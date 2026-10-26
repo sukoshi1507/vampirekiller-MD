@@ -4,8 +4,11 @@
 #include "player.h"
 #include "gameplay.h"
 #include "whip.h"
+#include "targets.h"
 #include "generated/player_assets.h"
 #include "generated/simon_attack_md.h"
+#include "generated/simon_crouch_md.h"
+#include "generated/flame_fx_md.h"
 #include "generated/intro_assets.h"
 
 /* Room explorer plus a movement prototype in the first room. */
@@ -52,7 +55,11 @@ static void show_room(u16 stage, u16 room, bool atlas)
 #define ARM_TILE_INDEX (WHIP_TILE_INDEX + 3)
 #define ATTACK_TILE_INDEX (ARM_TILE_INDEX + 4)
 
+static VKGame game;
+static VKPlayer player;
 static VKWhip whip;
+static VKTarget test_target;
+static bool target_visible = FALSE;
 static u16 diagnostic_timer;
 static int last_attack_frame = -1;
 /* Three animation-friendly tiles: grip, narrow lash and bright tip.
@@ -76,20 +83,61 @@ static const u32 arm_tiles[32] = {
     0x0000FF00UL,0,0,0
 };
 static const u16 attack_palette[16] = {
-    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0x00CA,0x0EEE
+    0,0x002A,0x006E,0x00CE,0,0,0,0,0,0,0,0,0,0,0x0CA0,0x0EEE
 };
 
+/* 16x16 training target, deliberately NOT an original ROM asset. */
+#define TARGET_TILE_INDEX (ATTACK_TILE_INDEX + VK_ATTACK_FRAME_COUNT * VK_ATTACK_TILES_PER_FRAME)
+#define FLAME_TILE_INDEX (TARGET_TILE_INDEX + 4)
+#define CROUCH_TILE_INDEX (FLAME_TILE_INDEX + (VK_FLAME_FRAMES + VK_SPARK_FRAMES) * VK_FLAME_TILES_PER_FRAME)
+static const u32 target_tiles[32] = {
+    0,0,0x000FF000UL,0x00F00F00UL,0x0F0000F0UL,0x0F0000F0UL,0xF000000FUL,0xF000000FUL,
+    0,0,0x000FF000UL,0x00F00F00UL,0x0F0000F0UL,0x0F0000F0UL,0xF000000FUL,0xF000000FUL,
+    0xF000000FUL,0xF000000FUL,0x0F0000F0UL,0x0F0000F0UL,0x00F00F00UL,0x000FF000UL,0,0,
+    0xF000000FUL,0xF000000FUL,0x0F0000F0UL,0x0F0000F0UL,0x00F00F00UL,0x000FF000UL,0,0
+};
+/* Prototype flame/impact animation generated from the V15 artwork.
+ * Source and provenance: tools/build_flame_fx.py, NOT the original MSX ROM. */
+static u16 flame_clock;
+static u16 flame_burst;
+static void reset_training_target(void)
+{
+    vk_target_init(&test_target, (int)player.x + 48, (int)player.y - 24, 16, 16);
+    target_visible = TRUE;
+    flame_clock = 0;
+    flame_burst = 0;
+}
 static void show_player(const VKPlayer *player)
 {
     const int attack_frame = vk_whip_arm_frame(&whip);
+    const int crouch_mode = !player->on_stairs && (player->crouched || (attack_frame && whip.crouched));
+    const u16 crouch_frame = attack_frame ? (u16)vk_whip_crouch_visual_step(&whip) : 0;
+    const u16 crouch_facing = attack_frame ? whip.facing : player->facing;
+    /* Frame-specific anchor correction for the 32x32 crouch reconstructions.
+     * The ROM-derived art does not fill the canvas uniformly: idle/recovery
+     * occupy the body-side half only, whereas whip frames extend wider.
+     * These offsets keep Simon's feet on the ground and prevent the body from
+     * drifting toward the facing direction when entering crouch. */
+    static const s16 crouch_x_right[5] = { -24, -24, -24, -24, -24 };
+    static const s16 crouch_x_left[5]  = {  -8,  -8,  -8,  -8,  -8 };
+    static const s16 crouch_y_offset[5] = { -25, -25, -25, -25, -25 };
     /* ROM-derived body frames and the lash are complementary layers. */
-    VDP_setSpriteFull(0, attack_frame ? -32 : (s16) player->x - 8,
-        attack_frame ? -32 : (s16) player->y - 31, SPRITE_SIZE(3, 4),
-        TILE_ATTR_FULL(PAL2, TRUE, FALSE, FALSE,
-                       PLAYER_TILE_INDEX + player->pose * VK_PLAYER_TILES_PER_POSE), 1);
+    if (crouch_mode)
+        VDP_setSpriteFull(0, (s16)player->x + (crouch_facing ? crouch_x_left[crouch_frame] : crouch_x_right[crouch_frame]),
+            (s16)player->y + crouch_y_offset[crouch_frame],
+            SPRITE_SIZE(4, 4), TILE_ATTR_FULL(PAL2, TRUE, FALSE,
+                crouch_facing, CROUCH_TILE_INDEX + crouch_frame * VK_CROUCH_TILES_PER_FRAME), 1);
+    else
+        VDP_setSpriteFull(0, attack_frame ? -32 : (s16) player->x - 8,
+            attack_frame ? -32 : (s16) player->y - 31, SPRITE_SIZE(3, 4),
+            TILE_ATTR_FULL(PAL2, TRUE, FALSE, FALSE,
+                           PLAYER_TILE_INDEX + player->pose * VK_PLAYER_TILES_PER_POSE), 1);
     {
         int left = 0, top = 0, right = 0, bottom = 0;
-        int count = vk_whip_segments(&whip);
+        /* The MSX2 ROM composition already contains the visible lash.
+         * Keep gameplay reach in whip.c, but never overlay the old synthetic
+         * three-segment graphics on top of the ROM sprite. */
+        int count = 0;
         int segment;
         if (count) vk_whip_bounds(&whip, &left, &top, &right, &bottom);
         for (segment = 0; segment < 3; segment++)
@@ -128,21 +176,30 @@ static void show_player(const VKPlayer *player)
      * Phase-to-index mapping is provisional pending a live MSX2 trace. */
     {
         u16 i;
-        const u16 frame_index = attack_frame ? (u16)(attack_frame - 1) : 0;
+        const u16 frame_index = attack_frame ? (u16)vk_whip_visual_step(&whip) : 0;
         const u16 base = ATTACK_TILE_INDEX + frame_index * VK_ATTACK_TILES_PER_FRAME;
         for (i = 0; i < 2; ++i)
         {
             const u16 source_half = whip.facing ? (u16)(1 - i) : i;
             VDP_setSpriteFull((u16)(5 + i),
-                attack_frame ? (s16)player->x - 32 + (s16)i * 32 : -32,
-                attack_frame ? (s16)player->y - 30 : -32,
+                (attack_frame && !crouch_mode) ? (s16)player->x - 32 + (s16)i * 32 : -32,
+                (attack_frame && !crouch_mode) ? (s16)player->y - 30 : -32,
                 SPRITE_SIZE(4, 4),
                 TILE_ATTR_FULL(PAL2, TRUE, FALSE, whip.facing,
                                base + source_half * VK_ATTACK_TILES_PER_HALF),
-                i == 0 ? 6 : 0);
+                i == 0 ? 6 : (target_visible ? 7 : 0));
         }
     }
-    VDP_updateSprites(7, CPU);
+    if (target_visible)
+        VDP_setSpriteFull(7, (test_target.active || flame_burst) ? (s16)test_target.x : -32,
+            (test_target.active || flame_burst) ? (s16)test_target.y : -32, SPRITE_SIZE(2, 2),
+            TILE_ATTR_FULL(PAL3, TRUE, FALSE, FALSE,
+                game.area == VK_AREA_COURTYARD ?
+                FLAME_TILE_INDEX + (flame_burst ?
+                    (VK_FLAME_FRAMES + ((12 - flame_burst) / 4)) * VK_FLAME_TILES_PER_FRAME :
+                    ((flame_clock >> 3) & (VK_FLAME_FRAMES - 1)) * VK_FLAME_TILES_PER_FRAME)
+                    : TARGET_TILE_INDEX), 0);
+    VDP_updateSprites(target_visible ? 8 : 7, CPU);
 }
 
 static void load_whip_graphics(void)
@@ -152,7 +209,12 @@ static void load_whip_graphics(void)
     VDP_loadTileData((const u32 *) vk_simon_attack_tiles, ATTACK_TILE_INDEX,
                      VK_ATTACK_FRAME_COUNT * VK_ATTACK_TILES_PER_FRAME, CPU);
     PAL_setPalette(PAL3, attack_palette, CPU);
+    VDP_loadTileData(target_tiles, TARGET_TILE_INDEX, 4, CPU);
+    VDP_loadTileData(vk_flame_fx_tiles, FLAME_TILE_INDEX,
+                     (VK_FLAME_FRAMES + VK_SPARK_FRAMES) * VK_FLAME_TILES_PER_FRAME, CPU);
+    VDP_loadTileData((const u32 *)vk_simon_crouch_tiles, CROUCH_TILE_INDEX, VK_CROUCH_TILE_COUNT, CPU);
     vk_whip_reset(&whip);
+    target_visible = FALSE;
     last_attack_frame = -1;
 }
 
@@ -164,14 +226,13 @@ static void enter_play(VKPlayer *player)
                     VK_PLAYER_POSES * VK_PLAYER_TILES_PER_POSE, CPU);
     PAL_setPalette(PAL2, vk_palettes[0], CPU);
     load_whip_graphics();
+    reset_training_target();
     VDP_drawText("FIRST ROOM MOVEMENT TEST  ", 3, 1);
     VDP_drawText(" ROM ATTACK CANDIDATES TEST   ", 2, 2);
     VDP_drawText(" L/R MOVE  C JUMP  B EXIT    ", 2, 27);
     show_player(player);
 }
 
-static VKPlayer player;
-static VKGame game;
 enum { FRONT_LOGO, FRONT_TITLE, FRONT_CASTLE, FRONT_COURTYARD,
        FRONT_INTERIOR, FRONT_VIEWER, FRONT_TEST };
 static u16 front_mode;
@@ -233,6 +294,7 @@ static void load_actor(u16 scene)
                     VK_PLAYER_POSES * VK_PLAYER_TILES_PER_POSE, CPU);
     PAL_setPalette(PAL2, vk_scenes[scene].palette, CPU);
     load_whip_graphics();
+    if (scene == 6 || (scene >= 3 && scene <= 5)) reset_training_target();
     show_player(&player);
 }
 
@@ -242,7 +304,7 @@ static void show_courtyard(u16 room)
     show_scene(3 + room);
     player = game.player;
     load_actor(3 + room);
-    VDP_drawText(room == 2 ? "L/R MOVE  C JUMP  UP ENTER" : "L/R MOVE C JUMP START TITLE", 2, 27);
+    VDP_drawText(room == 2 ? "B FOUET C SAUT UP PORTE" : "B FOUET  A+B FLAMME  C SAUT", 2, 27);
     front_mode = FRONT_COURTYARD;
 }
 
@@ -252,7 +314,7 @@ static void show_interior(void)
     player = game.player;
     load_actor(6);
     VDP_drawText("HALL: ORIGINAL MSX2 COLLISIONS", 1, 1);
-    VDP_drawText("B FOUET C SAUT A+L/R SALLES", 1, 27);
+    VDP_drawText("B FOUET A+B CIBLE C SAUT", 1, 27);
     front_mode = FRONT_INTERIOR;
 }
 
@@ -331,6 +393,7 @@ int main(bool hardReset)
                             VK_PLAYER_POSES * VK_PLAYER_TILES_PER_POSE, CPU);
                         PAL_setPalette(PAL2, vk_palettes[vk_stages[0].first + target], CPU);
                         load_whip_graphics();
+                        reset_training_target();
                         VDP_drawText(target == 1 ? "A+HAUT: ESCALIER  B: FOUET" :
                             "A+L/R SALLE  B: FOUET", 1, 27);
                         show_player(&player);
@@ -353,11 +416,24 @@ int main(bool hardReset)
                     game.player.crouched = 0;
                     VDP_drawText("ESCALIER DEMO: HAUT / BAS", 1, 1);
                 }
+                if ((front_mode == FRONT_INTERIOR || front_mode == FRONT_COURTYARD) &&
+                    (input.keys & BUTTON_A) && (pressed & BUTTON_B))
+                {
+                    reset_training_target();
+                    VDP_drawText(front_mode == FRONT_COURTYARD ?
+                        "FLAMME RALLUMEE! " : "CIBLE REINITIALISEE", 8, 3);
+                }
                 const VKEvent event = vk_game_tick_controls(&game, direction,
                     input.jump_pressed, !!(input.keys & BUTTON_UP),
                     !!(input.keys & BUTTON_DOWN));
                 player = game.player;
-                vk_whip_tick(&whip, &player, !!(pressed & BUTTON_B));
+                vk_whip_tick(&whip, &player, !!((pressed & BUTTON_B) && !(input.keys & BUTTON_A)));
+                if (target_visible && vk_target_tick(&test_target, &whip))
+                {
+                    if (front_mode == FRONT_COURTYARD) flame_burst = 12;
+                    VDP_drawText(front_mode == FRONT_COURTYARD ?
+                        "FLAMME ETEINTE! " : "CIBLE TOUCHEE!  ", 8, 3);
+                }
                 /* Independent on-screen state check for BlastEm. */
                 {
                     int frame = vk_whip_arm_frame(&whip);
@@ -381,7 +457,7 @@ int main(bool hardReset)
                     VDP_drawText("                         ", 1, 2);
                 if (event == VK_EVENT_ENTER) show_interior();
                 else if (event == VK_EVENT_ROOM) show_courtyard(game.room);
-                else show_player(&player);
+                else { ++flame_clock; if (flame_burst) --flame_burst; show_player(&player); }
             }
         }
         else if (front_mode == FRONT_TEST)
@@ -394,6 +470,8 @@ int main(bool hardReset)
                 const int direction = input.direction;
                 vk_player_tick(&player, direction, input.jump_pressed);
                 vk_whip_tick(&whip, &player, !!(pressed & BUTTON_A));
+                if (target_visible && vk_target_tick(&test_target, &whip))
+                    VDP_drawText("CIBLE TOUCHEE!", 8, 3);
                 show_player(&player);
             }
         }

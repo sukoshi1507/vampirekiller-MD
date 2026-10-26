@@ -21,9 +21,9 @@
     {
       "frame": 1,
       "lower_index": 0,
-      "upper_index": 6,
+      "upper_index": 2,
       "bounds": {
-        "min_x": -32,
+        "min_x": -8,
         "min_y": -30,
         "max_x_exclusive": 8,
         "max_y_exclusive": 2,
@@ -35,7 +35,7 @@
     {
       "frame": 2,
       "lower_index": 0,
-      "upper_index": 9,
+      "upper_index": 6,
       "bounds": {
         "min_x": -32,
         "min_y": -30,
@@ -49,7 +49,7 @@
     {
       "frame": 3,
       "lower_index": 0,
-      "upper_index": 6,
+      "upper_index": 9,
       "bounds": {
         "min_x": -32,
         "min_y": -30,
@@ -58,6 +58,62 @@
         "anchor_relative": "ROM signed dx/dy (no invented 24x32 crop)"
       },
       "png": "attack-candidate-3.png",
+      "classification": "ROM-derived candidate, NOT dynamically confirmed attack timing"
+    },
+    {
+      "frame": 4,
+      "lower_index": 1,
+      "upper_index": 9,
+      "bounds": {
+        "min_x": -32,
+        "min_y": -30,
+        "max_x_exclusive": 8,
+        "max_y_exclusive": 2,
+        "anchor_relative": "ROM signed dx/dy (no invented 24x32 crop)"
+      },
+      "png": "attack-candidate-4.png",
+      "classification": "ROM-derived candidate, NOT dynamically confirmed attack timing"
+    },
+    {
+      "frame": 5,
+      "lower_index": 1,
+      "upper_index": 6,
+      "bounds": {
+        "min_x": -32,
+        "min_y": -30,
+        "max_x_exclusive": 8,
+        "max_y_exclusive": 2,
+        "anchor_relative": "ROM signed dx/dy (no invented 24x32 crop)"
+      },
+      "png": "attack-candidate-5.png",
+      "classification": "ROM-derived candidate, NOT dynamically confirmed attack timing"
+    },
+    {
+      "frame": 6,
+      "lower_index": 1,
+      "upper_index": 2,
+      "bounds": {
+        "min_x": -8,
+        "min_y": -30,
+        "max_x_exclusive": 8,
+        "max_y_exclusive": 2,
+        "anchor_relative": "ROM signed dx/dy (no invented 24x32 crop)"
+      },
+      "png": "attack-candidate-6.png",
+      "classification": "ROM-derived candidate, NOT dynamically confirmed attack timing"
+    },
+    {
+      "frame": 7,
+      "lower_index": 0,
+      "upper_index": 0,
+      "bounds": {
+        "min_x": -8,
+        "min_y": -30,
+        "max_x_exclusive": 8,
+        "max_y_exclusive": 2,
+        "anchor_relative": "ROM signed dx/dy (no invented 24x32 crop)"
+      },
+      "png": "attack-candidate-7.png",
       "classification": "ROM-derived candidate, NOT dynamically confirmed attack timing"
     }
   ]

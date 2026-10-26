@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate conservative 4-phase SGDK attack candidates from verified ROM layers.
+"""Generate conservative 8-frame SGDK attack candidates from verified ROM layers.
 
 The graphics are ROM-derived. Phase assignment is NOT verified by a live Z80 trace.
 """
@@ -10,7 +10,7 @@ from decode_extended_simon import components,render
 from extract_rooms import decode_room
 from probe import load_rom
 
-PAIRS=[(0,0),(0,6),(0,9),(0,6)]
+PAIRS=[(0,0),(0,2),(0,6),(0,9),(1,9),(1,6),(1,2),(0,0)]
 W=64;H=32
 
 def generate(rom,out):
@@ -27,8 +27,9 @@ def generate(rom,out):
         if dx<0 or dy<0 or dx+pic.width>W or dy+pic.height>H:raise ValueError('Candidate cannot fit anchored 64x32 buffer')
         canvas.alpha_composite(pic,(dx,dy))
         canvas.save(out/f'attack-candidate-{index}.png')
-        pixels=[lookup.get(pixel,0) if pixel[3] else 0 for pixel in canvas.getdata()]
-        if any(pixel[3] and pixel not in lookup for pixel in canvas.getdata()):raise ValueError('ROM sprite palette exceeds 2-bit mask')
+        rgba=list(canvas.getdata())
+        pixels=[lookup.get(pixel,0) if pixel[3] else 0 for pixel in rgba]
+        if any(pixel[3] and pixel not in lookup for pixel in rgba):raise ValueError('ROM sprite palette exceeds 2-bit mask')
         # Each 32x32 half is one SGDK sprite: 16 contiguous tiles in column-major order.
         tiles=[]
         for half in range(2):
@@ -46,14 +47,14 @@ def generate(rom,out):
     header='''/* Generated ROM-derived candidate frames. Never hand edit. */
 #ifndef VK_SIMON_ATTACK_MD_H
 #define VK_SIMON_ATTACK_MD_H
-#define VK_ATTACK_FRAME_COUNT 4
+#define VK_ATTACK_FRAME_COUNT 8
 #define VK_ATTACK_TILES_PER_FRAME 32
 #define VK_ATTACK_TILES_PER_HALF 16
-extern const unsigned long vk_simon_attack_tiles[1024];
+extern const unsigned long vk_simon_attack_tiles[2048];
 #endif
 '''
     (out/'simon_attack_md.h').write_text(header)
-    lines=['/* Generated from Vampire Killer MSX2 ROM. Phase sequence HYPOTHETICAL. */','#include "simon_attack_md.h"','const unsigned long vk_simon_attack_tiles[1024] = {']
+    lines=['/* Generated from Vampire Killer MSX2 ROM. Phase sequence HYPOTHETICAL. */','#include "simon_attack_md.h"','const unsigned long vk_simon_attack_tiles[2048] = {']
     for i in range(0,len(alltiles),8):lines.append('    '+', '.join('0x%08XUL'%x for x in alltiles[i:i+8])+',')
     lines.append('};')
     (out/'simon_attack_md.c').write_text('\n'.join(lines)+'\n')

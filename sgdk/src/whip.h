@@ -1,7 +1,7 @@
 #ifndef VK_WHIP_H
 #define VK_WHIP_H
 #include "player.h"
-typedef struct { VKByte timer; VKByte facing; VKByte x; VKByte y; } VKWhip;
+typedef struct { VKByte timer; VKByte facing; VKByte x; VKByte y; VKByte crouched; } VKWhip;
 void vk_whip_reset(VKWhip *w);
 void vk_whip_tick(VKWhip *w, const VKPlayer *p, int attack_pressed);
 int vk_whip_active(const VKWhip *w);
@@ -11,6 +11,10 @@ int vk_whip_phase(const VKWhip *w);
 int vk_whip_segments(const VKWhip *w);
 /* Visual arm keyframe: 0 hidden, 1 windup, 2 short, 3 full, 4 recovery. */
 int vk_whip_arm_frame(const VKWhip *w);
+/* Experimental ROM-derived animation step (0..7); independent of hitbox timing. */
+int vk_whip_visual_step(const VKWhip *w);
+/* Experimental ROM-derived crouch/crouch-whip step (0..4). */
+int vk_whip_crouch_visual_step(const VKWhip *w);
 /* Position of the dedicated animated arm sprite (screen pixel coordinates). */
 void vk_whip_arm_position(const VKWhip *w, int *x, int *y);
 /* Inclusive hitbox (pixels); NULL outputs forbidden. */

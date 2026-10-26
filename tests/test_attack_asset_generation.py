@@ -14,9 +14,9 @@ class AssetTest(unittest.TestCase):
     def test_generated_tiles_count_and_variation(self):
         source=(ROOT/'sgdk/src/generated/simon_attack_md.c').read_text()
         vals=[int(x,16) for x in re.findall(r'0x([A-Fa-f0-9]{8})UL',source)]
-        self.assertEqual(len(vals),1024)
-        self.assertEqual(vals[256:512],vals[-256:])  # return pose echoes the short extension
-        self.assertNotEqual(vals[:256],vals[-256:])
+        self.assertEqual(len(vals),len(PAIRS)*256)
+        self.assertEqual(vals[:256],vals[-256:])  # return to rest
+        self.assertNotEqual(vals[256:512],vals[512:768])
         self.assertNotEqual(vals[:256],vals[256:512])
         self.assertNotEqual(vals[256:512],vals[512:768])
         self.assertTrue(all((v & 0x88888888)==0 for v in vals))
@@ -24,6 +24,6 @@ class AssetTest(unittest.TestCase):
         p=ROOT/'sgdk/src/generated/attack_candidates_manifest.json'
         m=json.loads(p.read_text())
         self.assertIs(m['phase_order_verified'],False)
-        self.assertEqual(len(m['frame_assignments']),4)
+        self.assertEqual(len(m['frame_assignments']),len(PAIRS))
 
 if __name__=='__main__': unittest.main()

@@ -13,4 +13,6 @@ ${CC:-cc} -std=c99 -Wall -Wextra -Werror -Isgdk/src \
 "$BIN"
 ${CC:-cc} -std=c99 -Wall -Wextra -Werror -Isgdk/src tests/test_whip.c sgdk/src/whip.c -o "$BIN"
 "$BIN"
+${CC:-cc} -std=c99 -Wall -Wextra -Werror -Isgdk/src tests/test_targets.c sgdk/src/targets.c sgdk/src/whip.c -o "$BIN"
+"$BIN"
 echo 'Native gameplay, physics, and whip tests: PASS'
