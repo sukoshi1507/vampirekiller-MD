@@ -6,13 +6,9 @@ import json
 from PIL import Image
 from decode_extended_simon import components, render
 from extract_rooms import decode_room
-from probe import load_rom
+from probe import load_rom, reference_rom
 
 ROOT = Path(__file__).resolve().parents[1]
-ROM_PATHS = [
-    Path('/mnt/data/Vampire Killer (Japan, Europe) (En).zip'),
-    Path('/mnt/data/Vampire Killer (Japan, Europe) (En) (Alt 3).rom'),
-]
 OUT = ROOT / 'sgdk/src/generated'
 PAIRS = [
     (6, 0),  # idle crouch
@@ -28,10 +24,10 @@ CANVAS_WORLD_TOP = -30
 
 
 def _find_rom() -> Path:
-    for candidate in ROM_PATHS:
-        if candidate.exists():
-            return candidate
-    raise FileNotFoundError('Reference ROM/ZIP not found in /mnt/data')
+    candidate = reference_rom()
+    if candidate.exists():
+        return candidate
+    raise FileNotFoundError(f'Reference ROM/ZIP not found: {candidate}')
 
 
 def _tile_words_from_canvas(canvas: Image.Image, lookup: dict) -> list[int]:

@@ -6,6 +6,7 @@ import csv
 import hashlib
 import json
 import math
+import os
 from pathlib import Path
 import struct
 import zipfile
@@ -13,6 +14,12 @@ import zipfile
 EXPECTED_SHA256 = '99eabaaeb2b6c02220e131043d5a6401d0d8c5f413d89204547adcc04d65e7e2'
 BANK_SIZE = 0x2000
 ROOT = Path(__file__).resolve().parents[1]
+DEFAULT_ROM = ROOT / 'Vampire Killer (Japan, Europe) (En).zip'
+
+
+def reference_rom():
+    """Chemin du dump de reference: VK_ROM_PATH, sinon le ZIP a la racine du depot."""
+    return Path(os.environ.get('VK_ROM_PATH', DEFAULT_ROM))
 
 
 def load_rom(path):
