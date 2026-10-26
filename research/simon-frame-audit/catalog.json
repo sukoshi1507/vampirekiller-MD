@@ -1,0 +1,265 @@
+{
+  "warning": "Valid masks are NOT identified crouch, stair or whip animations. Frames require Z80 state-table reconstruction.",
+  "frames": [
+    {
+      "frame": 0,
+      "status": "decoded",
+      "source": [
+        {
+          "frame": 0,
+          "pattern_cpu": "ACD1",
+          "pattern_file_offset": "1ACD1",
+          "coordinate_cpu": "7A1D"
+        },
+        {
+          "frame": 0,
+          "pattern_cpu": "AC93",
+          "pattern_file_offset": "1AC93",
+          "coordinate_cpu": "7A45"
+        }
+      ],
+      "opaque_pixels": 289
+    },
+    {
+      "frame": 1,
+      "status": "decoded",
+      "source": [
+        {
+          "frame": 1,
+          "pattern_cpu": "AD4E",
+          "pattern_file_offset": "1AD4E",
+          "coordinate_cpu": "7A1D"
+        },
+        {
+          "frame": 1,
+          "pattern_cpu": "AD12",
+          "pattern_file_offset": "1AD12",
+          "coordinate_cpu": "7A45"
+        }
+      ],
+      "opaque_pixels": 244
+    },
+    {
+      "frame": 2,
+      "status": "decoded",
+      "source": [
+        {
+          "frame": 2,
+          "pattern_cpu": "ADC3",
+          "pattern_file_offset": "1ADC3",
+          "coordinate_cpu": "7A1D"
+        },
+        {
+          "frame": 2,
+          "pattern_cpu": "AD87",
+          "pattern_file_offset": "1AD87",
+          "coordinate_cpu": "7A45"
+        }
+      ],
+      "opaque_pixels": 283
+    },
+    {
+      "frame": 3,
+      "status": "decoded",
+      "source": [
+        {
+          "frame": 3,
+          "pattern_cpu": "AFB4",
+          "pattern_file_offset": "1AFB4",
+          "coordinate_cpu": "7A1D"
+        },
+        {
+          "frame": 3,
+          "pattern_cpu": "B1CC",
+          "pattern_file_offset": "1B1CC",
+          "coordinate_cpu": "7A4F"
+        }
+      ],
+      "opaque_pixels": 273
+    },
+    {
+      "frame": 4,
+      "status": "decoded",
+      "source": [
+        {
+          "frame": 4,
+          "pattern_cpu": "B026",
+          "pattern_file_offset": "1B026",
+          "coordinate_cpu": "7A1D"
+        },
+        {
+          "frame": 4,
+          "pattern_cpu": "B235",
+          "pattern_file_offset": "1B235",
+          "coordinate_cpu": "7A4F"
+        }
+      ],
+      "opaque_pixels": 136
+    },
+    {
+      "frame": 5,
+      "status": "decoded",
+      "source": [
+        {
+          "frame": 5,
+          "pattern_cpu": "B09B",
+          "pattern_file_offset": "1B09B",
+          "coordinate_cpu": "7A1D"
+        },
+        {
+          "frame": 5,
+          "pattern_cpu": "B28A",
+          "pattern_file_offset": "1B28A",
+          "coordinate_cpu": "7A54"
+        }
+      ],
+      "opaque_pixels": 242
+    },
+    {
+      "frame": 6,
+      "status": "unsupported_layout",
+      "detail": "Pose requires a different sprite layout"
+    },
+    {
+      "frame": 7,
+      "status": "unsupported_layout",
+      "detail": "Pose requires a different sprite layout"
+    },
+    {
+      "frame": 8,
+      "status": "unsupported_layout",
+      "detail": "Pose requires a different sprite layout"
+    },
+    {
+      "frame": 9,
+      "status": "unsupported_layout",
+      "detail": "Nontransparent sprite pixel would be clipped"
+    },
+    {
+      "frame": 10,
+      "status": "unsupported_layout",
+      "detail": "Pose requires a different sprite layout"
+    },
+    {
+      "frame": 11,
+      "status": "unsupported_layout",
+      "detail": "Pose requires a different sprite layout"
+    },
+    {
+      "frame": 12,
+      "status": "unsupported_layout",
+      "detail": "Pose requires a different sprite layout"
+    },
+    {
+      "frame": 13,
+      "status": "unsupported_layout",
+      "detail": "Nontransparent sprite pixel would be clipped"
+    },
+    {
+      "frame": 14,
+      "status": "unsupported_layout",
+      "detail": "Pose requires a different sprite layout"
+    },
+    {
+      "frame": 15,
+      "status": "decoded",
+      "source": [
+        {
+          "frame": 15,
+          "pattern_cpu": "A795",
+          "pattern_file_offset": "1A795",
+          "coordinate_cpu": "7A31"
+        },
+        {
+          "frame": 15,
+          "pattern_cpu": "A38C",
+          "pattern_file_offset": "1A38C",
+          "coordinate_cpu": "7A8A"
+        }
+      ],
+      "opaque_pixels": 288
+    },
+    {
+      "frame": 16,
+      "status": "decoded",
+      "source": [
+        {
+          "frame": 16,
+          "pattern_cpu": "A869",
+          "pattern_file_offset": "1A869",
+          "coordinate_cpu": "7A36"
+        },
+        {
+          "frame": 16,
+          "pattern_cpu": "A40B",
+          "pattern_file_offset": "1A40B",
+          "coordinate_cpu": "7A8A"
+        }
+      ],
+      "opaque_pixels": 275
+    },
+    {
+      "frame": 17,
+      "status": "decoded",
+      "source": [
+        {
+          "frame": 17,
+          "pattern_cpu": "A8F4",
+          "pattern_file_offset": "1A8F4",
+          "coordinate_cpu": "7A3B"
+        },
+        {
+          "frame": 17,
+          "pattern_cpu": "A480",
+          "pattern_file_offset": "1A480",
+          "coordinate_cpu": "7A8A"
+        }
+      ],
+      "opaque_pixels": 267
+    },
+    {
+      "frame": 18,
+      "status": "decoded",
+      "source": [
+        {
+          "frame": 18,
+          "pattern_cpu": "A941",
+          "pattern_file_offset": "1A941",
+          "coordinate_cpu": "7A3B"
+        },
+        {
+          "frame": 18,
+          "pattern_cpu": "A8C1",
+          "pattern_file_offset": "1A8C1",
+          "coordinate_cpu": "7A94"
+        }
+      ],
+      "opaque_pixels": 357
+    },
+    {
+      "frame": 19,
+      "status": "unsupported_layout",
+      "detail": "Nontransparent sprite pixel would be clipped"
+    },
+    {
+      "frame": 20,
+      "status": "unsupported_layout",
+      "detail": "Nontransparent sprite pixel would be clipped"
+    },
+    {
+      "frame": 21,
+      "status": "unsupported_layout",
+      "detail": "Pose requires a different sprite layout"
+    },
+    {
+      "frame": 22,
+      "status": "unsupported_layout",
+      "detail": "Pose requires a different sprite layout"
+    },
+    {
+      "frame": 23,
+      "status": "unsupported_layout",
+      "detail": "Pose requires a different sprite layout"
+    }
+  ]
+}

@@ -1,0 +1,131 @@
+{
+  "all_passed": true,
+  "md_rom_sha256": "b64a49f4168a0d251a91b730a834f95c922032362ef12d31ccaaabac9c9a00b4",
+  "movement": {
+    "right_30_frames_px": 60,
+    "left_10_frames_px": 20
+  },
+  "jump_left_ground": true,
+  "landing_y": 192,
+  "left_facing_verified": true,
+  "sprite_pixel_comparisons": [
+    {
+      "step": 2,
+      "pose": 0,
+      "pixels_equal": true
+    },
+    {
+      "step": 4,
+      "pose": 0,
+      "pixels_equal": true
+    },
+    {
+      "step": 6,
+      "pose": 6,
+      "pixels_equal": true
+    },
+    {
+      "step": 7,
+      "pose": 0,
+      "pixels_equal": true
+    },
+    {
+      "step": 9,
+      "pose": 3,
+      "pixels_equal": true
+    }
+  ],
+  "observed_states": {
+    "0": {
+      "x": 0,
+      "y": 0,
+      "facing": 0,
+      "mode": 0,
+      "phase": 0,
+      "clock": 0,
+      "pose": 0
+    },
+    "1": {
+      "x": 16,
+      "y": 192,
+      "facing": 0,
+      "mode": 0,
+      "phase": 0,
+      "clock": 2,
+      "pose": 0
+    },
+    "2": {
+      "x": 16,
+      "y": 192,
+      "facing": 0,
+      "mode": 0,
+      "phase": 0,
+      "clock": 7,
+      "pose": 0
+    },
+    "3": {
+      "x": 76,
+      "y": 192,
+      "facing": 0,
+      "mode": 0,
+      "phase": 0,
+      "clock": 37,
+      "pose": 1
+    },
+    "4": {
+      "x": 76,
+      "y": 192,
+      "facing": 0,
+      "mode": 0,
+      "phase": 0,
+      "clock": 42,
+      "pose": 0
+    },
+    "5": {
+      "x": 76,
+      "y": 170,
+      "facing": 0,
+      "mode": 1,
+      "phase": 4,
+      "clock": 47,
+      "pose": 6
+    },
+    "6": {
+      "x": 76,
+      "y": 160,
+      "facing": 0,
+      "mode": 1,
+      "phase": 11,
+      "clock": 54,
+      "pose": 6
+    },
+    "7": {
+      "x": 76,
+      "y": 192,
+      "facing": 0,
+      "mode": 0,
+      "phase": 0,
+      "clock": 79,
+      "pose": 0
+    },
+    "8": {
+      "x": 56,
+      "y": 192,
+      "facing": 1,
+      "mode": 0,
+      "phase": 0,
+      "clock": 89,
+      "pose": 3
+    },
+    "9": {
+      "x": 56,
+      "y": 192,
+      "facing": 1,
+      "mode": 0,
+      "phase": 0,
+      "clock": 94,
+      "pose": 3
+    }
+  },
+  "scope": "First-room movement prototype; full original state machine not ported."
+}

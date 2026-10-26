@@ -1,0 +1,443 @@
+{
+  "rom": {
+    "size": 131072,
+    "sha256": "99eabaaeb2b6c02220e131043d5a6401d0d8c5f413d89204547adcc04d65e7e2",
+    "sha1": "5ef7d03b138a2023f6def241b671c666f97ed83b",
+    "signature": "AB",
+    "header": {
+      "init": "4075",
+      "statement": "0000",
+      "device": "0000",
+      "text": "0000"
+    }
+  },
+  "mapper": {
+    "working_model": "Konami non-SCC, 8 KiB banks",
+    "status": "static evidence; confirm with emulator trace",
+    "initialization_routine": "5336",
+    "windows_after_5336": {
+      "4000": "00",
+      "6000": "01",
+      "8000": "02",
+      "A000": "03"
+    }
+  },
+  "annotations": {
+    "records": 111,
+    "bytes": 237,
+    "byte_validation": "passed",
+    "note": "Valide les octets, pas la semantique des commentaires."
+  },
+  "banks": [
+    {
+      "bank": "00",
+      "file_offset": "00000",
+      "size": 8192,
+      "entropy_bits_per_byte": 7.074929,
+      "sha256": "ba5d285c15c905c96735835335db1d49f2ce811532bc296b1851e85ca91ea22d"
+    },
+    {
+      "bank": "01",
+      "file_offset": "02000",
+      "size": 8192,
+      "entropy_bits_per_byte": 6.952864,
+      "sha256": "93137cdab8789f4b25fb9f8fc9bba3d3ab0ae3569b39178eb518ad86674523da"
+    },
+    {
+      "bank": "02",
+      "file_offset": "04000",
+      "size": 8192,
+      "entropy_bits_per_byte": 7.002758,
+      "sha256": "70e9e13bd236680b3f61d43a23ccfa0d714ae9b62d259cf80e66d60d999d627b"
+    },
+    {
+      "bank": "03",
+      "file_offset": "06000",
+      "size": 8192,
+      "entropy_bits_per_byte": 6.591975,
+      "sha256": "3651a881251935f30dc6ceda30a535df6a6ea6590ea3a8c0178b3434536d4668"
+    },
+    {
+      "bank": "04",
+      "file_offset": "08000",
+      "size": 8192,
+      "entropy_bits_per_byte": 4.994882,
+      "sha256": "39424a176cb56d73fd7d6e04f080e1552e5803a643593db45f3100efbbcb103b"
+    },
+    {
+      "bank": "05",
+      "file_offset": "0A000",
+      "size": 8192,
+      "entropy_bits_per_byte": 5.11976,
+      "sha256": "077208aefcab47021a0a7bd6bb6f3e9e7603da19cfd424f359da201bd3e11c51"
+    },
+    {
+      "bank": "06",
+      "file_offset": "0C000",
+      "size": 8192,
+      "entropy_bits_per_byte": 5.354451,
+      "sha256": "b9d761aa3de6cb05054d2d11881abe95955f29eed9324599ab9fa00de16522d5"
+    },
+    {
+      "bank": "07",
+      "file_offset": "0E000",
+      "size": 8192,
+      "entropy_bits_per_byte": 5.000476,
+      "sha256": "79ae12bcfbc4a528ec0df7d188f22574550a9070dfaf92cb197a3b181532e8c5"
+    },
+    {
+      "bank": "08",
+      "file_offset": "10000",
+      "size": 8192,
+      "entropy_bits_per_byte": 4.293913,
+      "sha256": "2316d276edfb22a4c72db085347b26d64e6b63b9b68d452727b263ecad5ba82b"
+    },
+    {
+      "bank": "09",
+      "file_offset": "12000",
+      "size": 8192,
+      "entropy_bits_per_byte": 4.938028,
+      "sha256": "402b732204ed69a8e87879e2833afa7be5eb5f94220660bba388787ee93fca44"
+    },
+    {
+      "bank": "0A",
+      "file_offset": "14000",
+      "size": 8192,
+      "entropy_bits_per_byte": 6.791367,
+      "sha256": "778e71d13cec2150de847d601b0f682c3fa8604a06ee1c785324cfd3cd29bba7"
+    },
+    {
+      "bank": "0B",
+      "file_offset": "16000",
+      "size": 8192,
+      "entropy_bits_per_byte": 6.067364,
+      "sha256": "ef581b84d4c7be844c71d05c35ed6700fd7d7f0735da51b9a48a63f7424bf220"
+    },
+    {
+      "bank": "0C",
+      "file_offset": "18000",
+      "size": 8192,
+      "entropy_bits_per_byte": 6.264123,
+      "sha256": "3a70df0e18477d7e1cac614e3f1594103485d6095cd70f98fbc8b1493788444f"
+    },
+    {
+      "bank": "0D",
+      "file_offset": "1A000",
+      "size": 8192,
+      "entropy_bits_per_byte": 6.626828,
+      "sha256": "91a279e7419eb856e21b83de55cdeb57c5fb3f91bc10b098b44e86acc05d55d0"
+    },
+    {
+      "bank": "0E",
+      "file_offset": "1C000",
+      "size": 8192,
+      "entropy_bits_per_byte": 7.122973,
+      "sha256": "da6f8956fb1d37f05a22173d7a76d9b766dead244f5d47ddd5e50f6ba93dc6a5"
+    },
+    {
+      "bank": "0F",
+      "file_offset": "1E000",
+      "size": 8192,
+      "entropy_bits_per_byte": 5.496988,
+      "sha256": "bc6b49dde9812ad98b649b55ab90c5056c4a51f91284703840276a9b17919cb6"
+    }
+  ],
+  "mapper_write_candidates": [
+    {
+      "file_offset": "00033",
+      "bank": "00",
+      "offset_in_bank": "0033",
+      "candidate_instruction": "LD ($8000),A",
+      "status": "raw_pattern_unless_annotated"
+    },
+    {
+      "file_offset": "00038",
+      "bank": "00",
+      "offset_in_bank": "0038",
+      "candidate_instruction": "LD ($A000),A",
+      "status": "raw_pattern_unless_annotated"
+    },
+    {
+      "file_offset": "00042",
+      "bank": "00",
+      "offset_in_bank": "0042",
+      "candidate_instruction": "LD ($8000),A",
+      "status": "raw_pattern_unless_annotated"
+    },
+    {
+      "file_offset": "00048",
+      "bank": "00",
+      "offset_in_bank": "0048",
+      "candidate_instruction": "LD ($A000),A",
+      "status": "raw_pattern_unless_annotated"
+    },
+    {
+      "file_offset": "00FBC",
+      "bank": "00",
+      "offset_in_bank": "0FBC",
+      "candidate_instruction": "LD ($6000),A",
+      "status": "raw_pattern_unless_annotated"
+    },
+    {
+      "file_offset": "00FC2",
+      "bank": "00",
+      "offset_in_bank": "0FC2",
+      "candidate_instruction": "LD ($8000),A",
+      "status": "raw_pattern_unless_annotated"
+    },
+    {
+      "file_offset": "00FC8",
+      "bank": "00",
+      "offset_in_bank": "0FC8",
+      "candidate_instruction": "LD ($A000),A",
+      "status": "raw_pattern_unless_annotated"
+    },
+    {
+      "file_offset": "01063",
+      "bank": "00",
+      "offset_in_bank": "1063",
+      "candidate_instruction": "LD ($6000),A",
+      "status": "raw_pattern_unless_annotated"
+    },
+    {
+      "file_offset": "01068",
+      "bank": "00",
+      "offset_in_bank": "1068",
+      "candidate_instruction": "LD ($8000),A",
+      "status": "raw_pattern_unless_annotated"
+    },
+    {
+      "file_offset": "0106E",
+      "bank": "00",
+      "offset_in_bank": "106E",
+      "candidate_instruction": "LD ($A000),A",
+      "status": "raw_pattern_unless_annotated"
+    },
+    {
+      "file_offset": "010A6",
+      "bank": "00",
+      "offset_in_bank": "10A6",
+      "candidate_instruction": "LD ($8000),A",
+      "status": "raw_pattern_unless_annotated"
+    },
+    {
+      "file_offset": "010B0",
+      "bank": "00",
+      "offset_in_bank": "10B0",
+      "candidate_instruction": "LD ($A000),A",
+      "status": "raw_pattern_unless_annotated"
+    },
+    {
+      "file_offset": "01140",
+      "bank": "00",
+      "offset_in_bank": "1140",
+      "candidate_instruction": "LD ($6000),A",
+      "status": "raw_pattern_unless_annotated"
+    },
+    {
+      "file_offset": "01145",
+      "bank": "00",
+      "offset_in_bank": "1145",
+      "candidate_instruction": "LD ($8000),A",
+      "status": "raw_pattern_unless_annotated"
+    },
+    {
+      "file_offset": "0114B",
+      "bank": "00",
+      "offset_in_bank": "114B",
+      "candidate_instruction": "LD ($A000),A",
+      "status": "raw_pattern_unless_annotated"
+    },
+    {
+      "file_offset": "0133D",
+      "bank": "00",
+      "offset_in_bank": "133D",
+      "candidate_instruction": "LD ($6000),A",
+      "status": "raw_pattern_unless_annotated"
+    },
+    {
+      "file_offset": "01342",
+      "bank": "00",
+      "offset_in_bank": "1342",
+      "candidate_instruction": "LD ($8000),A",
+      "status": "raw_pattern_unless_annotated"
+    },
+    {
+      "file_offset": "01348",
+      "bank": "00",
+      "offset_in_bank": "1348",
+      "candidate_instruction": "LD ($A000),A",
+      "status": "raw_pattern_unless_annotated"
+    },
+    {
+      "file_offset": "01356",
+      "bank": "00",
+      "offset_in_bank": "1356",
+      "candidate_instruction": "LD ($8000),A",
+      "status": "raw_pattern_unless_annotated"
+    },
+    {
+      "file_offset": "0135C",
+      "bank": "00",
+      "offset_in_bank": "135C",
+      "candidate_instruction": "LD ($A000),A",
+      "status": "raw_pattern_unless_annotated"
+    },
+    {
+      "file_offset": "01368",
+      "bank": "00",
+      "offset_in_bank": "1368",
+      "candidate_instruction": "LD ($6000),A",
+      "status": "raw_pattern_unless_annotated"
+    },
+    {
+      "file_offset": "0136E",
+      "bank": "00",
+      "offset_in_bank": "136E",
+      "candidate_instruction": "LD ($8000),A",
+      "status": "raw_pattern_unless_annotated"
+    },
+    {
+      "file_offset": "01374",
+      "bank": "00",
+      "offset_in_bank": "1374",
+      "candidate_instruction": "LD ($A000),A",
+      "status": "raw_pattern_unless_annotated"
+    },
+    {
+      "file_offset": "01380",
+      "bank": "00",
+      "offset_in_bank": "1380",
+      "candidate_instruction": "LD ($8000),A",
+      "status": "raw_pattern_unless_annotated"
+    },
+    {
+      "file_offset": "01386",
+      "bank": "00",
+      "offset_in_bank": "1386",
+      "candidate_instruction": "LD ($A000),A",
+      "status": "raw_pattern_unless_annotated"
+    },
+    {
+      "file_offset": "01392",
+      "bank": "00",
+      "offset_in_bank": "1392",
+      "candidate_instruction": "LD ($8000),A",
+      "status": "raw_pattern_unless_annotated"
+    },
+    {
+      "file_offset": "01398",
+      "bank": "00",
+      "offset_in_bank": "1398",
+      "candidate_instruction": "LD ($A000),A",
+      "status": "raw_pattern_unless_annotated"
+    },
+    {
+      "file_offset": "013A4",
+      "bank": "00",
+      "offset_in_bank": "13A4",
+      "candidate_instruction": "LD ($6000),A",
+      "status": "raw_pattern_unless_annotated"
+    },
+    {
+      "file_offset": "013AA",
+      "bank": "00",
+      "offset_in_bank": "13AA",
+      "candidate_instruction": "LD ($8000),A",
+      "status": "raw_pattern_unless_annotated"
+    },
+    {
+      "file_offset": "013B0",
+      "bank": "00",
+      "offset_in_bank": "13B0",
+      "candidate_instruction": "LD ($A000),A",
+      "status": "raw_pattern_unless_annotated"
+    },
+    {
+      "file_offset": "01ED1",
+      "bank": "00",
+      "offset_in_bank": "1ED1",
+      "candidate_instruction": "LD ($8000),A",
+      "status": "raw_pattern_unless_annotated"
+    },
+    {
+      "file_offset": "01EEC",
+      "bank": "00",
+      "offset_in_bank": "1EEC",
+      "candidate_instruction": "LD ($8000),A",
+      "status": "raw_pattern_unless_annotated"
+    },
+    {
+      "file_offset": "02157",
+      "bank": "01",
+      "offset_in_bank": "0157",
+      "candidate_instruction": "LD ($8000),A",
+      "status": "raw_pattern_unless_annotated"
+    },
+    {
+      "file_offset": "02179",
+      "bank": "01",
+      "offset_in_bank": "0179",
+      "candidate_instruction": "LD ($8000),A",
+      "status": "raw_pattern_unless_annotated"
+    },
+    {
+      "file_offset": "02451",
+      "bank": "01",
+      "offset_in_bank": "0451",
+      "candidate_instruction": "LD ($A000),A",
+      "status": "raw_pattern_unless_annotated"
+    },
+    {
+      "file_offset": "0248F",
+      "bank": "01",
+      "offset_in_bank": "048F",
+      "candidate_instruction": "LD ($A000),A",
+      "status": "raw_pattern_unless_annotated"
+    },
+    {
+      "file_offset": "024C5",
+      "bank": "01",
+      "offset_in_bank": "04C5",
+      "candidate_instruction": "LD ($A000),A",
+      "status": "raw_pattern_unless_annotated"
+    },
+    {
+      "file_offset": "02746",
+      "bank": "01",
+      "offset_in_bank": "0746",
+      "candidate_instruction": "LD ($A000),A",
+      "status": "raw_pattern_unless_annotated"
+    },
+    {
+      "file_offset": "02750",
+      "bank": "01",
+      "offset_in_bank": "0750",
+      "candidate_instruction": "LD ($8000),A",
+      "status": "raw_pattern_unless_annotated"
+    }
+  ],
+  "dispatch": {
+    "routine": "414D",
+    "table": "4161",
+    "index_ram": "C000",
+    "count": 14,
+    "runtime_index_range_verified": false,
+    "targets": [
+      "417D",
+      "41A0",
+      "41AB",
+      "41D1",
+      "422C",
+      "4257",
+      "4294",
+      "42B2",
+      "4324",
+      "4377",
+      "4387",
+      "43DA",
+      "43F0",
+      "4414"
+    ]
+  }
+}

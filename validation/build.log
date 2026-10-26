@@ -1,0 +1,14 @@
+make: Entering directory '/workspace/scratch/cdd074283347/vampire-killer-md/sgdk'
+mkdir -p out/src/
+m68k-elf-gcc -std=c99 -Werror -DSGDK_GCC -m68000 -fdiagnostics-color=always -Wall -Wextra -Wno-shift-negative-value -Wno-main -Wno-unused-parameter -fno-builtin -ffunction-sections -fdata-sections -fms-extensions -I. -Iinc -Isrc -Ires -I/workspace/scratch/cdd074283347/.tools/sgdk/inc -I/workspace/scratch/cdd074283347/.tools/sgdk/res -B/workspace/scratch/cdd074283347/.tools/sgdk/bin -O3 -fuse-linker-plugin -fno-web -fno-gcse -fomit-frame-pointer -flto -flto=auto -ffat-lto-objects -MMD -c src/main.c -o out/src/main.o
+mkdir -p out/src/generated/
+m68k-elf-gcc -std=c99 -Werror -DSGDK_GCC -m68000 -fdiagnostics-color=always -Wall -Wextra -Wno-shift-negative-value -Wno-main -Wno-unused-parameter -fno-builtin -ffunction-sections -fdata-sections -fms-extensions -I. -Iinc -Isrc -Ires -I/workspace/scratch/cdd074283347/.tools/sgdk/inc -I/workspace/scratch/cdd074283347/.tools/sgdk/res -B/workspace/scratch/cdd074283347/.tools/sgdk/bin -O3 -fuse-linker-plugin -fno-web -fno-gcse -fomit-frame-pointer -flto -flto=auto -ffat-lto-objects -MMD -c src/generated/intro_assets.c -o out/src/generated/intro_assets.o
+mkdir -p out/
+echo "out/src/input.o out/src/main.o out/src/player.o out/src/generated/intro_assets.o out/src/generated/player_assets.o out/src/generated/rooms.o" > out/cmd_
+mkdir -p out/
+m68k-elf-gcc -m68000 -B/workspace/scratch/cdd074283347/.tools/sgdk/bin -n -T /workspace/scratch/cdd074283347/.tools/sgdk/md.ld -nostdlib out/sega.o @out/cmd_ /workspace/scratch/cdd074283347/.tools/sgdk/lib/libmd-native.a -lgcc -o out/rom.out -Wl,--gc-sections -flto -flto=auto -ffat-lto-objects
+rm out/cmd_
+m68k-elf-nm  -n -l out/rom.out > out/symbol.txt
+m68k-elf-objcopy -O binary out/rom.out out/rom.bin
+java -jar /workspace/scratch/cdd074283347/.tools/sgdk/bin/sizebnd.jar out/rom.bin -sizealign 131072 -checksum
+make: Leaving directory '/workspace/scratch/cdd074283347/vampire-killer-md/sgdk'

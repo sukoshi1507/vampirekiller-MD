@@ -1,0 +1,64 @@
+{
+  "rom_sha256": "99eabaaeb2b6c02220e131043d5a6401d0d8c5f413d89204547adcc04d65e7e2",
+  "asset_source": "MSX2 original, position/mask tables",
+  "phase_order_verified": false,
+  "canvas_anchor": "image origin at Simon x-32,y-30; mirror only for left-facing",
+  "frame_assignments": [
+    {
+      "frame": 0,
+      "lower_index": 0,
+      "upper_index": 0,
+      "bounds": {
+        "min_x": -8,
+        "min_y": -30,
+        "max_x_exclusive": 8,
+        "max_y_exclusive": 2,
+        "anchor_relative": "ROM signed dx/dy (no invented 24x32 crop)"
+      },
+      "png": "attack-candidate-0.png",
+      "classification": "ROM-derived candidate, NOT dynamically confirmed attack timing"
+    },
+    {
+      "frame": 1,
+      "lower_index": 0,
+      "upper_index": 6,
+      "bounds": {
+        "min_x": -32,
+        "min_y": -30,
+        "max_x_exclusive": 8,
+        "max_y_exclusive": 2,
+        "anchor_relative": "ROM signed dx/dy (no invented 24x32 crop)"
+      },
+      "png": "attack-candidate-1.png",
+      "classification": "ROM-derived candidate, NOT dynamically confirmed attack timing"
+    },
+    {
+      "frame": 2,
+      "lower_index": 0,
+      "upper_index": 9,
+      "bounds": {
+        "min_x": -32,
+        "min_y": -30,
+        "max_x_exclusive": 8,
+        "max_y_exclusive": 2,
+        "anchor_relative": "ROM signed dx/dy (no invented 24x32 crop)"
+      },
+      "png": "attack-candidate-2.png",
+      "classification": "ROM-derived candidate, NOT dynamically confirmed attack timing"
+    },
+    {
+      "frame": 3,
+      "lower_index": 0,
+      "upper_index": 6,
+      "bounds": {
+        "min_x": -32,
+        "min_y": -30,
+        "max_x_exclusive": 8,
+        "max_y_exclusive": 2,
+        "anchor_relative": "ROM signed dx/dy (no invented 24x32 crop)"
+      },
+      "png": "attack-candidate-3.png",
+      "classification": "ROM-derived candidate, NOT dynamically confirmed attack timing"
+    }
+  ]
+}

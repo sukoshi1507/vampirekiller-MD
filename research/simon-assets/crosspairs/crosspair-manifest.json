@@ -1,0 +1,1114 @@
+{
+  "rom_sha256": "99eabaaeb2b6c02220e131043d5a6401d0d8c5f413d89204547adcc04d65e7e2",
+  "lower_indices": [
+    0,
+    1,
+    2,
+    6,
+    10,
+    11,
+    12,
+    16
+  ],
+  "upper_indices": [
+    0,
+    2,
+    6,
+    9,
+    12,
+    15,
+    16,
+    17
+  ],
+  "entries": [
+    {
+      "lower": 0,
+      "upper": 0,
+      "png": "lower-00_upper-00.png",
+      "bounds": {
+        "min_x": -8,
+        "min_y": -30,
+        "max_x_exclusive": 8,
+        "max_y_exclusive": 2,
+        "anchor_relative": "ROM signed dx/dy (no invented 24x32 crop)"
+      },
+      "width": 16,
+      "height": 32,
+      "orphan_layers": 0,
+      "status": "fully_positioned",
+      "interpretation": "candidate composition, NOT a verified animation frame"
+    },
+    {
+      "lower": 0,
+      "upper": 2,
+      "png": "lower-00_upper-02.png",
+      "bounds": {
+        "min_x": -8,
+        "min_y": -30,
+        "max_x_exclusive": 8,
+        "max_y_exclusive": 2,
+        "anchor_relative": "ROM signed dx/dy (no invented 24x32 crop)"
+      },
+      "width": 16,
+      "height": 32,
+      "orphan_layers": 0,
+      "status": "fully_positioned",
+      "interpretation": "candidate composition, NOT a verified animation frame"
+    },
+    {
+      "lower": 0,
+      "upper": 6,
+      "png": "lower-00_upper-06.png",
+      "bounds": {
+        "min_x": -32,
+        "min_y": -30,
+        "max_x_exclusive": 8,
+        "max_y_exclusive": 2,
+        "anchor_relative": "ROM signed dx/dy (no invented 24x32 crop)"
+      },
+      "width": 40,
+      "height": 32,
+      "orphan_layers": 0,
+      "status": "fully_positioned",
+      "interpretation": "candidate composition, NOT a verified animation frame"
+    },
+    {
+      "lower": 0,
+      "upper": 9,
+      "png": "lower-00_upper-09.png",
+      "bounds": {
+        "min_x": -32,
+        "min_y": -30,
+        "max_x_exclusive": 8,
+        "max_y_exclusive": 2,
+        "anchor_relative": "ROM signed dx/dy (no invented 24x32 crop)"
+      },
+      "width": 40,
+      "height": 32,
+      "orphan_layers": 0,
+      "status": "fully_positioned",
+      "interpretation": "candidate composition, NOT a verified animation frame"
+    },
+    {
+      "lower": 0,
+      "upper": 12,
+      "png": "lower-00_upper-12.png",
+      "bounds": {
+        "min_x": -16,
+        "min_y": -30,
+        "max_x_exclusive": 8,
+        "max_y_exclusive": 2,
+        "anchor_relative": "ROM signed dx/dy (no invented 24x32 crop)"
+      },
+      "width": 24,
+      "height": 32,
+      "orphan_layers": 4,
+      "status": "partial",
+      "interpretation": "candidate composition, NOT a verified animation frame"
+    },
+    {
+      "lower": 0,
+      "upper": 15,
+      "png": "lower-00_upper-15.png",
+      "bounds": {
+        "min_x": -8,
+        "min_y": -30,
+        "max_x_exclusive": 9,
+        "max_y_exclusive": 2,
+        "anchor_relative": "ROM signed dx/dy (no invented 24x32 crop)"
+      },
+      "width": 17,
+      "height": 32,
+      "orphan_layers": 0,
+      "status": "fully_positioned",
+      "interpretation": "candidate composition, NOT a verified animation frame"
+    },
+    {
+      "lower": 0,
+      "upper": 16,
+      "png": "lower-00_upper-16.png",
+      "bounds": {
+        "min_x": -8,
+        "min_y": -30,
+        "max_x_exclusive": 9,
+        "max_y_exclusive": 2,
+        "anchor_relative": "ROM signed dx/dy (no invented 24x32 crop)"
+      },
+      "width": 17,
+      "height": 32,
+      "orphan_layers": 0,
+      "status": "fully_positioned",
+      "interpretation": "candidate composition, NOT a verified animation frame"
+    },
+    {
+      "lower": 0,
+      "upper": 17,
+      "png": "lower-00_upper-17.png",
+      "bounds": {
+        "min_x": -8,
+        "min_y": -30,
+        "max_x_exclusive": 9,
+        "max_y_exclusive": 2,
+        "anchor_relative": "ROM signed dx/dy (no invented 24x32 crop)"
+      },
+      "width": 17,
+      "height": 32,
+      "orphan_layers": 0,
+      "status": "fully_positioned",
+      "interpretation": "candidate composition, NOT a verified animation frame"
+    },
+    {
+      "lower": 1,
+      "upper": 0,
+      "png": "lower-01_upper-00.png",
+      "bounds": {
+        "min_x": -8,
+        "min_y": -30,
+        "max_x_exclusive": 8,
+        "max_y_exclusive": 2,
+        "anchor_relative": "ROM signed dx/dy (no invented 24x32 crop)"
+      },
+      "width": 16,
+      "height": 32,
+      "orphan_layers": 0,
+      "status": "fully_positioned",
+      "interpretation": "candidate composition, NOT a verified animation frame"
+    },
+    {
+      "lower": 1,
+      "upper": 2,
+      "png": "lower-01_upper-02.png",
+      "bounds": {
+        "min_x": -8,
+        "min_y": -30,
+        "max_x_exclusive": 8,
+        "max_y_exclusive": 2,
+        "anchor_relative": "ROM signed dx/dy (no invented 24x32 crop)"
+      },
+      "width": 16,
+      "height": 32,
+      "orphan_layers": 0,
+      "status": "fully_positioned",
+      "interpretation": "candidate composition, NOT a verified animation frame"
+    },
+    {
+      "lower": 1,
+      "upper": 6,
+      "png": "lower-01_upper-06.png",
+      "bounds": {
+        "min_x": -32,
+        "min_y": -30,
+        "max_x_exclusive": 8,
+        "max_y_exclusive": 2,
+        "anchor_relative": "ROM signed dx/dy (no invented 24x32 crop)"
+      },
+      "width": 40,
+      "height": 32,
+      "orphan_layers": 0,
+      "status": "fully_positioned",
+      "interpretation": "candidate composition, NOT a verified animation frame"
+    },
+    {
+      "lower": 1,
+      "upper": 9,
+      "png": "lower-01_upper-09.png",
+      "bounds": {
+        "min_x": -32,
+        "min_y": -30,
+        "max_x_exclusive": 8,
+        "max_y_exclusive": 2,
+        "anchor_relative": "ROM signed dx/dy (no invented 24x32 crop)"
+      },
+      "width": 40,
+      "height": 32,
+      "orphan_layers": 0,
+      "status": "fully_positioned",
+      "interpretation": "candidate composition, NOT a verified animation frame"
+    },
+    {
+      "lower": 1,
+      "upper": 12,
+      "png": "lower-01_upper-12.png",
+      "bounds": {
+        "min_x": -16,
+        "min_y": -30,
+        "max_x_exclusive": 8,
+        "max_y_exclusive": 2,
+        "anchor_relative": "ROM signed dx/dy (no invented 24x32 crop)"
+      },
+      "width": 24,
+      "height": 32,
+      "orphan_layers": 4,
+      "status": "partial",
+      "interpretation": "candidate composition, NOT a verified animation frame"
+    },
+    {
+      "lower": 1,
+      "upper": 15,
+      "png": "lower-01_upper-15.png",
+      "bounds": {
+        "min_x": -8,
+        "min_y": -30,
+        "max_x_exclusive": 9,
+        "max_y_exclusive": 2,
+        "anchor_relative": "ROM signed dx/dy (no invented 24x32 crop)"
+      },
+      "width": 17,
+      "height": 32,
+      "orphan_layers": 0,
+      "status": "fully_positioned",
+      "interpretation": "candidate composition, NOT a verified animation frame"
+    },
+    {
+      "lower": 1,
+      "upper": 16,
+      "png": "lower-01_upper-16.png",
+      "bounds": {
+        "min_x": -8,
+        "min_y": -30,
+        "max_x_exclusive": 9,
+        "max_y_exclusive": 2,
+        "anchor_relative": "ROM signed dx/dy (no invented 24x32 crop)"
+      },
+      "width": 17,
+      "height": 32,
+      "orphan_layers": 0,
+      "status": "fully_positioned",
+      "interpretation": "candidate composition, NOT a verified animation frame"
+    },
+    {
+      "lower": 1,
+      "upper": 17,
+      "png": "lower-01_upper-17.png",
+      "bounds": {
+        "min_x": -8,
+        "min_y": -30,
+        "max_x_exclusive": 9,
+        "max_y_exclusive": 2,
+        "anchor_relative": "ROM signed dx/dy (no invented 24x32 crop)"
+      },
+      "width": 17,
+      "height": 32,
+      "orphan_layers": 0,
+      "status": "fully_positioned",
+      "interpretation": "candidate composition, NOT a verified animation frame"
+    },
+    {
+      "lower": 2,
+      "upper": 0,
+      "png": "lower-02_upper-00.png",
+      "bounds": {
+        "min_x": -8,
+        "min_y": -30,
+        "max_x_exclusive": 8,
+        "max_y_exclusive": 2,
+        "anchor_relative": "ROM signed dx/dy (no invented 24x32 crop)"
+      },
+      "width": 16,
+      "height": 32,
+      "orphan_layers": 0,
+      "status": "fully_positioned",
+      "interpretation": "candidate composition, NOT a verified animation frame"
+    },
+    {
+      "lower": 2,
+      "upper": 2,
+      "png": "lower-02_upper-02.png",
+      "bounds": {
+        "min_x": -8,
+        "min_y": -30,
+        "max_x_exclusive": 8,
+        "max_y_exclusive": 2,
+        "anchor_relative": "ROM signed dx/dy (no invented 24x32 crop)"
+      },
+      "width": 16,
+      "height": 32,
+      "orphan_layers": 0,
+      "status": "fully_positioned",
+      "interpretation": "candidate composition, NOT a verified animation frame"
+    },
+    {
+      "lower": 2,
+      "upper": 6,
+      "png": "lower-02_upper-06.png",
+      "bounds": {
+        "min_x": -32,
+        "min_y": -30,
+        "max_x_exclusive": 8,
+        "max_y_exclusive": 2,
+        "anchor_relative": "ROM signed dx/dy (no invented 24x32 crop)"
+      },
+      "width": 40,
+      "height": 32,
+      "orphan_layers": 0,
+      "status": "fully_positioned",
+      "interpretation": "candidate composition, NOT a verified animation frame"
+    },
+    {
+      "lower": 2,
+      "upper": 9,
+      "png": "lower-02_upper-09.png",
+      "bounds": {
+        "min_x": -32,
+        "min_y": -30,
+        "max_x_exclusive": 8,
+        "max_y_exclusive": 2,
+        "anchor_relative": "ROM signed dx/dy (no invented 24x32 crop)"
+      },
+      "width": 40,
+      "height": 32,
+      "orphan_layers": 0,
+      "status": "fully_positioned",
+      "interpretation": "candidate composition, NOT a verified animation frame"
+    },
+    {
+      "lower": 2,
+      "upper": 12,
+      "png": "lower-02_upper-12.png",
+      "bounds": {
+        "min_x": -16,
+        "min_y": -30,
+        "max_x_exclusive": 8,
+        "max_y_exclusive": 2,
+        "anchor_relative": "ROM signed dx/dy (no invented 24x32 crop)"
+      },
+      "width": 24,
+      "height": 32,
+      "orphan_layers": 4,
+      "status": "partial",
+      "interpretation": "candidate composition, NOT a verified animation frame"
+    },
+    {
+      "lower": 2,
+      "upper": 15,
+      "png": "lower-02_upper-15.png",
+      "bounds": {
+        "min_x": -8,
+        "min_y": -30,
+        "max_x_exclusive": 9,
+        "max_y_exclusive": 2,
+        "anchor_relative": "ROM signed dx/dy (no invented 24x32 crop)"
+      },
+      "width": 17,
+      "height": 32,
+      "orphan_layers": 0,
+      "status": "fully_positioned",
+      "interpretation": "candidate composition, NOT a verified animation frame"
+    },
+    {
+      "lower": 2,
+      "upper": 16,
+      "png": "lower-02_upper-16.png",
+      "bounds": {
+        "min_x": -8,
+        "min_y": -30,
+        "max_x_exclusive": 9,
+        "max_y_exclusive": 2,
+        "anchor_relative": "ROM signed dx/dy (no invented 24x32 crop)"
+      },
+      "width": 17,
+      "height": 32,
+      "orphan_layers": 0,
+      "status": "fully_positioned",
+      "interpretation": "candidate composition, NOT a verified animation frame"
+    },
+    {
+      "lower": 2,
+      "upper": 17,
+      "png": "lower-02_upper-17.png",
+      "bounds": {
+        "min_x": -8,
+        "min_y": -30,
+        "max_x_exclusive": 9,
+        "max_y_exclusive": 2,
+        "anchor_relative": "ROM signed dx/dy (no invented 24x32 crop)"
+      },
+      "width": 17,
+      "height": 32,
+      "orphan_layers": 0,
+      "status": "fully_positioned",
+      "interpretation": "candidate composition, NOT a verified animation frame"
+    },
+    {
+      "lower": 6,
+      "upper": 0,
+      "png": "lower-06_upper-00.png",
+      "bounds": {
+        "min_x": -8,
+        "min_y": -30,
+        "max_x_exclusive": 8,
+        "max_y_exclusive": 8,
+        "anchor_relative": "ROM signed dx/dy (no invented 24x32 crop)"
+      },
+      "width": 16,
+      "height": 38,
+      "orphan_layers": 0,
+      "status": "fully_positioned",
+      "interpretation": "candidate composition, NOT a verified animation frame"
+    },
+    {
+      "lower": 6,
+      "upper": 2,
+      "png": "lower-06_upper-02.png",
+      "bounds": {
+        "min_x": -8,
+        "min_y": -30,
+        "max_x_exclusive": 8,
+        "max_y_exclusive": 8,
+        "anchor_relative": "ROM signed dx/dy (no invented 24x32 crop)"
+      },
+      "width": 16,
+      "height": 38,
+      "orphan_layers": 0,
+      "status": "fully_positioned",
+      "interpretation": "candidate composition, NOT a verified animation frame"
+    },
+    {
+      "lower": 6,
+      "upper": 6,
+      "png": "lower-06_upper-06.png",
+      "bounds": {
+        "min_x": -32,
+        "min_y": -30,
+        "max_x_exclusive": 8,
+        "max_y_exclusive": 8,
+        "anchor_relative": "ROM signed dx/dy (no invented 24x32 crop)"
+      },
+      "width": 40,
+      "height": 38,
+      "orphan_layers": 0,
+      "status": "fully_positioned",
+      "interpretation": "candidate composition, NOT a verified animation frame"
+    },
+    {
+      "lower": 6,
+      "upper": 9,
+      "png": "lower-06_upper-09.png",
+      "bounds": {
+        "min_x": -32,
+        "min_y": -30,
+        "max_x_exclusive": 8,
+        "max_y_exclusive": 8,
+        "anchor_relative": "ROM signed dx/dy (no invented 24x32 crop)"
+      },
+      "width": 40,
+      "height": 38,
+      "orphan_layers": 0,
+      "status": "fully_positioned",
+      "interpretation": "candidate composition, NOT a verified animation frame"
+    },
+    {
+      "lower": 6,
+      "upper": 12,
+      "png": "lower-06_upper-12.png",
+      "bounds": {
+        "min_x": -16,
+        "min_y": -30,
+        "max_x_exclusive": 8,
+        "max_y_exclusive": 8,
+        "anchor_relative": "ROM signed dx/dy (no invented 24x32 crop)"
+      },
+      "width": 24,
+      "height": 38,
+      "orphan_layers": 4,
+      "status": "partial",
+      "interpretation": "candidate composition, NOT a verified animation frame"
+    },
+    {
+      "lower": 6,
+      "upper": 15,
+      "png": "lower-06_upper-15.png",
+      "bounds": {
+        "min_x": -8,
+        "min_y": -30,
+        "max_x_exclusive": 9,
+        "max_y_exclusive": 8,
+        "anchor_relative": "ROM signed dx/dy (no invented 24x32 crop)"
+      },
+      "width": 17,
+      "height": 38,
+      "orphan_layers": 0,
+      "status": "fully_positioned",
+      "interpretation": "candidate composition, NOT a verified animation frame"
+    },
+    {
+      "lower": 6,
+      "upper": 16,
+      "png": "lower-06_upper-16.png",
+      "bounds": {
+        "min_x": -8,
+        "min_y": -30,
+        "max_x_exclusive": 9,
+        "max_y_exclusive": 8,
+        "anchor_relative": "ROM signed dx/dy (no invented 24x32 crop)"
+      },
+      "width": 17,
+      "height": 38,
+      "orphan_layers": 0,
+      "status": "fully_positioned",
+      "interpretation": "candidate composition, NOT a verified animation frame"
+    },
+    {
+      "lower": 6,
+      "upper": 17,
+      "png": "lower-06_upper-17.png",
+      "bounds": {
+        "min_x": -8,
+        "min_y": -30,
+        "max_x_exclusive": 9,
+        "max_y_exclusive": 8,
+        "anchor_relative": "ROM signed dx/dy (no invented 24x32 crop)"
+      },
+      "width": 17,
+      "height": 38,
+      "orphan_layers": 0,
+      "status": "fully_positioned",
+      "interpretation": "candidate composition, NOT a verified animation frame"
+    },
+    {
+      "lower": 10,
+      "upper": 0,
+      "png": "lower-10_upper-00.png",
+      "bounds": {
+        "min_x": -8,
+        "min_y": -30,
+        "max_x_exclusive": 9,
+        "max_y_exclusive": 2,
+        "anchor_relative": "ROM signed dx/dy (no invented 24x32 crop)"
+      },
+      "width": 17,
+      "height": 32,
+      "orphan_layers": 0,
+      "status": "fully_positioned",
+      "interpretation": "candidate composition, NOT a verified animation frame"
+    },
+    {
+      "lower": 10,
+      "upper": 2,
+      "png": "lower-10_upper-02.png",
+      "bounds": {
+        "min_x": -8,
+        "min_y": -30,
+        "max_x_exclusive": 9,
+        "max_y_exclusive": 2,
+        "anchor_relative": "ROM signed dx/dy (no invented 24x32 crop)"
+      },
+      "width": 17,
+      "height": 32,
+      "orphan_layers": 0,
+      "status": "fully_positioned",
+      "interpretation": "candidate composition, NOT a verified animation frame"
+    },
+    {
+      "lower": 10,
+      "upper": 6,
+      "png": "lower-10_upper-06.png",
+      "bounds": {
+        "min_x": -32,
+        "min_y": -30,
+        "max_x_exclusive": 9,
+        "max_y_exclusive": 2,
+        "anchor_relative": "ROM signed dx/dy (no invented 24x32 crop)"
+      },
+      "width": 41,
+      "height": 32,
+      "orphan_layers": 0,
+      "status": "fully_positioned",
+      "interpretation": "candidate composition, NOT a verified animation frame"
+    },
+    {
+      "lower": 10,
+      "upper": 9,
+      "png": "lower-10_upper-09.png",
+      "bounds": {
+        "min_x": -32,
+        "min_y": -30,
+        "max_x_exclusive": 9,
+        "max_y_exclusive": 2,
+        "anchor_relative": "ROM signed dx/dy (no invented 24x32 crop)"
+      },
+      "width": 41,
+      "height": 32,
+      "orphan_layers": 0,
+      "status": "fully_positioned",
+      "interpretation": "candidate composition, NOT a verified animation frame"
+    },
+    {
+      "lower": 10,
+      "upper": 12,
+      "png": "lower-10_upper-12.png",
+      "bounds": {
+        "min_x": -16,
+        "min_y": -30,
+        "max_x_exclusive": 9,
+        "max_y_exclusive": 2,
+        "anchor_relative": "ROM signed dx/dy (no invented 24x32 crop)"
+      },
+      "width": 25,
+      "height": 32,
+      "orphan_layers": 4,
+      "status": "partial",
+      "interpretation": "candidate composition, NOT a verified animation frame"
+    },
+    {
+      "lower": 10,
+      "upper": 15,
+      "png": "lower-10_upper-15.png",
+      "bounds": {
+        "min_x": -7,
+        "min_y": -30,
+        "max_x_exclusive": 9,
+        "max_y_exclusive": 2,
+        "anchor_relative": "ROM signed dx/dy (no invented 24x32 crop)"
+      },
+      "width": 16,
+      "height": 32,
+      "orphan_layers": 0,
+      "status": "fully_positioned",
+      "interpretation": "candidate composition, NOT a verified animation frame"
+    },
+    {
+      "lower": 10,
+      "upper": 16,
+      "png": "lower-10_upper-16.png",
+      "bounds": {
+        "min_x": -7,
+        "min_y": -30,
+        "max_x_exclusive": 9,
+        "max_y_exclusive": 2,
+        "anchor_relative": "ROM signed dx/dy (no invented 24x32 crop)"
+      },
+      "width": 16,
+      "height": 32,
+      "orphan_layers": 0,
+      "status": "fully_positioned",
+      "interpretation": "candidate composition, NOT a verified animation frame"
+    },
+    {
+      "lower": 10,
+      "upper": 17,
+      "png": "lower-10_upper-17.png",
+      "bounds": {
+        "min_x": -7,
+        "min_y": -30,
+        "max_x_exclusive": 9,
+        "max_y_exclusive": 2,
+        "anchor_relative": "ROM signed dx/dy (no invented 24x32 crop)"
+      },
+      "width": 16,
+      "height": 32,
+      "orphan_layers": 0,
+      "status": "fully_positioned",
+      "interpretation": "candidate composition, NOT a verified animation frame"
+    },
+    {
+      "lower": 11,
+      "upper": 0,
+      "png": "lower-11_upper-00.png",
+      "bounds": {
+        "min_x": -8,
+        "min_y": -30,
+        "max_x_exclusive": 9,
+        "max_y_exclusive": 2,
+        "anchor_relative": "ROM signed dx/dy (no invented 24x32 crop)"
+      },
+      "width": 17,
+      "height": 32,
+      "orphan_layers": 0,
+      "status": "fully_positioned",
+      "interpretation": "candidate composition, NOT a verified animation frame"
+    },
+    {
+      "lower": 11,
+      "upper": 2,
+      "png": "lower-11_upper-02.png",
+      "bounds": {
+        "min_x": -8,
+        "min_y": -30,
+        "max_x_exclusive": 9,
+        "max_y_exclusive": 2,
+        "anchor_relative": "ROM signed dx/dy (no invented 24x32 crop)"
+      },
+      "width": 17,
+      "height": 32,
+      "orphan_layers": 0,
+      "status": "fully_positioned",
+      "interpretation": "candidate composition, NOT a verified animation frame"
+    },
+    {
+      "lower": 11,
+      "upper": 6,
+      "png": "lower-11_upper-06.png",
+      "bounds": {
+        "min_x": -32,
+        "min_y": -30,
+        "max_x_exclusive": 9,
+        "max_y_exclusive": 2,
+        "anchor_relative": "ROM signed dx/dy (no invented 24x32 crop)"
+      },
+      "width": 41,
+      "height": 32,
+      "orphan_layers": 0,
+      "status": "fully_positioned",
+      "interpretation": "candidate composition, NOT a verified animation frame"
+    },
+    {
+      "lower": 11,
+      "upper": 9,
+      "png": "lower-11_upper-09.png",
+      "bounds": {
+        "min_x": -32,
+        "min_y": -30,
+        "max_x_exclusive": 9,
+        "max_y_exclusive": 2,
+        "anchor_relative": "ROM signed dx/dy (no invented 24x32 crop)"
+      },
+      "width": 41,
+      "height": 32,
+      "orphan_layers": 0,
+      "status": "fully_positioned",
+      "interpretation": "candidate composition, NOT a verified animation frame"
+    },
+    {
+      "lower": 11,
+      "upper": 12,
+      "png": "lower-11_upper-12.png",
+      "bounds": {
+        "min_x": -16,
+        "min_y": -30,
+        "max_x_exclusive": 9,
+        "max_y_exclusive": 2,
+        "anchor_relative": "ROM signed dx/dy (no invented 24x32 crop)"
+      },
+      "width": 25,
+      "height": 32,
+      "orphan_layers": 4,
+      "status": "partial",
+      "interpretation": "candidate composition, NOT a verified animation frame"
+    },
+    {
+      "lower": 11,
+      "upper": 15,
+      "png": "lower-11_upper-15.png",
+      "bounds": {
+        "min_x": -7,
+        "min_y": -30,
+        "max_x_exclusive": 9,
+        "max_y_exclusive": 2,
+        "anchor_relative": "ROM signed dx/dy (no invented 24x32 crop)"
+      },
+      "width": 16,
+      "height": 32,
+      "orphan_layers": 0,
+      "status": "fully_positioned",
+      "interpretation": "candidate composition, NOT a verified animation frame"
+    },
+    {
+      "lower": 11,
+      "upper": 16,
+      "png": "lower-11_upper-16.png",
+      "bounds": {
+        "min_x": -7,
+        "min_y": -30,
+        "max_x_exclusive": 9,
+        "max_y_exclusive": 2,
+        "anchor_relative": "ROM signed dx/dy (no invented 24x32 crop)"
+      },
+      "width": 16,
+      "height": 32,
+      "orphan_layers": 0,
+      "status": "fully_positioned",
+      "interpretation": "candidate composition, NOT a verified animation frame"
+    },
+    {
+      "lower": 11,
+      "upper": 17,
+      "png": "lower-11_upper-17.png",
+      "bounds": {
+        "min_x": -7,
+        "min_y": -30,
+        "max_x_exclusive": 9,
+        "max_y_exclusive": 2,
+        "anchor_relative": "ROM signed dx/dy (no invented 24x32 crop)"
+      },
+      "width": 16,
+      "height": 32,
+      "orphan_layers": 0,
+      "status": "fully_positioned",
+      "interpretation": "candidate composition, NOT a verified animation frame"
+    },
+    {
+      "lower": 12,
+      "upper": 0,
+      "png": "lower-12_upper-00.png",
+      "bounds": {
+        "min_x": -8,
+        "min_y": -30,
+        "max_x_exclusive": 9,
+        "max_y_exclusive": 2,
+        "anchor_relative": "ROM signed dx/dy (no invented 24x32 crop)"
+      },
+      "width": 17,
+      "height": 32,
+      "orphan_layers": 0,
+      "status": "fully_positioned",
+      "interpretation": "candidate composition, NOT a verified animation frame"
+    },
+    {
+      "lower": 12,
+      "upper": 2,
+      "png": "lower-12_upper-02.png",
+      "bounds": {
+        "min_x": -8,
+        "min_y": -30,
+        "max_x_exclusive": 9,
+        "max_y_exclusive": 2,
+        "anchor_relative": "ROM signed dx/dy (no invented 24x32 crop)"
+      },
+      "width": 17,
+      "height": 32,
+      "orphan_layers": 0,
+      "status": "fully_positioned",
+      "interpretation": "candidate composition, NOT a verified animation frame"
+    },
+    {
+      "lower": 12,
+      "upper": 6,
+      "png": "lower-12_upper-06.png",
+      "bounds": {
+        "min_x": -32,
+        "min_y": -30,
+        "max_x_exclusive": 9,
+        "max_y_exclusive": 2,
+        "anchor_relative": "ROM signed dx/dy (no invented 24x32 crop)"
+      },
+      "width": 41,
+      "height": 32,
+      "orphan_layers": 0,
+      "status": "fully_positioned",
+      "interpretation": "candidate composition, NOT a verified animation frame"
+    },
+    {
+      "lower": 12,
+      "upper": 9,
+      "png": "lower-12_upper-09.png",
+      "bounds": {
+        "min_x": -32,
+        "min_y": -30,
+        "max_x_exclusive": 9,
+        "max_y_exclusive": 2,
+        "anchor_relative": "ROM signed dx/dy (no invented 24x32 crop)"
+      },
+      "width": 41,
+      "height": 32,
+      "orphan_layers": 0,
+      "status": "fully_positioned",
+      "interpretation": "candidate composition, NOT a verified animation frame"
+    },
+    {
+      "lower": 12,
+      "upper": 12,
+      "png": "lower-12_upper-12.png",
+      "bounds": {
+        "min_x": -16,
+        "min_y": -30,
+        "max_x_exclusive": 9,
+        "max_y_exclusive": 2,
+        "anchor_relative": "ROM signed dx/dy (no invented 24x32 crop)"
+      },
+      "width": 25,
+      "height": 32,
+      "orphan_layers": 4,
+      "status": "partial",
+      "interpretation": "candidate composition, NOT a verified animation frame"
+    },
+    {
+      "lower": 12,
+      "upper": 15,
+      "png": "lower-12_upper-15.png",
+      "bounds": {
+        "min_x": -7,
+        "min_y": -30,
+        "max_x_exclusive": 9,
+        "max_y_exclusive": 2,
+        "anchor_relative": "ROM signed dx/dy (no invented 24x32 crop)"
+      },
+      "width": 16,
+      "height": 32,
+      "orphan_layers": 0,
+      "status": "fully_positioned",
+      "interpretation": "candidate composition, NOT a verified animation frame"
+    },
+    {
+      "lower": 12,
+      "upper": 16,
+      "png": "lower-12_upper-16.png",
+      "bounds": {
+        "min_x": -7,
+        "min_y": -30,
+        "max_x_exclusive": 9,
+        "max_y_exclusive": 2,
+        "anchor_relative": "ROM signed dx/dy (no invented 24x32 crop)"
+      },
+      "width": 16,
+      "height": 32,
+      "orphan_layers": 0,
+      "status": "fully_positioned",
+      "interpretation": "candidate composition, NOT a verified animation frame"
+    },
+    {
+      "lower": 12,
+      "upper": 17,
+      "png": "lower-12_upper-17.png",
+      "bounds": {
+        "min_x": -7,
+        "min_y": -30,
+        "max_x_exclusive": 9,
+        "max_y_exclusive": 2,
+        "anchor_relative": "ROM signed dx/dy (no invented 24x32 crop)"
+      },
+      "width": 16,
+      "height": 32,
+      "orphan_layers": 0,
+      "status": "fully_positioned",
+      "interpretation": "candidate composition, NOT a verified animation frame"
+    },
+    {
+      "lower": 16,
+      "upper": 0,
+      "png": "lower-16_upper-00.png",
+      "bounds": {
+        "min_x": -8,
+        "min_y": -30,
+        "max_x_exclusive": 9,
+        "max_y_exclusive": 8,
+        "anchor_relative": "ROM signed dx/dy (no invented 24x32 crop)"
+      },
+      "width": 17,
+      "height": 38,
+      "orphan_layers": 0,
+      "status": "fully_positioned",
+      "interpretation": "candidate composition, NOT a verified animation frame"
+    },
+    {
+      "lower": 16,
+      "upper": 2,
+      "png": "lower-16_upper-02.png",
+      "bounds": {
+        "min_x": -8,
+        "min_y": -30,
+        "max_x_exclusive": 9,
+        "max_y_exclusive": 8,
+        "anchor_relative": "ROM signed dx/dy (no invented 24x32 crop)"
+      },
+      "width": 17,
+      "height": 38,
+      "orphan_layers": 0,
+      "status": "fully_positioned",
+      "interpretation": "candidate composition, NOT a verified animation frame"
+    },
+    {
+      "lower": 16,
+      "upper": 6,
+      "png": "lower-16_upper-06.png",
+      "bounds": {
+        "min_x": -32,
+        "min_y": -30,
+        "max_x_exclusive": 9,
+        "max_y_exclusive": 8,
+        "anchor_relative": "ROM signed dx/dy (no invented 24x32 crop)"
+      },
+      "width": 41,
+      "height": 38,
+      "orphan_layers": 0,
+      "status": "fully_positioned",
+      "interpretation": "candidate composition, NOT a verified animation frame"
+    },
+    {
+      "lower": 16,
+      "upper": 9,
+      "png": "lower-16_upper-09.png",
+      "bounds": {
+        "min_x": -32,
+        "min_y": -30,
+        "max_x_exclusive": 9,
+        "max_y_exclusive": 8,
+        "anchor_relative": "ROM signed dx/dy (no invented 24x32 crop)"
+      },
+      "width": 41,
+      "height": 38,
+      "orphan_layers": 0,
+      "status": "fully_positioned",
+      "interpretation": "candidate composition, NOT a verified animation frame"
+    },
+    {
+      "lower": 16,
+      "upper": 12,
+      "png": "lower-16_upper-12.png",
+      "bounds": {
+        "min_x": -16,
+        "min_y": -30,
+        "max_x_exclusive": 9,
+        "max_y_exclusive": 8,
+        "anchor_relative": "ROM signed dx/dy (no invented 24x32 crop)"
+      },
+      "width": 25,
+      "height": 38,
+      "orphan_layers": 4,
+      "status": "partial",
+      "interpretation": "candidate composition, NOT a verified animation frame"
+    },
+    {
+      "lower": 16,
+      "upper": 15,
+      "png": "lower-16_upper-15.png",
+      "bounds": {
+        "min_x": -7,
+        "min_y": -30,
+        "max_x_exclusive": 9,
+        "max_y_exclusive": 8,
+        "anchor_relative": "ROM signed dx/dy (no invented 24x32 crop)"
+      },
+      "width": 16,
+      "height": 38,
+      "orphan_layers": 0,
+      "status": "fully_positioned",
+      "interpretation": "candidate composition, NOT a verified animation frame"
+    },
+    {
+      "lower": 16,
+      "upper": 16,
+      "png": "lower-16_upper-16.png",
+      "bounds": {
+        "min_x": -7,
+        "min_y": -30,
+        "max_x_exclusive": 9,
+        "max_y_exclusive": 8,
+        "anchor_relative": "ROM signed dx/dy (no invented 24x32 crop)"
+      },
+      "width": 16,
+      "height": 38,
+      "orphan_layers": 0,
+      "status": "fully_positioned",
+      "interpretation": "candidate composition, NOT a verified animation frame"
+    },
+    {
+      "lower": 16,
+      "upper": 17,
+      "png": "lower-16_upper-17.png",
+      "bounds": {
+        "min_x": -7,
+        "min_y": -30,
+        "max_x_exclusive": 9,
+        "max_y_exclusive": 8,
+        "anchor_relative": "ROM signed dx/dy (no invented 24x32 crop)"
+      },
+      "width": 16,
+      "height": 38,
+      "orphan_layers": 0,
+      "status": "fully_positioned",
+      "interpretation": "candidate composition, NOT a verified animation frame"
+    }
+  ],
+  "warning": "Spatial compositions based on ROM sprite tables. Selection order, timing, and meaning are not established. No changes made to the Mega Drive runtime."
+}

@@ -1,0 +1,220 @@
+{
+  "poses": [
+    {
+      "pose": 0,
+      "lower_frame": 0,
+      "upper_frame": 0,
+      "jumping": false,
+      "source": [
+        {
+          "frame": 0,
+          "pattern_cpu": "ACD1",
+          "pattern_file_offset": "1ACD1",
+          "coordinate_cpu": "7A1D"
+        },
+        {
+          "frame": 0,
+          "pattern_cpu": "AC93",
+          "pattern_file_offset": "1AC93",
+          "coordinate_cpu": "7A45"
+        }
+      ]
+    },
+    {
+      "pose": 1,
+      "lower_frame": 1,
+      "upper_frame": 1,
+      "jumping": false,
+      "source": [
+        {
+          "frame": 1,
+          "pattern_cpu": "AD4E",
+          "pattern_file_offset": "1AD4E",
+          "coordinate_cpu": "7A1D"
+        },
+        {
+          "frame": 1,
+          "pattern_cpu": "AD12",
+          "pattern_file_offset": "1AD12",
+          "coordinate_cpu": "7A45"
+        }
+      ]
+    },
+    {
+      "pose": 2,
+      "lower_frame": 2,
+      "upper_frame": 2,
+      "jumping": false,
+      "source": [
+        {
+          "frame": 2,
+          "pattern_cpu": "ADC3",
+          "pattern_file_offset": "1ADC3",
+          "coordinate_cpu": "7A1D"
+        },
+        {
+          "frame": 2,
+          "pattern_cpu": "AD87",
+          "pattern_file_offset": "1AD87",
+          "coordinate_cpu": "7A45"
+        }
+      ]
+    },
+    {
+      "pose": 3,
+      "lower_frame": 10,
+      "upper_frame": 15,
+      "jumping": false,
+      "source": [
+        {
+          "frame": 10,
+          "pattern_cpu": "A3CA",
+          "pattern_file_offset": "1A3CA",
+          "coordinate_cpu": "7A31"
+        },
+        {
+          "frame": 15,
+          "pattern_cpu": "A38C",
+          "pattern_file_offset": "1A38C",
+          "coordinate_cpu": "7A8A"
+        }
+      ]
+    },
+    {
+      "pose": 4,
+      "lower_frame": 11,
+      "upper_frame": 16,
+      "jumping": false,
+      "source": [
+        {
+          "frame": 11,
+          "pattern_cpu": "A447",
+          "pattern_file_offset": "1A447",
+          "coordinate_cpu": "7A31"
+        },
+        {
+          "frame": 16,
+          "pattern_cpu": "A40B",
+          "pattern_file_offset": "1A40B",
+          "coordinate_cpu": "7A8A"
+        }
+      ]
+    },
+    {
+      "pose": 5,
+      "lower_frame": 12,
+      "upper_frame": 17,
+      "jumping": false,
+      "source": [
+        {
+          "frame": 12,
+          "pattern_cpu": "A4BC",
+          "pattern_file_offset": "1A4BC",
+          "coordinate_cpu": "7A31"
+        },
+        {
+          "frame": 17,
+          "pattern_cpu": "A480",
+          "pattern_file_offset": "1A480",
+          "coordinate_cpu": "7A8A"
+        }
+      ]
+    },
+    {
+      "pose": 6,
+      "lower_frame": 6,
+      "upper_frame": 0,
+      "jumping": true,
+      "source": [
+        {
+          "frame": 6,
+          "pattern_cpu": "B171",
+          "pattern_file_offset": "1B171",
+          "coordinate_cpu": "7A22"
+        },
+        {
+          "frame": 0,
+          "pattern_cpu": "AC93",
+          "pattern_file_offset": "1AC93",
+          "coordinate_cpu": "7A45"
+        }
+      ]
+    },
+    {
+      "pose": 7,
+      "lower_frame": 16,
+      "upper_frame": 15,
+      "jumping": true,
+      "source": [
+        {
+          "frame": 16,
+          "pattern_cpu": "A869",
+          "pattern_file_offset": "1A869",
+          "coordinate_cpu": "7A36"
+        },
+        {
+          "frame": 15,
+          "pattern_cpu": "A38C",
+          "pattern_file_offset": "1A38C",
+          "coordinate_cpu": "7A8A"
+        }
+      ]
+    }
+  ],
+  "jump_delta_cpu": "6D95",
+  "jump_deltas": [
+    -6,
+    -6,
+    -5,
+    -5,
+    0,
+    -4,
+    -3,
+    -2,
+    -1,
+    0,
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    5,
+    6,
+    6
+  ],
+  "fall_delta_cpu": "6F81",
+  "fall_deltas": [
+    2,
+    4,
+    6,
+    6
+  ],
+  "collision_limit_cpu": "7C78",
+  "collision_limits": [
+    2,
+    4,
+    4,
+    4,
+    4,
+    4,
+    4,
+    4,
+    4,
+    4,
+    9,
+    9,
+    9,
+    4,
+    4,
+    4,
+    9,
+    9,
+    8
+  ],
+  "anchor": {
+    "x": 8,
+    "y": 31
+  },
+  "note": "ROM sprite layers/positions and normal player colors; no attack poses yet."
+}

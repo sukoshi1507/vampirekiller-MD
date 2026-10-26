@@ -1,0 +1,26 @@
+{
+  "passed": true,
+  "language": "C99",
+  "megadrive": {
+    "compiler": "m68k-elf-gcc 13.1.0",
+    "sgdk": "2.11",
+    "extra_flags": "-std=c99 -Werror",
+    "warnings": "-Wall -Wextra (SGDK defaults)",
+    "clean_build": false,
+    "baseline_milestone_4_sha256": "307fe1fe11b821116cdabd7bf49722716be4005494b8ecd40210fa70eb366e4a",
+    "baseline_matches_milestone_4": true,
+    "rom_sha256": "b64a49f4168a0d251a91b730a834f95c922032362ef12d31ccaaabac9c9a00b4",
+    "input_module_integrated": true,
+    "graphics_regenerated": true
+  },
+  "host": {
+    "compiler": "gcc 13.3.0",
+    "flags": "-shared -fPIC -std=c99 -pedantic-errors -Wall -Wextra -Werror -O2",
+    "sources": [
+      "sgdk/src/player.c",
+      "sgdk/src/generated/player_assets.c"
+    ],
+    "z80_comparisons": 53872,
+    "all_equal": true
+  }
+}
