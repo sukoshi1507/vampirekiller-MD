@@ -3,6 +3,7 @@
 #include "generated/rooms.h"
 #include "player.h"
 #include "gameplay.h"
+#include "room_manager.h"
 #include "whip.h"
 #include "targets.h"
 #include "generated/player_assets.h"
@@ -308,6 +309,30 @@ static void show_courtyard(u16 room)
     front_mode = FRONT_COURTYARD;
 }
 
+static void show_interior(void);
+/* Stage-1 playable room loader: common VRAM/player setup for test navigation.
+ * The room graph is intentionally marked experimental. */
+static void show_stage1_room(u16 room)
+{
+    if (room == 0)
+    {
+        show_interior();
+        return;
+    }
+    show_room(1, room, FALSE);
+    player = game.player;
+    VDP_loadTileData((const u32 *)vk_player_tiles, PLAYER_TILE_INDEX,
+        VK_PLAYER_POSES * VK_PLAYER_TILES_PER_POSE, CPU);
+    PAL_setPalette(PAL2, vk_palettes[vk_stages[0].first + room], CPU);
+    load_whip_graphics();
+    reset_training_target();
+    VDP_drawText("PARCOURS TEST / LIENS NON MSX2", 1, 1);
+    VDP_drawText(room == 1 ? "A+HAUT ESCALIER B FOUET" :
+        "B FOUET / A+L-R SALLE", 1, 27);
+    show_player(&player);
+    front_mode = FRONT_INTERIOR;
+}
+
 static void show_interior(void)
 {
     show_scene(6);
@@ -387,16 +412,7 @@ int main(bool hardReset)
                     int target = (int)game.room + ((pressed & BUTTON_RIGHT) ? 1 : -1);
                     if (target >= 0 && target < 8 && vk_game_debug_room(&game, (VKByte)target))
                     {
-                        show_room(1, (u16)target, FALSE);
-                        player = game.player;
-                        VDP_loadTileData((const u32 *) vk_player_tiles, PLAYER_TILE_INDEX,
-                            VK_PLAYER_POSES * VK_PLAYER_TILES_PER_POSE, CPU);
-                        PAL_setPalette(PAL2, vk_palettes[vk_stages[0].first + target], CPU);
-                        load_whip_graphics();
-                        reset_training_target();
-                        VDP_drawText(target == 1 ? "A+HAUT: ESCALIER  B: FOUET" :
-                            "A+L/R SALLE  B: FOUET", 1, 27);
-                        show_player(&player);
+                        show_stage1_room((u16)target);
                     }
                     continue;
                 }
@@ -457,6 +473,15 @@ int main(bool hardReset)
                     VDP_drawText("                         ", 1, 2);
                 if (event == VK_EVENT_ENTER) show_interior();
                 else if (event == VK_EVENT_ROOM) show_courtyard(game.room);
+                else if (front_mode == FRONT_INTERIOR && direction &&
+                         !(input.keys & BUTTON_A) &&
+                         vk_room_try_edge(&game.room, &game.player, direction))
+                {
+                    /* Keep player state across edge; collision map changes on
+                     * next gameplay tick. No fabricated vertical connections. */
+                    player = game.player;
+                    show_stage1_room(game.room);
+                }
                 else { ++flame_clock; if (flame_burst) --flame_burst; show_player(&player); }
             }
         }

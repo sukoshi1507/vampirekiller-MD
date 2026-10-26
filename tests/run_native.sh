@@ -15,4 +15,7 @@ ${CC:-cc} -std=c99 -Wall -Wextra -Werror -Isgdk/src tests/test_whip.c sgdk/src/w
 "$BIN"
 ${CC:-cc} -std=c99 -Wall -Wextra -Werror -Isgdk/src tests/test_targets.c sgdk/src/targets.c sgdk/src/whip.c -o "$BIN"
 "$BIN"
-echo 'Native gameplay, physics, and whip tests: PASS'
+${CC:-cc} -std=c99 -Wall -Wextra -Werror -Isgdk/src \
+    tests/test_room_manager.c sgdk/src/room_manager.c -o "$BIN"
+"$BIN"
+echo 'Native gameplay, physics, whip, and room manager tests: PASS'
