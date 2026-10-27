@@ -20,7 +20,7 @@
 #define FLAME_TILE_INDEX (TARGET_TILE_INDEX + 4)
 #define CROUCH_TILE_INDEX (FLAME_TILE_INDEX + (VK_FLAME_FRAMES + VK_SPARK_FRAMES) * VK_FLAME_TILES_PER_FRAME)
 /* Torch background once its flame is out (room_view.c). The block from here
- * (flame, whip levels, enemies: 400..643) sits in the free VRAM between the scene
+ * (flame, whip levels, enemies: 400..691) sits in the free VRAM between the scene
  * tiles (user index up to 313) and the HUD tiles (900, hud.h). Tiles from 1536 on
  * hold the plane tables, so nothing may be loaded past the sprite tiles (1024..1382). */
 #define FLAME_A_CLEAR_TILE_INDEX 400
@@ -32,6 +32,9 @@
 /* Hall enemy layers: VK_ENEMY_TILE_COUNT tiles after the whip levels; pattern N uses
  * tile ENEMY_TILE_INDEX + (N - VK_ENEMY_FIRST_PATTERN). */
 #define ENEMY_TILE_INDEX (WHIP_LEVEL_TILE_INDEX + WHIP_LEVEL_TILE_COUNT)
+/* Type 4 layers (room 4): their pattern numbers overlap types A and B, so they have
+ * their own block; pattern ENEMY_PATTERN_TYPE4 | N uses ENEMY4_TILE_INDEX + (N - 0x48). */
+#define ENEMY4_TILE_INDEX (ENEMY_TILE_INDEX + VK_ENEMY_TILE_COUNT)
 #define ENEMY_SPRITE_BASE 9           /* hardware sprites 9.. (0..8 are Simon, whip, target) */
 
 /* Hall enemies (enemies.c). Energy and invulnerability live here across rooms. */

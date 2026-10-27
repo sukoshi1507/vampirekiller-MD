@@ -63,6 +63,24 @@ static const EnemyU8 kPatterns[2][2][4] = {
       { 0x58, 0x5C, 0x68, 0x6C } }  /* type B, pose B */
 };
 
+/* Type 4 : Y SAT par pas de 2 images depuis le spawn (77 pas, identique dans les deux
+ * sens et a chaque tir, 8 episodes mesures en salle 4). Le pas 18 manque a la mesure
+ * (clignotement du multiplexage) : 178, interpole. */
+#define ENEMY_TYPE4_Y_STEPS 77
+static const EnemyU8 kType4Y[ENEMY_TYPE4_Y_STEPS] = {
+    170, 171, 172, 174, 175, 175, 176, 177, 178, 178, 179, 179, 179, 179, 179, 179,
+    179, 179, 178, 178, 177, 177, 176, 175, 174, 173, 172, 171, 170, 168, 167, 166,
+    164, 163, 162, 162, 161, 160, 160, 159, 159, 159, 158, 158, 158, 158, 159, 159,
+    159, 160, 161, 161, 162, 163, 164, 165, 166, 168, 169, 170, 172, 173, 174, 175,
+    175, 176, 177, 177, 178, 178, 178, 178, 178, 178, 178, 178, 178
+};
+/* Type 4 : battement d'ailes, 4 poses de 16 images (premiere couche ; la seconde est N+4).
+ * Vers la gauche 48, 50, 48, 58 ; vers la droite 60, 68, 60, 70 (mesure). */
+static const EnemyU8 kType4Patterns[2][4] = {
+    { 0x48, 0x50, 0x48, 0x58 },
+    { 0x60, 0x68, 0x60, 0x70 }
+};
+
 /* Pose B : a partir de l'age 15, par blocs de 8 images (observe). */
 static EnemyU8 poseOf(EnemyU16 age)
 {
@@ -230,11 +248,13 @@ static void advance(Enemy *e)
     }
     e->age++;
     if (e->type == ENEMY_TYPE_4) {
-        /* 1,5 px par image : pas alternant de 2 et 1 px (observe 152 images pour 228 px). */
-        e->sub ^= 1;
-        e->x += (EnemyS16)(e->dx * (e->sub ? 2 : 1));
-        if (e->dx < 0 && e->x <= ENEMY_EXIT_X_LEFT_T4) e->exiting = 1;
-        if (e->dx > 0 && e->x >= ENEMY_EXIT_X_RIGHT_T4) e->exiting = 1;
+        /* La SAT suit l'objet une image sur deux : 3 px en X et une marche de la
+         * courbe Y a chaque age pair (mesure image par image, scratchpad/type4/gfx). */
+        if ((e->age & 1) == 0) e->x += (EnemyS16)(3 * e->dx);
+        e->y = kType4Y[(e->age / 2) < ENEMY_TYPE4_Y_STEPS ? e->age / 2 : ENEMY_TYPE4_Y_STEPS - 1];
+        /* Derniere position tenue deux images : X 01 (gauche, ages 152-153), E6 (droite, 146-147). */
+        if ((e->age & 1) && e->dx < 0 && e->x <= ENEMY_EXIT_X_LEFT_T4) e->exiting = 1;
+        if ((e->age & 1) && e->dx > 0 && e->x >= ENEMY_EXIT_X_RIGHT_T4) e->exiting = 1;
         return;
     }
     /* Type 1 : pas de base de 2 px toutes les 2 images, a partir de l'age 3, et 1 px
@@ -308,7 +328,8 @@ int Enemies_frame(EnemyState *s, EnemySpawnTimer *t, const EnemyRoomVars *v, int
     if (v->map) {
         for (i = 0; i < ENEMY_MAX; i++) {
             Enemy *e = &s->enemy[i];
-            if (e->active && !e->exiting) fall(e, v->map, v->stage);
+            /* Le type 4 vole : sa hauteur suit kType4Y, sans chute. */
+            if (e->active && !e->exiting && e->type != ENEMY_TYPE_4) fall(e, v->map, v->stage);
         }
     }
 
@@ -362,14 +383,15 @@ int Enemies_sprites(const EnemyState *s, EnemyU8 index, EnemySprite out[ENEMY_SP
     if (!e->active) return 0;
 
     if (e->type == ENEMY_TYPE_4) {
-        /* Une cellule 16x16, deux couches (N et N+4), sans pose. Droite 48/4C, gauche 60/64. */
-        const EnemyU8 pattern = (e->dx < 0) ? 0x48 : 0x60;
+        /* Une cellule 16x16, deux couches (N et N+4), 4 poses de 16 images. Les motifs
+         * portent ENEMY_PATTERN_TYPE4 : leurs numeros recouvrent ceux des types A et B. */
+        const EnemyU8 pattern = kType4Patterns[e->dx < 0 ? 0 : 1][(e->age / 16) & 3];
         out[0].y = e->y;
         out[0].x = e->x;
-        out[0].pattern = pattern;
+        out[0].pattern = (EnemyU8)(ENEMY_PATTERN_TYPE4 | pattern);
         out[1].y = e->y;
         out[1].x = e->x;
-        out[1].pattern = (EnemyU8)(pattern + 4);
+        out[1].pattern = (EnemyU8)(ENEMY_PATTERN_TYPE4 | (pattern + 4));
         return ENEMY_TYPE4_SPRITES;
     }
 

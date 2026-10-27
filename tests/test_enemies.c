@@ -326,38 +326,53 @@ static void test_spawn_limits(void)
     CHECK(!Enemies_isVisible(&s.enemy[0]), "x=-1 ne doit pas etre visible");
 }
 
-/* 5. Type 4 : 1,5 px par image, motifs 48/4C (droite) et 60/64 (gauche), sortie a X 01 et E6. */
+/* 5. Type 4 : 3 px toutes les 2 images, courbe Y, 4 poses de 16 images (mesure image par
+ * image en salle 4, scratchpad/type4/gfx) ; sortie apres X 01 (gauche) et E6 (droite). */
 static void test_type4_motion(void)
 {
     EnemyState s;
     EnemySprite sp[ENEMY_SPRITES];
     int i;
+    const EnemyU8 T4 = ENEMY_PATTERN_TYPE4;
 
     Enemies_setRoom(&s);
     (void)Enemies_spawn(&s, ENEMY_SIDE_RIGHT, ENEMY_TYPE_4, ENEMY_TYPE4_Y, 0);
     CHECK(s.enemy[0].x == 0xE5 && s.enemy[0].dx == -1, "type 4 droite : x=E5, dx=-1");
     CHECK(Enemies_sprites(&s, 0, sp) == ENEMY_TYPE4_SPRITES, "type 4 : deux entrees SAT");
-    CHECK(sp[0].pattern == 0x48 && sp[1].pattern == 0x4C && sp[0].y == 0xAA,
-          "type 4 droite : 48/4C a Y=AA");
-    for (i = 0; i < 151; i++) Enemies_update(&s);
-    CHECK(s.enemy[0].active && !s.enemy[0].exiting && s.enemy[0].x == 2,
-          "type 4 droite : X=2 apres 151 images (attendu 2)");
+    CHECK(sp[0].pattern == (T4 | 0x48) && sp[1].pattern == (T4 | 0x4C) && sp[0].y == 0xAA,
+          "type 4 vers la gauche : 48/4C a Y=AA");
     Enemies_update(&s);
-    CHECK(s.enemy[0].active && s.enemy[0].exiting && s.enemy[0].x == 1,
-          "type 4 droite : sortie a X 01 a 152 images");
+    CHECK(s.enemy[0].x == 229 && s.enemy[0].y == 170, "type 4 : age 1, pas encore de pas");
     Enemies_update(&s);
-    CHECK(!s.enemy[0].active, "type 4 droite : inactif a l'image 153");
+    CHECK(s.enemy[0].x == 226 && s.enemy[0].y == 171, "type 4 : age 2, X-3, Y 171");
+    for (i = 2; i < 16; i++) Enemies_update(&s);
+    (void)Enemies_sprites(&s, 0, sp);
+    CHECK(sp[0].pattern == (T4 | 0x50) && s.enemy[0].x == 205 && s.enemy[0].y == 178,
+          "type 4 : age 16, pose 50, X 205, Y 178 (image 2713)");
+    for (i = 16; i < 48; i++) Enemies_update(&s);
+    (void)Enemies_sprites(&s, 0, sp);
+    CHECK(sp[0].pattern == (T4 | 0x58) && s.enemy[0].x == 157 && s.enemy[0].y == 174,
+          "type 4 : age 48, pose 58, X 157, Y 174 (image 2745)");
+    for (i = 48; i < 84; i++) Enemies_update(&s);
+    CHECK(s.enemy[0].y == 158, "type 4 : haut de la courbe, Y 158 (age 84)");
+    for (i = 84; i < 153; i++) Enemies_update(&s);
+    CHECK(s.enemy[0].active && s.enemy[0].exiting && s.enemy[0].x == 1 && s.enemy[0].y == 178,
+          "type 4 droite : X 01 tenu jusqu'a l'age 153");
+    Enemies_update(&s);
+    CHECK(!s.enemy[0].active, "type 4 droite : inactif a l'age 154 (image 2851)");
 
     Enemies_setRoom(&s);
     (void)Enemies_spawn(&s, ENEMY_SIDE_LEFT, ENEMY_TYPE_4, ENEMY_TYPE4_Y, 0);
     CHECK(s.enemy[0].x == 0x0B && s.enemy[0].dx == 1, "type 4 gauche : x=0B, dx=+1");
-    CHECK(Enemies_sprites(&s, 0, sp) == ENEMY_TYPE4_SPRITES && sp[0].pattern == 0x60 && sp[1].pattern == 0x64,
-          "type 4 gauche : 60/64");
-    for (i = 0; i < 145; i++) Enemies_update(&s);
-    CHECK(s.enemy[0].active && !s.enemy[0].exiting && s.enemy[0].x == 229,
-          "type 4 gauche : X=229 apres 145 images");
+    CHECK(Enemies_sprites(&s, 0, sp) == ENEMY_TYPE4_SPRITES && sp[0].pattern == (T4 | 0x60) &&
+          sp[1].pattern == (T4 | 0x64), "type 4 vers la droite : 60/64");
+    for (i = 0; i < 16; i++) Enemies_update(&s);
+    (void)Enemies_sprites(&s, 0, sp);
+    CHECK(sp[0].pattern == (T4 | 0x68) && s.enemy[0].x == 35, "type 4 vers la droite : age 16, 68, X 35");
+    for (i = 16; i < 147; i++) Enemies_update(&s);
+    CHECK(s.enemy[0].exiting && s.enemy[0].x == 0xE6, "type 4 gauche : X E6 a l'age 147");
     Enemies_update(&s);
-    CHECK(s.enemy[0].exiting && s.enemy[0].x == 0xE6, "type 4 gauche : sortie a X E6 a 146 images");
+    CHECK(!s.enemy[0].active, "type 4 gauche : inactif a l'age 148 (image 3013)");
 }
 
 /* 6. Type 4 par Enemies_frame : un tir tous les 168 images, cote droit puis gauche. */

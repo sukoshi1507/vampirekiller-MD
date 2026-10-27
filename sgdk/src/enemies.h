@@ -33,7 +33,8 @@ typedef short EnemyS16;
 #define ENEMY_RECOIL_FRAMES 22      /* C427 : 2 px par image, de 136 a 92 (44 px) */
 #define ENEMY_RECOIL_STEP 2
 #define ENEMY_TYPE4_PERIOD 168      /* 8 x 21 images entre deux tirs (mesure, 4 cas) */
-#define ENEMY_TYPE4_Y 0xAA          /* Y SAT du type 4 (observe) */
+#define ENEMY_TYPE4_Y 0xAA          /* Y SAT du type 4 au spawn (observe), puis courbe kType4Y */
+#define ENEMY_PATTERN_TYPE4 0x80    /* bit des motifs du type 4 (tuiles vk_enemy4_tiles) */
 #define ENEMY_FALL_SPEED 2          /* px par image quand le sol manque (PROVISOIRE, vitesse non mesuree) */
 
 /* Cote d'apparition, en repere d'ecran (observe). */
@@ -46,7 +47,7 @@ typedef enum {
 typedef enum {
     ENEMY_TYPE_A = 0,        /* type 1, sens droite : motifs 40/44 (haut), 48/4C <-> 50/54 (bas) */
     ENEMY_TYPE_B = 1,        /* type 1, sens gauche : motifs 58/5C (haut), 60/64 <-> 68/6C (bas) */
-    ENEMY_TYPE_4 = 2         /* type 4 (salle 4) : une cellule 48/4C (droite) ou 60/64 (gauche), sans pose */
+    ENEMY_TYPE_4 = 2         /* type 4 (salle 4, volant) : une cellule 16x16, 4 poses */
 } EnemyType;
 
 /* Un ennemi actif. x est la coordonnee SAT (pixels, signee pour le hors-ecran). */
@@ -58,7 +59,7 @@ typedef struct {
     EnemyS16 x;
     EnemyU8 y;
     EnemyS8 dx;               /* -1 ou +1 */
-    EnemyU8 sub;             /* type 4 : demi-pas du 1,5 px par image */
+    EnemyU8 sub;             /* inutilise (ancien demi-pas du type 4), garde pour la taille */
     EnemyU16 age;            /* images depuis le spawn ; 0 = image de spawn */
 } Enemy;
 

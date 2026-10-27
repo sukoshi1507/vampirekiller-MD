@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate SGDK 4bpp tiles for the stage 1 hall enemies (types A and B).
+"""Generate SGDK 4bpp tiles for the stage 1 hall enemies (types A and B, and type 4).
 
 Usage: VK_ROM_PATH=ROM.rom python3 -I tools/build_enemy_sprites_md.py
 Writes sgdk/src/generated/enemy_sprites_md.c and .h (never hand edit).
@@ -8,6 +8,12 @@ Source: the twelve 16x16 layers of types A and B, decoded from the reference ROM
 by tools/extract_enemy_sprites.py (research/enemy-assets.md). Pattern N (0x40..0x6C)
 is stored at tile slot (N - 0x40) / 4 in the table, four 8x8 tiles per layer in
 UL, LL, UR, LR order: the column-major order of an SGDK SPRITE_SIZE(2, 2).
+
+Type 4 (hall room 4, a bat): six layer pairs 48/4C, 50/54, 58/5C (flying left) and
+their mirrors 60/64, 68/6C, 70/74 (flying right), decoded from the RLE stream at
+0x154DE (bytes 271..462), checked against the room 4 VRAM (scratchpad/type4/gfx,
+research/enemy-behavior.md). They go in a second table, vk_enemy4_tiles, slot
+(N - 0x48) / 4, because their pattern numbers overlap types A and B.
 
 Pixels carry palette indices: the MSX2 colour of each layer (LAYER_COLOUR), read
 in the sprite colour table (research/enemy-assets.md section 5). The second layer
@@ -37,7 +43,13 @@ LONGS_PER_TILE = 8
 # layer N+4 colour 44 (colour 4, CC). All 16 lines carry the same byte. 48/4C were not
 # on screen in those dumps and follow the same pairs. The colour index is the MSX palette
 # index, which is the index of PAL2 (the room palette) in the game.
-LAYER_COLOUR = {pattern: (4 if pattern & 4 else 2) for pattern in range(0x40, 0x70, 4)}
+LAYER_COLOUR = {pattern: (4 if pattern & 4 else 2) for pattern in range(0x40, 0x78, 4)}
+# Type 4: same colour bytes 02 / 44 in the room 4 captures (scratchpad/type4/gfx).
+TYPE4_STREAM = 0x154DE
+TYPE4_OFFSET = 271
+TYPE4_SHA256 = '2ede5a121ee46caab886b2e92d01b8726689445ee9c79efd53efa149faecfecc'
+TYPE4_FIRST_PATTERN = 0x48
+TYPE4_PATTERN_COUNT = 12
 
 
 def layers_of_types_a_and_b(rom):
@@ -57,6 +69,50 @@ def layers_of_types_a_and_b(rom):
     expected = [FIRST_PATTERN + 4 * k for k in range(PATTERN_COUNT)]
     assert sorted(layers) == expected, sorted(layers)
     return layers
+
+
+def layers_of_type4(rom):
+    """Return {pattern: 32-byte layer} for patterns 0x48..0x74 (type 4)."""
+    stream = rle_decode(rom, TYPE4_STREAM)
+    data = stream[TYPE4_OFFSET:TYPE4_OFFSET + 192]
+    digest = hashlib.sha256(data).hexdigest()
+    if digest != TYPE4_SHA256:
+        raise ValueError(f'type 4 layers: unexpected bytes {digest}')
+    layers = {}
+    for index in range(6):
+        layer = data[index * 32:index * 32 + 32]
+        pattern = TYPE4_FIRST_PATTERN + 4 * index
+        layers[pattern] = layer
+        # Flying right: the left pair mirrored, 0x18 pattern numbers further (60/64, 68/6C, 70/74).
+        layers[pattern + 0x18] = mirror_layer(layer)
+    expected = [TYPE4_FIRST_PATTERN + 4 * k for k in range(TYPE4_PATTERN_COUNT)]
+    assert sorted(layers) == expected, sorted(layers)
+    return layers
+
+
+def pair_longs(layers):
+    """Tiles of every layer, the CC OR of each pair baked into its first layer."""
+    longs = []
+    for pattern in sorted(layers):
+        # Pattern N is the first layer of a pair (N, N+4 with N & 4 == 0), N+4 the second (CC).
+        if pattern & 4:
+            words = tile_longs(layers[pattern], LAYER_COLOUR[pattern])
+        else:
+            words = tile_longs(layers[pattern], LAYER_COLOUR[pattern],
+                               layers[pattern + 4], LAYER_COLOUR[pattern + 4])
+        longs.append((pattern, words))
+    return longs
+
+
+def c_table(name, longs):
+    lines = [f'const unsigned long {name}[{len(longs) * TILES_PER_LAYER * LONGS_PER_TILE}] = {{']
+    for pattern, words in longs:
+        lines.append(f'    /* pattern {pattern:02X} */')
+        for i in range(0, len(words), LONGS_PER_TILE):
+            chunk = ', '.join(f'0x{w:08X}UL' for w in words[i:i + LONGS_PER_TILE])
+            lines.append(f'    {chunk},')
+    lines.append('};')
+    return lines
 
 
 def tile_longs(layer, index_value, cc_layer=None, cc_value=0):
@@ -86,35 +142,21 @@ def generate(rom_path=None):
     digest = hashlib.sha256(data).hexdigest()
     if digest != ROM_SHA256:
         raise ValueError(f'ROM inattendue: {digest}')
-    layers = layers_of_types_a_and_b(data)
-
-    longs = []
-    for pattern in sorted(layers):
-        # Pattern N is the first layer of a pair (N, N+4 with N & 4 == 0), N+4 the second (CC).
-        if pattern & 4:
-            words = tile_longs(layers[pattern], LAYER_COLOUR[pattern])
-        else:
-            words = tile_longs(layers[pattern], LAYER_COLOUR[pattern],
-                               layers[pattern + 4], LAYER_COLOUR[pattern + 4])
-        longs.append((pattern, words))
+    longs = pair_longs(layers_of_types_a_and_b(data))
+    longs4 = pair_longs(layers_of_type4(data))
 
     OUT.mkdir(parents=True, exist_ok=True)
     tile_count = PATTERN_COUNT * TILES_PER_LAYER
+    tile_count4 = TYPE4_PATTERN_COUNT * TILES_PER_LAYER
     lines = [
         '/* Generated from the Vampire Killer MSX2 ROM by tools/build_enemy_sprites_md.py.',
-        ' * Types A and B of the stage 1 hall (patterns 0x40..0x6C). Colour index = MSX2 colour',
-        ' * of each layer (LAYER_COLOUR): see research/enemy-assets.md. Never hand edit. */',
+        ' * Types A and B of the stage 1 hall (patterns 0x40..0x6C) and type 4 (room 4, 0x48..0x74).',
+        ' * Colour index = MSX2 colour of each layer (LAYER_COLOUR): see research/enemy-assets.md.',
+        ' * Never hand edit. */',
         '#include "enemy_sprites_md.h"',
-        f'const unsigned long vk_enemy_tiles[{tile_count * LONGS_PER_TILE}] = {{',
     ]
-    flat = []
-    for pattern, words in longs:
-        flat.append(f'    /* pattern {pattern:02X} */')
-        for i in range(0, len(words), LONGS_PER_TILE):
-            chunk = ', '.join(f'0x{w:08X}UL' for w in words[i:i + LONGS_PER_TILE])
-            flat.append(f'    {chunk},')
-    lines.extend(flat)
-    lines.append('};')
+    lines += c_table('vk_enemy_tiles', longs)
+    lines += c_table('vk_enemy4_tiles', longs4)
     (OUT / 'enemy_sprites_md.c').write_text('\n'.join(lines) + '\n')
 
     header = [
@@ -126,10 +168,13 @@ def generate(rom_path=None):
         f'#define VK_ENEMY_TILES_PER_LAYER {TILES_PER_LAYER}',
         f'#define VK_ENEMY_TILE_COUNT {tile_count}',
         f'extern const unsigned long vk_enemy_tiles[{tile_count * LONGS_PER_TILE}];',
+        f'#define VK_ENEMY4_FIRST_PATTERN 0x{TYPE4_FIRST_PATTERN:02X}',
+        f'#define VK_ENEMY4_TILE_COUNT {tile_count4}',
+        f'extern const unsigned long vk_enemy4_tiles[{tile_count4 * LONGS_PER_TILE}];',
         '#endif',
     ]
     (OUT / 'enemy_sprites_md.h').write_text('\n'.join(header) + '\n')
-    print(f'{PATTERN_COUNT} layers, {tile_count} tiles -> {OUT}')
+    print(f'{PATTERN_COUNT} + {TYPE4_PATTERN_COUNT} layers, {tile_count} + {tile_count4} tiles -> {OUT}')
 
 
 if __name__ == '__main__':

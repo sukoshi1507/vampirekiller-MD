@@ -28,8 +28,9 @@ Ce qui fonctionne dans la ROM Mega Drive :
 
 Ce qui n'est pas porté ou reste provisoire :
 
-- **Type 4** : tué par le fouet, d'après la table des objets (boîte provisoire,
-  direction du fouet non vérifiée, `research/enemy-behavior.md`).
+- **Type 4** (salle 4, volant) : dessin, battement d'ailes et vol en vague d'après le
+  MSX2 ; tué par le fouet d'après la table des objets (boîte provisoire, direction
+  du fouet non vérifiée, `research/enemy-behavior.md`).
 - **Type 5** (salles 2, 3, 7) : non porté (apparition, mouvement, graphisme inconnus).
 - **Porte de la salle 7** : la zone de sortie est identifiée, mais son accès naturel
   depuis la salle ne l'est pas (`research/door-room7.md`).

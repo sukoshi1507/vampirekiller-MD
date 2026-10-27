@@ -1,0 +1,32 @@
+# (e) Salle 4 du hall : le type 4 (volant) apparait, ondule en Y et avance de 3 px
+# toutes les 2 images (research/enemy-behavior.md, trajectoire du type 4).
+include boot_to_courtyard.inc
+until game.area == 1 max 3000 RIGHT
+# Changement de salle debug du hall : A tenu, puis A+DROITE (le premier front est perdu).
+hold A 3
+hold A+RIGHT 3
+wait 10
+hold A 3
+hold A+RIGHT 3
+wait 10
+hold A 3
+hold A+RIGHT 3
+wait 10
+hold A 3
+hold A+RIGHT 3
+wait 10
+hold A 3
+hold A+RIGHT 3
+wait 10
+expect game.room == 4 # salle 4 du hall
+until enemies.alive > 0 max 600
+set slot [i for i, e in enumerate(enemies.enemy) if e.active][0]
+expect enemies.enemy[slot].type == 2 # ENEMY_TYPE_4
+set x0 enemies.enemy[slot].x
+set age0 enemies.enemy[slot].age
+until enemies.enemy[slot].age == 20 max 40
+shot e-bat
+expect enemies.enemy[slot].y == 179 # courbe kType4Y, pas 10
+expect abs(enemies.enemy[slot].x - x0) == 30 # 3 px toutes les 2 images
+until enemies.enemy[slot].age == 84 max 80
+expect enemies.enemy[slot].y == 158 # haut de la courbe

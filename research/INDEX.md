@@ -8,7 +8,7 @@ et les limites. « Prouvé » = mesuré en trace openMSX ou lu dans la ROM ;
 
 | Note | Sujet | Statut |
 | --- | --- | --- |
-| `enemy-behavior.md` | Spawn, mouvement, contact et mort des ennemis du hall (salles 0 à 7) | Prouvé pour les types 1 et 4 (spawn, trajectoire, contact, destruction au fouet via la table C800). Type 5 : ouvert. |
+| `enemy-behavior.md` | Spawn, mouvement, contact et mort des ennemis du hall (salles 0 à 7) | Prouvé pour les types 1 et 4 (spawn, trajectoire, contact, destruction au fouet via la table C800 ; type 4 : dessin, 4 poses et courbe Y mesurés image par image). Type 5 : ouvert. |
 | `enemy-spawn.md` | Table et routine de spawn de la salle 1 | Prouvé. À corriger : Y=40 et le type 1 ne sont pas liés au bloc décrit. |
 | `enemy-assets.md` | Motifs des ennemis, palette et couleurs (table F400) | Motifs prouvés (ROM et VRAM). Couleurs prouvées pour les types A et B (couche 1 : couleur 2, couche 2 : couleur 4 avec CC, recouvrement 6) ; 48/4C non observés à l'écran. |
 | `enemies-platforms.md` | Premier ennemi observé, cadence, absence de plateforme mobile | Historique. Section 5 (plan d'implémentation) réalisée depuis dans `enemies.c`. |

@@ -6,7 +6,7 @@
 #include "generated/stage1_collision.h"
 #include "hud.h"
 
-_Static_assert(ENEMY_TILE_INDEX + VK_ENEMY_TILE_COUNT <= HUD_TILE_INDEX,
+_Static_assert(ENEMY4_TILE_INDEX + VK_ENEMY4_TILE_COUNT <= HUD_TILE_INDEX,
                "sprite tiles 400.. must end before the HUD tiles");
 
 /* Simon, whip and hall enemies on screen. Their gameplay lives in player.c,
@@ -63,7 +63,11 @@ void vk_step_enemies(void)
         enemy_room_key = key;
         Enemies_setRoom(&vk_enemies);
         Enemies_spawnTimerInit(&enemy_timer);
-        if (key) VDP_loadTileData((const u32 *)vk_enemy_tiles, ENEMY_TILE_INDEX, VK_ENEMY_TILE_COUNT, CPU);
+        if (key)
+        {
+            VDP_loadTileData((const u32 *)vk_enemy_tiles, ENEMY_TILE_INDEX, VK_ENEMY_TILE_COUNT, CPU);
+            VDP_loadTileData((const u32 *)vk_enemy4_tiles, ENEMY4_TILE_INDEX, VK_ENEMY4_TILE_COUNT, CPU);
+        }
     }
     if (!key) return;
     vars.stage = 1;
@@ -109,10 +113,15 @@ static u16 show_enemy_sprites(void)
         for (k = 0; k < n; k++) list[count++] = sprites[k];
     }
     for (i = 0; i < count; i++)
+    {
+        const u8 pattern = list[i].pattern;
+        const u16 tile = (pattern & ENEMY_PATTERN_TYPE4)
+            ? (u16)(ENEMY4_TILE_INDEX + (pattern & ~ENEMY_PATTERN_TYPE4) - VK_ENEMY4_FIRST_PATTERN)
+            : (u16)(ENEMY_TILE_INDEX + pattern - VK_ENEMY_FIRST_PATTERN);
         VDP_setSpriteFull((u16)(ENEMY_SPRITE_BASE + i), list[i].x, list[i].y, SPRITE_SIZE(2, 2),
-            TILE_ATTR_FULL(PAL2, TRUE, FALSE, FALSE,
-                (u16)(ENEMY_TILE_INDEX + list[i].pattern - VK_ENEMY_FIRST_PATTERN)),
+            TILE_ATTR_FULL(PAL2, TRUE, FALSE, FALSE, tile),
             (u16)(i + 1 < count ? ENEMY_SPRITE_BASE + i + 1 : 0));
+    }
     return count;
 }
 

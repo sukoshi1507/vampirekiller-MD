@@ -92,8 +92,8 @@ Les deux sprites ne sont pas deux types : ce sont deux sens (droite et gauche) d
 | Y de sprite | `AA` observé pour Simon à `C425 = C0` (donc `E = B8` d'après le code) ; le décalage E vers sprite n'est pas vérifié pour ce type | prouvé (trace) pour `AA` ; déduit pour le décalage |
 | Cadence | 168 images entre les 4 créations (2726, 2894, 3062, 3230) = 8 × 21 | prouvé (trace) ; rechargement 21 déduit (période 20 de `9DBB`, plus 1, et 8 images par tick de `9CC3`) |
 | Côté | alterne droite / gauche à chaque création (bit 0 de `CF07`) | prouvé (4 cas) ; lien avec le bit 0 déduit du code |
-| Mouvement | 1,5 px par image (X E5 vers 01 en 152 images) | prouvé |
-| Animation | aucune pose changée sur 150 images (N fixe 48 ou 60) | prouvé (une piste par côté) |
+| Mouvement | la SAT suit l'objet une image sur deux : 3 px en X toutes les 2 images (X E5 vers 01 en 154 images) | prouvé (SAT image par image, 8 épisodes, `scratchpad/type4/gfx/out3/sat4.csv`) |
+| Animation | 4 poses de 16 images : vers la gauche 48, 50, 48, 58 ; vers la droite 60, 68, 60, 70 (seconde couche N+4). L'ancienne mesure « N fixe » échantillonnait mal | prouvé (même trace) |
 | Sortie | disparaît à X 01 ou E6 | prouvé |
 | Contact | -2 sur `C415` à 2797 et 3133, Simon en X 120 et Y 192, l'ennemi à X ≈ 122 | prouvé |
 
@@ -193,4 +193,6 @@ Les deux sprites ne sont pas deux types : ce sont deux sens (droite et gauche) d
 
 ## Trajectoire du type 4
 
-Un épisode mesuré (images 4617 à 4661) monte de Y AA à B0, puis redescend à AC, en se déplaçant de X E2 à A0. La SAT est partagée avec d'autres objets (motifs 50, 70 réutilisent les mêmes emplacements), donc une lecture de la SAT seule ne suffit pas.
+Mesurée image par image en salle 4 (2026-10-27, `scratchpad/type4/gfx/out3/sat4.csv`, 8 épisodes) : la courbe Y est identique à chaque tir et dans les deux sens. Par pas de 2 images depuis l'apparition, Y SAT = 170, 171, 172, 174, 175, 175, 176, 177, 178, 178, 179 (×8), 178, 178, 177, 177, 176 … jusqu'au haut 158 (pas 42 à 45), puis redescend à 178 (pas 68 à 76). Le pas 18 manque (clignotement du multiplexage), interpolé à 178. Table complète : `kType4Y` dans `sgdk/src/enemies.c`.
+
+Dessin : flux RLE de la ROM en `0x154DE`, octets 271 à 462 (paires 48/4C, 50/54, 58/5C) ; vers la droite, les mêmes paires en miroir (60/64, 68/6C, 70/74). Vérifié pixel par pixel contre la VRAM de la salle 4. Couleurs : 02 et 44 (CC), comme les types 1. Il ressemble à une chauve-souris (corps noir, contour cyan, face beige).
