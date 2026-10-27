@@ -111,3 +111,12 @@ Observations :
 - **Ce qui reste** : la routine `944F` (banque 2, tests C703 et D000) s'exécute deux fois en salle 7, mais la chaîne `944F` vers `94E8` vers `8D30` (A = 0x18) n'est pas exécutée. La condition qui déclenche le bit 0 reste ouverte.
 - **Traces** (hors dépôt) : `scratchpad/door7/c701/runs/n7` à `n10`, plans `n7.txt` et `n8.txt`.
 
+## 10. Chaîne jusqu'au setter (corrige la section 9)
+
+- `944F` ne mène pas au setter. Les deux passages observés en salle 7 viennent de `9221` et `91A2` (banque 2, pendant le fouet sur des objets).
+- **Chaîne complète** : `440E` (banque 0, appelle `9387`) → `9387` → `93FF` (lit le pointeur `944C`, écrit `C708` depuis la table de salle) → `94BA` (appelée depuis `43F2`, banque 0) → `8D30` (A = `C708`) → table → `8E60` (OR 1 dans `C701`).
+- Appelant secondaire de `8D30` : `8D29` (A = IX+4, depuis `8BFE`, non exécuté) et `9A9E`.
+- **Preuve d'absence** : points d'arrêt sur `440E`, `9387`, `93FF`, `9403`, `43F2`, `94BA`, `94C7`, `94FC`, `9A9E`, `8D2C`, `8D30`, `94E8` : aucun passage sur le chemin naturel testé (titre, cour, hall 1, 0, 3, 2, 7, fouet). `C708` et `C419` ne sont écrits qu'à l'initialisation.
+- **Conclusion** : sur le chemin testé, le bit 0 de `C701` n'est jamais mis à 1 ; la salle 7 reste bloquée à `C5AC` = 1.
+- **Ouvert** : l'état `C000` (ou le flag `C00B`) de la routine `43xx` qui appelle `440E`. Il faut relever la table d'états de `43xx` et tracer `C000` sur d'autres parties naturelles (retour aux salles 0 à 3 après une mort, ramassage de bougies).
+
