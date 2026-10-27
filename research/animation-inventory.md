@@ -39,12 +39,12 @@ Le code MD courant (`player.c` : `clock & 4` et `clock & 8`) n'est donc pas issu
 
 | Animation | Frames | Cadence | Source | Statut |
 |---|---|---|---|---|
-| Flamme gauche de la cour | 2 états (A, C) de 16 × 16, coordonnées VRAM x 64–78, y 144–159 | **2 états tenus 16 ticks chacun, période 32 ticks ≈ 0,53 s** ; transitions partielles d'une trame (écriture sur les lignes 144–148 puis 149–159) | VRAM openMSX (80 trames, 2300–2379, cour au repos) | **prouvé** (cadence) ; forme des états **déduite** de la VRAM, non comparée à une source ROM |
+| Flamme gauche de la cour | 2 états (A, B) de 16 × 16, coordonnées VRAM x 64–78, y 144–159 | **2 états tenus 16 ticks chacun, période 32 ticks ≈ 0,53 s** ; transitions partielles d'une trame (écriture sur les lignes 144–148 puis 149–159) | VRAM openMSX (80 trames, 2300–2379, cour au repos) ; blocs source en ROM (fichier 0xDF48 = état A, 0xDEC8 = état B) | **prouvé** (cadence) ; forme des états **extraite de la ROM** (`tools/build_flame_fx.py`) et contrôlée contre la VRAM du run harness et la VRAM openMSX ; palette **candidate** (non comparée à la VDP en direct). Voir `research/courtyard-flames.md` |
 | Flamme droite de la cour | idem, x 192–206 | même cadence, en phase avec la gauche | idem | **prouvé** (cadence) |
 | Coordonnées écran | Y VRAM − 32 = ordonnée du fond ? | — | `research/room-format.md` (fond à (0,32)) | **déduit**, à vérifier |
 | Carte de fond `D100–D3FF` | aucune modification en idle | — | RAM, 454 VBLANK | **prouvé** : pas d'animation par la carte en RAM |
 | Zone VRAM y 488–495 (page 1 présumée non affichée) | 16 états distincts, changement environ toutes les 2 trames | — | VRAM openMSX | **inconnu** (rôle non établi ; probablement tampon hors écran) |
-| Flammes du code MD actuel | 4 frames, `flame_fx_md.h` | — | généré depuis le prototype V15, **pas issu de la ROM** | **non authentique** (à remplacer) |
+| Flammes du code MD actuel | 4 frames de flamme + 3 frames de bouffée, `flame_fx_md.h` | — | générées par `tools/build_flame_fx.py` depuis les blocs ROM (commit `19819d0`, remplace le prototype V15). La bouffée réutilise les états ROM : aucune bouffée n'existe dans la ROM de la cour | **issu de la ROM** (provenance dans `sgdk/src/generated/flame_fx_manifest.json`) ; choix d'intégration pour la bouffée |
 | Nuage, 2 chauves-souris, Simon devant la grille (scène 63D3/4E93) | 14 sprites distincts | 320 ticks, une position par tick | `research/intro-format.md`; `sgdk/src/generated/intro_assets.h` (`vk_intro_frames[320][8]`) | **déduit** de la doc existante, **non remesuré** ici |
 
 ### 1.3 Compteurs RAM (cadence, sans rôle d'animation établi)
@@ -84,7 +84,7 @@ Le test `vk_attack_keys` de `sgdk/src/whip.c` doit être revu à partir de ces c
 ## 3. Ordre de priorité pour le portage
 
 1. **Fouet (12 ticks, 6/6/7/7/8×8)** : séquence déjà reproduite dans `whip.c` ; elle est prouvée. À garder ; vérifier la correspondance des touches.
-2. **Flammes de la cour (2 états, 16 ticks, deux emplacements)** : cadence prouvée, forme à extraire depuis la VRAM ou depuis la source de tuiles ROM, puis contrôle de palette. Remplace les flammes prototypes non authentiques.
+2. **Flammes de la cour (2 états, 16 ticks, deux emplacements)** : cadence prouvée, forme extraite de la ROM (fait, `19819d0`). Reste le contrôle de palette contre la VDP openMSX et la vérification de l'ordre de tuiles colonne par colonne sur émulateur MD.
 3. **Marche (poses 0..2 / 3..5, cadence)** : bloquant. Il faut une entrée de déplacement qui produise un mouvement, ou une routine de dispatch à tracer (routine d'écriture de x : `6BD0-6BD6` et alignement `6BFC-6C05`, identifiées statiquement).
 4. **Saut** : après la marche (cadence des images à mesurer ; trajectoire déjà connue).
 5. **Escalier** : séquence non identifiée.

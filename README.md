@@ -6,7 +6,9 @@ l'entree dans le hall du chateau.** Simon marche et saute avec les graphismes
 extraits de la ROM. L'explorateur de 152 fonds reste disponible.
 
 Les attaques, les ennemis, le son et les escaliers ne sont pas encore portes.
-Les flammes des nouveaux decors sont statiques et ne blessent pas Simon.
+Les flammes de la cour sont animees : deux etats extraits de la ROM, tenus 16 ticks chacun.
+La flamme A s'eteint des qu'un coup du fouet la touche (le fond cuit de la flamme est
+efface dans le meme cas). Les flammes ne blessent pas Simon.
 Le controleur et l'activation de la porte sont encore simplifies.
 
 Correction du demarrage : le cadre bleu du titre et le HUD de l'intro ont
@@ -112,6 +114,18 @@ ce dossier. Les ressources graphiques du programme proviennent du fichier fourni
 Les PNG et cartes dans `assets/rooms/` sont regenerables et exclus de Git.
 Les ressources C generees sont versionnees : compiler la ROM MD ne necessite
 pas le fichier MSX dans le checkout.
+
+## Tests Python
+
+Depuis la racine du depot, avec un interpreteur dans lequel `requirements.txt` est installe
+(par exemple un venv : `python3 -m venv .venv && .venv/bin/pip install -r requirements.txt`) :
+
+```sh
+python3 -m unittest discover -s tests -p 'test_*.py'
+```
+
+`tests/test_flame_fx.py` lance `tools/build_flame_fx.py`, qui depend du module `z80`
+et de la ROM de reference : il echoue avec un message explicite si `z80` manque.
 
 ## Compiler
 

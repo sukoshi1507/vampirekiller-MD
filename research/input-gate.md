@@ -65,9 +65,9 @@ Données : `gate/ram-walk.txt` (dump RAM `C000-C5FF` à chaque VBLANK, 120 image
 
 ## Déduit (non mesuré côté MD)
 
-- Port MD (`sgdk/src/player.c`, fonction de déplacement) : boucle `n < 2`, un pas de 1 px par boucle, soit **2 px par appel**. Si l'appel se fait à chaque VBLANK, le port va à 120 px/s, soit **le double** du MSX (60 px/s).
-- Animation MD : `frame = (clock & 4) ? 1 : ((clock & 8) ? 0 : 2)`, `clock` incrémenté à chaque appel. Cycle 2, 1, 0, 1 avec 4 appels par pose, soit 16 images. Le MSX a 32 images. Si l'appel est à 60 Hz, l'animation MD est **deux fois plus rapide**.
-- Donc la comparaison de `research/input-mapping-openmsx.md` (« 2 px/tick MSX et 2 px/frame MD coïncident à 60 Hz ») est **fausse** : le MSX fait 2 px par tick de 30 Hz, soit 1 px par image. Le port MD, s'il est à 2 px par image, va deux fois plus vite. À corriger dans le port.
+- Port MD (`sgdk/src/player.c`, `vk_player_tick_controls`) : boucle `n < 1`, **1 px par appel**. Un appel par image (`vk_player_tick` dans la boucle de `sgdk/src/main.c`, suivi de `SYS_doVBlankProcess`), donc 60 px/s, identique au MSX. Historique : le port était à `n < 2` (2 px par appel, 120 px/s) ; corrigé par le commit `726922d` (« Match Simon walk speed and cycle to the MSX2 trace »).
+- Animation MD (même commit) : `walk_frames = {0, 1, 2, 1}` indexé par `(clock >> 3) & 3`, soit 8 images par pose et cycle de 32 images, comme le MSX (`C42E`, 0, 1, 2, 1 avec 8 images par pose). Cette correspondance est **déduite du code**, pas mesurée sur le port.
+- L'ancienne comparaison de `research/input-mapping-openmsx.md` (« 2 px/tick MSX et 2 px/frame MD coïncident à 60 Hz ») reposait sur une erreur : le MSX fait 2 px par tick de 30 Hz, soit 1 px par image. Le port MD fait lui aussi 1 px par image depuis `726922d`.
 
 ## Inconnu
 
