@@ -526,10 +526,10 @@ int main(bool hardReset)
                     SYS_doVBlankProcess();
                     continue;
                 }
-                /* Demo-only stair placement. A+UP on stage-1 room-1 puts Simon
-                 * inside the authored stair test area; normal collision tiles
+                /* Debug stair placement. A+UP in any interior room puts Simon
+                 * inside the sandbox stair volume; normal collision tiles
                  * otherwise prevent reaching the strip reliably. */
-                if (front_mode == FRONT_INTERIOR && game.room == 1 &&
+                if (front_mode == FRONT_INTERIOR &&
                     (input.keys & BUTTON_A) && (pressed & BUTTON_UP))
                 {
                     game.player.x = 128;
