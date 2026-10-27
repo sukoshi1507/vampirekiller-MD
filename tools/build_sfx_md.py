@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Generate the whip sound effect as a per-frame PSG stream for sgdk/src/psg_player.c.
 
-Source: castlevania-md (Mega Drive port of Castlevania NES, copyleft), SFX_0A, the NES
+Source: castlevania-md (Mega Drive port of Castlevania NES, no licence published), SFX_0A, the NES
 sound $0A that src/main.c plays on the whip's 11th frame (whip_tick). Its data is the
 NES APU register script `sfx_0a` in src/music.c: pairs (register, value), 0xFE n = wait
 n-1 frames, 0xFF = end of the frame's writes, no loop.
@@ -223,7 +223,7 @@ def generate(source_dir, output):
     output.mkdir(parents=True, exist_ok=True)
     lines = ['/* Generated from castlevania-md SFX_0A (NES sound $0A, the whip). Never hand edit.',
              ' * Source: castlevania-md src/music.c, sfx_0a; replayed as src/sound.c does.',
-             ' * Generator: tools/build_sfx_md.py. Copyleft: see research/audio/whip-sfx-castlevania.md. */',
+             ' * Generator: tools/build_sfx_md.py. Licence: see research/licensing.md. */',
              '#include "sfx_md.h"',
              f'const u8 vk_sfx_whip[{len(stream)}] = {{']
     for i in range(0, len(stream), 16):

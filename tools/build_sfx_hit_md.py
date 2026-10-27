@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Generate the enemy/candle hit sound effect as a per-frame PSG stream for sgdk/src/psg_player.c.
 
-Source: castlevania-md (Mega Drive port of Castlevania NES, copyleft), SFX_14, the NES sound $14
+Source: castlevania-md (Mega Drive port of Castlevania NES, no licence published), SFX_14, the NES sound $14
 that src/main.c plays on a hit ("a hit", whip_strikes and the enemy hit paths). It is the
 fallback chosen for MSX effect 0C (candle/torch hit, research/hit-sound.md): the MSX effect
 table could not be decoded (its driver format is unidentified), so the NES sound is used.

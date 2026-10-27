@@ -207,3 +207,13 @@ Les fichiers de demarrage SGDK conservent leur licence MIT dans
 `third_party/SGDK-LICENSE.txt`. Les emulateurs et la chaine de compilation ne sont
 pas inclus. Prochain jalon : fouet, ennemis et son, puis extension des interactions du hall.
 Depot : https://github.com/spamkenny02/vampirekiller.
+
+## Licence
+
+Le code écrit pour ce portage est sous GPL-3.0-only (fichier `LICENSE`).
+Les données extraites de la ROM (graphismes, cartes, sprites, enregistrements audio
+dans `assets/`, `sgdk/src/generated/`, `research/`, `validation/`) restent sous le
+copyright de Konami et ne sont pas couvertes par cette licence. La ROM elle-même
+n'est pas incluse. Les fichiers SGDK conservent leur licence MIT (`third_party/SGDK-LICENSE.txt`).
+Le son du fouet et le son de coup sont dérivés de castlevania-md, qui ne publie pas de licence ;
+voir `research/licensing.md`.

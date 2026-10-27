@@ -1,6 +1,6 @@
 /* Generated from castlevania-md SFX_0A (NES sound $0A, the whip). Never hand edit.
  * Source: castlevania-md src/music.c, sfx_0a; replayed as src/sound.c does.
- * Generator: tools/build_sfx_md.py. Copyleft: see research/audio/whip-sfx-castlevania.md. */
+ * Generator: tools/build_sfx_md.py. Licence: see research/licensing.md. */
 #include "sfx_md.h"
 const u8 vk_sfx_whip[50] = {
     0x05, 0xE7, 0xC1, 0x00, 0xDF, 0xF8, 0x04, 0xC2, 0x00, 0xDF, 0xF5, 0x04, 0xC6, 0x00, 0xDF, 0xF3,
