@@ -128,6 +128,10 @@ static const s16 courtyard_flame_y[COURTYARD_ROOMS][COURTYARD_MAX_FLAMES] = {
 static const u16 flame_cell_col[COURTYARD_MAX_FLAMES] = { 8, 24 };
 static VKTarget courtyard_flame[COURTYARD_MAX_FLAMES];
 static u16 courtyard_room;
+/* Debug overlay with the internal room number, toggled by the Konami code in play.
+ * The key is what was last drawn; 0xFFFF forces a redraw after a scene change. */
+static bool debug_room_label;
+static u16 debug_room_key = 0xFFFF;
 /* Torch background once its flame is out, for torch A (cells 8..9) and torch B
  * (cells 24..25), rows 18..19. The MSX2 reference (openMSX VRAM after the hit)
  * keeps the brazier and clears only the flame. The four 8x8 tiles, in the order
@@ -404,9 +408,33 @@ static void load_actor(u16 scene)
     show_player(&player);
 }
 
+/* Draws "COUR SALLE n" or "ETAPE 1 SALLE n" at the top right while the debug
+ * overlay is on, and clears it when off. Only redraws when the key changes. */
+static void draw_debug_room_label(void)
+{
+    const int courtyard = game.area == VK_AREA_COURTYARD;
+    const u16 key = debug_room_label ?
+        (u16)(1 + (courtyard ? 0 : 8) + game.room) : 0;
+    char hall[16] = "ETAPE 1 SALLE 0";
+    char yard[16] = "COUR SALLE 0";
+    if (key == debug_room_key) return;
+    debug_room_key = key;
+    VDP_drawText("               ", 25, 0);
+    if (!key) return;
+    if (courtyard)
+    {
+        yard[11] = (char)('0' + game.room);
+        VDP_drawText(yard, 28, 0);
+        return;
+    }
+    hall[14] = (char)('0' + game.room);
+    VDP_drawText(hall, 25, 0);
+}
+
 static void show_courtyard(u16 room)
 {
     courtyard_room = room;
+    debug_room_key = 0xFFFF;
     front_mode = FRONT_COURTYARD;
     show_scene(3 + room);
     player = game.player;
@@ -420,6 +448,7 @@ static void show_interior(void);
  * The room graph is intentionally marked experimental. */
 static void show_stage1_room(u16 room)
 {
+    debug_room_key = 0xFFFF;
     if (room == 0)
     {
         show_interior();
@@ -441,6 +470,7 @@ static void show_stage1_room(u16 room)
 
 static void show_interior(void)
 {
+    debug_room_key = 0xFFFF;
     show_scene(6);
     player = game.player;
     /* Set the mode first: the hall target must not be placed as a courtyard flame. */
@@ -515,6 +545,9 @@ int main(bool hardReset)
             if (pressed & BUTTON_START) show_title();
             else
             {
+                /* Konami code in play toggles the internal room number on screen. */
+                if (vk_konami_step(pressed)) debug_room_label = !debug_room_label;
+                draw_debug_room_label();
                 if (front_mode == FRONT_INTERIOR && (input.keys & BUTTON_A) &&
                     (pressed & (BUTTON_RIGHT | BUTTON_LEFT)))
                 {
