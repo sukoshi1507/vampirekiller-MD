@@ -111,17 +111,18 @@ static const u32 target_tiles[32] = {
 static u16 flame_clock;
 /* Courtyard flames, per screen (rooms 0..2 = scenes 3..5). Each entry is one
  * real torch flame: its top-left corner, and the baked torch cells it covers in
- * the background (see set_courtyard_flame_background). Room 0 has torches A and
- * B; rooms 1 and 2 show only torch A. */
+ * the background (see set_courtyard_flame_background). Rooms 0 and 1 have torches
+ * A and B (openMSX: torch B at x 192 is animated and extinguished by the whip in
+ * room 1, with the same after-hit VRAM as torch A); room 2 shows only torch A. */
 #define COURTYARD_ROOMS 3
 #define COURTYARD_MAX_FLAMES 2
 #define FLAME_CELL_ROW 18
-static const u16 courtyard_flame_count[COURTYARD_ROOMS] = { 2, 1, 1 };
+static const u16 courtyard_flame_count[COURTYARD_ROOMS] = { 2, 2, 1 };
 static const s16 courtyard_flame_x[COURTYARD_ROOMS][COURTYARD_MAX_FLAMES] = {
-    { 64, 192 }, { 64, 0 }, { 64, 0 }
+    { 64, 192 }, { 64, 192 }, { 64, 0 }
 };
 static const s16 courtyard_flame_y[COURTYARD_ROOMS][COURTYARD_MAX_FLAMES] = {
-    { 144, 144 }, { 144, 0 }, { 144, 0 }
+    { 144, 144 }, { 144, 144 }, { 144, 0 }
 };
 /* First baked cell column of each flame (both 2x2 cells, rows 18..19). */
 static const u16 flame_cell_col[COURTYARD_MAX_FLAMES] = { 8, 24 };
