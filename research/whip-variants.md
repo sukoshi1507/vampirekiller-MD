@@ -89,9 +89,68 @@ Accroupi (`C42E` à 6 à droite, 16 à gauche = 6 + 10, prouvé pour les quatre 
 - Niveau 0 : droite `6/6 ×2, 6/7 ×2, 6/8 ×8` ; gauche `16/21 ×2, 16/22 ×2, 16/23 ×8` (**prouvé**, 2 coups par run).
 - Niveau 1 : droite `6/9, 6/10, 6/11` ; gauche `16/24, 16/25, 16/26` (prouvé).
 - Niveau 2 : droite `6/12 ×2, 6/13 ×2, 6/14 ×3` ; gauche `16/27, 16/28, 16/29` (prouvé).
-- Niveau 3 : **échec** : le coup accroupi à droite ne produit aucune composition (`C42F` = 0 pendant 14 ticks, deux runs), et le coup accroupi à gauche produit `16/27..29` (prouvé). Cause : **inconnue** (voir plus bas).
+- Niveau 3 : **échecs** pour les appuis qui tombent pendant un verrou de l'emplacement `C450` (20 appuis sur 64 au total, 10 par run, voir « Niveau 3 : échecs et séquence »). Les coups acceptés donnent `12/13/14` à droite et `27/28/29` à gauche. Le coup accroupi à gauche produit `16/27..29` (prouvé).
 
-Échecs au niveau 3 : dans les deux runs, le deuxième coup debout à droite (43,5 s) et le coup accroupi à droite ne produisent aucune composition. Pendant ces coups, `C096` vaut 6 et `C016` vaut 0x9C, alors que le troisième coup (1,5 s plus tard) fonctionne. Le début de son du niveau 3 n'est donc pas celui des niveaux 0 et 1. Cause : **inconnue** (possible verrou du son ou de l'état d'attaque, non isolé).
+### Niveau 3 : échecs et séquence (27 octobre, mesure des emplacements)
+
+Mesure : `tools/measure_whip_slots.py 3 DIR` (Tcl `tools/trace_whip_slots.tcl`, analyse `tools/analyze_whip_slots.py`). Une série par run : 8 coups debout à droite, 8 accroupis à droite, marche à gauche (LEFT 0,6 s), 8 debout à gauche, 8 accroupis à gauche, avec des intervalles entre débuts de 0,25 ; 0,5 ; 0,75 ; 1 ; 1,25 ; 1,5 ; 2 ; 3 s. `C416` forcé à 3 à 41 s. Deux runs identiques : `scratchpad/slots/L3-r{1,2}/slots.csv`.
+
+**Cause (prouvée : désassemblage et mesure).** Le verrou vient d'un emplacement de fouet, pas du son, de la posture ou de la position :
+
+1. Lancement (`0x7116`, banque 1) : SPACE (`C006` & 0x10) et `C422` = 0 (pas d'attaque en cours). `C436` reçoit `C416`. Niveaux 0 et 1 : lancement direct. Niveaux 2 et 3 : appel de `0x71BE`.
+2. `0x71BE` : `B` = 2 si `C436` = 2, sinon `B` = 1. La routine parcourt les emplacements de 16 octets `C450` puis `C460` et prend le premier dont l'octet `C451` est nul (elle y écrit `C450` = 1). Si aucun n'est libre, `B` = 0, le lancement est **abandonné sans écriture** (`C42E` et `C42F` restent inchangés, `C42F` = 0).
+3. Au niveau 3, `B` = 1 : **un seul emplacement** (`C450`). Tant que `C451` est non nul, tout appui SPACE est ignoré.
+4. `C451` reçoit `C436` (= 3) à la fin de la composition (`0x728C`). Le gestionnaire de type 3 est en `0x7473` (table `0x72D6`, index `C451` - 2). Il appelle aussi le son 6 (`CALL 0x509F` avec A = 6) quand `C003` & 7 = 0 : c'est la source de `C096` = 6 pendant le verrou (observé). `C096` n'intervient pas dans la condition de lancement.
+
+Durée du verrou (identique dans les deux runs) :
+- face à droite (`C42C` = 0) : `C451` non nul pendant **94 trames**, de début + 10 à début + 103 (debout et accroupi) ;
+- face à gauche (`C42C` = 1) : **6 trames** (début + 10 à début + 15). Le verrou à gauche est donc presque nul.
+
+Règle vérifiée : sur 32 appuis par run (64 au total), « appui ignoré » ⇔ « `C451` non nul à l'appui » : **accord 64/64**. Appuis ignorés dans chaque run : debout à droite n°2, 4, 5, 7 ; accroupi à droite n°2, 4, 5, 7 ; debout à gauche n°5 ; accroupi à gauche n°5 (intervalle de 15 ticks après l'appui précédent).
+
+Hypothèses éliminées :
+- **Posture** : debout et accroupi sont bloqués aux mêmes appuis (droite n°2, 4, 5, 7).
+- **Son** : appuis ignorés avec `C096` = 0 (accroupi à droite n°4 et 5), appui accepté avec `C096` = 6 (accroupi à gauche n°5).
+- **Position** : `C427` vaut 16 à droite et 14 à gauche, pour les appuis acceptés comme pour les ignorés. La lecture de lancement ne lit pas la position.
+- **Cooldown** : pas de compteur de cooldown dédié. Le blocage est la durée de vie du gestionnaire (94 ou 6 trames).
+
+Écrivains mesurés (`tools/trace_whip_slot_writers.tcl`, un coup debout à droite à 42 s, un accroupi à droite à 60 s ; PC = adresse de l'instruction, à 1 près) :
+- `C450` ← 1 en `0x71D4` (lancement, `0x71BE`) ;
+- `C451` ← 3 en `0x72A6` (fin de composition, `0x728C`) ;
+- `C450` ← 2 puis 3 en `0x734F` (gestionnaire, états successifs) ;
+- `C453` décroît de 3 à -1 (255) par pas d'une valeur toutes les 4 trames (écritures en `0x7395`) ;
+- `C450` ← 0 et tout le bloc `C450`..`C45F` effacé en `0x74EC` (routine `0x74E9`) : fin du verrou, au tick 2378 (42 s + 1,8 s), en accord avec la mesure.
+
+Qui appelle `0x74E9` à la fin (déduit du désassemblage, non confirmé par la pile) : le chemin `0x74A5` du gestionnaire `0x7473`, quand `C433` vaut 2 ou 3 (`0x748C`), ou le test de position de `0x74CE`. Ce second chemin est exclu pour le coup mesuré (position hors fenêtre). Pourquoi 94 trames à droite et 6 à gauche : **non décodé**. Le niveau 2 (`B` = 2, deux emplacements) n'a pas été mesuré avec ce protocole.
+
+**Séquence niveau 3** (prouvée, 2 runs, un tick = une image VBLANK ; `C42E` et `C42F` au premier tick de la composition) :
+
+| Direction | Posture | `C42E` avant | `C42E` pendant | `C42F` (ticks) |
+|---|---|---|---|---|
+| droite | debout | 0 | 0 | 12 ×2, 13 ×3, 14 ×3 |
+| droite | accroupi | 6 | 6 | 12 ×2, 13 ×3, 14 ×3 |
+| gauche | debout | 10 | 10 | 27 ×2, 28 ×3, 29 ×3 |
+| gauche | accroupi | 10 (debout), puis 6 (1 tick) | 16 | 27 ×2, 28 ×3, 29 ×3 |
+
+Chaque composition dure 8 ticks. Le triplet est le même qu'au niveau 2 (12-14 / 27-29) : seules les durées (6 ticks au niveau 2, 8 au niveau 3) et le verrou diffèrent.
+
+**Lanière par trame** (premier coup debout à droite, base de repos sans verrou précédent ; décodage 1 bpp, **déduit**, précision ±1 trame ; trame 0 = premier tick de la composition) :
+
+| Trames | Boîte x (relative à Simon) | Boîte y |
+|---|---|---|
+| +8, +9 | +8 à +12 | -20 à -16 |
+| +10, +11 | -5 à +10 | -31 à -16 |
+| +12, +13 | -2 à +13 | -31 à -16 |
+| +14, +15 | +1 à +16 | -31 à -16 |
+| +16, +17 | +4 à +19 | -31 à -16 |
+| +18, +19 | +7 à +22 | -31 à -16 |
+| +20 | +10 à +25 | -31 à -16 |
+
+Le bord avant avance d'environ 3 px toutes les 2 trames (**déduit** des boîtes de sprites). Ce n'est pas `C453` : cet octet, égal à 3 à l'activation, décroît de 1 toutes les 4 trames (écritures mesurées). La liste de sprites du niveau 3 reste **incertaine** : les noms exclus par la fenêtre de repos de 60 trames changent d'un coup à l'autre. Hypothèse probable : la lanière précédente, encore présente pendant 94 trames, fait partie de cette fenêtre (non vérifié).
+
+**Niveau de preuve** : séquence niveau 3 et règle de blocage (64/64) : **prouvé**. Code de lancement et de verrou (`0x71BE`, `0x728C`, `0x7473`) et écrivains de `C450`/`C451` : **prouvé** (désassemblage et écritures mesurées). Sens des valeurs de `C451` et chemin de fin `0x74A5` : **déduit**. Durée 94/6 trames : **mesurée**, mécanisme **inconnu**. Lanière par trame : **déduite** (1 bpp). Liste de sprites : **incertaine**.
+
+**Fichiers et empreintes** : `tools/measure_whip_slots.py`, `tools/trace_whip_slots.tcl`, `tools/analyze_whip_slots.py`, `tools/trace_whip_slot_writers.tcl` (ajoutés). Mesures hors dépôt : `scratchpad/slots/L3-r1/slots.csv` et `L3-r2/slots.csv`, SHA-256 identique `449dfb55aeb59eba3538d8d4812e0c209246e6962394c23d628e040308094df5` (les deux runs sont identiques, donc déterministes). Écrivains : `scratchpad/slots/writers/writers.csv`.
 
 ### Sélection : écritures réelles de `C416` (observé)
 
@@ -116,7 +175,7 @@ Trace de 220 s de marche sans forçage (`tools/trace_c416_writers.tcl`, PC lu da
 1. **Déclencheur du niveau dans le jeu** : l'écriture `0x8D76` (valeur 1 à 75 s) est observée, mais sa condition (table lue, objet touché) n'est pas décodée. Les niveaux 2 et 3 ne sont pas atteints en jeu normal dans une session de 220 s.
 2. **Hitbox par niveau** : niveaux 0 et 1 mesurés (1 bpp, deux runs). Niveaux 2 et 3 : balayage mesuré, mais la liste des sprites du niveau 3 est incertaine. Décodage 1 bpp **déduit**, à valider sur une image de référence.
 3. **Son** : niveaux 0 et 1 : rafale PSG identique (`r4=0, r6=2, r7=156, r10=5`). Niveaux 2 et 3 : pas de rafale de ce type (seulement des volumes sur `r8`–`r10`). Une éventuelle différence de son hors PSG n'est pas testée (C096/C016 non concluants pour le niveau 3).
-4. **Échecs du niveau 3** : coup debout n°2 et accroupi à droite sans composition, dans deux runs. Cause inconnue (`C096` = 6 pendant l'échec).
+4. **Échecs du niveau 3** : expliqués (verrou de `C450`, voir « Niveau 3 : échecs et séquence »). Reste à trouver l'écrivain qui remet `C450` à 0 (`tools/trace_whip_slot_writers.tcl`, non exécuté) et le mécanisme 94/6 trames.
 5. **Gauche et droite** : accroupi à gauche prouvé pour les quatre niveaux (base 16 = 6 + 10).
 
 ## Conséquence pour le portage
