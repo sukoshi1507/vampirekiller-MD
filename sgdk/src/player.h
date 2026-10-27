@@ -9,6 +9,7 @@ typedef struct {
     VKByte x, y, facing, mode, phase, clock, pose;
     VKByte crouched, on_stairs, stair_anim;
     VKByte stair_dir, stair_len; /* flight direction (1 = up right) and length in px */
+    VKByte stair_glide;          /* arrival slide from a hall link, not a tile flight */
 } VKPlayer;
 
 VKByte vk_sample_tile(const VKByte *map, VKByte x, VKByte y);

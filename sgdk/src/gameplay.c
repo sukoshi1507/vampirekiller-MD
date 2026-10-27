@@ -86,6 +86,9 @@ VKEvent vk_game_tick_controls(VKGame *game, int direction, int jump, int up, int
             vk_stage1_links[game->room].down : VK_ROOM_NONE;
         if (target != VK_ROOM_NONE)
         {
+            /* From an arrival glide, the MSX exit shifts X by 16 (207 -> 192). */
+            if (p->stair_glide) p->x = (VKByte)(p->stair_dir ? p->x + 16 : p->x - 16);
+            p->stair_glide = 0;
             game->room = target;
             p->y = 48;
             p->on_stairs = 0;
@@ -97,6 +100,22 @@ VKEvent vk_game_tick_controls(VKGame *game, int direction, int jump, int up, int
         vk_player_reset(p);
         if (game->area == VK_AREA_COURTYARD) p->y = 176;
         return VK_EVENT_NONE;
+    }
+    /* MSX up exit: on a flight with HAUT at Y < 48 (research/vertical-links.md).
+     * Simon lands at X +16 (-16 on a right-up flight), Y 224, and glides back up
+     * the 32 px diagonal to the floor of the room above. */
+    if (game->area == VK_AREA_INTERIOR && p->on_stairs && p->y < 48 &&
+        vk_stage1_links[game->room].up != VK_ROOM_NONE)
+    {
+        const int dir = p->stair_dir;
+        game->room = vk_stage1_links[game->room].up;
+        p->x = (VKByte)(dir ? p->x - 16 : p->x + 16);
+        p->y = 224;
+        p->stair_len = 32;
+        p->stair_anim = 0;
+        p->stair_glide = 1;
+        p->pose = 0;
+        return VK_EVENT_VERTICAL;
     }
     /* Hall vertical link: leaving the top of the playfield (a stair exit at y 24
      * counts) enters the room above, on its lowest floor in the same column. */

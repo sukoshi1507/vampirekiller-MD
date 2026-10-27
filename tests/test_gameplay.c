@@ -100,9 +100,13 @@ int main(void)
         int frames;
         for (frames = 0; frames < 300 && event != VK_EVENT_VERTICAL; frames++)
             event = vk_game_tick_controls(&g, 0, 0, 1, 0);
-        assert(event == VK_EVENT_VERTICAL && g.room == 5 && !g.player.on_stairs);
-        /* The boundary is crossed at progress 65 of 72 (y 31), so x is 175. */
-        assert(g.player.x == 175 && g.player.y % 8 == 0 && g.player.y >= 40);
+        /* The MSX exit fires at Y < 48 (x 191): Simon lands at (207,224), gliding. */
+        assert(event == VK_EVENT_VERTICAL && g.room == 5 && g.player.on_stairs);
+        assert(g.player.stair_glide && g.player.x == 207 && g.player.y == 224);
+        /* HAUT glides him up the 32 px diagonal to the floor at (175,192). */
+        for (frames = 0; frames < 200 && g.player.on_stairs; frames++)
+            vk_game_tick_controls(&g, 0, 0, 1, 0);
+        assert(!g.player.on_stairs && g.player.x == 175 && g.player.y == 192);
     }
     assert(vk_stage1_links[1].up == 5 && vk_stage1_links[5].down == 1);
     assert(vk_stage1_links[3].up == 7 && vk_stage1_links[7].down == 3);
@@ -113,6 +117,19 @@ int main(void)
     g.player.on_stairs = 0;
     assert(vk_game_tick_controls(&g, 0, 0, 0, 0) == VK_EVENT_VERTICAL);
     assert(g.room == 1 && g.player.y == 48 && g.player.x == 192);
+    /* From the room 5 glide foot (207,224), BAS drops through Y 225 into room 1
+     * at X 191, the -16 of the MSX exit. */
+    assert(vk_game_debug_room(&g, 5));
+    g.player.x = 207; g.player.y = 224; g.player.on_stairs = 1;
+    g.player.stair_dir = 0; g.player.stair_len = 32; g.player.stair_anim = 0;
+    g.player.stair_glide = 1;
+    {
+        VKEvent event = VK_EVENT_NONE;
+        int frames;
+        for (frames = 0; frames < 20 && event != VK_EVENT_VERTICAL; frames++)
+            event = vk_game_tick_controls(&g, 0, 0, 0, 1);
+        assert(event == VK_EVENT_VERTICAL && g.room == 1 && g.player.x == 191 && g.player.y == 48);
+    }
     assert(vk_game_debug_room(&g, 0) && g.collision_verified);
     assert(g.player.x == 16 && g.player.y == 192);
 

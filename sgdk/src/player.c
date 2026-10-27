@@ -56,7 +56,7 @@ void vk_player_reset(VKPlayer *p)
     p->y = 192;
     p->facing = p->mode = p->phase = p->clock = p->pose = 0;
     p->crouched = p->on_stairs = p->stair_anim = 0;
-    p->stair_dir = p->stair_len = 0;
+    p->stair_dir = p->stair_len = p->stair_glide = 0;
 }
 
 /* Gameplay controller: the original tile probes and delta tables above remain
@@ -139,6 +139,7 @@ static int vk_stair_enter(VKPlayer *p, const VKByte *map)
     p->facing = (VKByte)!dir; /* facing 1 looks left, as in the walk code */
     p->stair_len = (VKByte)(8 * steps + 8);
     p->stair_anim = 0;
+    p->stair_glide = 0;
     p->on_stairs = 1;
     p->mode = 0;
     p->phase = 0;
@@ -175,9 +176,17 @@ static void vk_stair_tick(VKPlayer *p, int direction, int down, int up)
             p->stair_anim--;
             moved = 1;
         }
+        else if (want_down && p->stair_glide && p->y < 225)
+        {
+            /* A glide foot at Y 224 drops through the bottom edge (Y 225). */
+            p->y++;
+            moved = 1;
+        }
     }
     p->facing = (VKByte)!p->stair_dir;
-    if (moved && (p->stair_anim == p->stair_len || p->stair_anim == 0))
+    if (p->stair_anim == p->stair_len) p->stair_glide = 0;
+    if (moved && (p->stair_anim == p->stair_len || p->y >= 225 ||
+                  (p->stair_anim == 0 && !p->stair_glide)))
     { p->on_stairs = 0; p->mode = 0; p->phase = 0; }
     /* Four-step walk cycle, one pose per eight pixels of progress. The poses are
      * the walk frames of the assets, not recovered MSX2 stair poses. */
