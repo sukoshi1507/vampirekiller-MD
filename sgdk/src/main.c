@@ -104,9 +104,17 @@ static const u32 target_tiles[32] = {
  * Source and provenance: tools/build_flame_fx.py, NOT the original MSX ROM. */
 static u16 flame_clock;
 static u16 flame_burst;
+/* Courtyard torch positions (top-left of each 16x16 flame). */
+#define FLAME_A_X 64
+#define FLAME_A_Y 144
+#define FLAME_B_X 192
+#define FLAME_B_Y 144
 static void reset_training_target(void)
 {
-    vk_target_init(&test_target, (int)player.x + 24, (int)player.y - 24, 16, 16);
+    if (game.area == VK_AREA_COURTYARD)
+        vk_target_init(&test_target, FLAME_A_X, FLAME_A_Y, 16, 16);
+    else
+        vk_target_init(&test_target, (int)player.x + 24, (int)player.y - 24, 16, 16);
     target_visible = TRUE;
     flame_clock = 0;
     flame_burst = 0;
@@ -193,15 +201,28 @@ static void show_player(const VKPlayer *player)
                 i == 0 ? 6 : (target_visible ? 7 : 0));
         }
     }
+    if (target_visible && game.area == VK_AREA_COURTYARD)
+    {
+        /* Courtyard flames stay at their fixed torch positions. Flame A carries
+         * the hit zone (see reset_training_target) and shows the burst. */
+        const u16 cycle = (flame_clock >> 3) & (VK_FLAME_FRAMES - 1);
+        const u16 flame_a = flame_burst ?
+            (VK_FLAME_FRAMES + ((12 - flame_burst) / 4)) : cycle;
+        VDP_setSpriteFull(7, FLAME_A_X, FLAME_A_Y, SPRITE_SIZE(2, 2),
+            TILE_ATTR_FULL(PAL3, TRUE, FALSE, FALSE,
+                FLAME_TILE_INDEX + flame_a * VK_FLAME_TILES_PER_FRAME), 8);
+        VDP_setSpriteFull(8, FLAME_B_X, FLAME_B_Y, SPRITE_SIZE(2, 2),
+            TILE_ATTR_FULL(PAL3, TRUE, FALSE, FALSE,
+                FLAME_TILE_INDEX + cycle * VK_FLAME_TILES_PER_FRAME), 0);
+        VDP_updateSprites(9, DMA_QUEUE);
+        return;
+    }
     if (target_visible)
+    {
         VDP_setSpriteFull(7, (test_target.active || flame_burst) ? (s16)test_target.x : -32,
             (test_target.active || flame_burst) ? (s16)test_target.y : -32, SPRITE_SIZE(2, 2),
-            TILE_ATTR_FULL(PAL3, TRUE, FALSE, FALSE,
-                game.area == VK_AREA_COURTYARD ?
-                FLAME_TILE_INDEX + (flame_burst ?
-                    (VK_FLAME_FRAMES + ((12 - flame_burst) / 4)) * VK_FLAME_TILES_PER_FRAME :
-                    ((flame_clock >> 3) & (VK_FLAME_FRAMES - 1)) * VK_FLAME_TILES_PER_FRAME)
-                    : TARGET_TILE_INDEX), 0);
+            TILE_ATTR_FULL(PAL3, TRUE, FALSE, FALSE, TARGET_TILE_INDEX), 0);
+    }
     VDP_updateSprites(target_visible ? 8 : 7, DMA_QUEUE);
 }
 
