@@ -75,3 +75,27 @@ J'avais annoncé un désalignement des instructions entre `4660` et `4700`. C'é
 ## Prochaine étape
 
 Tracer en openMSX les écritures sur les ports 98/99 et 9B pendant une image de jeu, avec `PC` et la valeur de `(0006)`/`(0007)`. Cela tranchera les points déduits et complétera les routines bancaires.
+
+## Vérification en émulation (openMSX 21.0, C-BIOS MSX2)
+
+Script : `tools/trace_vdp_routines.tcl`. Scénario : démarrage, puis SPACE répété de 40 s à 60 s, comme dans `ATTACK_TRACE_OPENMSX.md`.
+
+**Confirmé :**
+- Indexes des registres Z80 dans openMSX : `0=A 1=F 2=B 3=C 4=D 5=E 6=H 7=L`.
+- À l'entrée de `4917` (configuration de commande), `C = 0x99` : l'écriture part bien du port de contrôle 99 (pointeur R#17), puis les paramètres passent par `9B`.
+- À `4698` (boucle d'écriture), `C = 0x98` : port de données VRAM.
+- À `46BB` (adresse VRAM), `C = 0x99`.
+- `(0006)`/`(0007)` : cohérent avec `0x98` (`L = 0x98` avant `INC L` en `4855`). Non relu directement en RAM.
+
+**Activité par fenêtre :**
+
+| Fenêtre | `status_read` | `cmd_setup_9B` | `data_loop_98` | `vram_addr_set` |
+|---|---|---|---|---|
+| 0–10 s (boot) | 2950 | 4 | 256 | 431 |
+| 10–40 s (intro, titre) | 8128 | 46 | 384 | 8756 |
+| 40–60 s (coups de fouet) | 299 | **0** | **0** | 2400 |
+
+**Conclusions :**
+- Pendant les coups, aucune écriture de bloc de commande (HMMV) et aucune écriture VRAM via la boucle `4698`. Le fouet n'utilise donc pas ces routines.
+- Il reste à identifier la routine qui écrit réellement pendant les coups, probablement via `46BB` ou un autre chemin d'écriture non couvert.
+- Les valeurs de `C` à l'entrée de `4855` et `4875` ne sont pas significatives : `C` y est chargé après l'entrée.
