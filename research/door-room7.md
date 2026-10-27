@@ -103,3 +103,11 @@ Observations :
 - **Ce qui tranchera** : trouver ce qui produit A = 0x18 en `8D30` (watch de C419 pendant le jeu), identifier la banque mappée en 8000 dans la salle 7, et tracer les écritures de C5AC non étudiées (1EC3, 2559, 2B12, 2B5D, 2C81, 303C, 37B3, 383A, 3868, 388A, 3917, 5147, 516A).
 - **Preuves** (hors dépôt) : `scratchpad/door7/c701/`.
 
+## 9. Chemin naturel vers la salle 7 et suite (traces n7 à n10)
+
+- **Chemin sans poke, établi** : depuis le titre, marche jusqu'à la salle 1, puis gauche 1 vers 0 vers 3 (x 246, y 192). Salle 3 : marcher à droite jusqu'à x 44 à 48, HAUT (escalier, arrivée (112,128)). Marcher à droite jusqu'à x 172, HAUT (arrivée (112,64)). Marcher à gauche jusqu'à x 52, HAUT : arrivée en salle 7 en (49,224).
+- **Salle 7 en jeu naturel** : C5AC reste à 1, aucune écriture de C701 bit 0 (toutes valent 0). Seuls `638E`, `BB5D`, `53FC` et `7755` écrivent C5AC ; 1 vers 2 ou 1 vers 4 n'a pas eu lieu.
+- **Banque 8000** : la banque 2 est mappée pendant environ 4 600 images sur 4 700 (signature `CD 30 8D` à `94E8`). La banque 14 n'apparaît que brièvement, via le trampoline `509F`.
+- **Ce qui reste** : la routine `944F` (banque 2, tests C703 et D000) s'exécute deux fois en salle 7, mais la chaîne `944F` vers `94E8` vers `8D30` (A = 0x18) n'est pas exécutée. La condition qui déclenche le bit 0 reste ouverte.
+- **Traces** (hors dépôt) : `scratchpad/door7/c701/runs/n7` à `n10`, plans `n7.txt` et `n8.txt`.
+

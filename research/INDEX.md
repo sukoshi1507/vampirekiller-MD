@@ -16,7 +16,7 @@ et les limites. « Prouvé » = mesuré en trace openMSX ou lu dans la ROM ;
 | `whip-hitbox.md` | Forme de la lanière du fouet (openMSX) | Prouvé pour les pixels mesurés. |
 | `whip-hitbox-ingame.md` | Boîte du fouet et cible d'entraînement, en jeu (MD) | Prouvé pour la boîte debout ; accroupi non mesuré. |
 | `whip-variants.md` | Fouets : variantes, séquence accroupie | Prouvé pour les niveaux 0 à 2 ; niveau 3 sans asset. |
-| `door-room7.md` | Porte de sortie de la salle 7 du hall | Sortie prouvée (test forcé, arrivée stage 2 à x 16). Setter de C701 bit 0 identifié (une seule routine, `8E60`). Accès naturel : ouvert, jamais atteint en jeu. |
+| `door-room7.md` | Porte de sortie de la salle 7 du hall | Sortie prouvée (test forcé, arrivée stage 2 à x 16). Setter de C701 bit 0 identifié (une seule routine, `8E60`). Chemin naturel jusqu'à la salle 7 établi. Déclencheur du bit 0 : ouvert (chaîne `944F` vers `8D30` non exécutée). |
 
 ## Mécaniques du joueur
 
