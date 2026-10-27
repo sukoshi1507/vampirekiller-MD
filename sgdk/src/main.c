@@ -90,6 +90,10 @@ static const u16 attack_palette[16] = {
     0,0x002A,0x006E,0x00CE,0,0,0,0,0,0,0,0,0,0,0x0CA0,0x0EEE
 };
 
+enum { FRONT_LOGO, FRONT_TITLE, FRONT_CASTLE, FRONT_COURTYARD,
+       FRONT_INTERIOR, FRONT_VIEWER, FRONT_TEST, FRONT_SOUND };
+static u16 front_mode;
+
 /* 16x16 training target, deliberately NOT an original ROM asset. */
 #define TARGET_TILE_INDEX (ATTACK_TILE_INDEX + VK_ATTACK_FRAME_COUNT * VK_ATTACK_TILES_PER_FRAME)
 #define FLAME_TILE_INDEX (TARGET_TILE_INDEX + 4)
@@ -111,7 +115,7 @@ static u16 flame_burst;
 #define FLAME_B_Y 144
 static void reset_training_target(void)
 {
-    if (game.area == VK_AREA_COURTYARD)
+    if (front_mode == FRONT_COURTYARD)
         vk_target_init(&test_target, FLAME_A_X, FLAME_A_Y, 16, 16);
     else
         vk_target_init(&test_target, (int)player.x + 24, (int)player.y - 24, 16, 16);
@@ -201,7 +205,7 @@ static void show_player(const VKPlayer *player)
                 i == 0 ? 6 : (target_visible ? 7 : 0));
         }
     }
-    if (target_visible && game.area == VK_AREA_COURTYARD)
+    if (target_visible && front_mode == FRONT_COURTYARD)
     {
         /* Courtyard flames stay at their fixed torch positions. Flame A carries
          * the hit zone (see reset_training_target) and shows the burst. */
@@ -260,9 +264,6 @@ static void enter_play(VKPlayer *player)
     show_player(player);
 }
 
-enum { FRONT_LOGO, FRONT_TITLE, FRONT_CASTLE, FRONT_COURTYARD,
-       FRONT_INTERIOR, FRONT_VIEWER, FRONT_TEST, FRONT_SOUND };
-static u16 front_mode;
 static u16 front_timer;
 static u16 courtyard_room;
 
@@ -328,11 +329,11 @@ static void load_actor(u16 scene)
 static void show_courtyard(u16 room)
 {
     courtyard_room = room;
+    front_mode = FRONT_COURTYARD;
     show_scene(3 + room);
     player = game.player;
     load_actor(3 + room);
     VDP_drawText(room == 2 ? "B FOUET C SAUT UP PORTE" : "B FOUET  A+B FLAMME  C SAUT", 2, 27);
-    front_mode = FRONT_COURTYARD;
 }
 
 static void show_interior(void);
