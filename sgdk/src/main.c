@@ -170,16 +170,19 @@ static void show_player(const VKPlayer *player)
      * The decoded candidate is already right-facing: player/whip facing == 0
      * means right, facing == 1 means left. Only left-facing attacks require
      * horizontal reflection and reversal of the source half order.
-     * Phase-to-index mapping is provisional pending a live MSX2 trace. */
+     * The right-facing canvas starts at x-24 (the traced frames reach x+39).
+     * Its mirror starts at x-39, so that the left-facing block lands on x-39..x+24.
+     * Phase-to-index mapping follows the openMSX trace (see ATTACK_TRACE_OPENMSX.md). */
     {
         u16 i;
         const u16 frame_index = attack_frame ? (u16)vk_whip_visual_step(&whip) : 0;
         const u16 base = ATTACK_TILE_INDEX + frame_index * VK_ATTACK_TILES_PER_FRAME;
+        const s16 origin_x = whip.facing ? -39 : -24;
         for (i = 0; i < 2; ++i)
         {
             const u16 source_half = whip.facing ? (u16)(1 - i) : i;
             VDP_setSpriteFull((u16)(5 + i),
-                (attack_frame && !crouch_mode) ? (s16)player->x - 32 + (s16)i * 32 : -32,
+                (attack_frame && !crouch_mode) ? (s16)player->x + origin_x + (s16)i * 32 : -32,
                 (attack_frame && !crouch_mode) ? (s16)player->y - 30 : -32,
                 SPRITE_SIZE(4, 4),
                 TILE_ATTR_FULL(PAL2, TRUE, FALSE, whip.facing,

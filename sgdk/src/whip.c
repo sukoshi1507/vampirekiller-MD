@@ -28,14 +28,16 @@ void vk_whip_bounds(const VKWhip *w, int *left, int *top, int *right, int *botto
 }
 
 /* Shared 15-step timeline for both body styles. Indices represent the
- * current timer (14 is attack start, 0 is idle). Visual selections remain
- * experimental ROM-derived compositions; the gameplay hit windows are kept.
+ * current timer (14 is attack start, 0 is idle). The standing frames follow the
+ * openMSX trace: upper index 6 for 2 frames, 7 for 2 frames, 8 for 8 frames
+ * (research/simon-assets/ATTACK_TRACE_OPENMSX.md). The body is shown from timer 14
+ * to 3, that is 12 frames. The gameplay hit window (timer 3..10) is unchanged.
  * Each entry is {arm phase, standing frame, crouched frame}. */
 typedef struct { VKByte phase, standing, crouched; } VKAttackKey;
 static const VKAttackKey vk_attack_keys[15] = {
-    {0,0,0}, {4,7,4}, {4,7,4}, {3,6,3}, {3,5,3},
-    {3,5,3}, {3,5,3}, {3,4,3}, {2,4,3}, {2,3,2},
-    {2,2,2}, {1,1,1}, {1,1,1}, {1,0,1}, {1,0,0}
+    {0,0,0}, {0,0,4}, {0,0,4}, {1,2,3}, {1,2,3},
+    {1,2,3}, {1,2,3}, {1,2,3}, {1,2,3}, {1,2,2},
+    {1,2,2}, {1,1,1}, {1,1,1}, {1,0,1}, {1,0,0}
 };
 
 static const VKAttackKey *vk_attack_key(const VKWhip *w)
