@@ -21,17 +21,18 @@ void vk_whip_tick(VKWhip *w, const VKPlayer *p, int attack_pressed)
 /* Standing lash box, inclusive: x +8..+32 and y -22..-15 relative to Simon.
  * These are the visible lash measured in-game (research/whip-hitbox-ingame.md),
  * not the openMSX trace box (research/whip-hitbox.md, x +8..+39, y -31..-16).
- * The left-facing box is the mirror image. The crouched box is not measured yet. */
+ * The left-facing box is the mirror image. The crouched box is set below. */
 void vk_whip_bounds(const VKWhip *w, int *left, int *top, int *right, int *bottom)
 {
     if (w->crouched)
     {
-        /* Unmeasured: keep the previous timer-dependent reach. */
-        const int reach = w->timer >= 8 ? 16 : 24;
-        *left = w->facing ? (int)w->x - reach - 8 : (int)w->x + 8;
-        *right = w->facing ? (int)w->x - 8 : (int)w->x + reach + 8;
-        *top = (int)w->y - 10;
-        *bottom = (int)w->y - 7;
+        /* Crouched lash measured on the Mega Drive frames (timers 9..2, right and
+         * left facing mirror exactly): x +12..+32 (lash tip), y -17..-10. The
+         * hit box is x +8..+32 and y -17..-10, constant over the attack. */
+        *left = w->facing ? (int)w->x - 32 : (int)w->x + 8;
+        *right = w->facing ? (int)w->x - 8 : (int)w->x + 32;
+        *top = (int)w->y - 17;
+        *bottom = (int)w->y - 10;
         return;
     }
     *left = w->facing ? (int)w->x - 32 : (int)w->x + 8;

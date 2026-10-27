@@ -39,10 +39,10 @@ int main(void)
     assert(w.crouched==1);
     for(i=0;i<4;i++) vk_whip_tick(&w,&p,0);
     vk_whip_bounds(&w,&l,&t,&r,&b);
-    assert(t==p.y-10 && b==p.y-7);
+    assert(t==p.y-17 && b==p.y-10 && l==p.x+8 && r==p.x+32);
     p.crouched=0; /* mid-attack changes must not move the hitbox */
     vk_whip_bounds(&w,&l,&t,&r,&b);
-    assert(t==p.y-10 && b==p.y-7);
+    assert(t==p.y-17 && b==p.y-10 && l==p.x+8 && r==p.x+32);
     /* Exhaustive attack timeline: all visual frame indices remain in their
      * generated-resource ranges, and active hitboxes have visible lash. */
     {
