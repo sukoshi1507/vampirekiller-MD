@@ -170,3 +170,36 @@ Sans poke, points d'arrêt sur `9327` et `9329`, dossiers `scratchpad/door7/c701
 - **Condition manquante** : (a) bit 0 à 1, acquis par la bougie de la salle 2 (fragile) ; (b) Simon dans la zone de `8580` en salle 7 (X 228 à 235, Y dans la bande de `C5AD`). Ensuite `C5AC` 2 vers 3 passe par le compteur `C5AF` (`9147`, banque 2) ; 3 vers 4 n'est pas tracé.
 - **Prochaines étapes** : relever `C5AD` en salle 7 ; trouver un accès à l'ouverture (saut ou autre) ; isoler la condition de la bougie (S2 avec un seul des deux fouets, avec compteur d'images).
 
+
+## 16. Hypothèse de la clé
+
+**Résultat : CONFIRMÉ.** L'objet de type 0x18 de la salle 2 est une **clé blanche** posée au sol ; `C701` bit 0 = « Simon a la clé blanche ». La porte (barreau rose dans l'ouverture haute droite de la salle 7) s'ouvre avec cette clé, qui est consommée. Sans elle, la porte reste fermée. Sortie de stage obtenue **sans poke** (run K3).
+
+Méthode : openMSX 21.0 (`C-BIOS_MSX2`), plan S2 rejoué, puis instantanés VRAM rendus hors ligne (SCREEN 5 + sprites mode 2), car la capture d'écran openMSX est noire sans affichage. Scripts et images (hors dépôt) : `scratchpad/door7/key/` (`harness.tcl` = copie de `tools/vertical_links_trace.tcl` avec actions `gotox` et `snap`, `key_extra.tcl`, `render_snap.py`, plans `plans/K1` à `K4`, preuves dans `evidence/`).
+
+| Run | Scénario | Résultat |
+|---|---|---|
+| K1 | S2 puis salle 7, 6, escalier de la salle 6, retour en salle 7 au palier y 128 | clé blanche ramassée image 3307 ; clé dorée ramassée en salle 7 ; panthère touche Simon au pied de l'escalier (y 128), montée ratée |
+| K2 | K1 + six coups de fouet à x 96 | panthère non tuée, même échec |
+| K3 | K1, on encaisse le coup de la panthère puis montée | **porte ouverte, stage 2** |
+| K4 | K3 sans les fouets de la salle 2 (clé blanche non prise) | **porte fermée**, `C5AC` reste à 1 |
+
+Preuves :
+
+- **Ramassage en salle 2** (K1, image 3307) : la clé blanche est visible au sol en (128-145, 160-175) avant le contact, puis disparaît quand Simon passe à x 148 (y 192). Objet `C520` : octet 0 passe de `84` à `00`, Y `A0`, X `80`, type `18`. Même image : `C701` 0 → 1. Images `evidence/K1_salle2_cle_blanche_3290-3327.png` et `K1_salle2_zoom_cle.png`.
+- **HUD** : la 2e case d'objet est vide à l'image 3300 et montre une clé blanche à 3327 (`evidence/K1_hud_avant3300_apres3327.png`).
+- **Seconde clé (dorée)** : objet type 0x17 en salle 7, X `80`, Y `70` (128,112), sur le palier du milieu. Ramassée à x 124, y 128 (K1 image 5389) : `C701` bit 1 mis (`C701` = 3), HUD montre clé dorée + clé blanche. La salle 2 contient aussi une clé dorée (type 0x17, (64,176)) et un coffre bleu (type 0x19, (176,176)). Rôle de la clé dorée : non testé (probablement le coffre).
+- **Accès à la porte** : salle 7 bas → gauche vers salle 6 (x 246, y 192) → marche à x 112, HAUT (escalier de la salle 6) → (176,128) → droite vers salle 7 au palier (10,128) → marche à x 144, HAUT → (176,96) → droite : arrêt à x 228, y 96 (barreau de la porte).
+- **Zone de `8580`** : `C5AD` = 48 en salle 7 (écrit en `BB52`). `8580` donne carry si `(Y-2) - (C5AD-8) < 0x38` (Y dans [42, 98)) et si `X±8 - C5AE < 8` (+8 si `C42C` = 0, regard à droite) : X dans [228, 236). Simon à (228,96) remplit les deux.
+- **Ouverture (K3)** : image 5799, X 228, Y 96 : `7736` carry, `7737` (bit 0 = 1), `7743` `RES 0,(C701)` (`C701` 3 → 2 : clé blanche consommée, clé dorée gardée), `7752` `INC C5AC` (1 → 2). Puis `C5AF` compte de 1 à 44, un pas toutes les 2 images (`9157`, images 5800-5886). `C5AC` := 3 en `916A` (image 5886). Simon avance seul de x 228 à 248 (images 5886-5965). Test de bord (`77BA`, x ≥ 248, `C41F` = FF), `C408` := 1 en `7802` (image 5965), `D000` 1 → 2 et `D001` := 0 (image 5967). HUD : la clé blanche disparaît, le barreau de la porte est levé (`evidence/K3_porte_ouverte_stage2.png`).
+- **Contre-test (K4)** : sans les fouets de la salle 2, Simon reste bloqué à x 166 et ne touche pas la clé ; `C701` = 2 (clé dorée seule). À (228,96), `7737` est atteint 261 fois (images 5513-6031), jamais `7743` ; `C5AC` reste à 1 ; pas de sortie. Le barreau reste en place (`evidence/K4_sans_cle_porte_fermee.png`).
+
+Correction de §14-15 : l'événement de la « bougie » est un **ramassage par contact** de la clé, pas un coup de fouet. Les fouets de la salle 1 et le décompte d'images ne jouent pas. En revanche, dans tous les runs, Simon s'arrête à x 166 en marchant vers la gauche en salle 2 : le passage ne s'est ouvert qu'après les deux séries de fouet à x 166 (S2, K1, K3). La cause de ce blocage n'est pas identifiée.
+
+À porter dans le jeu MD :
+
+- **Clé blanche** (type 0x18) : stage 1, salle 2 du hall, en (128,160) (X `80`, Y `A0` de la table objet). Dessinée dans le décor (bitmap), pas en sprite : aucun sprite matériel à cette position dans les instantanés. Elle est présente dès que Simon arrive près d'elle ; ramassage au contact ; effet : bit « clé blanche » mis, icône clé blanche dans la 2e case du HUD, objet retiré.
+- **Clé dorée** (type 0x17) : même mécanisme, bit 1 de `C701`, icône dorée dans le HUD. Positions : salle 2 (64,176), salle 7 (128,112).
+- **Porte de la salle 7** : barreau dans l'ouverture haute droite (x ≈ 236-244, y 48-96), dessiné dans le décor. Condition d'ouverture : clé blanche, Simon regard à droite, X dans [228, 236), Y dans [42, 98). Effet : la clé blanche est retirée, le barreau se lève en 44 pas de 2 images (environ 88 images), Simon avance seul jusqu'à x 248, puis sortie vers stage 2, salle 0, x 16.
+- **Sans clé** : la porte est un mur à x 228 ; rien ne se passe.
+- **Panthère** sur le rebord y 96 : elle saute sur Simon quand il approche de x ≈ 124-144 au palier y 128. Hors sujet de la porte, mais elle gêne l'accès à l'escalier.
