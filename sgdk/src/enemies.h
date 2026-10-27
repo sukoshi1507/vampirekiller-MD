@@ -130,6 +130,12 @@ int Enemies_spawnTimerTick(EnemySpawnTimer *t, const EnemyRoomVars *v, EnemyStat
  * Retourne 1 si un contact a ete compte cette image (energie -2), 0 sinon. */
 int Enemies_frame(EnemyState *s, EnemySpawnTimer *t, const EnemyRoomVars *v, int *pushX);
 
+/* Coup de fouet : tue les ennemis de type 1 (A et B) dont la boite touche la boite du fouet.
+ * La boite du fouet est en coordonnees de jeu, inclusive (vk_whip_bounds). Les ennemis sont
+ * en coordonnees d'ecran : x de jeu = x d'ecran + 8. Le type 4 n'est pas touche (regle inconnue).
+ * Retourne le nombre d'ennemis tues. */
+int Enemies_whipHit(EnemyState *s, int left, int top, int right, int bottom);
+
 /* Avance d'une image les ennemis actifs (mouvement, animation, sortie). */
 void Enemies_update(EnemyState *s);
 

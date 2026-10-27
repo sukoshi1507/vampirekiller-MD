@@ -230,6 +230,12 @@ static void step_enemies(void)
     vars.difficulty = 0;
     vars.map = vk_stage1_collision[game.room];   /* floor for falling enemies */
     (void)Enemies_frame(&enemy_state, &enemy_timer, &vars, &push);
+    if (vk_whip_active(&whip))
+    {
+        int left = 0, top = 0, right = 0, bottom = 0;
+        vk_whip_bounds(&whip, &left, &top, &right, &bottom);
+        (void)Enemies_whipHit(&enemy_state, left, top, right, bottom);
+    }
     if (push)
     {
         const int x = (int)game.player.x + push;

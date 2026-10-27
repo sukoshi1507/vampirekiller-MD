@@ -268,6 +268,25 @@ static int touches(const Enemy *e, int simonX, int simonY)
            e->y + h > simonY - ENEMY_SIMON_H;
 }
 
+#define ENEMY_SCREEN_TO_GAME_X 8   /* Simon et les ennemis : sprite X = x de jeu - 8 */
+
+int Enemies_whipHit(EnemyState *s, int left, int top, int right, int bottom)
+{
+    EnemyU8 i;
+    int killed = 0;
+    for (i = 0; i < ENEMY_MAX; i++) {
+        Enemy *e = &s->enemy[i];
+        int ex, ey;
+        if (!e->active || e->exiting || e->type == ENEMY_TYPE_4) continue;
+        ex = e->x + ENEMY_SCREEN_TO_GAME_X;
+        ey = e->y;
+        if (right < ex || left >= ex + 16 || bottom < ey || top >= ey + ENEMY_TYPE1_ROW_H) continue;
+        e->active = 0;   /* un coup suffit pour le type 1 (observe par le joueur, zombies) */
+        killed++;
+    }
+    return killed;
+}
+
 int Enemies_frame(EnemyState *s, EnemySpawnTimer *t, const EnemyRoomVars *v, int *pushX)
 {
     EnemyRoomVars w = *v;

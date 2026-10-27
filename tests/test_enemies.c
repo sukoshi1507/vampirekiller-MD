@@ -468,6 +468,32 @@ static void test_fall_to_floor(void)
     CHECK(s.enemy[0].y == 0xA1, "sur le sol : reste a Y 0xA1");
 }
 
+/* 9. Coup de fouet : tue un ennemi de type 1 touche (boite du fouet, coordonnees de jeu),
+ * laisse le type 4 et un ennemi hors de portee. */
+static void test_whip_kills_type1(void)
+{
+    EnemyState s;
+    int killed;
+
+    Enemies_init(&s);
+    (void)Enemies_spawn(&s, ENEMY_SIDE_RIGHT, ENEMY_TYPE_A, 160, 1);
+    s.enemy[0].x = 120;               /* jeu x 128 : dans la boite (128..152, y 170..177) */
+    killed = Enemies_whipHit(&s, 128, 170, 152, 177);
+    CHECK(killed == 1 && !s.enemy[0].active, "fouet : ennemi de type 1 touche, mort");
+
+    Enemies_init(&s);
+    (void)Enemies_spawn(&s, ENEMY_SIDE_RIGHT, ENEMY_TYPE_A, 160, 1);
+    s.enemy[0].x = 150;               /* jeu x 158 : hors de la boite (droite 152) */
+    killed = Enemies_whipHit(&s, 128, 170, 152, 177);
+    CHECK(killed == 0 && s.enemy[0].active, "fouet : ennemi hors de portee, vivant");
+
+    Enemies_init(&s);
+    (void)Enemies_spawn(&s, ENEMY_SIDE_RIGHT, ENEMY_TYPE_4, ENEMY_TYPE4_Y, 0);
+    s.enemy[0].x = 120;
+    killed = Enemies_whipHit(&s, 128, 170, 152, 177);
+    CHECK(killed == 0 && s.enemy[0].active, "fouet : type 4 non touche (regle inconnue)");
+}
+
 int main(void)
 {
     test_rom_tables();
@@ -485,6 +511,7 @@ int main(void)
     test_type4_timer();
     test_contact_recoil_invuln();
     test_fall_to_floor();
+    test_whip_kills_type1();
     if (failures == 0) {
         printf("Enemies tests: PASS\n");
         return 0;
