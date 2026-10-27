@@ -79,6 +79,8 @@ class WhipLevelAssetTest(unittest.TestCase):
 
     def test_previews_are_indexed_with_transparency(self):
         from PIL import Image
+        if not (ROOT / 'assets/whip_levels').is_dir():
+            self.skipTest('previews are ignored by Git: run tools/build_whip_levels_md.py')
         for level, data in self.manifest['levels'].items():
             for f in data['frames']:
                 img = Image.open(ROOT / f['png'])
