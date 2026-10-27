@@ -77,6 +77,38 @@ int main(void)
         vk_whip_bounds(&w,&l,&t,&r,&b);
         assert(l==88 && r==112 && t==138 && b==145);
     }
+    /* Body duration per level, counted from attack start (timer 14) until the
+     * arm frame returns to 0. Level 0 and 1: 12 frames (2/2/8). Level 2: 6 frames
+     * (2/2/2, measured in openMSX), with the standing frames 0,0,1,1,2,2. */
+    {
+        static const int level2_standing[6] = {0,0,1,1,2,2};
+        int frames;
+        vk_whip_reset(&w);
+        assert(vk_whip_set_level(&w,2)==0);
+        p.facing=0; p.crouched=0;
+        vk_whip_tick(&w,&p,1);
+        for(frames=0; vk_whip_arm_frame(&w); frames++) {
+            assert(vk_whip_visual_step(&w)==level2_standing[frames]);
+            vk_whip_tick(&w,&p,0);
+        }
+        assert(frames==6);
+        assert(vk_whip_arm_frame(&w)==0 && vk_whip_visual_step(&w)==0);
+        /* Level 0 is unchanged: 12 frames with the 2/2/8 standing sequence. */
+        vk_whip_reset(&w);
+        vk_whip_tick(&w,&p,1);
+        for(frames=0; vk_whip_arm_frame(&w); frames++) {
+            assert(vk_whip_level(&w)==0);
+            assert(vk_whip_visual_step(&w)==(frames < 2 ? 0 : (frames < 4 ? 1 : 2)));
+            vk_whip_tick(&w,&p,0);
+        }
+        assert(frames==12);
+        /* The hit window is the same for every level. */
+        vk_whip_reset(&w);
+        assert(vk_whip_set_level(&w,2)==0);
+        vk_whip_tick(&w,&p,1);
+        for(i=0;i<4;i++) vk_whip_tick(&w,&p,0);
+        assert(vk_whip_active(&w) && w.timer==10);
+    }
     vk_whip_reset(&w);
     assert(vk_whip_level(&w)==0);
     return 0;

@@ -170,6 +170,33 @@ Trace de 220 s de marche sans forçage (`tools/trace_c416_writers.tcl`, PC lu da
 - Donc, en partie normale : **le niveau 1 est atteint** (écriture de 1 par le jeu, observée). Niveaux 2 et 3 : **non observés** en 220 s.
 - Le déclencheur précis (objet, collision, salle) : **inconnu**. La condition de `JR Z` et la table lue par `0x8D76` ne sont pas décodées (l'adresse de la table est en dehors de la page décodée).
 
+## Chronologie du niveau 2 (6 images, 27 octobre)
+
+**Problème** : la chronologie partagée de `sgdk/src/whip.c` (15 entrées, timer 14..0) donnait 12 images au niveau 2 (2/2/8, comme les niveaux 0 et 1). La mesure donne 6 images (2/2/2).
+
+**Répartition retenue** : le niveau 2 a sa propre table (`vk_attack_keys_level2`), avec le même départ (timer 14) :
+
+| Timer | Phase du bras | Image debout (pas `vk_whip_visual_step`) | Image accroupie | Composition haute (`C42F`) |
+|---|---|---|---|---|
+| 14, 13 | 1 | 0 | 1 | 12 (2 ticks) |
+| 12, 11 | 1 | 1 | 2 | 13 (2 ticks) |
+| 10, 9 | 1 | 2 | 3 | 14 (2 ticks) |
+| 8..0 | 0 | 0 | 0 | 0 |
+
+- Le corps est affiché sur les timers 14..9 (6 images). Les niveaux 0 et 1 restent sur 14..3 (12 images) ; leur table et `vk_whip_active` ne changent pas.
+- Autres répartitions possibles (étirer 2/2/2 sur les 12 timers, ou le centrer sur la fenêtre de coup 3..10) : rejetées, car elles ne suivent pas la durée mesurée (6 ticks, deux runs identiques) et placeraient l'image 14 hors du départ mesuré.
+- Le tableau de la colonne accroupie suit les mêmes pas de 2 images, car le corps accroupi partage la phase du bras. Le MD dessine les images accroupies du niveau 0 quel que soit le niveau (`main.c`) : seule leur durée change au niveau 2.
+
+**Preuve** :
+- Durée et séquence debout du niveau 2 : **prouvé** (forcé `C416` = 2, 2 runs, `C42F` = 12,12,13,13,14,14 puis 0 ; voir « Mesures par niveau »).
+- Alignement sur le départ (timer 14 = premier tick de `C42F`) : **déduit** du tracé openMSX du niveau 0 (12 ticks = timers 14..3) ; le niveau 2 suit la même règle.
+- Test natif : `tests/test_whip.c` vérifie 6 images au niveau 2 (`0,0,1,1,2,2`), 12 images et la séquence inchangées au niveau 0, et la fenêtre de coup identique.
+
+**Limites (non vérifiées)** :
+- La fenêtre de coup reste 3..10 pour tous les niveaux. Elle n'a pas été mesurée au niveau 2 : après le timer 9, le corps ne montre plus la lanière, mais la boîte reste active jusqu'au timer 3. À vérifier à l'écran et en mesure.
+- Accroupi au niveau 2 : la mesure donne 2/2/3 (7 ticks, 6/12 ×2, 6/13 ×2, 6/14 ×3, 2 runs de la section « Mesures par niveau ») ; la table en donne 6 (les pas 2/2/2 suivent la durée debout). Non reproduit exactement, et non décodé : le MD ne mesure pas l'accroupi au niveau 2.
+- Rien n'a été vu à l'écran (openMSX absent).
+
 ## Ce qui reste inconnu
 
 1. **Déclencheur du niveau dans le jeu** : l'écriture `0x8D76` (valeur 1 à 75 s) est observée, mais sa condition (table lue, objet touché) n'est pas décodée. Les niveaux 2 et 3 ne sont pas atteints en jeu normal dans une session de 220 s.

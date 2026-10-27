@@ -52,7 +52,8 @@ void vk_whip_bounds(const VKWhip *w, int *left, int *top, int *right, int *botto
  * current timer (14 is attack start, 0 is idle). The standing frames follow the
  * openMSX trace: upper index 6 for 2 frames, 7 for 2 frames, 8 for 8 frames
  * (research/simon-assets/ATTACK_TRACE_OPENMSX.md). The body is shown from timer 14
- * to 3, that is 12 frames. The gameplay hit window (timer 3..10) is unchanged.
+ * to 3, that is 12 frames (levels 0 and 1; level 2 has its own table below). The
+ * gameplay hit window (timer 3..10) is unchanged for every level.
  * The crouched attack follows the same 12 ticks with the lower index held at 6
  * (C42E = 6 while crouched): crouch frame 1 = upper 6 (timer 14..13), 2 = upper 7
  * (timer 12..11), 3 = upper 8 (timer 10..3). Frame 0 is the idle crouch.
@@ -63,10 +64,21 @@ static const VKAttackKey vk_attack_keys[15] = {
     {1,2,3}, {1,2,3}, {1,2,3}, {1,2,3}, {1,2,3},
     {1,2,3}, {1,1,2}, {1,1,2}, {1,0,1}, {1,0,1}
 };
+/* Level 2 lasts 6 frames in the openMSX trace: upper index 12 for 2 frames, 13 for
+ * 2 frames, 14 for 2 frames (research/whip-variants.md, "Chronologie du niveau 2").
+ * The same timer-14 start is kept, so the body is shown on timers 14..9 and the
+ * entries for timers 8..0 are idle. The crouched column keeps the same 2-frame steps. */
+static const VKAttackKey vk_attack_keys_level2[15] = {
+    {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0},
+    {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {1,2,3},
+    {1,2,3}, {1,1,2}, {1,1,2}, {1,0,1}, {1,0,1}
+};
+#define VK_WHIP_LEVEL_SHORT 2
 
 static const VKAttackKey *vk_attack_key(const VKWhip *w)
 {
-    return &vk_attack_keys[w->timer <= 14 ? w->timer : 0];
+    const VKAttackKey *keys = w->level == VK_WHIP_LEVEL_SHORT ? vk_attack_keys_level2 : vk_attack_keys;
+    return &keys[w->timer <= 14 ? w->timer : 0];
 }
 
 int vk_whip_arm_frame(const VKWhip *w)
