@@ -129,3 +129,18 @@ Observations :
 - **Points jamais atteints** : `9327`, `9329`, `43F0`, `440E`, `9387`, `93FF`, `4414`, et `4387` (sauf l'état 0A une fois).
 - **Ouvert** : ce qui appelle `9327` ou `9329`. Candidats à tester un par un sans poke : contact du fouet sur un objet (`944F` et `9221` tournent déjà en salle 7, pas `9329`), ramassage de bougie dans la cour et le hall, mort de Simon, passage dans la cour seule.
 
+## 12. Quatre déclencheurs naturels testés (négatifs pour 9329)
+
+Sans poke, points d'arrêt sur `9327` et `9329`, dossiers `scratchpad/door7/c701/runs/`.
+
+| Test | Scénario | Résultat |
+| --- | --- | --- |
+| T1 | Fouet sur la torche B (cour, écran 0/1, x 188) | Un passage à `8D30` (A = 02, IX = C800), retour vers `509F`. Ni `9327`, ni `9329`, ni `440E`, ni `8E60`. |
+| T2 | Fouet puis marche vers un cœur (cour) | Même passage unique à `8D30` (A = 02). Ramassage du cœur non vérifié. |
+| T3 | Mort par ennemi (hall, salle 1) | Pas de mort : 6 000 images immobiles en salle 1, puis 12 allers-retours salles 0 à 1. Aucun contact confirmé (C415 non tracé). |
+| T4 | Cour seule (écrans 0/0 à 0/2) | Aucun point d'arrêt déclenché. |
+
+- **Établi** : le fouet sur un objet de cour déclenche le dispatch d'objet `8D30` avec A = 2. Ce n'est pas A = 0x18, donc pas de chemin vers `8E60`.
+- **C40C** reste à 0 après le boot dans tous les tests : la chaîne `9329` → `C40C` → état 0C → `440E` → `93FF` → `C708` → `8D30` (0x18) → `8E60` n'est pas amorcée.
+- **Ouvert** : l'appelant de `9329`. Il faut d'abord retrouver le vrai début de la routine `9327`/`9329` en banque 2 (le désassemblage est mal aligné autour de 9300-9330). Autres pistes : un contact réel de type 1 avec `C415` mesuré à chaque image, et une bougie du hall (non localisée dans les notes).
+
