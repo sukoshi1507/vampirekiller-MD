@@ -276,12 +276,16 @@ int Enemies_whipHit(EnemyState *s, int left, int top, int right, int bottom)
     int killed = 0;
     for (i = 0; i < ENEMY_MAX; i++) {
         Enemy *e = &s->enemy[i];
-        int ex, ey;
-        if (!e->active || e->exiting || e->type == ENEMY_TYPE_4) continue;
+        int ex, ey, eh;
+        if (!e->active || e->exiting) continue;
         ex = e->x + ENEMY_SCREEN_TO_GAME_X;
         ey = e->y;
-        if (right < ex || left >= ex + 16 || bottom < ey || top >= ey + ENEMY_TYPE1_ROW_H) continue;
-        e->active = 0;   /* un coup suffit pour le type 1 (observe par le joueur, zombies) */
+        eh = (e->type == ENEMY_TYPE_4) ? ENEMY_TYPE4_ROW_H : ENEMY_TYPE1_ROW_H;
+        if (right < ex || left >= ex + 16 || bottom < ey || top >= ey + eh) continue;
+        /* Un coup suffit pour les types 1 (zombies, observe par le joueur) et 4 (trace :
+         * 12 morts sur la premiere image de fouet utile, scratchpad/type4/whip-kill-type4.md).
+         * Boite du type 4 : 16 x 16 provisoire, bornes a +-1-2 px non fixees. */
+        e->active = 0;
         killed++;
     }
     return killed;

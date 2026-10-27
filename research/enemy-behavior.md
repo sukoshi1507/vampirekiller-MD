@@ -182,13 +182,15 @@ Les deux sprites ne sont pas deux types : ce sont deux sens (droite et gauche) d
 - Analyse : `tools/analyze_enemy_behavior.py RUNDIR`.
 - Données de travail (non versionnées) : `scratchpad/enemy-behavior/` (ROM copiée, plans `plan-A` à `plan-G`, runs A, B, D, E, F, G et leurs variantes `-w` ; `runD-c/callers.txt`).
 
-## Mise à jour : type 4, trajectoire et fouet (état actuel)
+## Type 4 : fouet et table des objets (état actuel)
 
-Mesures faites sur deux traces openMSX de la salle 4 (scénario `scratchpad/type4/`, hors dépôt) :
+- **Table des objets** (RAM MSX2 `C800` et `C880`, deux blocs de 128 octets) : premier octet = type (`00` libre, `01` type 1, `04` type 4, `05` type 5, `1E` et `24` effets de fin). Y à +2/+3 (SAT Y = +3 - 15, prouvé sur le type 4), X à +4/+5 (SAT X = +5 - 8, prouvé). Les enregistrements de sprite (`[k][Y][X][N][C]`) commencent à +0x21.
+- **Fouet** : sur 17 instances de type 4 (trace `scratchpad/type4/out2`), 12 meurent. Chaque mort a lieu sur la première image utile de la phase 3 du fouet (`C422` = 3), où la boîte du fouet touche l'ennemi, ou sur la suivante. Un objet `1E` apparaît au même X/Y. Les 4 autres finissent par sortie d'écran, sans contact. Calibrage : 3 morts de type 1 suivent le même schéma (`scratchpad/enemy-behavior/runC`).
+- **Géométrie** : ajustée, non contrôlée. Dans le repère de la table, boîte de l'ennemi de X-8 à X+7 et de Y-8 à Y+7. Aucun écart sur 17 échantillons. Les bornes exactes restent à ±1-2 px.
+- **Code** : `Enemies_whipHit` tue les types 1 et 4. La boîte du type 4 est provisoire (16 x 16 en coordonnées d'écran).
+- **Ouvert** : la direction du fouet n'a pas été lue dans la trace (les morts à x=200 se produisent côté gauche, alors que le plan demandait la droite). Une trace contrôlée avec l'ennemi posé en bordure de boîte fixerait les bords.
+- **Preuves** (hors dépôt) : `scratchpad/type4/whip-kill-type4.md`, `scratchpad/type4/object-table-format.md`, `scratchpad/type4/analysis/`.
 
-- **Trajectoire** : l'ennemi ne tombe pas en ligne droite. Un épisode mesuré (images 4617 à 4661) monte de Y AA à B0, puis redescend à AC, en se déplaçant de X E2 à A0. Les fins d'épisode à Y B0 observées ailleurs ne suffisent pas à conclure à une chute.
-- **Partage de la SAT** : les emplacements de sprites 14 à 21 sont réutilisés par d'autres objets. Les motifs changent en cours de trajectoire (48, puis 50, puis 58, puis 70). Une lecture de la SAT seule mélange donc plusieurs objets.
-- **Fouet** : sur environ 6 000 images, aucune destruction de type 4 n'est attribuable à un coup de fouet. Le fouet a rarement intersecté la trajectoire. Une mesure fiable demande de suivre chaque objet dans la table `C800` (champ de type et d'état), ce qui n'est pas fait.
+## Trajectoire du type 4
 
-Conclusion provisoire : la règle de destruction du type 4 reste ouverte. Le code ne le touche pas (`Enemies_whipHit` exclut le type 4).
-
+Un épisode mesuré (images 4617 à 4661) monte de Y AA à B0, puis redescend à AC, en se déplaçant de X E2 à A0. La SAT est partagée avec d'autres objets (motifs 50, 70 réutilisent les mêmes emplacements), donc une lecture de la SAT seule ne suffit pas.

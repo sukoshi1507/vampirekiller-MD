@@ -468,7 +468,7 @@ static void test_fall_to_floor(void)
     CHECK(s.enemy[0].y == 0xA1, "sur le sol : reste a Y 0xA1");
 }
 
-/* 9. Coup de fouet : tue un ennemi de type 1 touche (boite du fouet, coordonnees de jeu),
+/* 9. Coup de fouet : tue un ennemi de type 1 ou 4 touche (boite du fouet, coordonnees de jeu),
  * laisse le type 4 et un ennemi hors de portee. */
 static void test_whip_kills_type1(void)
 {
@@ -491,7 +491,7 @@ static void test_whip_kills_type1(void)
     (void)Enemies_spawn(&s, ENEMY_SIDE_RIGHT, ENEMY_TYPE_4, ENEMY_TYPE4_Y, 0);
     s.enemy[0].x = 120;
     killed = Enemies_whipHit(&s, 128, 170, 152, 177);
-    CHECK(killed == 0 && s.enemy[0].active, "fouet : type 4 non touche (regle inconnue)");
+    CHECK(killed == 1 && !s.enemy[0].active, "fouet : type 4 touche, mort (table C800, scratchpad/type4)");
 }
 
 int main(void)
