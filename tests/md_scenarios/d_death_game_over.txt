@@ -5,7 +5,7 @@ include boot_to_courtyard.inc
 until game.area == 1 max 3000 RIGHT
 expect health.lives == 2 and health.phase == 0 # C410 = 2 en jeu, vivant
 until enemies.alive > 0 max 600
-poke enemy_state+48 2                              # C415 = 2
+poke enemy_state+72 2                              # C415 = 2
 wait 2
 shot d-energy2
 until enemies.energy == 0 max 600
@@ -22,7 +22,7 @@ wait 2
 shot d-respawn
 until enemies.alive > 0 max 600
 poke health 0                                      # C410 = 0
-poke enemy_state+48 2
+poke enemy_state+72 2
 until enemies.energy == 0 max 600
 set f_contact frame
 until health.phase == 3 max 400

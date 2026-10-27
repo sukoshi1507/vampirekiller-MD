@@ -9,4 +9,7 @@ extern const unsigned long vk_enemy_tiles[384];
 #define VK_ENEMY4_FIRST_PATTERN 0x48
 #define VK_ENEMY4_TILE_COUNT 48
 extern const unsigned long vk_enemy4_tiles[384];
+#define VK_ENEMY5_FIRST_PATTERN 0x40
+#define VK_ENEMY5_TILE_COUNT 128
+extern const unsigned long vk_enemy5_tiles[1024];
 #endif

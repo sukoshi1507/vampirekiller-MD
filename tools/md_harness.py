@@ -63,7 +63,7 @@ BUTTONS = {'B': 0, 'A': 1, 'START': 3, 'UP': 4, 'DOWN': 5, 'LEFT': 6, 'RIGHT': 7
 FRONT_MODES = ['LOGO', 'TITLE', 'CASTLE', 'COURTYARD', 'INTERIOR', 'VIEWER', 'TEST', 'SOUND']
 
 # Tailles attendues (octets) des globales decodees : garde-fou contre une derive des structures.
-EXPECTED_SIZES = {'player': 14, 'game': 22, 'whip': 6, 'enemy_state': 56,
+EXPECTED_SIZES = {'player': 14, 'game': 22, 'whip': 6, 'enemy_state': 82,
                   'test_target': 18, 'courtyard_flame': 36, 'front_mode': 2, 'health': 4}
 # Noms C actuels des globales partagees (sgdk/src/frontend.h, actors.h) ; les scenarios
 # gardent les noms courts. test_target et courtyard_flame sont statiques (room_view.c).
@@ -292,16 +292,18 @@ class Game_View:
             a = A['enemy_state']
             enemies = []
             for i in range(4):
-                e = a + 12 * i
+                e = a + 18 * i
                 enemies.append({'active': m.rd8(e), 'exiting': m.rd8(e + 1), 'type': m.rd8(e + 2),
                                 'extraPhase': m.rd8(e + 3), 'x': s16(m.rd16(e + 4)), 'y': m.rd8(e + 6),
-                                'dx': s8(m.rd8(e + 7)), 'sub': m.rd8(e + 8), 'age': m.rd16(e + 10)})
-            b = a + 48
+                                'dx': s8(m.rd8(e + 7)), 'sub': m.rd8(e + 8), 'age': m.rd16(e + 10),
+                                'vy': s16(m.rd16(e + 12)), 'state': m.rd8(e + 14),
+                                'anim': m.rd8(e + 15), 'pose': m.rd8(e + 16)})
+            b = a + 72
             state['enemies'] = {'enemy': enemies, 'alive': sum(1 for e in enemies if e['active']),
                                 'energy': m.rd8(b), 'invuln': m.rd8(b + 1), 'invulnPhase': m.rd8(b + 2),
                                 'recoil': m.rd8(b + 3), 'recoilDir': s8(m.rd8(b + 4)),
                                 'parity': m.rd8(b + 5), 'type4Frames': m.rd8(b + 6),
-                                'type4Side': m.rd8(b + 7)}
+                                'type4Side': m.rd8(b + 7), 'type5Timer': m.rd8(b + 8)}
         if 'health' in A:
             a = A['health']   # VKHealth (health.h), statique de main.c
             state['health'] = {'lives': m.rd8(a), 'phase': m.rd8(a + 1), 'timer': m.rd16(a + 2)}

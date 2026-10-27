@@ -15,8 +15,8 @@
 
 _Static_assert(KEY_TILE_INDEX >= ENEMY4_TILE_INDEX + VK_ENEMY4_TILE_COUNT,
                "key tiles must follow the enemy tiles");
-_Static_assert(DOOR_TILE_INDEX + DOOR_COLS * DOOR_CELLS <= HUD_TILE_INDEX,
-               "key and door tiles must end before the HUD tiles");
+_Static_assert(DOOR_TILE_INDEX + DOOR_COLS * DOOR_CELLS <= ENEMY5_TILE_INDEX,
+               "key and door tiles must end before the type 5 tiles");
 
 static u32 door_tiles[DOOR_COLS * DOOR_CELLS * 8];
 

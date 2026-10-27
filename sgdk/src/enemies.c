@@ -81,6 +81,18 @@ static const EnemyU8 kType4Patterns[2][4] = {
     { 0x60, 0x68, 0x60, 0x70 }
 };
 
+/* Type 5 : position (X, Y) de la panthere par salle du hall, 0 = aucune. Liste d'objets
+ * en ROM fichier 0x1C674 (paires type, position YX par salle) : salle 2 en 80,80,
+ * salle 3 en 60,40, salle 7 en C0,60. */
+static const EnemyU8 kType5Spawn[8][2] = {
+    { 0, 0 }, { 0, 0 }, { 0x80, 0x80 }, { 0x60, 0x40 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0xC0, 0x60 }
+};
+#define ENEMY_TYPE5_VX 4            /* 0x0400 par mise a jour (une image sur deux) */
+#define ENEMY_TYPE5_WAKE 0x40       /* A891 : activation si |C427 - X| < 0x40 */
+#define ENEMY_TYPE5_JUMP_VY (-0x0108)
+#define ENEMY_TYPE5_GRAVITY 0x00A0
+#define ENEMY_TYPE5_VY_MAX 0x07FF
+
 /* Pose B : a partir de l'age 15, par blocs de 8 images (observe). */
 static EnemyU8 poseOf(EnemyU16 age)
 {
@@ -99,6 +111,10 @@ static void clearEnemy(Enemy *e)
     e->dx = 0;
     e->sub = 0;
     e->age = 0;
+    e->vy = 0;
+    e->state = 0;
+    e->anim = 0;
+    e->pose = 0;
 }
 
 void Enemies_setRoom(EnemyState *s)
@@ -108,6 +124,7 @@ void Enemies_setRoom(EnemyState *s)
     s->parity = 0;
     s->type4Frames = 0;
     s->type4Side = ENEMY_SIDE_RIGHT;
+    s->type5Timer = 0;
 }
 
 void Enemies_init(EnemyState *s)
@@ -239,9 +256,84 @@ static void fall(Enemy *e, const EnemyU8 *map, EnemyU8 stage)
     }
 }
 
+/* Type 5 : sol au point (X, Y) ou (X - 10, Y) (7B98 = 7D2F + 7C5E). Sans carte, sol partout. */
+static int pantherGround(const Enemy *e, const EnemyU8 *map, EnemyU8 stage)
+{
+    if (!map) return 1;
+    return vk_tile_solid(vk_sample_tile(map, (VKByte)e->x, e->y), stage, 0) ||
+           vk_tile_solid(vk_sample_tile(map, (VKByte)(e->x - 10), e->y), stage, 0);
+}
+
+/* Type 5 : vitesse X vers Simon (C427 >= X : droite). */
+static void pantherToward(Enemy *e, EnemyU8 simonX)
+{
+    e->dx = (EnemyS8)(simonX >= e->x ? 1 : -1);
+}
+
+/* Type 5 : une mise a jour (une image sur deux), dans l'ordre de la boucle 98EC :
+ * routine A87D, deplacement 99B9 (Y += vy, X += vx en 8.8), bornes 99E5. */
+static void pantherStep(Enemy *e, const EnemyRoomVars *v)
+{
+    int y;
+    if (e->x < 0x18) {         /* sortie a gauche, avant la routine */
+        e->active = 0;
+        return;
+    }
+    if (e->state == 0) {       /* A891 : assise, attend Simon a moins de 64 px (sans condition en Y) */
+        const int d = (int)v->simonX - e->x;
+        if ((d < 0 ? -d : d) < ENEMY_TYPE5_WAKE) {
+            pantherToward(e, v->simonX);
+            e->state = 1;
+        }
+    } else if (e->state == 1) { /* A8AC : course, animation A909, saut au bord du sol */
+        const EnemyU8 base = e->dx < 0 ? 0x41 : 0x45;
+        if (++e->anim > 12) e->anim = 1;
+        e->pose = (EnemyU8)(e->anim <= 3 ? base : e->anim <= 9 ? base + 1 : base - 1);
+        if (!pantherGround(e, v->map, v->stage)) {
+            e->vy = ENEMY_TYPE5_JUMP_VY;
+            e->pose = e->dx < 0 ? 0x42 : 0x46;
+            e->state = 2;
+        }
+    } else {                   /* A8D2 : saut ou chute, pose figee */
+        e->vy = (EnemyS16)(e->vy + ENEMY_TYPE5_GRAVITY);
+        if (e->vy > ENEMY_TYPE5_VY_MAX) e->vy = ENEMY_TYPE5_VY_MAX;
+        if (pantherGround(e, v->map, v->stage)) {
+            pantherToward(e, v->simonX);
+            e->anim = 0;
+            e->state = 1;
+            e->y &= 0xF8;
+            e->sub = 0;
+            e->vy = 0;
+        }
+    }
+    y = (int)((e->y << 8) | e->sub) + e->vy;
+    e->y = (EnemyU8)(y >> 8);
+    e->sub = (EnemyU8)y;
+    e->x += (EnemyS16)(ENEMY_TYPE5_VX * e->dx);
+    if (e->y >= 0xE4 || e->x >= 0xF1 || e->x < 0x07) e->active = 0;
+}
+
+/* Type 5 : creation (61BB, 5F1F, A85C). Pose assise tournee vers Simon, etat 0. */
+static void pantherSpawn(EnemyState *s, EnemyU8 x, EnemyU8 y, EnemyU8 simonX)
+{
+    EnemyU8 i;
+    for (i = 0; i < ENEMY_MAX; i++) {
+        Enemy *e = &s->enemy[i];
+        if (e->active) continue;
+        clearEnemy(e);
+        e->active = 1;
+        e->type = ENEMY_TYPE_5;
+        e->x = x;
+        e->y = y;
+        e->pose = simonX >= x ? 0x43 : 0x3F;
+        return;
+    }
+}
+
 /* Une image pour un ennemi deja actif. */
 static void advance(Enemy *e)
 {
+    if (e->type == ENEMY_TYPE_5) return;   /* mis a jour par Enemies_frame (carte, Simon) */
     if (e->exiting) {          /* masque a l'image suivant la limite (observe 1126, 1208) */
         e->active = 0;
         return;
@@ -278,9 +370,15 @@ void Enemies_update(EnemyState *s)
 }
 
 /* Boite de contact : Simon est dessine sur 24 x 32 en (X-8, Y-31) ; ennemi [x, x+16) x [y, y+h).
- * Les deux boites sont celles des sprites affiches (provisoire : la boite MSX n'est pas mesuree). */
+ * Les deux boites sont celles des sprites affiches (provisoire : la boite MSX n'est pas mesuree).
+ * Type 5 : boite de la ROM (8290, classe 2, HL = 0A0C), Simon debout. */
 static int touches(const Enemy *e, int simonX, int simonY)
 {
+    if (e->type == ENEMY_TYPE_5) {
+        const int d = simonX - e->x;
+        const int h = simonY + 8 - e->y;
+        return d > -17 && d < 17 && h >= 0 && h < 36;
+    }
     const int h = (e->type == ENEMY_TYPE_4) ? ENEMY_TYPE4_ROW_H : ENEMY_TYPE1_ROW_H;
     return e->x < simonX + ENEMY_SIMON_RIGHT &&
            e->x + 16 > simonX - ENEMY_SIMON_HALF_W &&
@@ -297,7 +395,7 @@ int Enemies_whipHit(EnemyState *s, int left, int top, int right, int bottom)
     for (i = 0; i < ENEMY_MAX; i++) {
         Enemy *e = &s->enemy[i];
         int ex, ey, eh;
-        if (!e->active || e->exiting) continue;
+        if (!e->active || e->exiting || e->type == ENEMY_TYPE_5) continue;
         ex = e->x + ENEMY_SCREEN_TO_GAME_X;
         ey = e->y;
         eh = (e->type == ENEMY_TYPE_4) ? ENEMY_TYPE4_ROW_H : ENEMY_TYPE1_ROW_H;
@@ -306,6 +404,23 @@ int Enemies_whipHit(EnemyState *s, int left, int top, int right, int bottom)
          * 12 morts sur la premiere image de fouet utile, scratchpad/type4/whip-kill-type4.md).
          * Boite du type 4 : 16 x 16 provisoire, bornes a +-1-2 px non fixees. */
         e->active = 0;
+        killed++;
+    }
+    return killed;
+}
+
+int Enemies_whipHitType5(EnemyState *s, int simonX, int simonY, int facingLeft, int crouched)
+{
+    const int whipX = facingLeft ? simonX - 20 : simonX + 20;
+    const int b = crouched ? 10 : 18;
+    EnemyU8 i;
+    int killed = 0;
+    for (i = 0; i < ENEMY_MAX; i++) {
+        Enemy *e = &s->enemy[i];
+        const int d = whipX - e->x;
+        if (!e->active || e->type != ENEMY_TYPE_5) continue;
+        if (d <= -24 || d >= 24 || e->y < simonY - b - 3 || e->y > simonY - b + 10) continue;
+        e->active = 0;         /* points de vie 1 : mort au premier coup (objet 1E non porte) */
         killed++;
     }
     return killed;
@@ -329,8 +444,15 @@ int Enemies_frame(EnemyState *s, EnemySpawnTimer *t, const EnemyRoomVars *v, int
         for (i = 0; i < ENEMY_MAX; i++) {
             Enemy *e = &s->enemy[i];
             /* Le type 4 vole : sa hauteur suit kType4Y, sans chute. */
-            if (e->active && !e->exiting && e->type != ENEMY_TYPE_4) fall(e, v->map, v->stage);
+            if (e->active && !e->exiting && e->type != ENEMY_TYPE_4 && e->type != ENEMY_TYPE_5)
+                fall(e, v->map, v->stage);
         }
+    }
+    /* Type 5 : une mise a jour une image sur deux, a partir de l'image qui suit la creation. */
+    for (i = 0; i < ENEMY_MAX; i++) {
+        Enemy *e = &s->enemy[i];
+        if (!e->active || e->type != ENEMY_TYPE_5) continue;
+        if (++e->age & 1) pantherStep(e, v);
     }
 
     /* Type 1 : 9CC3 une image sur deux. Le cote alterne par tir (provisoire). */
@@ -349,17 +471,26 @@ int Enemies_frame(EnemyState *s, EnemySpawnTimer *t, const EnemyRoomVars *v, int
         }
     }
 
+    /* Type 5 : une panthere par visite des salles 2, 3 et 7, ENEMY_TYPE5_DELAY images apres
+     * l'entree (62F5 recopie la liste a chaque chargement de salle). */
+    if (v->stage == 1 && v->room < 8 && kType5Spawn[v->room][0] && s->type5Timer < ENEMY_TYPE5_DELAY) {
+        if (++s->type5Timer == ENEMY_TYPE5_DELAY)
+            pantherSpawn(s, kType5Spawn[v->room][0], kType5Spawn[v->room][1], v->simonX);
+    }
+
     /* Contact : desactive pendant le recul et l'invulnerabilite (C420, C42D). */
     if (s->recoil == 0 && s->invuln == 0) {
         for (i = 0; i < ENEMY_MAX; i++) {
             const Enemy *e = &s->enemy[i];
             if (!e->active || e->exiting) continue;
+            const EnemyU8 damage = e->type == ENEMY_TYPE_5 ? ENEMY_TYPE5_DAMAGE : ENEMY_CONTACT_DAMAGE;
             if (!touches(e, v->simonX, v->simonY)) continue;
-            s->energy = (s->energy > ENEMY_CONTACT_DAMAGE) ? (EnemyU8)(s->energy - ENEMY_CONTACT_DAMAGE) : 0;
+            s->energy = (s->energy > damage) ? (EnemyU8)(s->energy - damage) : 0;
             s->invuln = ENEMY_INVULN_START;
             s->invulnPhase = 0;
             s->recoil = ENEMY_RECOIL_FRAMES;
-            s->recoilDir = e->dx;
+            /* Panthere assise (dx 0) : recul a l'oppose d'elle (PROVISOIRE, non mesure). */
+            s->recoilDir = e->dx ? e->dx : (EnemyS8)(v->simonX >= e->x ? 1 : -1);
             hit = 1;
             break;
         }
@@ -382,6 +513,26 @@ int Enemies_sprites(const EnemyState *s, EnemyU8 index, EnemySprite out[ENEMY_SP
     e = &s->enemy[index];
     if (!e->active) return 0;
 
+    if (e->type == ENEMY_TYPE_5) {
+        /* Deux cellules 16x16 a deux couches (N, N+4), N = 40 + 16 x (pose - 3F) a gauche,
+         * 80 + 16 x (pose - 43) a droite (miroir). Decalages mesures sur 981 images ; lignes
+         * Y-15 a Y. Le retard d'affichage MSX d'une mise a jour n'est pas reproduit. */
+        const int right = e->pose >= 0x43;
+        const int sitting = e->pose == 0x3F || e->pose == 0x43;
+        const EnemyU8 n = (EnemyU8)(right ? 0x80 + 16 * (e->pose - 0x43) : 0x40 + 16 * (e->pose - 0x3F));
+        const EnemyU8 left = (EnemyU8)(right ? n + 8 : n);
+        const EnemyU8 rightCell = (EnemyU8)(right ? n : n + 8);
+        const EnemyS16 xl = (EnemyS16)(e->x + (sitting ? (right ? -23 : -9) : -16));
+        const EnemyS16 xr = (EnemyS16)(e->x + (sitting ? (right ? -7 : 7) : 0));
+        for (k = 0; k < ENEMY_SPRITES; k++) {
+            out[k].y = (EnemyU8)(e->y - 15);
+            out[k].x = k < 2 ? xl : xr;
+            out[k].pattern = (EnemyU8)((k < 2 ? left : rightCell) + (k & 1 ? 4 : 0));
+            out[k].bank = 1;
+        }
+        return ENEMY_SPRITES;
+    }
+
     if (e->type == ENEMY_TYPE_4) {
         /* Une cellule 16x16, deux couches (N et N+4), 4 poses de 16 images. Les motifs
          * portent ENEMY_PATTERN_TYPE4 : leurs numeros recouvrent ceux des types A et B. */
@@ -392,6 +543,7 @@ int Enemies_sprites(const EnemyState *s, EnemyU8 index, EnemySprite out[ENEMY_SP
         out[1].y = e->y;
         out[1].x = e->x;
         out[1].pattern = (EnemyU8)(ENEMY_PATTERN_TYPE4 | (pattern + 4));
+        out[0].bank = out[1].bank = 0;
         return ENEMY_TYPE4_SPRITES;
     }
 
@@ -401,6 +553,7 @@ int Enemies_sprites(const EnemyState *s, EnemyU8 index, EnemySprite out[ENEMY_SP
         out[k].y = (EnemyU8)(k < 2 ? e->y : e->y + ENEMY_ROW_OFFSET);
         out[k].x = e->x;
         out[k].pattern = kPatterns[t][k < 2 ? 0 : pose][k];
+        out[k].bank = 0;
     }
     return ENEMY_SPRITES;
 }

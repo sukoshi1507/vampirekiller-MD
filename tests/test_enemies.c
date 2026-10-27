@@ -509,6 +509,80 @@ static void test_whip_kills_type1(void)
     CHECK(killed == 1 && !s.enemy[0].active, "fouet : type 4 touche, mort (table C800, scratchpad/type4)");
 }
 
+/* Type 5 (panthere), research/enemy-behavior.md section Type 5 : creation 21 images apres
+ * l'entree en salle 2 (80,80), activation a 62 px, courbe du saut table complete,
+ * atterrissage Y & F8, poses et decalages SAT, contact -6, fouet debout / accroupi. */
+static void test_type5(void)
+{
+    static EnemyU8 map[768];
+    static const EnemyU8 jumpY[13] = { 0x7E, 0x7E, 0x7E, 0x7F, 0x81, 0x83, 0x85, 0x89,
+                                        0x8D, 0x91, 0x97, 0x9C, 0xA3 };
+    EnemyState s;
+    EnemySpawnTimer t;
+    EnemyRoomVars v;
+    EnemySprite sp[ENEMY_SPRITES];
+    Enemy *e = &s.enemy[0];
+    int push = 0, f, k;
+    memset(map, 0, sizeof map);
+    for (k = 0; k < 32; k++) map[18 * 32 + k] = 1;   /* sol en Y A0..A7 */
+    Enemies_init(&s);
+    Enemies_spawnTimerInit(&t);
+    memset(&v, 0, sizeof v);
+    v.stage = 1; v.room = 2; v.simonX = 10; v.simonY = 192; v.map = map;
+    for (f = 1; f < ENEMY_TYPE5_DELAY; f++) (void)Enemies_frame(&s, &t, &v, &push);
+    CHECK(!e->active, "type 5 : pas encore cree a l'image %d", f - 1);
+    (void)Enemies_frame(&s, &t, &v, &push);
+    CHECK(e->active && e->type == ENEMY_TYPE_5 && e->x == 0x80 && e->y == 0x80 && e->pose == 0x3F,
+          "type 5 : cree en 80,80 assis a gauche");
+    CHECK(Enemies_sprites(&s, 0, sp) == 4 && sp[0].pattern == 0x40 && sp[1].pattern == 0x44 &&
+          sp[2].pattern == 0x48 && sp[3].pattern == 0x4C && sp[0].x == 0x80 - 9 && sp[2].x == 0x80 + 7 &&
+          sp[0].y == 0x80 - 15 && sp[0].bank == 1, "type 5 : pose 3F en X-9 / X+7");
+    for (k = 0; k < 4; k++) (void)Enemies_frame(&s, &t, &v, &push);
+    CHECK(e->state == 0 && e->x == 0x80, "type 5 : Simon a 118 px, reste assise");
+    v.simonX = 0x80 + 62;
+    (void)Enemies_frame(&s, &t, &v, &push);
+    if (e->state == 0) (void)Enemies_frame(&s, &t, &v, &push);
+    CHECK(e->state == 1 && e->dx == 1 && e->x == 0x84 && e->pose == 0x3F,
+          "type 5 : activation a 62 px, 4 px vers Simon, pose assise une mise a jour");
+    v.simonX = 0;   /* pas de demi-tour en course ni en saut */
+    for (k = 0; k < 13; k++) {
+        (void)Enemies_frame(&s, &t, &v, &push);
+        (void)Enemies_frame(&s, &t, &v, &push);
+        CHECK(e->y == jumpY[k], "type 5 : saut pas %d, Y %02X attendu %02X", k, jumpY[k], e->y);
+        CHECK(e->state == 2 && e->pose == 0x46, "type 5 : saut pas %d, pose 46", k);
+    }
+    CHECK(e->x == 0x84 + 4 * 13, "type 5 : 4 px par mise a jour en saut (X %d)", e->x);
+    (void)Enemies_frame(&s, &t, &v, &push);
+    (void)Enemies_frame(&s, &t, &v, &push);
+    CHECK(e->state == 1 && e->y == 0xA0 && e->sub == 0 && e->vy == 0 && e->dx == -1,
+          "type 5 : posee en A0, repart vers Simon");
+    (void)Enemies_frame(&s, &t, &v, &push);
+    (void)Enemies_frame(&s, &t, &v, &push);
+    CHECK(e->anim == 1 && e->pose == 0x41, "type 5 : course gauche, pose 41 au compteur 1");
+    CHECK(Enemies_sprites(&s, 0, sp) == 4 && sp[0].pattern == 0x60 && sp[2].pattern == 0x68 &&
+          sp[0].x == e->x - 16 && sp[2].x == e->x, "type 5 : pose 41 en X-16 / X");
+    e->pose = 0x43;
+    CHECK(Enemies_sprites(&s, 0, sp) == 4 && sp[0].pattern == 0x88 && sp[1].pattern == 0x8C &&
+          sp[2].pattern == 0x80 && sp[0].x == e->x - 23 && sp[2].x == e->x - 7,
+          "type 5 : pose 43 en X-23 / X-7");
+
+    /* Contact : |C427 - X| < 17, Y de C425 - 27 a C425 + 8 ; -6. */
+    e->x = 100; e->y = 0xA0; e->state = 0; e->dx = 0;
+    v.simonX = 116; v.simonY = 0xA0 - 8;
+    s.energy = 32; s.invuln = 0; s.recoil = 0;
+    CHECK(Enemies_frame(&s, &t, &v, &push) == 1 && s.energy == 26 && s.recoilDir == 1,
+          "type 5 : contact -6, recul a l'oppose");
+    /* La panthere s'est reveillee : Simon 28 px plus bas qu'elle est hors de la boite. */
+    s.invuln = 0; s.recoil = 0; s.energy = 32; v.simonX = (EnemyU8)e->x; v.simonY = 0xA0 + 28;
+    CHECK(Enemies_frame(&s, &t, &v, &push) == 0 && s.energy == 32, "type 5 : Y = C425 - 28, pas de contact");
+
+    /* Fouet : debout, il passe au-dessus d'une panthere au niveau de Simon ; accroupi, il la tue. */
+    e->x = 100; e->y = 0xA0;
+    CHECK(Enemies_whipHitType5(&s, 120, 0xA0, 1, 0) == 0 && e->active, "type 5 : fouet debout au-dessus");
+    CHECK(Enemies_whipHitType5(&s, 120, 0xA0, 0, 1) == 0 && e->active, "type 5 : fouet accroupi du mauvais cote");
+    CHECK(Enemies_whipHitType5(&s, 120, 0xA0, 1, 1) == 1 && !e->active, "type 5 : fouet accroupi, mort");
+}
+
 int main(void)
 {
     test_rom_tables();
@@ -527,6 +601,7 @@ int main(void)
     test_contact_recoil_invuln();
     test_fall_to_floor();
     test_whip_kills_type1();
+    test_type5();
     if (failures == 0) {
         printf("Enemies tests: PASS\n");
         return 0;

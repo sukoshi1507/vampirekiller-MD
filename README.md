@@ -16,7 +16,9 @@ Ce qui fonctionne dans la ROM Mega Drive :
   direction de regard. Les sorties verticales arrivent en glissade, et la sortie
   basse de la salle 5 reprend la volée de la salle 1.
 - **Hall du château (stage 1)** : huit salles, liens gauche/droite et haut/bas.
-- **Ennemis du hall** : type 1 (salles 0, 1, 5, 6) et type 4 (salle 4), avec
+- **Ennemis du hall** : type 1 (salles 0, 1, 5, 6), type 4 (salle 4) et type 5, la
+  panthère (salles 2, 3, 7 : assise, bondit vers Simon sous 64 px, saute au bord des
+  plateformes, -6 d'énergie au contact, tuée par le fouet accroupi), avec
   apparition, mouvement, animation, contact (-2 d'énergie, recul, invulnérabilité),
   chute sur le sol et couleurs d'après la table de couleur du MSX2.
   **Le fouet tue les ennemis de types 1 et 4** (type 1 confirmé à l'émulateur).
@@ -37,7 +39,10 @@ Ce qui n'est pas porté ou reste provisoire :
 - **Type 4** (salle 4, volant) : dessin, battement d'ailes et vol en vague d'après le
   MSX2 ; tué par le fouet d'après la table des objets (boîte provisoire, direction
   du fouet non vérifiée, `research/enemy-behavior.md`).
-- **Type 5** (salles 2, 3, 7) : non porté (apparition, mouvement, graphisme inconnus).
+- **Type 5** : le retard d'affichage d'une mise à jour du MSX, l'objet de mort (`1E`), le
+  score et la boîte de contact accroupi ne sont pas reproduits ; la phase 3 du fouet
+  est assimilée au fouet déployé (`vk_whip_phase` 2) et le recul face à une panthère
+  assise est provisoire.
 - **Stage 2** : ni ennemis ni objets. Après une mort, Simon reprend en salle 0
   (x 16, y 96), lieu provisoire. Les liens haut/bas viennent de la table de la ROM,
   sans trace en jeu.

@@ -35,6 +35,9 @@
 /* Type 4 layers (room 4): their pattern numbers overlap types A and B, so they have
  * their own block; pattern ENEMY_PATTERN_TYPE4 | N uses ENEMY4_TILE_INDEX + (N - 0x48). */
 #define ENEMY4_TILE_INDEX (ENEMY_TILE_INDEX + VK_ENEMY_TILE_COUNT)
+/* Type 5 layers (rooms 2, 3, 7, patterns 40..BC, sprites of bank 1): after the key and
+ * door tiles of item_view.c; pattern N uses ENEMY5_TILE_INDEX + (N - 0x40). */
+#define ENEMY5_TILE_INDEX 760
 #define ENEMY_SPRITE_BASE 9           /* hardware sprites 9.. (0..8 are Simon, whip, target) */
 
 /* Hall enemies (enemies.c). Energy and invulnerability live here across rooms. */

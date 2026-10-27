@@ -1,0 +1,32 @@
+# (g) Type 5, la panthere de la salle 2 du hall (research/enemy-behavior.md, section Type 5).
+# enemies.enemy[0] : type 3 = ENEMY_TYPE_5 ; x, y = objet MSX ; state 0 assise, 1 course, 2 saut.
+include boot_to_courtyard.inc
+until game.area == 1 max 3000 RIGHT
+# Changement de salle debug du hall : A tenu, puis A+DROITE (le premier front est perdu).
+hold A 3
+hold A+RIGHT 3
+wait 10
+hold A 3
+hold A+RIGHT 3
+wait 10
+hold A 3
+hold A+RIGHT 3
+wait 10
+expect game.room == 2 # salle 2 du hall
+# Simon sur la plateforme de la panthere (x 194, y 128), comme les tests WC du MSX.
+poke vk_game+0 194
+poke vk_game+1 128
+until enemies.enemy[0].active max 40
+expect enemies.enemy[0].type == 3 and enemies.enemy[0].x == 128 and enemies.enemy[0].y == 128 # creee en 80,80
+expect enemies.enemy[0].pose == 0x43 # assise, tournee vers Simon (a droite)
+wait 4
+shot g-panthere-assise
+expect enemies.enemy[0].state == 0 # Simon a 66 px : elle attend
+# Un pas a gauche : activation sous 64 px.
+until enemies.enemy[0].state == 1 max 20 LEFT
+expect enemies.enemy[0].dx == 1 # elle court vers Simon
+# Accroupi, coup de fouet a gauche : la panthere meurt au premier coup.
+hold DOWN 2
+hold DOWN+B 1
+until not enemies.enemy[0].active max 30 DOWN
+expect enemies.energy == 32 # tuee avant le contact

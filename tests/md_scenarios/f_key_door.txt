@@ -40,6 +40,11 @@ hold A 3
 hold A+RIGHT 3
 wait 10
 expect game.room == 7 # salle 7 du hall
+# La panthere de la salle 7 (C0,60) nait sur le rebord de la porte ; on la retire et on
+# laisse passer un eventuel recul pour isoler la porte (le run K3 du MSX encaissait son coup).
+until enemies.enemy[0].active max 40
+poke enemy_state+0 0
+wait 30
 poke vk_game+0 200
 poke vk_game+1 96
 wait 4

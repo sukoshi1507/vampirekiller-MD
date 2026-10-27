@@ -203,6 +203,8 @@ Dessin : flux RLE de la ROM en `0x154DE`, octets 271 à 462 (paires 48/4C, 50/54
 
 ## Type 5 : la panthère (salles 2, 3 et 7)
 
+**Porté** dans `sgdk/src/enemies.c` (`pantherStep`, `pantherSpawn`, `Enemies_whipHitType5`), tuiles par `tools/build_enemy_sprites_md.py` (`vk_enemy5_tiles`, VRAM 760+), tests `test_type5` et scénario `g_room2_panther`. Non reproduits : retard d'affichage d'une mise à jour, objet `1E`, score, contact accroupi.
+
 Relevé du 2026-10-27/28 (openMSX, SAT et objets lus à chaque image, plus lecture du code). Il **remplace le tableau du §3.4** et ferme les points 1, 2 et 7 du §7. Le type 5 est une panthère : elle est assise, bondit vers Simon quand il approche, saute au bord des plateformes et retombe, puis repart vers Simon.
 
 Repère : celui de la table des objets (`C800`), qui est celui de Simon (`C427` = X, `C425` = Y des pieds). Objet : `+1` état, `+2/+3` Y en 8.8, `+4/+5` X en 8.8, `+6` déplacement actif, `+7/+8` vitesse Y (8.8, signée), `+9/+A` vitesse X, `+B` pose, `+C` compteur d'animation, `+D` points de vie, `+E` drapeaux (bit 0 : touchable au fouet, bit 1 : contact), `+F` numéro de l'entrée de liste.

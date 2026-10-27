@@ -8,6 +8,8 @@
 
 _Static_assert(ENEMY4_TILE_INDEX + VK_ENEMY4_TILE_COUNT <= HUD_TILE_INDEX,
                "sprite tiles 400.. must end before the HUD tiles");
+_Static_assert(ENEMY5_TILE_INDEX + VK_ENEMY5_TILE_COUNT <= HUD_TILE_INDEX,
+               "type 5 tiles must end before the HUD tiles");
 
 /* Simon, whip and hall enemies on screen. Their gameplay lives in player.c,
  * whip.c and enemies.c; this module only feeds them and draws the result. */
@@ -69,6 +71,7 @@ void vk_step_enemies(void)
         {
             VDP_loadTileData((const u32 *)vk_enemy_tiles, ENEMY_TILE_INDEX, VK_ENEMY_TILE_COUNT, CPU);
             VDP_loadTileData((const u32 *)vk_enemy4_tiles, ENEMY4_TILE_INDEX, VK_ENEMY4_TILE_COUNT, CPU);
+            VDP_loadTileData((const u32 *)vk_enemy5_tiles, ENEMY5_TILE_INDEX, VK_ENEMY5_TILE_COUNT, CPU);
         }
     }
     if (!key) return;
@@ -85,6 +88,11 @@ void vk_step_enemies(void)
         int left = 0, top = 0, right = 0, bottom = 0;
         vk_whip_bounds(&vk_whip, &left, &top, &right, &bottom);
         (void)Enemies_whipHit(&vk_enemies, left, top, right, bottom);
+        /* Type 5: only in the MSX whip phase 3 (C422 = 3), taken as the full lash
+         * (vk_whip_phase 2, PROVISIONAL match), from the latched whip origin. */
+        if (vk_whip_phase(&vk_whip) == 2)
+            (void)Enemies_whipHitType5(&vk_enemies, vk_whip.x, vk_whip.y,
+                                       vk_whip.facing, vk_whip.crouched);
     }
     if (push)
     {
@@ -117,7 +125,9 @@ static u16 show_enemy_sprites(void)
     for (i = 0; i < count; i++)
     {
         const u8 pattern = list[i].pattern;
-        const u16 tile = (pattern & ENEMY_PATTERN_TYPE4)
+        const u16 tile = list[i].bank
+            ? (u16)(ENEMY5_TILE_INDEX + pattern - VK_ENEMY5_FIRST_PATTERN)
+            : (pattern & ENEMY_PATTERN_TYPE4)
             ? (u16)(ENEMY4_TILE_INDEX + (pattern & ~ENEMY_PATTERN_TYPE4) - VK_ENEMY4_FIRST_PATTERN)
             : (u16)(ENEMY_TILE_INDEX + pattern - VK_ENEMY_FIRST_PATTERN);
         VDP_setSpriteFull((u16)(ENEMY_SPRITE_BASE + i), list[i].x, list[i].y, SPRITE_SIZE(2, 2),
