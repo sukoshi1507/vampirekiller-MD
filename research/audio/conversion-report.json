@@ -1,0 +1,44 @@
+{
+  "input": "psg_ay_msx_long1_150s.vgm",
+  "input_bytes": 171515,
+  "ay_writes": 28542,
+  "ay_registers": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+  ],
+  "total_samples": 6610737,
+  "total_seconds": 149.903,
+  "unsupported_commands": {},
+  "conversion": {
+    "tone_noise_mix": 101,
+    "sn_tone_writes": 1577,
+    "sn_volume_writes": 9686,
+    "tone_clipped": 410,
+    "sn_noise_writes": 1
+  },
+  "sn_event_times": 10584,
+  "clocks": {
+    "ay_hz": 1789773,
+    "sn_hz": 3579545
+  },
+  "status": "candidate",
+  "caveats": [
+    "Enveloppe AY non reproduite (volume max applique si bit 4 actif).",
+    "Melange ton+bruit : ton conserve.",
+    "Bruit reduit a trois taux SN, bruit blanc.",
+    "Ecarts de frequence dus au bornage 1..1023 seulement."
+  ],
+  "sn_out": {
+    "name": "psg_sn76489_candidate.vgm",
+    "bytes": 57534
+  }
+}
