@@ -1,132 +1,122 @@
-# Ennemis et plateformes mobiles - etat de la recherche
+# Ennemis et plateformes mobiles - état de la recherche
 
-Statut : **recherche partielle**. Aucun ennemi ni aucune plateforme n'a encore
-ete observe en execution, et aucune table de spawn ou de trajectoire n'est
-authentifiee. Ce document ne decrit donc pas de mecanique finale; il fixe ce
-qui est prouve, ce qui est deduit du code, et ce qui bloque la suite.
+Statut : **un ennemi est observé et suivi** (deux ennemis en salle 1, trajectoires et cadence mesurées). **Aucune plateforme mobile** n'est trouvée. La table de spawn par salle n'est **pas** identifiée ; la routine `5A49` décode un autre flux (carte de cellules, voir 1.4).
 
-Dump de reference : SHA-256 `99eabaaeb2b6c02220e131043d5a6401d0d8c5f413d89204547adcc04d65e7e2`.
-Adresses CPU sauf mention contraire. Banque 0 fixe en `4000-5FFF`; la fenetre
-`6000-7FFF` est commutable (banque 01 pendant la boucle de jeu).
+Ce document remplace la version précédente, qui disait que Simon ne bougeait pas et que le mapping des touches était inconnu. Ces deux points sont faux (voir 1.1).
 
-## 1. Prouve (execution openMSX, ou lecture directe de la ROM)
+Adresses CPU sauf mention contraire. Banque fixe `4000-5FFF` (banque 0). Dump : SHA-256 de la ROM `99eabaae...` (ROM extraite du zip, voir `research/input-gate.md`).
 
-### 1.1 Boucle de frame et sondage
+## 1. Prouvé (exécution openMSX ou lecture de la ROM)
 
-- Le hook VBLANK `4028` est atteint a 60 Hz : 1 frame = 1/60 s (frame 1 a 4,07 s,
-  frame 121 a 6,07 s). Source : trace `entities5/entities-live.csv` (3592 lignes).
-- Le handler d'etat `414D` dispatche sur `C000` via la table a `4161`
-  (14 entrees). Le handler de l'etat 4 (`422C`) appelle `62E6`, la chaine de frame
-  de jeu (`423A`). Le handler de l'etat 6 (`4294`) appelle `62D0`.
-- Pendant la trace, la machine atteint `C000=3`, puis `4`, puis `5` (`C001=0`),
-  l'etat ou `4257` teste `C40C`, `C40A`, `C41B`, `C408`, `C409` et `C413`.
+### 1.1 Entrées et marche de Simon
 
-### 1.2 Sprites et objets
+- `keymatrixdown 8 N` prend un **masque de bits** sur la ligne 8, pas un index de colonne. Mapping utilisé : SPACE = masque 1 (fouet), LEFT = 16, UP = 32, DOWN = 64, RIGHT = 128. Détail et mesures : `research/input-gate.md`, `research/input-mapping-openmsx.md`.
+- Marche à droite : Simon avance de **1 px par VBLANK** (`C427` +2 toutes les 2 images). Mesure refaite dans cette recherche : x passe de 16 à 232 en 13,5 s environ.
+- Le contrôle de Simon ne dépend pas de `C00B`/`C00C` (hypothèse précédente fausse).
 
-- La SAT est a `D600` (32 entrees de 4 octets Y, X, N, couleur). `63C5` la
-  remplit de `E0` (sprite masque) a chaque frame. Dans la trace, les entrees
-  masquees valent bien `E0`.
-- Dans la premiere salle, la trace n'a montre que 4 sprites (Simon, Y ~ `90`/`A0`,
-  X ~ `08`) apres l'etat 5. **Aucun ennemi n'est apparu** pendant environ 60 s
-  d'emulation, avec les entrees testees ci-dessous.
-- Les frames `500-850` (`C000=3`, `C001=4`) affichent 14 sprites a `Y=39`, dont
-  `X` varie de `B8` a `AF` avec des numeros `40/44/50/54`. Ce motif est un
-  mouvement continu. Il est **inconnu** s'il s'agit d'un ennemi, d'une
-  animation d'intro ou d'un element de l'ecran titre (voir section 4).
+### 1.2 Trace de l'ennemi (salle de départ puis salle suivante)
 
-### 1.3 Entrees clavier (lecture, pas la correspondance des boutons)
+Script : `scratchpad/enemies6/trace.tcl` (lecture seule, VBLANK `4028`, RIGHT maintenu de 25 s à 60 s, SPACE au titre). Sortie : `scratchpad/enemies6/frames.txt` (2217 images : E000-E47F, C420-C5FF, D600-D67F, C000/C001, D000, C425/C427 à chaque image). Analyse : `scratchpad/enemies6/an2.py`, `an4.py`, `an5.py`.
 
-- `4B9D` lit la matrice via le BIOS (`SNSMAT`, `0141` en page 0, wrapper `0093`).
-  Ligne 8 : `4BCF`. Ligne 6 : `4BF4`.
-- `C007` (etat de la ligne 8 via `4BBB`) change lorsque les bits impairs de la
-  ligne 8 sont presses (valeur `0x10`). Preuve par la trace.
-- `C00C` (etat de la ligne 6 via `4BF4`) n'a **jamais** change pendant la trace,
-  malgre les pressions des bits 0 a 7 de la ligne 6. `C00B` (front montant
-  de `C00C`) reste donc a 0.
-- Simon ne se deplace pas. La routine `5C25` (appelee par `4257`) ne passe a la
-  suite que si `C00B` bit 0 vaut 1 (`5C41`: `LD A,(C00B); RRA; JR NC`). Sans
-  front sur ce bit, le controle de Simon n'est pas active.
+Chronologie (images VBLANK, 60 Hz ; `C000` = état de jeu) :
 
-### 1.4 Chemin de demonstration (sans entree)
+| Image | Temps | Événement |
+|---|---|---|
+| 1-838 | 24 s-38 s | Salle de départ (`D000=0`), Simon marche de x=16 à x=232. **Aucun ennemi mobile.** |
+| ~776 | ~37 s | Apparition de 8 sprites fixes à `X=E0`, `Y=8F/9F`, N=`20..2C` (Simon à x=216). Ils ne bougent pas jusqu'à la sortie de salle. Nature non identifiée (pas le fouet : N diffère de `research/whip-hitbox.md`). |
+| 839 | 38,0 s | `C000=10` (transition), puis `C000=4`, `D000=1` : chargement de la salle suivante. |
+| 857-858 | 38,6 s | `E000-E47F` réécrit (chargement de la carte de la salle 1). |
+| 908 | 39,1 s | **Premier ennemi** : 4 entrées SAT (s14-s17) à `X=E5`, `Y=A0/B0`, Simon à x=48. Première image à `Y=E1`, `X=99` (valeur provisoire), puis position réelle. |
+| 1000-1025 | 40,6 s-41,1 s | Contact avec Simon (ennemi 1 à x=136 au moment où Simon est à 136) : Simon recule de x 136 à 108 et son Y (`C425`) fait un arc 192 -> 176 -> 192. |
+| 1012 | 40,9 s | **Deuxième ennemi** (s18-s21) : spawn à `X=0A`, `Y=A0/B0`, va vers la droite. |
+| 1126 | 43,5 s | Ennemi 1 sort à gauche (x proche de 0) : disparaît du SAT. |
+| 1208 | 44,8 s | Ennemi 2 disparaît (x=216). Entrée `C000=9` avec Simon à x=10 (voir 1.5). |
+| 1256 | 45,9 s | Ennemi 1 réapparaît à droite. Cycle de passages répété (1474, 1564, 1585, 1694). |
 
-- `4B9D` ne lit l'entree que si `C002 & 0x40` est non nul. Sinon `4E2E` appelle
-  une sequence pilotee par `CF3A` (compteur) et `CF3B` (indice). Si `CF3B != FF`,
-  la routine `4BB1` alimente `C007` avec ces valeurs. Ce chemin pourrait servir
-  de scenario reproductible, mais son contenu n'a pas encore ete lu.
+**Vitesse et cadence de l'ennemi 1 (mesurées)** :
 
-## 2. Deduit du code (non verifie en execution)
+- Déplacement : **-1 px par image** (x = E5 en 909-910, E3 en 911-912, E1 en 913-914 ...). Pas de pause observée sur 218 images. Le temps de traversée d'un bord à l'autre est d'environ 218 images (3,6 s).
+- Animation : seules les 4 entrées du bas (N=48/4C ou 50/54) alternent. Pose 48/4C pendant 8 images, pose 50/54 pendant 8 images. Cycle complet de 16 images (1st cycle : 14 images, car le spawn compte). Les entrées du haut restent à N=40/44.
+- Simon marche à 1 px par image, donc la distance relative se ferme à 2 px par image.
 
-- **Chaine de frame** `62E6..6336` (banque 01) : `564C`, `570D`, `63B7`, `6402`,
-  `5A49`, `63C5`, `6382`, `5780`, `56E1`, `4F83`, `47D4`, `6333`, `4F91`, `91BE`,
-  `8671`, `9147`, `8EE6`, `47C7`, `9CA9`, `6154`, `61BB`. Les candidats objets
-  sont `63B7` (efface `C420`, 0x4F octets), `6382` (efface `C470`, 0x28F octets,
-  et appelle `5B1B`, `5A40`, `902D`, `909B`, `5A37`, `7513`), et `5A49`.
-- **`5A49` (decodage d'un flux)** : efface `E000..E47F`, puis lit un flux a
-  partir de `5A56`. Le code traite des octets de commande `00` (fin), `01`, `02`
-  (appel `4066` avec `A=18`) et copie des paires d'octets jusqu'a `7F`. Ce
-  flux pourrait etre la liste d'objets d'une salle, mais le format n'est pas prouve.
-- **`6402`** : table indexee par `D000` (stage) a `641F`, qui ecrit `C425`,
-  `C427` et `C42C`. Il s'agit probablement de la position initiale de Simon.
-- **Adresses RAM candidates** : `C420-C46F` (objets ?), `C470-C5FF` (efface par `6382`),
-  `E000-E47F` (flux decode par `5A49`), `D600-D67F` (SAT, prouve), `C800`
-  et `D700` (effaces par `6382`).
+**Deuxième ennemi** : même vitesse en valeur absolue (+1 px par image vers la droite), même cadence d'animation (8 images par pose), patterns différents (N=58/5C en haut, 60/64 ou 68/6C en bas).
+
+**Cadence de réapparition** : les passages alternent entre bord droit et bord gauche. Intervalles observés entre une disparition et la réapparition suivante : 130, 111, 152 images. La cause (minuterie, compteur, ou événement) est **inconnue**.
+
+### 1.3 Sprites et SAT
+
+- La SAT est en `D600-D67F` (32 entrées de 4 octets : Y, X, N, couleur). Une entrée à `Y=E0` est masquée (vérifié).
+- Simon occupe 4 entrées (s0-s3). Le sprite est en Y = `C425-16` et `C425-32` : pour Simon à `C425=C0`, Y = `B0` et `A0`. L'ennemi 1 occupe la même bande verticale (Y `A0` et `B0`), donc il fait la même taille que Simon.
+- Les entrées d'un même sprite partagent le même X (paires N=40/44 et 48/4C). La géométrie exacte (16x16 ou 8x8, l'ordre des motifs) n'est **pas** vérifiée : il faudrait un décodage de la VRAM (la SAT réelle est en `F600`, voir `research/whip-hitbox.md`). Les captures d'écran ne fonctionnent pas avec le rendu de la machine de test.
+
+### 1.4 Routine `5A49` : décodage de carte, pas de table d'ennemis
+
+- `5A49` efface `E000-E47F`, puis lit un flux à partir de `5A98` :
+  - Stage 0 (`D000=0`) : flux à `800C` (banque 14).
+  - Autres stages : table de pointeurs en `8000` (banque 14), indexée par `D002`.
+- Format prouvé par le code (`5A65-5A90`) :
+  - Un octet `00` termine le flux.
+  - `FE` : passe à la ligne suivante (+0x18 octets dans `E000`).
+  - `FF` : saute +0x180 octets.
+  - Sinon : deux octets copiés (index de cellule, attribut). Si le deuxième vaut `7F`, un troisième octet est copié.
+- Vérifié : un décodeur Python (`scratchpad/enemies6/decode5a49.py`) reproduit exactement `E000-E003`, `E018-E01B`, `E030-E031` de la RAM à l'image 1 (salle 0).
+- Conclusion : `E000-E47F` est une **carte de cellules à 2 octets** (12 cellules par ligne), réécrite à chaque chargement de salle et **constante** pendant la salle (aucun octet ne change en jeu, seulement au changement de salle). Ce n'est pas une liste d'ennemis : aucun ennemi n'apparaît dans ce bloc. Le flux `5A49` n'est donc **pas** la table de spawn.
+
+### 1.5 Ce qui est écrit par qui (watchpoints, 60 s de jeu)
+
+- `C425` (Y de Simon) est écrit par : `6D5D` (dans une routine `6D4D-6D60` qui ajoute une valeur d'une table à Y : arc de saut ou de recul), `63C3`/`6411`/`63D8` (chargement de salle), `44D2`, `40A5`, `830F` (initialisation).
+- `C427` (X) est écrit par `6C98` (732 écritures, marche de Simon, contrôle) et quelques écritures d'initialisation.
+- **Aucune écriture de `C425` ou `C427` hors de ces routines** n'a été vue. En particulier, aucune plateforme mobile n'a déplacé Simon dans les salles 0 et 1 pendant ce test.
+- `C000=9` apparaît quand Simon atteint x=10 après être passé à droite (images 293, 1208, 1564). Cela ressemble à un défilement ou à une réapparition de l'écran (x repart de 10), pas à une mort. **Déduit**, non vérifié.
+
+## 2. Déduit du code (non vérifié en exécution)
+
+- La routine `6D4D-6D60` applique une table de delta à Y. Elle est utilisée par le saut et par le recul. Elle pourrait servir à une plateforme, mais rien ne le prouve.
+- `C476` et `C486` (dans `C420-C5FF`) s'incrémentent d'une unité toutes les 2 images pendant la marche : compteur de défilement probable. Déduit.
+- La table de spawn des ennemis est probablement dans la banque 14 (là où `5A49` lit `8000`/`800C`), mais ce n'est pas prouvé.
 
 ## 3. Inconnu
 
-- Format de la table de spawn par salle (ennemis, quantite, position, type).
-- Table de comportement ou de trajectoire d'un ennemi. Vitesse en px/frame.
-- Cadence d'apparition, degats, collisions avec Simon (boite de collision).
-- Ascenseurs, plateformes mobiles : aucune trace, aucune routine identifiee.
-- Correspondance des touches de la ligne 6 avec les boutons du jeu.
-- Contenu de la table `CF3B` (demonstration) et son role dans le jeu normal.
+- Table de spawn par salle : position, type, nombre, et l'état qui déclenche le spawn (`C426` et `C43x` sont candidats).
+- Cause des intervalles de réapparition (130, 111, 152 images).
+- Nature des 8 sprites fixes `X=E0` (salle 0, image 776). Peut-être un objet de décor ou un cierge.
+- Géométrie exacte d'un ennemi (16x16 ou 8x8, boîte de collision) et dégâts au contact.
+- Mécanique du recul : table de delta, durée, invulnérabilité.
+- Plateformes mobiles : **aucune trouvée** dans les salles testées (0 et 1). Il faut tester d'autres salles (stage 1 et plus) avec un scénario qui tombe sur une plateforme.
+- Ce qui se passe en `C000=9`.
 
-## 4. Blocages et prochaines etapes
+## 4. Statut des touches (openMSX)
 
-1. **Authentifier les entrees** : comprendre pourquoi `C00C` reste a 0 malgre
-   la matrice ligne 6. Hypotheses : le `CPL/RLCA/AND 7` de `4BF4` ne lit pas les
-   bits attendus, ou la ligne 6 est fausse dans le mapping openMSX. Methode :
-   tracer les valeurs de `A` en sortie de `4BF4`, ou utiliser le chemin de
-   demonstration `4E2E` (`CF3B`).
-2. **Trace d'entree reelle** : une fois Simon controlable, rejouer une marche
-   vers la droite, en enregistrant `E000-E47F`, `C420-C5FF` et `D600-D67F` a
-   chaque frame, puis identifier le moment ou un ennemi apparait.
-3. **Plateformes** : chercher les routines qui ecrivent `C425` ou `C427` hors de
-   la boucle de Simon, et les ecritures dans `C470-C5FF` qui se repetent a
-   chaque frame.
+| Touche | Masque ligne 8 | Effet vérifié |
+|---|---|---|
+| SPACE | 1 | Fouet |
+| LEFT | 16 | Marche à gauche |
+| UP | 32 | Saut |
+| DOWN | 64 | Accroupi |
+| RIGHT | 128 | Marche à droite (1 px/image) |
 
-## 5. Plan d'implementation SGDK minimal (a faire ensuite, rien n'est modifie)
+## 5. Plan d'implémentation SGDK minimal (rien n'est créé)
 
-Objectif : un ennemi simple (aller-retour, sans degats au debut) et une
-plateforme mobile (translation horizontale), une fois les donnees ROM prouvees.
+Objectif : **un ennemi simple** d'abord (aller-retour ou traversée, 1 px/image, animation 8 images par pose, spawn au bord). Les plateformes viennent après, quand une salle en contient une.
 
-Fichiers a creer (aucun fichier existant n'est modifie) :
+Fichiers à créer (aucun fichier existant n'est modifié par cette recherche) :
 
-- `tools/extract_entities.py` : lit la ROM via `tools/probe.py` (`reference_rom`),
-  extrait la table de spawn et le format de comportement une fois prouves.
-- `sgdk/src/enemies.h` et `sgdk/src/enemies.c` : structure d'un ennemi
-  (position, vitesse, borne gauche/droite, sprite), `enemies_init`,
-  `enemies_update` (aller-retour), `enemies_draw` (SPR_setPosition).
-- `sgdk/src/platforms.h` et `sgdk/src/platforms.c` : plateforme mobile
-  (position, vitesse, bornes), `platforms_update`, et une fonction de collision
-  `platforms_check_standing` qui renvoie la hauteur de sol.
+- `sgdk/src/enemies.h` et `sgdk/src/enemies.c` :
+  - structure `Enemy` : x, y, sens (`dx` = -1 ou +1), indice d'animation, actif ;
+  - `enemies_spawn_edge(side)` : spawn à `X=0xE5` (droite, vers la gauche) ou `X=0x0A` (gauche, vers la droite) avec `Y` de la bande du sol ;
+  - `enemies_update()` : `x += dx` chaque image, animation toutes les 8 images (poses 48/4C et 50/54 pour l'ennemi 1), désactivation hors écran ;
+  - `enemies_draw()` : `SPR_setPosition` pour les 4 sprites (le haut est fixe, le bas alterne).
+- Données : `sgdk/src/generated/enemy1_md.h` (motifs), produits par un outil dédié, par exemple `tools/build_enemy_assets.py`. Ce script doit lire la ROM de référence via `tools/probe.py` (`reference_rom()`), sans rien committer de la ROM.
+- Données de test : `tools/verify_enemies.py` (vérifie les 218 images de traversée et la cadence 8/8 à partir de `scratchpad/enemies6/frames.txt`).
 
-Points d'integration (a faire par le responsable, pas par cette recherche) :
-`sgdk/src/main.c` ou `sgdk/src/gameplay.c` appelleront `enemies_update` et
-`platforms_update`. Ces deux fichiers sont interdits dans cette tache :
-`main.c`, `player.c`, `whip.c`, `gameplay.c`.
+Points d'intégration (à faire par le responsable, pas ici) : appeler `enemies_update()` et `enemies_draw()` dans la boucle de jeu (`sgdk/src/gameplay.c` ou `sgdk/src/main.c`). Ces fichiers sont interdits dans cette tâche.
 
-## 6. Outils et traces produits
+Ne pas faire encore : la table de spawn, les plateformes, la collision et les dégâts (à prouver d'abord, voir section 3).
 
-- `tools/trace_entities_live.tcl` : trace openMSX en lecture seule (VBLANK
-  `4028`), journalise `C000/C001/C003-C005`, `C40A/C40C/C410/C415/C418`,
-  `C425/C427`, `C002/C006/C007/C00B/C00C`, `C420-C44F`, `D600-D67F`, `C470-C4FF`.
-  Requiert `vk_output` et `vk_seconds` definis par le lanceur. Les entrees
-  clavier de test ne sont pas dans ce fichier.
-- Lanceur et calendrier d'entrees (hors depot) :
-  `/tmp/claude-1000/-home-sukoshi-Documents-githubsuko-vampirekiller-MD/13d81fab-4688-46e1-bcca-3d7f6368905e/scratchpad/run_entities5.sh`
-  et `.../scratchpad/inputs2.tcl`.
-- Traces : `.../scratchpad/entities5/entities-live.csv`, et
-  `.../scratchpad/entities4/entities-live.csv`.
-- Desassemblage de travail : `.../scratchpad/dis.py` (z80dis, banque/fenetre
-  explicites).
-- Aucun fichier genere existant n'a ete modifie. Rien n'a ete commite.
+## 6. Traces et outils
+
+- Trace : `scratchpad/enemies6/trace.tcl` (script openMSX, lecture seule), résultat `scratchpad/enemies6/frames.txt`, ROM de travail `scratchpad/gate/game.rom`.
+- Analyse : `scratchpad/enemies6/an2.py` (états), `an3.py` (octets qui changent), `an4.py` (entrées SAT), `an5.py` (suivi des ennemis), `decode5a49.py` (décodeur de `5A49`).
+- Écritures de `C425` : `scratchpad/enemies6/watch_y.tcl`, sortie `scratchpad/enemies6/watch_c425.txt`.
+- Désassemblage : `scratchpad/dis.py` (banque et fenêtre explicites).
+- Tracer d'entités précédent : `tools/trace_entities_live.tcl` (en lecture seule). Il lit `C420-C44F`, `D600-D67F` et `C470-C4FF` ; il ne lit pas `E000` et ne couvre donc pas la carte.
