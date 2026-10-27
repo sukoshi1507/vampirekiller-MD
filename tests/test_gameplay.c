@@ -51,19 +51,43 @@ int main(void)
     assert(vk_game_collision(&g) == vk_stage1_collision[1]);
     assert(!vk_game_debug_room(&g, 8));
     assert(g.room == 1);
-    /* Demonstration stair must move diagonally, not merely teleport a sprite. */
-    g.player.x = 128;
-    g.player.y = 176;
-    g.player.on_stairs = 1;
+    /* Stage 1 room 1, flight A (tile 12, 7 steps): HAUT at the foot (48,192)
+     * climbs to the landing (112,128), the 64 px of research/stairs.md. */
+    {
+        int frames;
+        g.player.x = 48;
+        g.player.y = 192;
+        g.player.on_stairs = 0;
+        g.player.mode = 0;
+        assert(vk_game_tick_controls(&g, 0, 0, 1, 0) == VK_EVENT_NONE);
+        assert(g.player.on_stairs && g.player.x == 48 && g.player.y == 192);
+        assert(g.player.stair_dir == 1 && g.player.stair_len == 64);
+        /* Releasing the key holds Simon on the step. */
+        for (frames = 0; frames < 6; frames++) vk_game_tick_controls(&g, 0, 0, 0, 0);
+        assert(g.player.on_stairs && g.player.x == 48 && g.player.y == 192);
+        for (frames = 0; frames < 200 && g.player.on_stairs; frames++) {
+            vk_game_tick_controls(&g, 0, 0, 1, 0);
+            assert(g.player.x - 48 == 192 - g.player.y);
+        }
+        assert(!g.player.on_stairs && g.player.x == 112 && g.player.y == 128);
+        /* Descending with BAS from the same foot returns to (48,192). */
+        g.player.x = 48;
+        g.player.y = 192;
+        assert(vk_game_tick_controls(&g, 0, 0, 1, 0) == VK_EVENT_NONE && g.player.on_stairs);
+        for (frames = 0; frames < 200; frames++) {
+            if (g.player.stair_anim == 16) break;
+            vk_game_tick_controls(&g, 0, 0, 1, 0);
+        }
+        assert(g.player.stair_anim == 16);
+        for (frames = 0; frames < 200 && g.player.on_stairs; frames++)
+            vk_game_tick_controls(&g, 0, 0, 0, 1);
+        assert(!g.player.on_stairs && g.player.x == 48 && g.player.y == 192);
+    }
+    /* X=36 is outside the entry window of that foot: no staircase. */
+    g.player.x = 36;
+    g.player.y = 192;
     g.player.mode = 0;
-    assert(vk_game_tick_controls(&g, 0, 0, 1, 0) == VK_EVENT_NONE);
-    assert(g.player.x == 129 && g.player.y == 175 && g.player.on_stairs);
-    assert(g.player.facing == 0 && g.player.pose <= 2);
-    assert(vk_game_tick_controls(&g, 0, 0, 0, 1) == VK_EVENT_NONE);
-    assert(g.player.x == 128 && g.player.y == 176 && g.player.on_stairs);
-    assert(g.player.facing == 1 && g.player.pose >= 3 && g.player.pose <= 5);
-    assert(vk_game_tick_controls(&g, 0, 0, 0, 0) == VK_EVENT_NONE);
-    assert(g.player.on_stairs && g.player.facing == 1);
+    assert(vk_game_tick_controls(&g, 0, 0, 1, 0) == VK_EVENT_NONE && !g.player.on_stairs);
     assert(vk_game_debug_room(&g, 0) && g.collision_verified);
     assert(g.player.x == 16 && g.player.y == 192);
 

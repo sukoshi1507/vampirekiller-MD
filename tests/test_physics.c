@@ -41,49 +41,39 @@ int main(void)
     /* Crouch: stationary, immune to jump while DOWN is held. */
     memset(map,0,sizeof(map)); row(18);
     start(&p,160);
-    vk_player_tick_controls(&p,map,1,1,1,1,0,0,0);
+    vk_player_tick_controls(&p,map,1,1,1,1,0);
     assert(p.crouched && p.mode==0 && p.x==80);
-    vk_player_tick_controls(&p,map,1,0,0,0,0,0,0);
+    vk_player_tick_controls(&p,map,1,0,0,0,0);
     assert(!p.crouched);
-    /* An explicit staircase strip enables climbing without falling. */
+    /* A staircase is a tile-12 flight (climbing right), here four steps from the
+     * foot (80,160). HAUT mounts it and the top is reached 40 px away. */
     {
-        const VKStair stair = {76,100,110,170};
+        int frames;
+        memset(map,0,sizeof(map)); row(18);
+        map[17*32+10]=12; map[16*32+11]=12; map[15*32+12]=12; map[14*32+13]=12;
         start(&p,160);
-        vk_player_tick_controls(&p,map,1,0,0,0,1,&stair,1);
-        assert(p.on_stairs && p.y==159 && p.facing==0);
-        for(i=0;i<8;i++) vk_player_tick_controls(&p,map,1,0,0,0,1,&stair,1);
-        assert(p.y==151 && p.on_stairs);
-        vk_player_tick_controls(&p,map,1,0,0,1,0,&stair,1);
-        assert(p.on_stairs && p.y==152 && p.facing==1);
-        assert(p.pose>=3 && p.pose<=5);
-        /* Pose cadence follows actual movement, not global idle frames. */
-        start(&p,160);
-        vk_player_tick_controls(&p,map,1,0,0,0,1,&stair,1);
-        assert(p.stair_anim==1 && p.pose==0);
-        for (i=0;i<6;i++) vk_player_tick_controls(&p,map,1,0,0,0,1,&stair,1);
-        assert(p.stair_anim==7 && p.pose==0);
-        vk_player_tick_controls(&p,map,1,0,0,0,1,&stair,1);
-        assert(p.stair_anim==8 && p.pose==1);
-        { VKByte progress=p.stair_anim;
-          for (i=0;i<15;i++) vk_player_tick_controls(&p,map,1,0,0,0,0,&stair,1);
-          assert(p.stair_anim==progress && p.pose==0);
+        vk_player_tick_controls(&p,map,1,0,0,0,1);
+        assert(p.on_stairs && p.x==80 && p.y==160 && p.stair_dir==1 && p.stair_len==40);
+        for(i=0;i<6;i++) vk_player_tick_controls(&p,map,1,0,0,0,0);
+        assert(p.on_stairs && p.x==80 && p.y==160);
+        for(frames=0;frames<200 && p.on_stairs;frames++) {
+            vk_player_tick_controls(&p,map,1,0,0,0,1);
+            assert(p.x-80 == 160-p.y);
         }
-        vk_player_tick_controls(&p,map,1,0,0,1,0,&stair,1);
-        assert(p.facing==1 && p.pose>=3 && p.pose<=5);
-        assert(p.stair_anim==9);
-        /* At a terminal step the actor stays attached to the stair. */
-        for (i=0;i<180;i++) vk_player_tick_controls(&p,map,1,0,0,0,1,&stair,1);
-        assert(p.on_stairs && p.x<=100 && p.y>=110);
-        { VKByte hold_x=p.x, hold_y=p.y;
-          for(i=0;i<10;i++) vk_player_tick_controls(&p,map,1,0,0,0,1,&stair,1);
-          assert(p.on_stairs && p.x==hold_x && p.y==hold_y); }
-        vk_player_tick_controls(&p,map,1,0,0,0,0,&stair,1);
-        assert(p.on_stairs && p.pose==0);
-        vk_player_tick_controls(&p,map,1,0,1,0,0,&stair,1);
-        assert(!p.on_stairs && p.mode==1);
+        assert(!p.on_stairs && p.x==120 && p.y==120 && p.mode==0);
+        /* Mount again, climb to mid-flight, then BAS descends back to the foot. */
         start(&p,160);
-        vk_player_tick_controls(&p,map,1,0,0,0,1,0,0);
-        assert(!p.on_stairs);
+        vk_player_tick_controls(&p,map,1,0,0,0,1);
+        for(frames=0;frames<200 && p.stair_anim!=16;frames++) vk_player_tick_controls(&p,map,1,0,0,0,1);
+        assert(p.stair_anim==16);
+        for(frames=0;frames<200 && p.on_stairs;frames++) vk_player_tick_controls(&p,map,1,0,0,1,0);
+        assert(!p.on_stairs && p.x==80 && p.y==160);
+        /* Mount again, then JUMP dismounts into a jump. */
+        start(&p,160);
+        vk_player_tick_controls(&p,map,1,0,0,0,1);
+        assert(p.on_stairs && p.facing==1 && p.pose==3);
+        vk_player_tick_controls(&p,map,1,0,1,0,0);
+        assert(!p.on_stairs && p.mode==1);
     }
     return 0;
 }

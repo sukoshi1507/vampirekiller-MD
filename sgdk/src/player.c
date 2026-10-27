@@ -52,6 +52,7 @@ void vk_player_reset(VKPlayer *p)
     p->y = 192;
     p->facing = p->mode = p->phase = p->clock = p->pose = 0;
     p->crouched = p->on_stairs = p->stair_anim = 0;
+    p->stair_dir = p->stair_len = 0;
 }
 
 /* Gameplay controller: the original tile probes and delta tables above remain
@@ -90,61 +91,105 @@ static int vk_move_vertical(VKPlayer *p, const VKByte *map, VKByte stage,
     return 0;
 }
 
-static int vk_stair_here(const VKStair *stairs, unsigned count, VKByte x, VKByte y)
+/* Staircases are map tiles (research/stairs.md): tile 12 is a flight climbing
+ * to the right, tile 13 a flight climbing to the left. Each step is one 8 px
+ * cell, and a flight of N steps is travelled as 8N + 8 px on both axes. */
+#define VK_STAIR_RIGHT 12
+#define VK_STAIR_LEFT 13
+/* Shorter runs of these tiles are decor, not stairs (research/stairs.md). */
+#define VK_STAIR_MIN_STEPS 3
+
+static int vk_stair_tile_at(const VKByte *map, int x, int y)
 {
-    unsigned i;
-    if (!stairs) return 0;
-    for (i = 0; i < count; i++)
-        if (x >= stairs[i].x_min && x <= stairs[i].x_max &&
-            y >= stairs[i].y_min && y <= stairs[i].y_max) return 1;
-    return 0;
+    if (x < 0 || x > 255 || y < 16) return 0;
+    return vk_sample_tile(map, (VKByte)x, (VKByte)y);
+}
+
+/* Mount a flight from its foot with HAUT. The probes follow the original order:
+ * tile 13 at x-8 then x, tile 12 at x+8 then x, all on the row above the feet. */
+static int vk_stair_enter(VKPlayer *p, const VKByte *map)
+{
+    const int x = p->x;
+    const int y = (int)p->y - 8;
+    int cell_x, dir, steps, i;
+    if (vk_stair_tile_at(map, x - 8, y) == VK_STAIR_LEFT) { cell_x = (x - 8) & ~7; dir = 0; }
+    else if (vk_stair_tile_at(map, x, y) == VK_STAIR_LEFT) { cell_x = x & ~7; dir = 0; }
+    else if (vk_stair_tile_at(map, x + 8, y) == VK_STAIR_RIGHT) { cell_x = (x + 8) & ~7; dir = 1; }
+    else if (vk_stair_tile_at(map, x, y) == VK_STAIR_RIGHT) { cell_x = x & ~7; dir = 1; }
+    else return 0;
+    /* Count the steps: each row up moves the cell by 8 px in the flight direction. */
+    steps = 0;
+    for (i = 0; i < 24; i++)
+    {
+        const int step_y = (int)(y & ~7) - 8 * i;
+        const int step_x = cell_x + (dir ? 8 : -8) * i;
+        if (step_y < 16 || step_x < 0 || step_x > 248) break;
+        if (vk_stair_tile_at(map, step_x, step_y) != (dir ? VK_STAIR_RIGHT : VK_STAIR_LEFT)) break;
+        steps++;
+    }
+    if (steps < VK_STAIR_MIN_STEPS) return 0;
+    /* Original alignment: right-up flights snap X to the cell, left-up flights to cell+8. */
+    p->x = (VKByte)(dir ? cell_x : cell_x + 8);
+    p->y = (VKByte)((y & ~7) + 8);
+    p->stair_dir = (VKByte)dir;
+    p->facing = (VKByte)dir;
+    p->stair_len = (VKByte)(8 * steps + 8);
+    p->stair_anim = 0;
+    p->on_stairs = 1;
+    p->mode = 0;
+    p->phase = 0;
+    p->crouched = 0;
+    return 1;
+}
+
+/* Climb or descend one pixel on each axis every two frames. stair_anim is the
+ * progress along the flight: 0 at the foot, stair_len at the top. Releasing the
+ * key holds Simon on the step; reaching either end leaves the staircase. */
+static void vk_stair_tick(VKPlayer *p, int direction, int down, int up)
+{
+    /* Right-up flights climb with HAUT or DROITE, left-up flights with HAUT or GAUCHE. */
+    const int want_up = up || (p->stair_dir ? direction > 0 : direction < 0);
+    const int want_down = !want_up && (down || (p->stair_dir ? direction < 0 : direction > 0));
+    const int sx = p->stair_dir ? 1 : -1; /* horizontal sign of a climb */
+    int moved = 0;
+    static const VKByte stair_frames[4] = {0, 1, 2, 1};
+    p->crouched = 0;
+    p->clock++;
+    if ((p->clock & 1) == 0)
+    {
+        if (want_up && p->stair_anim < p->stair_len)
+        {
+            p->x = (VKByte)((int)p->x + sx);
+            p->y = (VKByte)(p->y - 1);
+            p->stair_anim++;
+            moved = 1;
+        }
+        else if (want_down && p->stair_anim > 0)
+        {
+            p->x = (VKByte)((int)p->x - sx);
+            p->y = (VKByte)(p->y + 1);
+            p->stair_anim--;
+            moved = 1;
+        }
+    }
+    p->facing = p->stair_dir;
+    if (moved && (p->stair_anim == p->stair_len || p->stair_anim == 0))
+    { p->on_stairs = 0; p->mode = 0; p->phase = 0; }
+    /* Four-step walk cycle, one pose per eight pixels of progress. The poses are
+     * the walk frames of the assets, not recovered MSX2 stair poses. */
+    p->pose = (VKByte)(stair_frames[(p->stair_anim >> 3) & 3] + (p->facing ? 3 : 0));
 }
 
 void vk_player_tick_controls(VKPlayer *p, const VKByte *map, VKByte stage,
-                             int direction, int jump_pressed, int down, int up,
-                             const VKStair *stairs, unsigned stair_count)
+                             int direction, int jump_pressed, int down, int up)
 {
-    int climb = (up ? -1 : 0) + (down ? 1 : 0);
-    int stair_near = vk_stair_here(stairs, stair_count, p->x, p->y);
-    /* Stair mode is opt-in and only works inside explicitly authored areas.
-     * Do not interpret generic solid tiles as stairs. */
-    if (p->on_stairs && !stair_near) p->on_stairs = 0;
-    if (!p->on_stairs && climb && stair_near && !jump_pressed)
-    { p->on_stairs = 1; p->mode = 0; p->phase = 0; p->stair_anim = 0; }
-    if (p->on_stairs)
+    /* Staircases exist only inside the interior areas (stage 1). */
+    if (p->on_stairs && jump_pressed) { p->on_stairs = 0; p->mode = 1; p->phase = 0; }
+    else if (p->on_stairs) { vk_stair_tick(p, direction, down, up); return; }
+    else if (stage && up && !jump_pressed && vk_stair_enter(p, map))
     {
-        if (jump_pressed) { p->on_stairs = 0; p->mode = 1; p->phase = 0; }
-        else
-        {
-            int next_y = (int)p->y + climb;
-            int next_x = (int)p->x - climb; /* demo incline rises to the right */
-            p->crouched = 0;
-            if (climb && next_y >= 32 && next_y < 208 &&
-                next_x >= 8 && next_x <= 248 &&
-                vk_stair_here(stairs, stair_count, (VKByte)next_x, (VKByte)next_y))
-            {
-                p->x = (VKByte)next_x;
-                p->y = (VKByte)next_y;
-                p->clock++;
-                p->stair_anim++; /* advance only when feet actually move */
-            }
-            /* At either staircase endpoint hold position rather than dropping
-             * into gravity on a visually unsupported tile. Jump dismounts. */
-            /* Match direction of travel: up is right, down is left.
-             * Original ROM walk frames, not a synthetic jump silhouette. */
-            if (climb) p->facing = (VKByte)(climb > 0);
-            /* Four-step walk cycle at eight travelled pixels per keyframe.
-             * Use a dedicated progress counter: clock-based animation used to
-             * flicker between mismatched frames, including at stair endpoints.
-             * The current assets are still walk poses, not recovered MSX2
-             * stair poses. The fixed sprite anchor stays unchanged. */
-            {
-                static const VKByte stair_frames[4] = {0, 1, 2, 1};
-                VKByte frame = climb ? stair_frames[(p->stair_anim >> 3) & 3] : 0;
-                p->pose = (VKByte)(frame + (p->facing ? 3 : 0));
-            }
-            return;
-        }
+        p->pose = (VKByte)(p->facing ? 3 : 0);
+        return;
     }
     p->crouched = (VKByte)(down && p->mode == 0 && !up);
     if (p->crouched) direction = 0;
@@ -216,8 +261,7 @@ void vk_player_tick_controls(VKPlayer *p, const VKByte *map, VKByte stage,
 void vk_player_tick_map(VKPlayer *p, const VKByte *map, VKByte stage,
                         int direction, int jump_pressed)
 {
-    vk_player_tick_controls(p, map, stage, direction, jump_pressed,
-                            0, 0, 0, 0);
+    vk_player_tick_controls(p, map, stage, direction, jump_pressed, 0, 0);
 }
 
 void vk_player_tick(VKPlayer *p, int direction, int jump_pressed)

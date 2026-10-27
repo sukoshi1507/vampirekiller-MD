@@ -43,16 +43,9 @@ VKEvent vk_game_tick_controls(VKGame *game, int direction, int jump, int up, int
         return VK_EVENT_ENTER;
     }
 
-    /* No verified stair volumes are available for these rooms yet.
-     * The controller supports volumes, but they must be mapped from ROM data. */
-    /* Explicit debug volume, active in every interior room for exploration until
-     * the authored stairs are mapped: NOT an original MSX2 stair coordinate. */
-    static const VKStair sandbox_stairs[] = {{120, 208, 96, 184}};
-    const int demo = game->area == VK_AREA_INTERIOR;
     vk_player_tick_controls(p, vk_game_collision(game),
                             game->area == VK_AREA_COURTYARD ? 0 : 1,
-                            direction, jump, down, up,
-                            demo ? sandbox_stairs : 0, demo ? 1u : 0u);
+                            direction, jump, down, up);
 
     if (game->area == VK_AREA_COURTYARD && direction != 0 &&
         ((direction > 0 && p->x >= 248) || (direction < 0 && p->x <= 8)))
