@@ -1,20 +1,22 @@
 /*
- * Logique pure des ennemis de la salle 1 (voir enemies.h et research/enemy-spawn.md).
+ * Logique pure des ennemis de la salle 1 (voir enemies.h et research/enemy-spawn.md, section 7).
  *
- * Toutes les valeurs ci-dessous sont des observations de la trace openMSX
- * (research/enemies-platforms.md, frames.txt), sauf mention contraire.
- * Image de reference : chargement de la salle 1 = image 857 (E000-E47F reecrit
- * en 857-858). Le premier spawn est a l'image 908, soit frame = 51.
+ * Traduction des routines Z80 du spawn type 1 :
+ *   - 9CE6 (banque 2, 0x9CE6) : canal type 1, appele depuis 5EF6 si bit0 du drapeau ROM.
+ *   - 9CC3 (banque 2, 0x9CC3) : minuterie partagee CF10 + compte a rebours CF00.
+ *   - 9CFC (banque 2, 0x9CFC) : position de spawn (E = Y, D = X de spawn).
+ *   - 9E16 (banque 2, 0x9E16) : garde de spawn selon Simon (C427) et D.
+ *   - 5F1D (banque 0, 0x5F1D) : creation de l'entite dans le premier bloc libre.
  *
- * Confiance par comportement :
- *   - X initial : E5 (cote droit) ou 0A (cote gauche)            observe
- *   - pas : +-2 px toutes les 2 images a partir de l'age 3        observe
- *   - pas supplementaire : +-1 px tous les 16 images (phase)       observe, cause inconnue
- *   - pose : bas A 8 images / bas B 8 images, 1re pose B a l'age 15 observe
- *   - sortie : limite atteinte (x <= 0 si dx < 0 ; x >= 216 si dx > 0), masque a l'image suivante
- *                                                                  observe (2 cas), TODO(non-verifie) pour la regle generale
- *   - declencheur et frame des spawns : observes seulement pour la salle 1
- *     TODO(non-verifie) : table ROM et declencheur (voir research/enemy-spawn.md)
+ * Niveau de confiance par element :
+ *   - Tables kEnemy*                            verifie (lecture ROM, adresses ci-dessous)
+ *   - Minuterie (4 appels par decrement, reload = periode - 2*D012 + 1)   verifie
+ *       code + intervalles 104 et 152 images (2102-2206, 2206-2358)
+ *   - Garde 9E16 et choix de cote (L=1)        verifie code + 6 cas de trace
+ *   - Mouvement, animation, sortie             observe (trace frames.txt)
+ *   - Type par bloc (C800 = A, C880 = B)       observe, 4 spawns ; TODO(non-verifie) au-dela
+ *   - extraPhase (1 pour A, 15 pour B)         observe, cause inconnue : TODO(non-verifie)
+ *   - Y de sprite = E - 0x20                   observe pour E=C0 seulement : TODO(non-verifie)
  *
  * Age : 0 = image de spawn (sprite encore hors position, Y=E1 dans la trace),
  *       1 = premiere image visible.
@@ -27,16 +29,12 @@
 #define ENEMY_EXIT_X_RIGHT  216    /* dx > 0 : limite x >= 216 ; masque a l'image suivante (observe 1207 -> 1208) */
 #define ENEMY_ROW_OFFSET    16     /* rang bas = Y + 16 (observe B0 pour A0) */
 
-/* Salle 1 : deux spawns observes dans le premier cycle d'ecran.
- * Cycle ulterieur (apres changement d'ecran C000=9) : non inclus, relation au
- * declencheur inconnue. Observes (frame absolue -> cote, Y, type) :
- *   1256 gauche (X=0 a l'apparition), 1360 droite (X=D8), 1585 gauche (X=0). */
-const EnemySpawnDef kEnemyRoom1Spawns[] = {
-    /* frame, side, type, y, extraPhase */
-    { 51,  ENEMY_SIDE_RIGHT, ENEMY_TYPE_A, 0xA0, 1 },   /* 908 : E1 (4 entrees SAT s14-s17) */
-    { 155, ENEMY_SIDE_LEFT,  ENEMY_TYPE_B, 0xA0, 15 }   /* 1012 : E2 (s18-s21) */
-};
-const uint8_t kEnemyRoom1SpawnCount = (uint8_t)(sizeof(kEnemyRoom1Spawns) / sizeof(kEnemyRoom1Spawns[0]));
+/* Tables ROM salle de stage 1 (D000 = 1).
+ * kEnemyStage1RoomFlags : ROM 0x85CF-0x85D6 (pointeur 85A8 = 85CF pour D000 = 1).
+ *   D001 = 0 -> 01 (canal type 1 actif), 1 -> 01, 2 -> 00, 3 -> 00, 4 -> 08 (bit3, non porte), 5 -> 01, 6 -> 01, 7 -> 00.
+ * kEnemySpawnPeriod : ROM 0x9D43-0x9D4A (banque 2). */
+const uint8_t kEnemyStage1RoomFlags[8] = { 0x01, 0x01, 0x00, 0x00, 0x08, 0x01, 0x01, 0x00 };
+const uint8_t kEnemySpawnPeriod[8] = { 0x0C, 0x12, 0x0C, 0x0C, 0x0C, 0x12, 0x0C, 0x0C };
 
 /* Motifs : [type][pose][entree] ; entrees 0,1 = rang haut ; 2,3 = rang bas. */
 static const uint8_t kPatterns[2][2][4] = {
@@ -53,6 +51,9 @@ static uint8_t poseOf(uint16_t age)
     return 0;
 }
 
+/* Une image pour un ennemi deja actif. */
+static void advance(Enemy *e);
+
 static void clearEnemy(Enemy *e)
 {
     e->active = 0;
@@ -65,14 +66,19 @@ static void clearEnemy(Enemy *e)
     e->age = 0;
 }
 
-void Enemies_setRoom(EnemyState *s, const EnemySpawnDef *spawns, uint8_t count)
+void Enemies_setRoom(EnemyState *s)
 {
     uint8_t i;
     for (i = 0; i < ENEMY_MAX; i++) clearEnemy(&s->enemy[i]);
-    s->roomFrame = 0;
-    s->nextSpawn = 0;
-    s->spawns = spawns;
-    s->spawnCount = count;
+}
+
+void Enemies_spawnTimerInit(EnemySpawnTimer *t)
+{
+    /* ROM 9CBB : CF00 = 04, CF01 = 00. CF10 non initialise par cette routine :
+     * sa valeur de depart n'est pas prouvee ; 0 est choisi ici (TODO(non-verifie)). */
+    t->phase = 0;
+    t->counter = 4;
+    t->index = 0;
 }
 
 int Enemies_isVisible(const Enemy *e)
@@ -104,7 +110,72 @@ int Enemies_spawn(EnemyState *s, uint8_t side, uint8_t type, uint8_t y, uint8_t 
             return (int)i;
         }
     }
-    return -1; /* plein : spawn perdu (TODO(non-verifie) : comportement MSX si plein) */
+    return -1; /* plein : spawn perdu (TODO(non-verifie) : comportement MSX si plein, 5F5C/5F42 ne testent que le bloc) */
+}
+
+/* Un appel de 9CC3 (minuterie) puis, si le compte a rebours expire, 9CE6 (spawn). */
+int Enemies_spawnTimerTick(EnemySpawnTimer *t, const EnemyRoomVars *v, EnemyState *s)
+{
+    uint8_t idx, period, reload, c, dCoord, yCoord, slot, i;
+    uint8_t side;
+    uint8_t type;
+
+    /* TODO(non-verifie) : tables des autres stages non extraites. */
+    if (v->stage != 1 || v->room > 7) return 0;
+    /* 5EE7-5EF6 : 9CE6 n'est appele que si bit0 du drapeau de la salle est a 1. */
+    if ((kEnemyStage1RoomFlags[v->room] & 0x01) == 0) return 0;
+
+    /* 9CC3 : DEC CF10 ; RET NZ si (CF10 & 3) != 0. */
+    t->phase--;
+    if ((t->phase & 0x03) != 0) return 0;
+    /* 9CC3 : DEC (canal) ; RET NZ tant que le compte a rebours n'est pas nul. */
+    t->counter--;
+    if (t->counter != 0) return 0;
+
+    /* 9CD0-9CD3 : idx = CF01 puis CF01++ ; periode = table[idx & 7]. */
+    idx = t->index;
+    t->index++;
+    period = kEnemySpawnPeriod[idx & 7];
+    /* 9CD8-9CE3 : reload = max(periode - 2*D012, 0) + 1. */
+    c = (uint8_t)(v->difficulty << 1);
+    reload = (period >= c) ? (uint8_t)(period - c) : 0;
+    t->counter = (uint8_t)(reload + 1);
+
+    /* 9CFC : E (Y) et D (X) de spawn. Branche L = D000 = 1 (stage 1). */
+    yCoord = 0xC0;
+    if (v->room == 1 && v->simonY < 0x88) {
+        /* 9D38 -> DE = F060 : cas sans cote (D = F0 = droite). */
+        yCoord = 0x60;
+        dCoord = 0xF0;
+    } else {
+        /* 9D2C/9D2E : D = F0 ; D = 10 si C42C != 0. */
+        dCoord = (v->sideFlag != 0) ? 0x10 : 0xF0;
+    }
+
+    /* 9E16 : garde selon X de Simon (C427) et D. Refus = RET C (9CF6). */
+    if (v->simonX >= 0xC0) {
+        if (dCoord >= 0xC0) return 0;          /* 9E29-9E2D : D >= C0 -> carry, refus */
+    } else if (v->simonX >= 0x40) {
+        /* 9E21 : pas de condition */
+    } else {
+        if (dCoord < 0x40) return 0;           /* 9E22-9E28 : D < 40 -> carry, refus */
+    }
+
+    /* 5F1D : premier bloc libre (5F42 : premier bloc a [0] nul). */
+    slot = ENEMY_MAX;
+    for (i = 0; i < ENEMY_MAX; i++) {
+        if (!s->enemy[i].active) { slot = i; break; }
+    }
+    if (slot == ENEMY_MAX) return 0;           /* plein : spawn perdu (TODO(non-verifie)) */
+
+    /* Type observe : bloc 0 (C800) = A, bloc 1 (C880) = B. Au-dela : TODO(non-verifie). */
+    type = (slot & 1) ? ENEMY_TYPE_B : ENEMY_TYPE_A;
+    side = (dCoord == 0xF0) ? ENEMY_SIDE_RIGHT : ENEMY_SIDE_LEFT;
+
+    /* Y de sprite = E - 0x20 (observe pour E = C0 -> A0). */
+    yCoord = (uint8_t)(yCoord - 0x20);
+    return Enemies_spawn(s, side, type, yCoord,
+                         (type == ENEMY_TYPE_A) ? 1 : 15) >= 0;
 }
 
 /* Une image pour un ennemi deja actif. */
@@ -130,19 +201,8 @@ static void advance(Enemy *e)
 void Enemies_update(EnemyState *s)
 {
     uint8_t i;
-
-    /* 1. avancer les ennemis existants */
     for (i = 0; i < ENEMY_MAX; i++) {
         if (s->enemy[i].active) advance(&s->enemy[i]);
-    }
-
-    /* 2. declencher les spawns dus a cette image */
-    s->roomFrame++;
-    while (s->spawns != 0 && s->nextSpawn < s->spawnCount &&
-           s->spawns[s->nextSpawn].frame == s->roomFrame) {
-        const EnemySpawnDef *d = &s->spawns[s->nextSpawn];
-        (void)Enemies_spawn(s, d->side, d->type, d->y, d->extraPhase);
-        s->nextSpawn++;
     }
 }
 
