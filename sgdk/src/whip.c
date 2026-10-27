@@ -1,5 +1,12 @@
 #include "whip.h"
-void vk_whip_reset(VKWhip *w) { w->timer = w->facing = w->x = w->y = w->crouched = 0; }
+void vk_whip_reset(VKWhip *w) { w->timer = w->facing = w->x = w->y = w->crouched = w->level = 0; }
+int vk_whip_set_level(VKWhip *w, int level)
+{
+    if (level < 0 || level >= VK_WHIP_LEVEL_COUNT) return -1;
+    w->level = (VKByte)level;
+    return 0;
+}
+int vk_whip_level(const VKWhip *w) { return w->level; }
 int vk_whip_active(const VKWhip *w) { return w->timer >= 3 && w->timer <= 10; }
 int vk_whip_phase(const VKWhip *w)
 {

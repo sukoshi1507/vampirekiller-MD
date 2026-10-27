@@ -60,5 +60,24 @@ int main(void)
             else assert(vk_whip_segments(&w)==0);
         }
     }
+    /* Whip levels: default 0, levels 1 and 2 accepted, level 3 (no asset) refused.
+     * The hit box is the level 0 box for every level. */
+    vk_whip_reset(&w);
+    assert(vk_whip_level(&w)==0);
+    assert(vk_whip_set_level(&w,3)==-1 && vk_whip_level(&w)==0);
+    assert(vk_whip_set_level(&w,-1)==-1 && vk_whip_level(&w)==0);
+    p.facing=0; p.crouched=0; p.x=80; p.y=160;
+    vk_whip_tick(&w,&p,1);
+    for(i=0;i<4;i++) vk_whip_tick(&w,&p,0);
+    vk_whip_bounds(&w,&l,&t,&r,&b);
+    assert(l==88 && r==112 && t==138 && b==145);
+    for(i=1;i<=2;i++){
+        assert(vk_whip_set_level(&w,i)==0 && vk_whip_level(&w)==i);
+        assert(vk_whip_visual_step(&w)==2 && vk_whip_arm_frame(&w)==1);
+        vk_whip_bounds(&w,&l,&t,&r,&b);
+        assert(l==88 && r==112 && t==138 && b==145);
+    }
+    vk_whip_reset(&w);
+    assert(vk_whip_level(&w)==0);
     return 0;
 }

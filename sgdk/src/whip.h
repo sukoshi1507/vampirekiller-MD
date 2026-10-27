@@ -1,9 +1,16 @@
 #ifndef VK_WHIP_H
 #define VK_WHIP_H
 #include "player.h"
-typedef struct { VKByte timer; VKByte facing; VKByte x; VKByte y; VKByte crouched; } VKWhip;
+/* Whip levels with a ROM-derived standing asset: 0 (wired since the first frames),
+ * 1 and 2. Level 3 has no asset and is refused (see research/whip-variants.md). */
+#define VK_WHIP_LEVEL_COUNT 3
+typedef struct { VKByte timer; VKByte facing; VKByte x; VKByte y; VKByte crouched; VKByte level; } VKWhip;
 void vk_whip_reset(VKWhip *w);
 void vk_whip_tick(VKWhip *w, const VKPlayer *p, int attack_pressed);
+/* Selects the whip level (0..VK_WHIP_LEVEL_COUNT-1). Returns -1 and keeps the
+ * current level when the level has no asset. Reset returns to level 0. */
+int vk_whip_set_level(VKWhip *w, int level);
+int vk_whip_level(const VKWhip *w);
 int vk_whip_active(const VKWhip *w);
 /* 0 hidden/windup, 1 short extension, 2 full extension. */
 int vk_whip_phase(const VKWhip *w);
