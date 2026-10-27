@@ -200,7 +200,7 @@ static void show_player(const VKPlayer *player)
                     (VK_FLAME_FRAMES + ((12 - flame_burst) / 4)) * VK_FLAME_TILES_PER_FRAME :
                     ((flame_clock >> 3) & (VK_FLAME_FRAMES - 1)) * VK_FLAME_TILES_PER_FRAME)
                     : TARGET_TILE_INDEX), 0);
-    VDP_updateSprites(target_visible ? 8 : 7, CPU);
+    VDP_updateSprites(target_visible ? 8 : 7, DMA_QUEUE);
 }
 
 static void load_whip_graphics(void)
@@ -277,7 +277,7 @@ static void show_castle_frame(u16 frame)
             TILE_ATTR_FULL(PAL0, TRUE, FALSE, FALSE, PLAYER_TILE_INDEX + sprite->tile),
             i == 7 ? 0 : i + 1);
     }
-    VDP_updateSprites(8, CPU);
+    VDP_updateSprites(8, DMA_QUEUE);
 }
 
 static void begin_castle(void)
@@ -345,7 +345,8 @@ static void show_interior(void)
 
 static void logo_palette(u16 level)
 {
-    u16 colors[16];
+    /* DMA_QUEUE keeps the pointer until the VBlank flush: the buffer must be static. */
+    static u16 colors[16];
     u16 i;
     for (i = 0; i < 16; i++)
     {
@@ -355,7 +356,7 @@ static void logo_palette(u16 level)
         u16 b = ((source >> 9) & 7) * level / 16;
         colors[i] = (b << 9) | (g << 5) | (r << 1);
     }
-    PAL_setPalette(PAL0, colors, CPU);
+    PAL_setPalette(PAL0, colors, DMA_QUEUE);
 }
 
 int main(bool hardReset)
@@ -376,7 +377,6 @@ int main(bool hardReset)
     {
         u16 pressed;
         bool dirty = FALSE;
-        SYS_doVBlankProcess();
         handleInput(&input);
         pressed = input.pressed;
         if (front_mode == FRONT_LOGO)
@@ -414,6 +414,7 @@ int main(bool hardReset)
                     {
                         show_stage1_room((u16)target);
                     }
+                    SYS_doVBlankProcess();
                     continue;
                 }
                 /* Demo-only stair placement. A+UP on stage-1 room-1 puts Simon
@@ -519,6 +520,7 @@ int main(bool hardReset)
                 if (dirty) show_room(stage, room, atlas);
             }
         }
+        SYS_doVBlankProcess();
     }
     return 0;
 }
