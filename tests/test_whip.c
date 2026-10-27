@@ -61,7 +61,8 @@ int main(void)
         }
     }
     /* Whip levels: default 0, levels 1 and 2 accepted, level 3 (no asset) refused.
-     * The hit box is the level 0 box for every level. */
+     * Hit box per level: 0 reaches x +32 (y -22..-15), 1 reaches x +39, and 2
+     * reaches x +12 with y -19..-15. */
     vk_whip_reset(&w);
     assert(vk_whip_level(&w)==0);
     assert(vk_whip_set_level(&w,3)==-1 && vk_whip_level(&w)==0);
@@ -71,12 +72,24 @@ int main(void)
     for(i=0;i<4;i++) vk_whip_tick(&w,&p,0);
     vk_whip_bounds(&w,&l,&t,&r,&b);
     assert(l==88 && r==112 && t==138 && b==145);
-    for(i=1;i<=2;i++){
-        assert(vk_whip_set_level(&w,i)==0 && vk_whip_level(&w)==i);
-        assert(vk_whip_visual_step(&w)==2 && vk_whip_arm_frame(&w)==1);
-        vk_whip_bounds(&w,&l,&t,&r,&b);
-        assert(l==88 && r==112 && t==138 && b==145);
+    {
+        static const int right_reach[3] = {112, 119, 92};
+        static const int top_row[3] = {138, 138, 141};
+        for(i=1;i<=2;i++){
+            assert(vk_whip_set_level(&w,i)==0 && vk_whip_level(&w)==i);
+            assert(vk_whip_visual_step(&w)==2 && vk_whip_arm_frame(&w)==1);
+            vk_whip_bounds(&w,&l,&t,&r,&b);
+            assert(l==88 && r==right_reach[i] && t==top_row[i] && b==145);
+        }
     }
+    /* Left-facing mirror of level 2: x -12..-8. */
+    vk_whip_reset(&w);
+    assert(vk_whip_set_level(&w,2)==0);
+    p.facing=1;
+    vk_whip_tick(&w,&p,1);
+    for(i=0;i<4;i++) vk_whip_tick(&w,&p,0);
+    vk_whip_bounds(&w,&l,&t,&r,&b);
+    assert(l==68 && r==72 && t==141 && b==145);
     /* Body duration per level, counted from attack start (timer 14) until the
      * arm frame returns to 0. Level 0 and 1: 12 frames (2/2/8). Level 2: 6 frames
      * (2/2/2, measured in openMSX), with the standing frames 0,0,1,1,2,2. */

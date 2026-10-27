@@ -1,5 +1,5 @@
 #include "whip.h"
-void vk_whip_reset(VKWhip *w) { w->timer = w->facing = w->x = w->y = w->crouched = w->level = 0; }
+void vk_whip_reset(VKWhip *w) { *w = (VKWhip){0}; }
 int vk_whip_set_level(VKWhip *w, int level)
 {
     if (level < 0 || level >= VK_WHIP_LEVEL_COUNT) return -1;
@@ -42,10 +42,17 @@ void vk_whip_bounds(const VKWhip *w, int *left, int *top, int *right, int *botto
         *bottom = (int)w->y - 10;
         return;
     }
-    *left = w->facing ? (int)w->x - 32 : (int)w->x + 8;
-    *right = w->facing ? (int)w->x - 8 : (int)w->x + 32;
-    *top = (int)w->y - 22;
-    *bottom = (int)w->y - 15;
+    /* Reach and height depend on the level's lash, measured on the Mega Drive
+     * frames against the MSX2 sprite table (research/whip-variants.md): level 1
+     * reaches x +39, level 2 only x +12 and y -19..-15, level 0 keeps x +32. */
+    {
+        const int reach = w->level == 1 ? 39 : (w->level == 2 ? 12 : 32);
+        const int top_offset = w->level == 2 ? 19 : 22;
+        *left = w->facing ? (int)w->x - reach : (int)w->x + 8;
+        *right = w->facing ? (int)w->x - 8 : (int)w->x + reach;
+        *top = (int)w->y - top_offset;
+        *bottom = (int)w->y - 15;
+    }
 }
 
 /* Shared 15-step timeline for both body styles. Indices represent the
