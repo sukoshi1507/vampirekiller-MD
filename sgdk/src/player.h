@@ -10,6 +10,7 @@ typedef struct {
     VKByte crouched, on_stairs, stair_anim;
     VKByte stair_dir, stair_len; /* flight direction (1 = up right) and length in px */
     VKByte stair_glide;          /* arrival slide from a hall link, not a tile flight */
+    VKByte jump_frames;          /* frames since the jump began, paces the arc at 30 Hz */
 } VKPlayer;
 
 VKByte vk_sample_tile(const VKByte *map, VKByte x, VKByte y);

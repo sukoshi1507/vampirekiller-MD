@@ -57,6 +57,7 @@ void vk_player_reset(VKPlayer *p)
     p->facing = p->mode = p->phase = p->clock = p->pose = 0;
     p->crouched = p->on_stairs = p->stair_anim = 0;
     p->stair_dir = p->stair_len = p->stair_glide = 0;
+    p->jump_frames = 0;
 }
 
 /* Gameplay controller: the original tile probes and delta tables above remain
@@ -185,6 +186,56 @@ static int vk_stair_enter_top(VKPlayer *p, const VKByte *map)
     return 1;
 }
 
+/* Resume a flight at an arrival point that has no stair mode, such as a fall
+ * through the bottom edge into the room below. The arrival cell is the tile row
+ * above the feet, at the column nearest to X - 8. When it is a tile 13 (down
+ * right) or tile 12 (down left) flight, Simon stands on it at its progress: the
+ * flight runs from its foot along the diagonal, 8 px per cell. Returns 0 when no
+ * flight passes the point, and the caller keeps its fall. */
+int vk_stair_resume(VKPlayer *p, const VKByte *map)
+{
+    const int cy = ((int)p->y - 8) & ~7;
+    const int cx = ((int)p->x - 4) & ~7;
+    int dir, below, above, i, top;
+    VKByte want;
+    if (vk_stair_tile_at(map, cx, cy) == VK_STAIR_LEFT) dir = 0;
+    else if (vk_stair_tile_at(map, cx, cy) == VK_STAIR_RIGHT) dir = 1;
+    else return 0;
+    want = (VKByte)(dir ? VK_STAIR_RIGHT : VK_STAIR_LEFT);
+    /* Down step is (+8,+8) on a tile 13 flight and (-8,+8) on a tile 12 flight. */
+    below = 0;
+    for (i = 1; i < 24; i++)
+    {
+        const int step_y = cy + 8 * i;
+        if (step_y > 200) break;
+        if (vk_stair_tile_at(map, cx + (dir ? -8 : 8) * i, step_y) != want) break;
+        below++;
+    }
+    above = 0;
+    for (i = 1; i < 24; i++)
+    {
+        const int step_y = cy - 8 * i;
+        if (step_y < 16) break;
+        if (vk_stair_tile_at(map, cx - (dir ? -8 : 8) * i, step_y) != want) break;
+        above++;
+    }
+    /* The arrival cell is the foot + below; the top cell is at foot + below + above. */
+    if (below < 1 || below + above + 1 < VK_STAIR_MIN_STEPS) return 0;
+    top = below + above;
+    if (top > 29) top = 29; /* keeps stair_len within a byte */
+    p->stair_dir = (VKByte)dir;
+    p->stair_len = (VKByte)(8 * (top + 1) + 8);
+    p->stair_anim = (VKByte)(8 * below);
+    p->stair_glide = 0;
+    p->on_stairs = 1;
+    p->mode = 0;
+    p->phase = 0;
+    p->crouched = 0;
+    p->facing = (VKByte)dir; /* arriving from above, Simon goes down */
+    p->pose = (VKByte)(p->facing ? 3 : 0);
+    return 1;
+}
+
 /* Climb or descend one pixel on each axis every two frames. stair_anim is the
  * progress along the flight: 0 at the foot, stair_len at the top. Releasing the
  * key holds Simon on the step; reaching either end leaves the staircase. */
@@ -236,7 +287,7 @@ void vk_player_tick_controls(VKPlayer *p, const VKByte *map, VKByte stage,
                              int direction, int jump_pressed, int down, int up)
 {
     /* Staircases exist only inside the interior areas (stage 1). */
-    if (p->on_stairs && jump_pressed) { p->on_stairs = 0; p->mode = 1; p->phase = 0; }
+    if (p->on_stairs && jump_pressed) { p->on_stairs = 0; p->mode = 1; p->phase = 0; p->jump_frames = 0; }
     else if (p->on_stairs) { vk_stair_tick(p, direction, down, up); return; }
     else if (stage && up && !jump_pressed && vk_stair_enter(p, map))
     {
@@ -276,19 +327,25 @@ void vk_player_tick_controls(VKPlayer *p, const VKByte *map, VKByte stage,
         if (!vk_grounded(map, p->x, p->y, stage, 0))
         { p->mode = 4; p->phase = 0; }
         else if (jump_pressed && !p->crouched)
-        { p->mode = 1; p->phase = 0; }
+        { p->mode = 1; p->phase = 0; p->jump_frames = 0; }
     }
     else if (p->mode == 1)
     {
-        VKByte next_phase = (VKByte)(p->phase + 1);
-        if (next_phase > 19) next_phase = 19;
-        p->phase = next_phase;
-        vertical = vk_jump_deltas[next_phase - 1];
-        hit = vk_move_vertical(p, map, stage, vertical);
-        if (hit == -1 || hit == 1 || p->phase >= 19)
+        /* The MSX arc advances once per 30 Hz logic tick, so every second frame, with
+         * the first step on frame 4 (openMSX, research/jump-compare.md). */
+        p->jump_frames++;
+        if (p->jump_frames >= 4 && (p->jump_frames & 1) == 0)
         {
-            if (hit == 1) { p->mode = 0; p->phase = 0; }
-            else { p->mode = 4; p->phase = 0; }
+            VKByte next_phase = (VKByte)(p->phase + 1);
+            if (next_phase > 19) next_phase = 19;
+            p->phase = next_phase;
+            vertical = vk_jump_deltas[next_phase - 1];
+            hit = vk_move_vertical(p, map, stage, vertical);
+            if (hit == -1 || hit == 1 || p->phase >= 19)
+            {
+                if (hit == 1) { p->mode = 0; p->phase = 0; }
+                else { p->mode = 4; p->phase = 0; }
+            }
         }
     }
     else if (p->mode == 4)

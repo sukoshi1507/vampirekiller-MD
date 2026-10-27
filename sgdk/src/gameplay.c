@@ -95,6 +95,12 @@ VKEvent vk_game_tick_controls(VKGame *game, int direction, int jump, int up, int
             p->stair_anim = 0;
             p->mode = 4;
             p->phase = 0;
+            /* A flight of the room below through this point takes Simon on its stairs
+             * instead of the fall (player.c). Otherwise he keeps falling. */
+            {
+                int vk_stair_resume(VKPlayer *player, const VKByte *map);
+                vk_stair_resume(p, vk_game_collision(game));
+            }
             return VK_EVENT_VERTICAL;
         }
         vk_player_reset(p);

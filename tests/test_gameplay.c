@@ -129,6 +129,15 @@ int main(void)
         for (frames = 0; frames < 20 && event != VK_EVENT_VERTICAL; frames++)
             event = vk_game_tick_controls(&g, 0, 0, 0, 1);
         assert(event == VK_EVENT_VERTICAL && g.room == 1 && g.player.x == 191 && g.player.y == 48);
+        /* Room 1 flight C (tile 13) passes (184,40): Simon is put back on the stairs
+         * at progress 48, six cells above its foot, instead of falling. */
+        assert(g.player.on_stairs && g.player.mode == 0 && g.player.stair_dir == 0);
+        assert(g.player.stair_anim == 48 && g.player.stair_len == 72);
+        /* Holding BAS descends the flight to its foot and leaves the stairs there.
+         * The arrival X is 191, one pixel left of the diagonal, so the foot is (239,96). */
+        for (frames = 0; frames < 200 && g.player.on_stairs; frames++)
+            vk_game_tick_controls(&g, 0, 0, 0, 1);
+        assert(!g.player.on_stairs && g.player.x == 239 && g.player.y == 96);
     }
     /* Stage 1 room 7: BAS on the tile 3 platform at (168..180, 96) enters the top of
      * the flight, and holding BAS descends it to the foot (144,128), 32 px down-left
