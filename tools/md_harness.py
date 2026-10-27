@@ -63,7 +63,7 @@ BUTTONS = {'B': 0, 'A': 1, 'START': 3, 'UP': 4, 'DOWN': 5, 'LEFT': 6, 'RIGHT': 7
 FRONT_MODES = ['LOGO', 'TITLE', 'CASTLE', 'COURTYARD', 'INTERIOR', 'VIEWER', 'TEST', 'SOUND']
 
 # Tailles attendues (octets) des globales decodees : garde-fou contre une derive des structures.
-EXPECTED_SIZES = {'player': 14, 'game': 22, 'whip': 6, 'enemy_state': 82,
+EXPECTED_SIZES = {'player': 14, 'game': 22, 'whip': 6, 'enemy_state': 84,
                   'test_target': 18, 'courtyard_flame': 36, 'front_mode': 2, 'health': 4}
 # Noms C actuels des globales partagees (sgdk/src/frontend.h, actors.h) ; les scenarios
 # gardent les noms courts. test_target et courtyard_flame sont statiques (room_view.c).
@@ -302,8 +302,9 @@ class Game_View:
             state['enemies'] = {'enemy': enemies, 'alive': sum(1 for e in enemies if e['active']),
                                 'energy': m.rd8(b), 'invuln': m.rd8(b + 1), 'invulnPhase': m.rd8(b + 2),
                                 'recoil': m.rd8(b + 3), 'recoilDir': s8(m.rd8(b + 4)),
-                                'parity': m.rd8(b + 5), 'type4Frames': m.rd8(b + 6),
-                                'type4Side': m.rd8(b + 7), 'type5Timer': m.rd8(b + 8)}
+                                'parity': m.rd8(b + 5), 'type4Frames': m.rd16(b + 6),
+                                'type4Side': m.rd8(b + 8), 'type5Timer': m.rd8(b + 9),
+                                'type4Shots': m.rd8(b + 10)}
         if 'health' in A:
             a = A['health']   # VKHealth (health.h), statique de main.c
             state['health'] = {'lives': m.rd8(a), 'phase': m.rd8(a + 1), 'timer': m.rd16(a + 2)}

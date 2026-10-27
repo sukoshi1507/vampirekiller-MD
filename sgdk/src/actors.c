@@ -3,7 +3,6 @@
 #include "room_view.h"
 #include "generated/whip_level2_md.h"
 #include "generated/enemy_sprites_md.h"
-#include "generated/stage1_collision.h"
 #include "hud.h"
 
 _Static_assert(ENEMY4_TILE_INDEX + VK_ENEMY4_TILE_COUNT <= HUD_TILE_INDEX,
@@ -16,7 +15,7 @@ _Static_assert(ENEMY5_TILE_INDEX + VK_ENEMY5_TILE_COUNT <= HUD_TILE_INDEX,
 EnemyState vk_enemies;
 /* Hall enemies (enemies.c). Their tiles use PAL2 indices given by the MSX2 colour table. */
 static EnemySpawnTimer enemy_timer;
-static u16 enemy_room_key = 0xFFFF;   /* hall room + 1 while the enemies belong to it, else 0 */
+static u16 enemy_room_key = 0xFFFF;   /* room_key() while the enemies belong to it, else 0 */
 static int last_attack_frame = -1;
 /* Three animation-friendly tiles: grip, narrow lash and bright tip.
  * These are original placeholder graphics, not ROM-extracted attack frames. */
@@ -52,14 +51,20 @@ static const u32 target_tiles[32] = {
  * the wired gameplay keeps the level 0 frames and the level 0 hit box. */
 static int whip_level_choice = 0;
 
-/* One gameplay frame of the hall enemies. The state follows the hall room: a room
- * change or a leave of the hall rebuilds it (key 0 outside the hall and in stage 2,
- * whose enemies are not ported yet). Simon's
+/* One gameplay frame of the castle enemies. The state follows the castle room: a
+ * room change or a leave of the castle rebuilds it (key 0 outside). In stage 2 only
+ * the type 4 is ported (enemies.c, kEnemyStage2RoomFlags). Simon's
  * recoil moves him here through vk_game_push (walls and walk limits). */
+/* Castle room the enemy state belongs to: stage 1 rooms 1..8, stage 2 rooms 9..14. */
+static u16 room_key(void)
+{
+    if (vk_front_mode != FRONT_INTERIOR) return 0;
+    return (u16)(8 * (vk_game.stage - 1) + vk_game.room + 1);
+}
+
 void vk_step_enemies(void)
 {
-    const u16 key = vk_front_mode == FRONT_INTERIOR && vk_game.stage == 1 ?
-        (u16)(vk_game.room + 1) : 0;
+    const u16 key = room_key();
     EnemyRoomVars vars;
     int push = 0;
     if (key != enemy_room_key)
@@ -75,13 +80,13 @@ void vk_step_enemies(void)
         }
     }
     if (!key) return;
-    vars.stage = 1;
+    vars.stage = vk_game.stage;
     vars.room = vk_game.room;
     vars.simonX = vk_game.player.x;
     vars.simonY = vk_game.player.y;
     vars.sideFlag = 0;
     vars.difficulty = 0;
-    vars.map = vk_stage1_collision[vk_game.room];   /* floor for falling enemies */
+    vars.map = vk_game_collision(&vk_game);   /* floor for falling enemies */
     (void)Enemies_frame(&vk_enemies, &enemy_timer, &vars, &push);
     if (vk_whip_active(&vk_whip))
     {
@@ -114,7 +119,7 @@ static u16 show_enemy_sprites(void)
     EnemySprite list[ENEMY_MAX * ENEMY_SPRITES];
     u16 count = 0;
     u16 i;
-    if (vk_front_mode != FRONT_INTERIOR || enemy_room_key != (u16)(vk_game.room + 1)) return 0;
+    if (!enemy_room_key || enemy_room_key != room_key()) return 0;
     for (i = 0; i < ENEMY_MAX; i++)
     {
         EnemySprite sprites[ENEMY_SPRITES];

@@ -300,7 +300,7 @@ void vk_show_castle_room(u16 stage, u16 room)
     VDP_drawText(stage == 1 && room == 1 ? "A+HAUT ESCALIER B FOUET" :
         "B FOUET / A+L-R SALLE", 1, 27);
     show_play_overlay(stage == 1 ? "PARCOURS TEST / LIENS NON MSX2" :
-        "ETAPE 2: SANS ENNEMIS", TRUE);
+        "ETAPE 2: CHAUVES-SOURIS SEULES", TRUE);
     vk_show_player(&vk_player);
     vk_front_mode = FRONT_INTERIOR;
 }

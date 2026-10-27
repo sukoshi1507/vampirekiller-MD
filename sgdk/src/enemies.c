@@ -50,6 +50,7 @@
  *   D001 = 0 -> 01, 1 -> 01, 2 -> 00, 3 -> 00, 4 -> 08 (type 4), 5 -> 01, 6 -> 01, 7 -> 00.
  * kEnemySpawnPeriod : ROM 0x9D43-0x9D4A (banque 2). */
 const EnemyU8 kEnemyStage1RoomFlags[8] = { 0x01, 0x01, 0x00, 0x00, 0x08, 0x01, 0x01, 0x00 };
+const EnemyU8 kEnemyStage2RoomFlags[6] = { 0x08, 0x08, 0x01, 0x08, 0x02, 0x02 };
 const EnemyU8 kEnemySpawnPeriod[8] = { 0x0C, 0x12, 0x0C, 0x0C, 0x0C, 0x12, 0x0C, 0x0C };
 
 #define ENEMY_FLAG_TYPE1 0x01
@@ -125,6 +126,7 @@ void Enemies_setRoom(EnemyState *s)
     s->type4Frames = 0;
     s->type4Side = ENEMY_SIDE_RIGHT;
     s->type5Timer = 0;
+    s->type4Shots = 0;
 }
 
 void Enemies_init(EnemyState *s)
@@ -330,6 +332,14 @@ static void pantherSpawn(EnemyState *s, EnemyU8 x, EnemyU8 y, EnemyU8 simonX)
     }
 }
 
+/* Octet de drapeaux de la salle (85A6 + 2 x D000), 0 hors des stages 1 et 2. */
+static EnemyU8 roomFlags(const EnemyRoomVars *v)
+{
+    if (v->stage == 1 && v->room < 8) return kEnemyStage1RoomFlags[v->room];
+    if (v->stage == 2 && v->room < 6) return kEnemyStage2RoomFlags[v->room];
+    return 0;
+}
+
 /* Une image pour un ennemi deja actif. */
 static void advance(Enemy *e)
 {
@@ -343,7 +353,8 @@ static void advance(Enemy *e)
         /* La SAT suit l'objet une image sur deux : 3 px en X et une marche de la
          * courbe Y a chaque age pair (mesure image par image, scratchpad/type4/gfx). */
         if ((e->age & 1) == 0) e->x += (EnemyS16)(3 * e->dx);
-        e->y = kType4Y[(e->age / 2) < ENEMY_TYPE4_Y_STEPS ? e->age / 2 : ENEMY_TYPE4_Y_STEPS - 1];
+        /* La courbe est relative a la Y du spawn (sub = Y du spawn - ENEMY_TYPE4_Y). */
+        e->y = (EnemyU8)(kType4Y[(e->age / 2) < ENEMY_TYPE4_Y_STEPS ? e->age / 2 : ENEMY_TYPE4_Y_STEPS - 1] + e->sub);
         /* Derniere position tenue deux images : X 01 (gauche, ages 152-153), E6 (droite, 146-147). */
         if ((e->age & 1) && e->dx < 0 && e->x <= ENEMY_EXIT_X_LEFT_T4) e->exiting = 1;
         if ((e->age & 1) && e->dx > 0 && e->x >= ENEMY_EXIT_X_RIGHT_T4) e->exiting = 1;
@@ -462,11 +473,18 @@ int Enemies_frame(EnemyState *s, EnemySpawnTimer *t, const EnemyRoomVars *v, int
     }
     s->parity ^= 1;
 
-    /* Type 4 : salle 4 (drapeau bit3). Un tir tous les 168 images, cote alterne, droite d'abord. */
-    if (v->stage == 1 && v->room < 8 && (kEnemyStage1RoomFlags[v->room] & ENEMY_FLAG_TYPE4)) {
-        if (++s->type4Frames >= ENEMY_TYPE4_PERIOD) {
+    /* Type 4 : drapeau bit3 (hall salle 4, stage 2 salles 0, 1, 3). Periodes 168, 168, 168, 328
+     * (table 9DBB), cote alterne, droite d'abord ; Y SAT du spawn = C425 - 22. */
+    if (roomFlags(v) & ENEMY_FLAG_TYPE4) {
+        /* Premier tir : delai de chargement ; ensuite table[(tirs - 1) & 7], longue a l'index 3. */
+        const EnemyU16 period = (s->type4Shots && ((s->type4Shots - 1) & 3) == 3) ?
+            ENEMY_TYPE4_PERIOD_LONG : ENEMY_TYPE4_PERIOD;
+        if (++s->type4Frames >= period) {
+            const int k = Enemies_spawn(s, s->type4Side, ENEMY_TYPE_4,
+                                        (EnemyU8)(v->simonY - ENEMY_TYPE4_Y_FROM_SIMON), 0);
             s->type4Frames = 0;
-            (void)Enemies_spawn(s, s->type4Side, ENEMY_TYPE_4, ENEMY_TYPE4_Y, 0);
+            s->type4Shots++;
+            if (k >= 0) s->enemy[k].sub = (EnemyU8)(s->enemy[k].y - ENEMY_TYPE4_Y);
             s->type4Side ^= 1;
         }
     }

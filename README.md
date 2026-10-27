@@ -25,7 +25,7 @@ Ce qui fonctionne dans la ROM Mega Drive :
 - **Clé et porte** : la clé blanche de la salle 2 se ramasse au contact et s'affiche
   dans le HUD ; la porte de la salle 7 bloque Simon sans elle, s'ouvre avec (barreau
   qui se lève, Simon qui sort seul) et mène vers le stage 2.
-- **Stage 2 (jouable, sans ennemis)** : six salles avec les collisions et les liens
+- **Stage 2 (jouable, chauves-souris seules)** : six salles avec les collisions et les liens
   de la ROM (`tools/build_stage_maps_md.py`) ; arrivée en salle 0 à x 16, y 96, comme
   sur le MSX2.
 - **Énergie, vies, mort, game over** : la barre PLAYER du HUD suit l'énergie (32 points).
@@ -43,7 +43,8 @@ Ce qui n'est pas porté ou reste provisoire :
   score et la boîte de contact accroupi ne sont pas reproduits ; la phase 3 du fouet
   est assimilée au fouet déployé (`vk_whip_phase` 2) et le recul face à une panthère
   assise est provisoire.
-- **Stage 2** : ni ennemis ni objets. Après une mort, Simon reprend en salle 0
+- **Stage 2** : seules les chauves-souris (salles 0, 1, 3) sont portées ; le type 1 de la
+  salle 2 et les hommes-poissons des salles 4 et 5 ne le sont pas. Pas d'objets. Après une mort, Simon reprend en salle 0
   (x 16, y 96), lieu provisoire. Les liens haut/bas viennent de la table de la ROM,
   sans trace en jeu.
 - **Clé dorée** et coffre : non portés.

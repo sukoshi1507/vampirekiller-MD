@@ -19,7 +19,7 @@ Outil : `tools/md_harness.py`. Il charge `sgdk/out/rom.bin` dans le core libretr
 | `b_hall_whip_kill` | DROITE tenu jusqu'au hall (arrivée x=16, y=192 comme sur le MSX2, puis Simon replacé à x=200) ; ennemi type B (type 1 MSX) à x=10 image 1003 ; Simon se tourne, fouet quand l'ennemi est à x-36 ; ennemi tué image 1175 (whip.timer=10), énergie intacte | 8/8 |
 | `d_death_game_over` | contact jusqu'à 0 d'énergie : mort (état 6 à +252 images), vies 2 → 1, reprise salle 0 x 16 ; puis vies forcées à 0 : game over et retour au titre | 8/8 |
 | `e_room4_bat` | hall, salle 4 par le changement de salle debug ; le type 4 apparaît, X recule de 30 px en 20 images, Y suit la courbe (179 au pas 10, 158 en haut) | 5/5 |
-| `f_key_door` | salle 2 : clé prise au contact (x 140..152) ; salle 7 sur le rebord (panthère retirée) : ouverture à x 228, clé consommée ; stage 2 en jeu (salle 0, x 16, y 96), puis salle 1 par la droite depuis l'étage haut (y 64) | 11/11 |
+| `f_key_door` | salle 2 : clé prise au contact (x 140..152) ; salle 7 sur le rebord (panthère retirée) : ouverture à x 228, clé consommée ; stage 2 en jeu (salle 0, x 16, y 96), chauve-souris en Y 74, puis salle 1 par la droite depuis l'étage haut (y 64) | 12/12 |
 | `g_room2_panther` | salle 2 : panthère créée en 80,80, assise tournée vers Simon (x 194, y 128) ; réveil sous 64 px, course vers Simon ; tuée au premier coup de fouet accroupi, sans contact | 6/6 |
 | `c_enemy_contact` | même chemin sans attaquer ; contact image 1192 : énergie 32 → 30, invulnérabilité et recul ; après 30 images, recul fini, pas de second dégât | 7/7 |
 

@@ -387,16 +387,18 @@ static void test_type4_timer(void)
     v.room = 4;
     v.map = 0;
     v.simonX = 0x7A;
-    v.simonY = 0x40;   /* hors de la zone des ennemis : pas de contact dans ce test */
+    v.simonY = 0xC0;   /* au sol du hall : spawn en Y SAT 0xAA (C425 - 22) */
     v.sideFlag = 0;
     v.difficulty = 0;
     Enemies_init(&s);
     Enemies_spawnTimerInit(&t);
+    s.invuln = 0xFF;   /* pas de contact dans ce test (510 images) */
     for (f = 1; f <= 167; f++) (void)Enemies_frame(&s, &t, &v, &push);
     CHECK(!s.enemy[0].active, "type 4 : aucun tir avant 168 images");
     (void)Enemies_frame(&s, &t, &v, &push);
     CHECK(s.enemy[0].active && s.enemy[0].type == ENEMY_TYPE_4 && s.enemy[0].dx == -1 && s.enemy[0].x == 0xE5,
           "type 4 : premier tir a 168 images, cote droit");
+    CHECK(s.enemy[0].y == ENEMY_TYPE4_Y, "type 4 : Y SAT 0xAA pour C425 = C0");
     for (f = 169; f <= 335; f++) (void)Enemies_frame(&s, &t, &v, &push);
     (void)Enemies_frame(&s, &t, &v, &push);
     /* Le premier tir est sorti vers 320 images : son slot (0) est reutilise. */
@@ -405,12 +407,39 @@ static void test_type4_timer(void)
     CHECK(!s.enemy[1].active, "type 4 : un seul ennemi actif apres le second tir");
     CHECK(s.energy == ENEMY_ENERGY_MAX, "pas de contact dans ce test");
 
+    /* Stage 2, salle 0 (drapeau 08) : Simon en Y 96 -> Y SAT 74, courbe decalee d'autant ;
+     * periodes 168, 168, 168 puis 328 (trace stage 2 : 6068, 6236, 6404, 6572, 6900). */
+    Enemies_init(&s);
+    Enemies_spawnTimerInit(&t);
+    s.invuln = 0xFF;
+    v.stage = 2; v.room = 0; v.simonX = 0x10; v.simonY = 96;
+    {
+        static const int shots[5] = { 168, 336, 504, 672, 1000 };
+        int n = 0;
+        for (f = 1; f <= 1000; f++) {
+            int k, before = 0, after = 0;
+            for (k = 0; k < ENEMY_MAX; k++) before += s.enemy[k].active && s.enemy[k].age == 0;
+            (void)Enemies_frame(&s, &t, &v, &push);
+            if (f % 200 == 0) s.invuln = 0xFF;
+            for (k = 0; k < ENEMY_MAX; k++) after += s.enemy[k].type == ENEMY_TYPE_4 && s.enemy[k].active && s.enemy[k].age == 0;
+            if (after > before) {
+                CHECK(n < 5 && f == shots[n], "stage 2 : tir %d a l'image %d (attendu %d)", n, f, n < 5 ? shots[n] : -1);
+                for (k = 0; k < ENEMY_MAX; k++)
+                    if (s.enemy[k].active && s.enemy[k].age == 0) CHECK(s.enemy[k].y == 74, "stage 2 : Y SAT 74");
+                n++;
+            }
+        }
+        CHECK(n == 5, "stage 2 : 5 tirs en 1000 images (obtenu %d)", n);
+    }
+    v.stage = 1;
+
     /* Salle 2 (drapeau 0) : ni type 1 ni type 4. */
     Enemies_init(&s);
     Enemies_spawnTimerInit(&t);
     v.room = 2;
     for (f = 1; f <= 400; f++) (void)Enemies_frame(&s, &t, &v, &push);
-    CHECK(!s.enemy[0].active && !s.enemy[1].active, "salle 2 : aucun ennemi de type 1 ni 4");
+    for (f = 0; f < ENEMY_MAX; f++)
+        CHECK(!s.enemy[f].active || s.enemy[f].type == ENEMY_TYPE_5, "salle 2 : aucun ennemi de type 1 ni 4");
 }
 
 /* 7. Contact : -2, recul de 22 images a 2 px, invulnerabilite de 180 images. Ennemi maintenu sur Simon. */

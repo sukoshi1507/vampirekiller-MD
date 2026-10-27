@@ -317,3 +317,20 @@ Palette VDP des salles 2, 3 et 7 (37 instantanés) : `0000 08AE 0222 064C 0CC8 0
 - Plans : `scratchpad/type5/plans/` (`K1` : chemin naturel salles 3, 2, 3, 7 ; `B` : jusqu'à la salle 2 ; `WC4`-`WC10`, `WS4`, `WS8` : tests du fouet).
 - Traces : `scratchpad/type5/out/A/sat5.csv` (2876 images en salles 2, 3, 7), `out/A/objwrites.csv`, `out/A/snaps/` ; `out/B/` (vidage mémoire) ; `out/WC*/`, `out/WS*/` (fouet).
 - Analyses : `scratchpad/type5/analysis/` (`norm.py`, `A_norm.txt`, `offsets.py`, `offsets2.py`, `layers.py`, `vram_layers.bin`, `findrle.py`, `poses.png`).
+
+## Stage 2 : ennemis (relevé du 2026-10-28)
+
+Lecture du code (`tools/disasm_rom_window.py`) et trace openMSX `scratchpad/stage2e/out/A` (plan `S2` = K3 puis stage 2 ; SAT, objets `C800`-`CB7F`, instantanés VRAM).
+
+| Point | Valeur | Preuve |
+|---|---|---|
+| Drapeaux de salle | `85D7`-`85DC` (pointeur `85AA`) : `08 08 01 08 02 02` (salles 0 à 5). Bit 3 (`9D97`, type 4) en salles 0, 1, 3 ; bit 0 (`9CE6`, type 1) en salle 2 ; bit 1 (`9D4B`, type 2) en salles 4, 5 | ROM |
+| Objets fixes | aucun : la liste du stage 2 (appel 2 de `6181` depuis `8674`) est vide (`FF`) | ROM |
+| Répartition des routines (`993B`, table `9942`) | type 1 `A964`, types 2 et 3 `A310`, type 4 `B0F8`, type 5 `A87D` | ROM |
+| Type 4 : dessin | les 12 couches `48`-`74` en VRAM sont identiques à celles du hall (5 instantanés des salles 0, 4, 2) | trace |
+| Type 4 : Y du spawn | `9D97` : `E = C425 - 8` ; Y SAT au spawn = **C425 - 22** (Simon 96 → 74, Simon 128 → 106 ; hall : 192 → `AA`) | code + trace (20 tirs) |
+| Type 4 : cadence | table `9DBB` = `14 14 14 28 14 14 14 28` : 168, 168, 168 puis 328 images (tirs 6068, 6236, 6404, 6572, 6900, …) ; le premier tir vient 168 images après l'entrée | code + trace |
+| Type 1 (salle 2) | `9CFC` branche stage 2 : `E = A0`, côté `D = F0`, ou `10` si le bit 1 de `CF01` est mis | code seul |
+| Type 2 (salles 4, 5) | `9D4B` : minuterie `CF02`, périodes `9D8F` (`01 18 18 …`), Y `C8`, X = table `9D87` (`60 D0 30 90 A0 40 60 B0`) selon `CF03 & 7`, décalé de 32 px vers le centre si Simon est à moins de 24 px. Routine `A310` : chute sous gravité `0x80`, posé au sol puis marche vers Simon à ±`0x180` ; sous Y `C0` sans sol, disparaît en créant deux objets `20` (éclaboussures). Homme-poisson probable | code seul |
+
+**Porté** : type 4 au stage 2 (salles 0, 1, 3), Y du spawn relative à Simon et cadence 168/328 pour tous les stages. **Non porté** : type 1 de la salle 2 (dessin au stage 2 non relevé), type 2 (dessin, sauts et tir de l'état 2 `A45A` non relevés). La trace n'a pas atteint les salles 2 et 4 : le lien forcé (`C41E`) n'a pas servi, Simon était sur un escalier.

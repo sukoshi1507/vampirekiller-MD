@@ -34,8 +34,10 @@ typedef short EnemyS16;
 #define ENEMY_INVULN_START 0x5A     /* C42D : decremente une fois sur deux images, fenetre mesuree 180 images */
 #define ENEMY_RECOIL_FRAMES 22      /* C427 : 2 px par image, de 136 a 92 (44 px) */
 #define ENEMY_RECOIL_STEP 2
-#define ENEMY_TYPE4_PERIOD 168      /* 8 x 21 images entre deux tirs (mesure, 4 cas) */
-#define ENEMY_TYPE4_Y 0xAA          /* Y SAT du type 4 au spawn (observe), puis courbe kType4Y */
+#define ENEMY_TYPE4_PERIOD 168      /* 8 x 21 images entre deux tirs (table 9DBB : 14 -> 21 x 8) */
+#define ENEMY_TYPE4_PERIOD_LONG 328 /* un tir sur quatre : 28 -> 41 x 8 (mesure au stage 2) */
+#define ENEMY_TYPE4_Y 0xAA          /* Y SAT du type 4 au spawn dans le hall (Simon au sol, Y C0), puis courbe kType4Y */
+#define ENEMY_TYPE4_Y_FROM_SIMON 22 /* Y SAT au spawn = C425 - 22 (9D97 : E = C425 - 8 ; mesure stage 2 et hall) */
 #define ENEMY_PATTERN_TYPE4 0x80    /* bit des motifs du type 4 (tuiles vk_enemy4_tiles) */
 #define ENEMY_FALL_SPEED 2          /* px par image quand le sol manque (PROVISOIRE, vitesse non mesuree) */
 #define ENEMY_TYPE5_DAMAGE 6        /* table 81CE : base 3, doublee (bit 4 de C701 nul) ; mesure 4 fois */
@@ -66,7 +68,7 @@ typedef struct {
     EnemyS16 x;
     EnemyU8 y;
     EnemyS8 dx;               /* -1 ou +1 */
-    EnemyU8 sub;             /* type 5 : fraction de Y ; inutilise pour les autres types */
+    EnemyU8 sub;             /* type 5 : fraction de Y ; type 4 : Y SAT du spawn - ENEMY_TYPE4_Y */
     EnemyU16 age;            /* images depuis le spawn ; 0 = image de spawn */
     EnemyS16 vy;             /* type 5 : vitesse Y 8.8 (+7/+8 de l'objet) */
     EnemyU8 state;           /* type 5 : 0 assise, 1 course, 2 saut ou chute */
@@ -91,10 +93,16 @@ typedef struct {
     EnemyU8 recoil;          /* images restantes de recul */
     EnemyS8 recoilDir;       /* sens du recul = sens de l'ennemi touche */
     EnemyU8 parity;          /* 9CC3 est appele une image sur deux */
-    EnemyU8 type4Frames;     /* images depuis le dernier tir de type 4 */
+    EnemyU16 type4Frames;    /* images depuis le dernier tir de type 4 */
     EnemyU8 type4Side;       /* prochain cote de type 4 : 0 droite, 1 gauche */
     EnemyU8 type5Timer;      /* images depuis l'entree dans la salle, jusqu'a la creation du type 5 */
+    EnemyU8 type4Shots;      /* tirs de type 4 depuis l'entree (CF06 : periode longue un tir sur quatre) */
 } EnemyState;
+
+/* Drapeaux de salle du stage 2 (D000 = 2) : ROM 85D7-85DC (pointeur 85AA), salles 0 a 5.
+ * Bit 3 (type 4) en salles 0, 1, 3 ; bit 0 (type 1) en salle 2 ; bit 1 (type 2, 9D4B) en 4, 5.
+ * Seul le type 4 est porte au stage 2 (memes motifs que le hall, verifie en VRAM). */
+extern const EnemyU8 kEnemyStage2RoomFlags[6];
 
 /* Tables ROM, salle de stage 1 (D000 = 1).
  * kEnemyStage1RoomFlags[D001] : octet de drapeaux ROM 85CF-85D6 ; bit0 = canal
