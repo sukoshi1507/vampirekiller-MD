@@ -19,7 +19,8 @@ void vk_whip_tick(VKWhip *w, const VKPlayer *p, int attack_pressed)
     if (w->timer == 14) { w->facing = p->facing; w->x = p->x; w->y = p->y; w->crouched = p->crouched; }
 }
 /* Standing lash box measured from the openMSX sprite trace (research/whip-hitbox.md):
- * x +8..+39 and y -31..-16 relative to Simon, identical for frames 6, 7 and 8.
+ * x +8..+32 and y -22..-15 relative to Simon: the visible lash measured in-game
+ * (research/whip-hitbox-ingame.md), which replaces the earlier sprite-cell estimate.
  * The left-facing box is the mirror image. The crouched box is not measured yet. */
 void vk_whip_bounds(const VKWhip *w, int *left, int *top, int *right, int *bottom)
 {
@@ -33,10 +34,10 @@ void vk_whip_bounds(const VKWhip *w, int *left, int *top, int *right, int *botto
         *bottom = (int)w->y - 7;
         return;
     }
-    *left = w->facing ? (int)w->x - 40 : (int)w->x + 8;
-    *right = w->facing ? (int)w->x - 8 : (int)w->x + 40;
-    *top = (int)w->y - 31;
-    *bottom = (int)w->y - 16;
+    *left = w->facing ? (int)w->x - 32 : (int)w->x + 8;
+    *right = w->facing ? (int)w->x - 8 : (int)w->x + 32;
+    *top = (int)w->y - 22;
+    *bottom = (int)w->y - 15;
 }
 
 /* Shared 15-step timeline for both body styles. Indices represent the

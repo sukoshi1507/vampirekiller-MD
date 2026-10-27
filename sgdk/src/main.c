@@ -12,6 +12,8 @@
 #include "generated/flame_fx_md.h"
 #include "generated/intro_assets.h"
 #include "sound_test.h"
+#include "psg_player.h"
+#include "generated/sfx_md.h"
 
 /* Room explorer plus a movement prototype in the first room. */
 static const u16 hud_palette[16] = {
@@ -104,7 +106,7 @@ static u16 flame_clock;
 static u16 flame_burst;
 static void reset_training_target(void)
 {
-    vk_target_init(&test_target, (int)player.x + 48, (int)player.y - 24, 16, 16);
+    vk_target_init(&test_target, (int)player.x + 24, (int)player.y - 24, 16, 16);
     target_visible = TRUE;
     flame_clock = 0;
     flame_burst = 0;
@@ -445,7 +447,11 @@ int main(bool hardReset)
                     input.jump_pressed, !!(input.keys & BUTTON_UP),
                     !!(input.keys & BUTTON_DOWN));
                 player = game.player;
-                vk_whip_tick(&whip, &player, !!((pressed & BUTTON_B) && !(input.keys & BUTTON_A)));
+                {
+                    const bool idle = whip.timer == 0;
+                    vk_whip_tick(&whip, &player, !!((pressed & BUTTON_B) && !(input.keys & BUTTON_A)));
+                    if (idle && whip.timer == 14) vk_psg_play(vk_sfx_whip);
+                }
                 if (target_visible && vk_target_tick(&test_target, &whip))
                 {
                     if (front_mode == FRONT_COURTYARD) flame_burst = 12;
@@ -525,6 +531,7 @@ int main(bool hardReset)
                 if (dirty) show_room(stage, room, atlas);
             }
         }
+        vk_psg_update();
         SYS_doVBlankProcess();
     }
     return 0;

@@ -74,7 +74,6 @@ void vk_sound_test_enter(void)
 
 bool vk_sound_test_tick(u16 pressed)
 {
-    vk_psg_update();
     if (pressed & BUTTON_B)
     {
         vk_psg_stop();
