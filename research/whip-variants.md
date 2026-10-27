@@ -207,9 +207,11 @@ Trace de 220 s de marche sans forçage (`tools/trace_c416_writers.tcl`, PC lu da
 
 ## Conséquence pour le portage
 
-- Le MD ne porte que le niveau 0. Le niveau 1 est atteint par le jeu normal et ne diffère que par la longueur de la lanière et la liste de sprites (durée et son identiques), ce qui permet de le porter sans nouvelle trame de composition.
-- Les niveaux 2 et 3 ont des compositions et sons distincts, mais leur déclenchement dans le jeu n'est pas établi. Les porter demande d'abord le déclencheur (écriture `0x8D76`, condition de la table).
-- Cette étape ne modifie pas `sgdk/src/` : `whip.c` et `main.c` restent inchangés.
+- Le MD porte les niveaux 0, 1 et 2 (`dc6a353`, `2cc20f8`, `3cac5ce`). Le niveau 0 reste le défaut : aucune touche ni aucun événement de jeu ne choisit encore un autre niveau, donc le comportement en partie normale ne change pas.
+- Le niveau 1 est atteint par le jeu normal et ne diffère que par la longueur de la lanière et la liste de sprites (durée et son identiques). Son rendu et sa boîte restent à vérifier à l'écran.
+- Le niveau 2 a sa chronologie propre de 6 images (`3cac5ce`). Son rendu n'est pas vérifié à l'écran.
+- Le niveau 3 n'est pas porté : ses compositions et sons sont distincts, et son déclenchement dans le jeu n'est pas établi (écriture `0x8D76`, condition de la table).
+- `main.c` et `whip.c` ont été modifiés pour brancher les niveaux 1 et 2 ; le niveau 0 garde son chemin d'origine.
 
 ## Fichiers et empreintes (27 octobre)
 
