@@ -13,7 +13,7 @@ int vk_whip_segments(const VKWhip *w);
 int vk_whip_arm_frame(const VKWhip *w);
 /* Experimental ROM-derived animation step (0..7); independent of hitbox timing. */
 int vk_whip_visual_step(const VKWhip *w);
-/* Experimental ROM-derived crouch/crouch-whip step (0..4). */
+/* ROM-derived crouch/crouch-whip step (0..3): 0 idle, 1..3 attack (see whip.c). */
 int vk_whip_crouch_visual_step(const VKWhip *w);
 /* Position of the dedicated animated arm sprite (screen pixel coordinates). */
 void vk_whip_arm_position(const VKWhip *w, int *x, int *y);

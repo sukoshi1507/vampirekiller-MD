@@ -45,12 +45,15 @@ void vk_whip_bounds(const VKWhip *w, int *left, int *top, int *right, int *botto
  * openMSX trace: upper index 6 for 2 frames, 7 for 2 frames, 8 for 8 frames
  * (research/simon-assets/ATTACK_TRACE_OPENMSX.md). The body is shown from timer 14
  * to 3, that is 12 frames. The gameplay hit window (timer 3..10) is unchanged.
+ * The crouched attack follows the same 12 ticks with the lower index held at 6
+ * (C42E = 6 while crouched): crouch frame 1 = upper 6 (timer 14..13), 2 = upper 7
+ * (timer 12..11), 3 = upper 8 (timer 10..3). Frame 0 is the idle crouch.
  * Each entry is {arm phase, standing frame, crouched frame}. */
 typedef struct { VKByte phase, standing, crouched; } VKAttackKey;
 static const VKAttackKey vk_attack_keys[15] = {
-    {0,0,0}, {0,0,4}, {0,0,4}, {1,2,3}, {1,2,3},
-    {1,2,3}, {1,2,3}, {1,2,3}, {1,2,3}, {1,2,2},
-    {1,2,2}, {1,1,1}, {1,1,1}, {1,0,1}, {1,0,0}
+    {0,0,0}, {0,0,0}, {0,0,0}, {1,2,3}, {1,2,3},
+    {1,2,3}, {1,2,3}, {1,2,3}, {1,2,3}, {1,2,3},
+    {1,2,3}, {1,1,2}, {1,1,2}, {1,0,1}, {1,0,1}
 };
 
 static const VKAttackKey *vk_attack_key(const VKWhip *w)

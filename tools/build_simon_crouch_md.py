@@ -10,15 +10,22 @@ from probe import load_rom, reference_rom
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / 'sgdk/src/generated'
+# Crouch compositions (lower, upper) in the order of the crouch whip sequence.
+# The openMSX trace of a crouched attack (C42E stays 6 while crouched, C42F =
+# 6,6,7,7,8x8 then 0; 12 ticks = timer 14..3) shows the upper indices 6, 7 and 8,
+# the same ones as the standing attack with lower index 0 (build_simon_attack_md.py).
+# Index 0 is the idle crouch (C42F = 0).
 PAIRS = [
     (6, 0),  # idle crouch
-    (6, 2),  # windup / recovery candidate
-    (6, 6),  # extension candidate 1
-    (6, 6),  # hold full extension without below-ground dangling layer
-    (6, 2),  # recovery
+    (6, 6),  # attack, timer 14..13 (MSX ticks 1-2)
+    (6, 7),  # attack, timer 12..11 (MSX ticks 3-4)
+    (6, 8),  # attack, timer 10..3 (MSX ticks 5-12)
 ]
-W = 32
+# 64x32 anchored buffer, as build_simon_attack_md.py: the whip reaches x+39.
+# Two 32x32 halves are emitted, one SGDK sprite each.
+W = 64
 H = 32
+TILES_PER_HALF = 16
 CANVAS_WORLD_LEFT = -24
 CANVAS_WORLD_TOP = -30
 
@@ -37,13 +44,17 @@ def _tile_words_from_canvas(canvas: Image.Image, lookup: dict) -> list[int]:
         raise ValueError(f'Unexpected sprite palette entries: {extras}')
     pixels = [lookup.get(pixel, 0) if pixel[3] else 0 for pixel in rgba]
     words = []
-    for tx in range(4):
-        for ty in range(4):
-            for py in range(8):
-                word = 0
-                for px in range(8):
-                    word = (word << 4) | pixels[(ty * 8 + py) * W + tx * 8 + px]
-                words.append(word)
+    # Each 32x32 half is one SGDK sprite: 16 tiles in column-major order.
+    for half in range(W // 32):
+        for tx in range(4):
+            for ty in range(4):
+                for py in range(8):
+                    word = 0
+                    for px in range(8):
+                        x = half * 32 + tx * 8 + px
+                        word = (word << 4) | pixels[(ty * 8 + py) * W + x]
+                    words.append(word)
+    assert len(words) == (W // 32) * TILES_PER_HALF * 8
     return words
 
 
@@ -116,7 +127,7 @@ def generate(rom_path: Path | None = None):
 
         canvas = Image.new('RGBA', (W, H))
         if dx < 0 or dy < 0 or dx + subject.width > W or dy + subject.height > H:
-            raise ValueError(f'Crouch candidate {low}/{up} cannot fit canonical 32x32 window')
+            raise ValueError(f'Crouch candidate {low}/{up} cannot fit canonical 64x32 window')
         canvas.alpha_composite(subject, (dx, dy))
         canvas.save(OUT / f'crouch-candidate-{frame_index}.png')
         preview_sheet.alpha_composite(canvas, (frame_index * W, 0))
@@ -134,20 +145,22 @@ def generate(rom_path: Path | None = None):
         })
 
     preview_sheet.save(OUT / 'simon_crouch_preview.png')
+    tiles_per_frame = (W // 32) * TILES_PER_HALF
     (OUT / 'simon_crouch_md.h').write_text(
-        '/* Generated ROM-derived crouch candidate frames. */\n'
+        '/* Generated ROM-derived crouch frames. Never hand edit. */\n'
         '#ifndef VK_SIMON_CROUCH_MD_H\n'
         '#define VK_SIMON_CROUCH_MD_H\n'
-        '#define VK_CROUCH_FRAME_COUNT 5\n'
-        '#define VK_CROUCH_TILES_PER_FRAME 16\n'
+        f'#define VK_CROUCH_FRAME_COUNT {len(PAIRS)}\n'
+        f'#define VK_CROUCH_TILES_PER_FRAME {tiles_per_frame}\n'
+        '#define VK_CROUCH_TILES_PER_HALF 16\n'
         '#define VK_CROUCH_TILE_COUNT (VK_CROUCH_FRAME_COUNT * VK_CROUCH_TILES_PER_FRAME)\n'
-        'extern const unsigned long vk_simon_crouch_tiles[640];\n'
+        f'extern const unsigned long vk_simon_crouch_tiles[{len(all_words)}];\n'
         '#endif\n'
     )
     lines = [
-        '/* Generated from Vampire Killer MSX2 ROM. Crouch phase order is a best-effort candidate. */',
+        '/* Generated from Vampire Killer MSX2 ROM. Crouch phase order from the openMSX trace. */',
         '#include "simon_crouch_md.h"',
-        'const unsigned long vk_simon_crouch_tiles[640] = {',
+        f'const unsigned long vk_simon_crouch_tiles[{len(all_words)}] = {{',
     ]
     for i in range(0, len(all_words), 8):
         lines.append('    ' + ', '.join('0x%08XUL' % v for v in all_words[i:i + 8]) + ',')
@@ -157,11 +170,12 @@ def generate(rom_path: Path | None = None):
     manifest = {
         'rom_sha256': hashlib.sha256(rom).hexdigest(),
         'asset_source': 'MSX2 original, position/mask tables',
-        'phase_order_verified': False,
+        'phase_order_verified': True,
         'candidate_state': 'crouch / crouch-whip',
         'canvas_size': [W, H],
         'canvas_world_window': {'left': CANVAS_WORLD_LEFT, 'top': CANVAS_WORLD_TOP, 'width': W, 'height': H},
-        'sgdk_anchor': 'x-12,y-31 with optional horizontal mirror',
+        'sgdk_anchor': 'buffer origin x-24,y-30 (64x32), two 32x32 halves at x-24 and x+8, SGDK y-25; left-facing: mirror, origin x-39',
+        'phase_order_source': 'openMSX crouched-attack trace (C42E=6, C42F=6,6,7,7,8x8,0)',
         'frame_assignments': frames,
     }
     (OUT / 'simon_crouch_manifest.json').write_text(json.dumps(manifest, indent=2) + '\n')

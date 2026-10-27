@@ -48,14 +48,14 @@ int main(void)
     {
         static const int expected_arm[15] = {0,0,0,1,1,1,1,1,1,1,1,1,1,1,1};
         static const int expected_standing[15] = {0,0,0,2,2,2,2,2,2,2,2,1,1,0,0};
-        static const int expected_crouched[15] = {0,4,4,3,3,3,3,3,3,2,2,1,1,1,0};
+        static const int expected_crouched[15] = {0,0,0,3,3,3,3,3,3,3,3,2,2,1,1};
         for (i=0;i<15;i++) {
             w.timer=(VKByte)i;
             assert(vk_whip_arm_frame(&w)==expected_arm[i]);
             assert(vk_whip_visual_step(&w)==expected_standing[i]);
             assert(vk_whip_crouch_visual_step(&w)==expected_crouched[i]);
             assert(vk_whip_visual_step(&w)>=0 && vk_whip_visual_step(&w)<3);
-            assert(vk_whip_crouch_visual_step(&w)>=0 && vk_whip_crouch_visual_step(&w)<5);
+            assert(vk_whip_crouch_visual_step(&w)>=0 && vk_whip_crouch_visual_step(&w)<4);
             if (vk_whip_active(&w)) assert(vk_whip_segments(&w)>0);
             else assert(vk_whip_segments(&w)==0);
         }

@@ -129,23 +129,15 @@ static void show_player(const VKPlayer *player)
     const int crouch_mode = !player->on_stairs && (player->crouched || (attack_frame && whip.crouched));
     const u16 crouch_frame = attack_frame ? (u16)vk_whip_crouch_visual_step(&whip) : 0;
     const u16 crouch_facing = attack_frame ? whip.facing : player->facing;
-    /* Frame-specific anchor correction for the 32x32 crouch reconstructions.
-     * The ROM-derived art does not fill the canvas uniformly: idle/recovery
-     * occupy the body-side half only, whereas whip frames extend wider.
-     * These offsets keep Simon's feet on the ground and prevent the body from
-     * drifting toward the facing direction when entering crouch. */
-    static const s16 crouch_x_right[5] = { -24, -24, -24, -24, -24 };
-    static const s16 crouch_x_left[5]  = {  -8,  -8,  -8,  -8,  -8 };
-    static const s16 crouch_y_offset[5] = { -25, -25, -25, -25, -25 };
-    /* ROM-derived body frames and the lash are complementary layers. */
-    if (crouch_mode)
-        VDP_setSpriteFull(0, (s16)player->x + (crouch_facing ? crouch_x_left[crouch_frame] : crouch_x_right[crouch_frame]),
-            (s16)player->y + crouch_y_offset[crouch_frame],
-            SPRITE_SIZE(4, 4), TILE_ATTR_FULL(PAL2, TRUE, FALSE,
-                crouch_facing, CROUCH_TILE_INDEX + crouch_frame * VK_CROUCH_TILES_PER_FRAME), 1);
+    /* Standing body on sprite 0. In crouch mode and during any attack the body
+     * is the two-half composition drawn on sprites 5 and 6 (below); the lash
+     * is part of those ROM-derived frames, so no separate lash is overlaid. */
+    if (crouch_mode || attack_frame)
+        VDP_setSpriteFull(0, -32, -32, SPRITE_SIZE(3, 4),
+            TILE_ATTR_FULL(PAL2, TRUE, FALSE, FALSE,
+                           PLAYER_TILE_INDEX + player->pose * VK_PLAYER_TILES_PER_POSE), 1);
     else
-        VDP_setSpriteFull(0, attack_frame ? -32 : (s16) player->x - 8,
-            attack_frame ? -32 : (s16) player->y - 31, SPRITE_SIZE(3, 4),
+        VDP_setSpriteFull(0, (s16) player->x - 8, (s16) player->y - 31, SPRITE_SIZE(3, 4),
             TILE_ATTR_FULL(PAL2, TRUE, FALSE, FALSE,
                            PLAYER_TILE_INDEX + player->pose * VK_PLAYER_TILES_PER_POSE), 1);
     {
@@ -181,27 +173,36 @@ static void show_player(const VKPlayer *player)
             TILE_ATTR_FULL(PAL3, TRUE, FALSE, whip.facing,
                            ARM_TILE_INDEX + (frame ? (u16)(frame - 1) : 0)), 5);
     }
-    /* Two 32x32 hardware sprites cover a 64x32 anchored composition.
-     * The decoded candidate is already right-facing: player/whip facing == 0
-     * means right, facing == 1 means left. Only left-facing attacks require
-     * horizontal reflection and reversal of the source half order.
+    /* Two 32x32 hardware sprites cover a 64x32 anchored composition, both for
+     * the standing attack and for the crouch body / crouched attack.
+     * The decoded candidates are already right-facing: facing == 0 means right,
+     * facing == 1 means left. Only left-facing frames need horizontal reflection
+     * and reversal of the source half order.
      * The right-facing canvas starts at x-24 (the traced frames reach x+39).
      * Its mirror starts at x-39, so that the left-facing block lands on x-39..x+24.
-     * Phase-to-index mapping follows the openMSX trace (see ATTACK_TRACE_OPENMSX.md). */
+     * Crouch frames are placed 25 px above Simon's y (feet anchor), attack frames 30 px.
+     * Phase-to-index mapping: research/simon-assets/ATTACK_TRACE_OPENMSX.md (standing)
+     * and the crouched-attack trace summarized in tools/build_simon_crouch_md.py. */
     {
         u16 i;
+        const u16 facing = (u16)crouch_facing;
+        const bool body = crouch_mode || attack_frame;
         const u16 frame_index = attack_frame ? (u16)vk_whip_visual_step(&whip) : 0;
-        const u16 base = ATTACK_TILE_INDEX + frame_index * VK_ATTACK_TILES_PER_FRAME;
-        const s16 origin_x = whip.facing ? -39 : -24;
+        const u16 base = crouch_mode
+            ? CROUCH_TILE_INDEX + crouch_frame * VK_CROUCH_TILES_PER_FRAME
+            : ATTACK_TILE_INDEX + frame_index * VK_ATTACK_TILES_PER_FRAME;
+        const u16 tiles_per_half = crouch_mode ? VK_CROUCH_TILES_PER_HALF : VK_ATTACK_TILES_PER_HALF;
+        const s16 origin_x = facing ? -39 : -24;
+        const s16 origin_y = crouch_mode ? -25 : -30;
         for (i = 0; i < 2; ++i)
         {
-            const u16 source_half = whip.facing ? (u16)(1 - i) : i;
+            const u16 source_half = facing ? (u16)(1 - i) : i;
             VDP_setSpriteFull((u16)(5 + i),
-                (attack_frame && !crouch_mode) ? (s16)player->x + origin_x + (s16)i * 32 : -32,
-                (attack_frame && !crouch_mode) ? (s16)player->y - 30 : -32,
+                body ? (s16)player->x + origin_x + (s16)i * 32 : -32,
+                body ? (s16)player->y + origin_y : -32,
                 SPRITE_SIZE(4, 4),
-                TILE_ATTR_FULL(PAL2, TRUE, FALSE, whip.facing,
-                               base + source_half * VK_ATTACK_TILES_PER_HALF),
+                TILE_ATTR_FULL(PAL2, TRUE, FALSE, facing,
+                               base + source_half * tiles_per_half),
                 i == 0 ? 6 : (target_visible ? 7 : 0));
         }
     }

@@ -1,19 +1,20 @@
 {
   "rom_sha256": "99eabaaeb2b6c02220e131043d5a6401d0d8c5f413d89204547adcc04d65e7e2",
   "asset_source": "MSX2 original, position/mask tables",
-  "phase_order_verified": false,
+  "phase_order_verified": true,
   "candidate_state": "crouch / crouch-whip",
   "canvas_size": [
-    32,
+    64,
     32
   ],
   "canvas_world_window": {
     "left": -24,
     "top": -30,
-    "width": 32,
+    "width": 64,
     "height": 32
   },
-  "sgdk_anchor": "x-12,y-31 with optional horizontal mirror",
+  "sgdk_anchor": "buffer origin x-24,y-30 (64x32), two 32x32 halves at x-24 and x+8, SGDK y-25; left-facing: mirror, origin x-39",
+  "phase_order_source": "openMSX crouched-attack trace (C42E=6, C42F=6,6,7,7,8x8,0)",
   "frame_assignments": [
     {
       "frame": 0,
@@ -43,23 +44,23 @@
     {
       "frame": 1,
       "lower_index": 6,
-      "upper_index": 2,
+      "upper_index": 6,
       "png": "crouch-candidate-1.png",
       "bounds": {
-        "min_x": -8,
+        "min_x": -32,
         "min_y": -30,
         "max_x_exclusive": 8,
         "max_y_exclusive": 2,
         "anchor_relative": "ROM signed dx/dy (no invented 24x32 crop)"
       },
       "content_bbox": [
-        0,
+        8,
         1,
-        16,
+        40,
         25
       ],
       "canvas_offset_xy": [
-        16,
+        0,
         1
       ],
       "gap_adjustments": [],
@@ -68,7 +69,7 @@
     {
       "frame": 2,
       "lower_index": 6,
-      "upper_index": 6,
+      "upper_index": 7,
       "png": "crouch-candidate-2.png",
       "bounds": {
         "min_x": -32,
@@ -93,49 +94,24 @@
     {
       "frame": 3,
       "lower_index": 6,
-      "upper_index": 6,
+      "upper_index": 8,
       "png": "crouch-candidate-3.png",
-      "bounds": {
-        "min_x": -32,
-        "min_y": -30,
-        "max_x_exclusive": 8,
-        "max_y_exclusive": 2,
-        "anchor_relative": "ROM signed dx/dy (no invented 24x32 crop)"
-      },
-      "content_bbox": [
-        8,
-        1,
-        40,
-        25
-      ],
-      "canvas_offset_xy": [
-        0,
-        1
-      ],
-      "gap_adjustments": [],
-      "classification": "ROM-derived candidate frame, lower component raised by 6 px; temporal role not dynamically confirmed"
-    },
-    {
-      "frame": 4,
-      "lower_index": 6,
-      "upper_index": 2,
-      "png": "crouch-candidate-4.png",
       "bounds": {
         "min_x": -8,
         "min_y": -30,
-        "max_x_exclusive": 8,
+        "max_x_exclusive": 40,
         "max_y_exclusive": 2,
         "anchor_relative": "ROM signed dx/dy (no invented 24x32 crop)"
       },
       "content_bbox": [
         0,
-        1,
-        16,
+        2,
+        41,
         25
       ],
       "canvas_offset_xy": [
         16,
-        1
+        2
       ],
       "gap_adjustments": [],
       "classification": "ROM-derived candidate frame, lower component raised by 6 px; temporal role not dynamically confirmed"
