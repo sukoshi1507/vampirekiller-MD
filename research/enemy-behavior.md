@@ -181,3 +181,14 @@ Les deux sprites ne sont pas deux types : ce sont deux sens (droite et gauche) d
 - Sonde : `tools/enemy_spawn_callers.tcl` (pile et registres à l'écriture de `C800`).
 - Analyse : `tools/analyze_enemy_behavior.py RUNDIR`.
 - Données de travail (non versionnées) : `scratchpad/enemy-behavior/` (ROM copiée, plans `plan-A` à `plan-G`, runs A, B, D, E, F, G et leurs variantes `-w` ; `runD-c/callers.txt`).
+
+## Mise à jour : type 4, trajectoire et fouet (état actuel)
+
+Mesures faites sur deux traces openMSX de la salle 4 (scénario `scratchpad/type4/`, hors dépôt) :
+
+- **Trajectoire** : l'ennemi ne tombe pas en ligne droite. Un épisode mesuré (images 4617 à 4661) monte de Y AA à B0, puis redescend à AC, en se déplaçant de X E2 à A0. Les fins d'épisode à Y B0 observées ailleurs ne suffisent pas à conclure à une chute.
+- **Partage de la SAT** : les emplacements de sprites 14 à 21 sont réutilisés par d'autres objets. Les motifs changent en cours de trajectoire (48, puis 50, puis 58, puis 70). Une lecture de la SAT seule mélange donc plusieurs objets.
+- **Fouet** : sur environ 6 000 images, aucune destruction de type 4 n'est attribuable à un coup de fouet. Le fouet a rarement intersecté la trajectoire. Une mesure fiable demande de suivre chaque objet dans la table `C800` (champ de type et d'état), ce qui n'est pas fait.
+
+Conclusion provisoire : la règle de destruction du type 4 reste ouverte. Le code ne le touche pas (`Enemies_whipHit` exclut le type 4).
+

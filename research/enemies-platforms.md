@@ -1,5 +1,9 @@
 # Ennemis et plateformes mobiles - état de la recherche
 
+> **Mise à jour** : la section 5 (plan d'implémentation) est réalisée dans
+> `sgdk/src/enemies.c`, avec les corrections de `enemy-behavior.md`. Le reste de cette note
+> reste une trace de la première recherche.
+
 Statut : **un ennemi est observé et suivi** (deux ennemis en salle 1, trajectoires et cadence mesurées). **Aucune plateforme mobile** n'est trouvée. La table de spawn par salle n'est **pas** identifiée ; la routine `5A49` décode un autre flux (carte de cellules, voir 1.4).
 
 Ce document remplace la version précédente, qui disait que Simon ne bougeait pas et que le mapping des touches était inconnu. Ces deux points sont faux (voir 1.1).

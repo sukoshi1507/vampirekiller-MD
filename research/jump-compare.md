@@ -1,5 +1,9 @@
 # Saut de Simon : trajectoire MSX2 (openMSX) et simulation MD
 
+> **Mise à jour** : la correction proposée (cadence à 30 Hz) est appliquée dans `sgdk/src/player.c`
+> (`jump_frames`, commit `0e7d5a7`). Sur le saut immobile, les 46 valeurs de Y du MD égalent celles du MSX2.
+> Le saut en mouvement horizontal et la chute (mode 4) ne sont pas comparés.
+
 Statut : **écart prouvé** entre la cadence du saut MSX2 et celle du portage MD. Le tracé Y du saut (19 valeurs) est identique ; la durée est double côté MSX2. Cause dans le code MD : `vk_player_tick_controls` (`sgdk/src/player.c`) avance le saut une fois par VBLANK, alors que le MSX2 l'avance une fois par tick logique de 30 Hz (un tick toutes les 2 images). Aucun fichier de `sgdk/src`, `tests/`, `validation/` ou `.claude/` n'a été modifié.
 
 ROM : `Vampire Killer (Japan, Europe) (En).zip`, SHA-256 interne `99eabaae...` vérifié (`scratchpad/jump/`). openMSX 21.0, machine `C-BIOS_MSX2`.
