@@ -158,7 +158,8 @@ void vk_player_tick_controls(VKPlayer *p, const VKByte *map, VKByte stage,
     {
         const int dx = direction < 0 ? -1 : 1;
         p->facing = dx < 0;
-        for (n = 0; n < 2; n++)
+        /* MSX2 measured in openMSX: C427 advances 1 px per VBLANK (60 px/s). */
+        for (n = 0; n < 1; n++)
         {
             int next = (int)p->x + dx;
             if (next < 8 || next > 248 ||
@@ -205,7 +206,9 @@ void vk_player_tick_controls(VKPlayer *p, const VKByte *map, VKByte stage,
     if (p->mode == 1 || p->mode == 4) p->pose = p->facing ? 7 : 6;
     else
     {
-        VKByte frame = walking ? ((p->clock & 4) ? 1 : ((p->clock & 8) ? 0 : 2)) : 0;
+        /* MSX2 walk cycle measured in openMSX: poses 0,1,2,1 held 8 VBLANKs each. */
+        static const VKByte walk_frames[4] = {0, 1, 2, 1};
+        VKByte frame = walking ? walk_frames[(p->clock >> 3) & 3] : 0;
         p->pose = frame + (p->facing ? 3 : 0);
     }
 }

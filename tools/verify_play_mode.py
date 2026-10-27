@@ -41,10 +41,10 @@ def main():
     run(args.core, args.md_rom, out / 'md-player-left.png', script=script,
         memory_observer=memory, observe=image, startup=[([1], 5), ([], 5)])
     assert (states[2]['x'], states[2]['y']) == (16, 192)
-    assert (states[4]['x'], states[4]['y']) == (76, 192)
+    assert (states[4]['x'], states[4]['y']) == (46, 192)
     assert states[6]['mode'] == 1 and states[6]['y'] < 192
-    assert (states[7]['x'], states[7]['y'], states[7]['mode']) == (76, 192, 0)
-    assert (states[9]['x'], states[9]['y'], states[9]['facing']) == (56, 192, 1)
+    assert (states[7]['x'], states[7]['y'], states[7]['mode']) == (46, 192, 0)
+    assert (states[9]['x'], states[9]['y'], states[9]['facing']) == (36, 192, 1)
     data = load_rom(args.source_rom)
     record, graphics, tilemap = decode_room(data, 1, 0)
     palette = [gx_rgb565(c) for c in record['palette_rgb333']]
@@ -80,7 +80,7 @@ def main():
     images[6].save(out / 'md-player-jump.png')
     images[9].save(out / 'md-player-left.png')
     report = {'all_passed': True, 'md_rom_sha256': hashlib.sha256(args.md_rom.read_bytes()).hexdigest(),
-              'movement': {'right_30_frames_px': 60, 'left_10_frames_px': 20},
+              'movement': {'right_30_frames_px': 30, 'left_10_frames_px': 10},
               'jump_left_ground': True, 'landing_y': 192, 'left_facing_verified': True,
               'sprite_pixel_comparisons': comparisons, 'observed_states': states,
               'scope': 'First-room movement prototype; full original state machine not ported.'}

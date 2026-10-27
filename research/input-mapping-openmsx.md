@@ -1,20 +1,32 @@
-# Entrées clavier en openMSX : état de la mesure de vitesse
+# Entrées clavier en openMSX : mapping et vitesse de marche
 
-Objectif : mesurer la vitesse de marche de Simon dans la ROM MSX2 (position `C427`) pour la comparer au portage MD.
+Détails complets et scripts : `research/input-gate.md`.
 
-## Vérifié
+## Correction
 
-- Modèle `C-BIOS_MSX2`, ROM de référence, `keymatrixdown 8 1` (SPACE) déclenche l'attaque à chaque appui : séquence `C42F` 6, 7, 8 puis retour à 0, comme dans `simon-assets/ATTACK_TRACE_OPENMSX.md`.
-- Le jeu passe en partie (`C000=5`) vers 19 s après le démarrage, sans entrée.
-- Balayage de la matrice : rangées 0 à 10, colonnes 0 à 7, chacune maintenue 0,4 s pendant la partie. Aucune combinaison ne déplace Simon (`C427` reste à 16, `C425` à 176), y compris les colonnes de la rangée 8 où se trouvent d'ordinaire les curseurs. Le saut n'a pas non plus été observé.
-- La ROM lit le clavier directement par les ports `A9` (données) et `AA` (sélection de ligne), et non par les appels BIOS `GTSTCK` (`00D5`) ou `GTTRIG` (`00D8`), absents de la ROM.
-- Aucune commande de contrôle joystick n'est exposée par ce build openMSX (`info commands *joy*` vide). `get_pluggable_for_connector joyporta` ne renvoie aucun périphérique.
+Une version précédente de cette note concluait à tort que Simon ne se déplaçait pas. La cause était une mauvaise lecture de `keymatrixdown` : la commande prend un **masque de bits** par ligne, et non un index de colonne. `keymatrixdown 8 1` appuie donc sur SPACE (bit 0 du masque 1), et `keymatrixdown 8 7` appuie sur SPACE + HOME + INS. Les appuis « impairs » déclenchaient le fouet pour cette raison.
 
-## Non résolu
+## Masques utiles (ligne 8, matrice MSX standard)
 
-- Quelle combinaison d'entrée fait marcher Simon. Hypothèses restantes : une ligne de matrice non testée, un mode d'entrée choisi au titre, ou une lecture par le port joystick (`A9` bits de direction) qu'openMSX ne pilote pas depuis le script.
-- Mesure de la vitesse dynamique : bloquée tant que l'entrée n'est pas trouvée.
+| Touche | Masque |
+| --- | --- |
+| SPACE (attaque, B) | 1 |
+| LEFT | 16 |
+| UP | 32 |
+| DOWN | 64 |
+| RIGHT | 128 |
 
-## Vitesse estimée (non mesurée)
+Chacun produit l'effet attendu sur `C427`, `C425`, `C42E`/`C42F` et `C007`.
 
-Le code de marche `6C2F/6C53` applique 0200 en 8.8, soit 2 px par tick (voir `player-format.md`). Le portage MD déplace Simon de 2 px par image. Si la boucle MSX tourne à 60 Hz, les deux vitesses coïncident. Cette équivalence reste déduite du code.
+## Vitesse de marche mesurée
+
+- Simon avance de **1 px par VBLANK** (60 px/s) à droite, mesuré sur 120 images.
+- Le compteur logique `C003` avance toutes les 2 images, donc 2 px par tick logique : c'est la valeur 0200 de `6C2F/6C53`.
+- Cadence d'animation : `C42E` suit 0, 1, 2, 1 avec 8 images par pose, soit un cycle de 32 images (environ 533 ms).
+
+Le portage MD a été aligné sur ces mesures : 1 px par image et cycle `{0,1,2,1}` tenu 8 images. Le vérificateur `tools/verify_play_mode.py` a été mis à jour en conséquence (30 px en 30 images, 10 px en 10 images vers la gauche).
+
+## Non établi
+
+- La routine exacte qui lit la ligne 8 (`IN A,(A9)`) n'a pas été tracée. Le mapping vient de la matrice standard et du comportement observé.
+- La marche au-delà de 2 s et près des murs n'a pas été mesurée.
