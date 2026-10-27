@@ -147,6 +147,44 @@ static int vk_stair_enter(VKPlayer *p, const VKByte *map)
     return 1;
 }
 
+/* Descend a flight from its top with BAS (research/down-stairs.md). The feet stand
+ * on a solid tile 3 (down left, measured in room 7 at Y 96) or tile 4 (down right,
+ * not yet measured). X is the tile cell + 8 for tile 3, as in the MSX alignment.
+ * The flight below is counted in tiles 12 (down left) or 13 (down right). */
+static int vk_stair_enter_top(VKPlayer *p, const VKByte *map)
+{
+    const int x = p->x;
+    const int y = p->y;
+    int cell_x, dir, steps, i;
+    if (vk_stair_tile_at(map, x, y) == 3) { cell_x = x & ~7; dir = 1; }
+    else if (vk_stair_tile_at(map, x - 8, y) == 3) { cell_x = (x - 8) & ~7; dir = 1; }
+    else if (vk_stair_tile_at(map, x, y) == 4) { cell_x = x & ~7; dir = 0; }
+    else if (vk_stair_tile_at(map, x + 8, y) == 4) { cell_x = (x + 8) & ~7; dir = 0; }
+    else return 0;
+    steps = 0;
+    for (i = 0; i < 24; i++)
+    {
+        const int step_x = cell_x + (dir ? -8 : 8) * (i + 1);
+        const int step_y = (y & ~7) + 8 * (i + 1);
+        if (step_y > 200 || step_x < 0 || step_x > 248) break;
+        if (vk_stair_tile_at(map, step_x, step_y) != (dir ? VK_STAIR_RIGHT : VK_STAIR_LEFT)) break;
+        steps++;
+    }
+    if (steps < 1) return 0;
+    p->x = (VKByte)(dir ? cell_x + 8 : cell_x);
+    p->y = (VKByte)(y & ~7);
+    p->stair_dir = (VKByte)dir;
+    p->stair_len = (VKByte)(8 * steps + 8);
+    p->stair_anim = p->stair_len; /* the progress starts at the top */
+    p->stair_glide = 0;
+    p->facing = (VKByte)!dir;
+    p->on_stairs = 1;
+    p->mode = 0;
+    p->phase = 0;
+    p->crouched = 0;
+    return 1;
+}
+
 /* Climb or descend one pixel on each axis every two frames. stair_anim is the
  * progress along the flight: 0 at the foot, stair_len at the top. Releasing the
  * key holds Simon on the step; reaching either end leaves the staircase. */
@@ -200,6 +238,12 @@ void vk_player_tick_controls(VKPlayer *p, const VKByte *map, VKByte stage,
     if (p->on_stairs && jump_pressed) { p->on_stairs = 0; p->mode = 1; p->phase = 0; }
     else if (p->on_stairs) { vk_stair_tick(p, direction, down, up); return; }
     else if (stage && up && !jump_pressed && vk_stair_enter(p, map))
+    {
+        p->pose = (VKByte)(p->facing ? 3 : 0);
+        return;
+    }
+    else if (stage && down && !up && !jump_pressed && p->mode == 0 &&
+             vk_stair_enter_top(p, map))
     {
         p->pose = (VKByte)(p->facing ? 3 : 0);
         return;

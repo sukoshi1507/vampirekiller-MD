@@ -130,6 +130,19 @@ int main(void)
             event = vk_game_tick_controls(&g, 0, 0, 0, 1);
         assert(event == VK_EVENT_VERTICAL && g.room == 1 && g.player.x == 191 && g.player.y == 48);
     }
+    /* Stage 1 room 7: BAS on the tile 3 platform at (168..180, 96) enters the top of
+     * the flight, and holding BAS descends it to the foot (144,128), 32 px down-left
+     * (research/down-stairs.md, measured by trace). */
+    assert(vk_game_debug_room(&g, 7));
+    g.player.x = 176; g.player.y = 96; g.player.mode = 0;
+    assert(vk_game_tick_controls(&g, 0, 0, 0, 1) == VK_EVENT_NONE);
+    assert(g.player.on_stairs && g.player.x == 176 && g.player.y == 96 && !g.player.crouched);
+    {
+        int frames;
+        for (frames = 0; frames < 200 && g.player.on_stairs; frames++)
+            vk_game_tick_controls(&g, 0, 0, 0, 1);
+        assert(!g.player.on_stairs && g.player.x == 144 && g.player.y == 128);
+    }
     assert(vk_game_debug_room(&g, 0) && g.collision_verified);
     assert(g.player.x == 16 && g.player.y == 192);
 
