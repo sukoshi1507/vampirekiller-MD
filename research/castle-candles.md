@@ -1,6 +1,6 @@
 # Bougies du chateau : positions et table de placement
 
-Statut : **partiel mais solide pour les positions**. Les bougies (objets fixes qui lachent un objet au fouet) sont decodees pour les 156 salles (cour 3 + chateau 153) par execution de la routine ROM de chargement. Quatre salles sont verifiees en jeu (cour 0 et 1, hall 0 et 1). La regle de touche au fouet n'est **pas** etablie.
+Statut : **partiel mais solide pour les positions**. Les bougies (objets fixes qui lachent un objet au fouet) sont decodees pour les 156 salles (cour 3 + chateau 153) par execution de la routine ROM de chargement. Quatre salles sont verifiees en jeu (cour 0 et 1, hall 0 et 1). La regle de touche au fouet, le format des enregistrements et la table des objets laches sont lus dans le code (section 9, 2026-10-28).
 
 ROM de reference : `Vampire Killer (Japan, Europe) (En).zip`, SHA-256 `99eabaaeb2b6c02220e131043d5a6401d0d8c5f413d89204547adcc04d65e7e2` (verifie). Adresses CPU Z80 ; offset fichier = CPU pour la fenetre fixe 4000-5FFF (banque 0), sinon banque × 0x2000 + (CPU & 0x1FFF). Preuves : **prouve** (trace openMSX ou execution du code ROM), **deduit** (lecture statique), **inconnu**.
 
@@ -239,3 +239,58 @@ Pour les autres bougies (y compris toutes les bougies du chateau), la touchabili
 - `tools/castle_room_objects.py` : harnais de decodage (texte, lecture seule de la ROM). Usage : `python3 tools/castle_room_objects.py "<ROM .rom>" sortie.json`.
 - `research/castle-candles.md` : ce document.
 - Donnees de travail (non versionnees, `scratchpad/castle-candles/`) : `work/*.tcl`, `work/tool.json`, `work/summary.json`, `pc/pc.log` (PC des ecritures), `verify/room-*.bin` (dumps en jeu).
+
+## 9. Code du coup, des objets laches et du ramassage (lecture du code, 2026-10-28)
+
+Desassemblage `tools/disasm_rom_window.py` (banque 1 en 6000, banque 2 en 8000, banque 0 en 4000). **Prouve (code)** sauf mention.
+
+### 9.1 Enregistrement de bougie (`C470`-`C4F0`, 16 octets)
+
+`+0` type (01 au chargement, 02 en jeu), `+1` Y, `+2` X, `+3` compteur de touche (mis a 1 par le fouet), `+4` **mode** (00 = bougie ou torche ; 03 = cache dans le decor, revele par le fouet ; 02 et autres : variantes de `87D2`), `+5` **objet lache**, `+6` ?, `+7` motif (`E0`/`E1`), `+7`-`+9` pour le mode 3 : contenu du bloc (`8814`).
+
+Exemple : hall salle 2, `01 a0 80 00 03 18` = bloc cache en (80,A0) contenant **la cle blanche** (0x18). Sur le MSX, la cle n'apparait qu'apres un coup de fouet sur ce point du mur (coherent avec le contre-test K4, `door-room7.md`).
+
+### 9.2 Touche au fouet (`7FB7` banque 1, test `8450` -> `84A7`/`84D9`)
+
+Seulement en phase de fouet `C422 = 3`. Pour chaque bougie non vide : centre `D = X + 8`, `E = Y + 16`. X du fouet = `C427 + 20` (regard a droite, `C42C = 0`) ou `C427 - 20` ; 24 si `C416 = 1`. Touche si `|X fouet - D| < 20` (`L = 8 + 12`, ou `8 + 16` si `C416 = 1`) et `0 <= C425 - B - E + 16 < 20` avec `B = 18` debout, `10` accroupi (`C420 = 2`), soit `C425 - B - Y` dans [0, 20). Effet : `+3` += 1, son `0C`.
+
+Note : la regle donne la torche A de la cour touchee a Simon X 36 et 40 regard a droite ; la mesure (section 6) dit non. A verifier (direction de Simon pendant ces essais, phase `C422`).
+
+### 9.3 Bougie touchee (`868C` -> `87BA` -> `898F`)
+
+La bougie est effacee (`+0 = 0`). Mode < 2 : effacement de l'affichage (`884A`, `8874`) puis `898F` avec B = objet. Si B = 0 ou 0x15 : pas de flamme. Sinon `89BF` cree la flamme dans `C800` (type `26`, ou `1E` si B = 1) en (E + 16, D + 8). Puis `8A37` cree l'objet lache dans `C500` : type `01`, Y, X, `+4` = B, `+5` = 2 (sauf B < 2 ou 0x15 : 0). Il devient `83` quand la flamme disparait (`candles-and-drops.md` : 45 images). Mode 3 : son `0E`, revelation du decor (`885E`/`8899` ou `884A`/`887D`) ; objet 0x18 : `883E` ; 0x1F : contenu du bloc en `+7`-`+9` (`8814`).
+
+### 9.4 Ramassage (`7FE2` banque 1, test `8230` -> `847A`)
+
+Hors fouet (`C422 = 0`), pour les objets `C500` de type >= `80` : centre `D = X + 8`, `E = Y + 16` ; ramasse si `|C427 - D| < 13` et `0 <= C425 - 2 - E + 16 < 42` (debout ; `C425 - 8` si `C420 = 1` ; 34 si `C420` vaut 1 ou 2). Effet : `+3` += 1, puis `8D30` avec A = `+4`.
+
+### 9.5 Table des objets (`8D30`, sauts en `8D3E`, index = objet - 1)
+
+| Objet | Routine | Effet |
+|---|---|---|
+| 00 | - | rien (pas de flamme) |
+| 01 | `8DAF` | coeurs + 1 (`4594` : `C417` += 1 en BCD, max 99) ; son `0F` |
+| 02 | `8DB7` | coeurs + 5 (mesure : torche B de la cour) |
+| 03 | `8D98` | `C701` : bit 5 efface, bit 4 mis ; `C441` = 10 |
+| 04 | `8DA1` | `C701` : bit 4 efface, bit 5 mis ; `C441` = 10 |
+| 05 | `8DBB` | `7806`, `928D`, `C43E` = 18 ; son `1B` |
+| 06 | `8D7C` | minuterie `C440` = 96 (F0 si bit 2 de `C431`) |
+| 07 | `8DDE` | points (`4605`, B = 08) |
+| 08 | `8DCD` | minuterie `C43A` = 96 / F0 ; son `16` |
+| 09 | `8DE5` | minuterie `C434` = 96 / F0 |
+| 0A | `8D94` | `C701` bit 6 |
+| 0B, 0C, 0D | `8DF5`, `8DFC`, `8E03` | `C431` bits 2, 3, 4 |
+| 0E | `8E16` | `870C`, `C702` bit 0 |
+| 0F, 10 | `8E33`, `8E1D` | `C431` bit 6 et `C70F` = 3 ; `C702` bit 6 |
+| 11 | `8E26` | `C702` bit 7 |
+| 12 | `8E79` | `C431` bit 1, `C701` bit 2, `C700` = 3 |
+| 13, 14 | `8E42`, `8E4B` | points (`44EC`, 5000 et 1000) |
+| 15 | `8E14` | rien (pas de flamme) |
+| 16 | `8E0D` | points (`4605`, B = 20) |
+| 17 | `8E50` | **cle doree** : `C701` bit 1, `C700` = 1 |
+| 18 | `8E60` | **cle blanche** : `C701` bit 0 (prouve, `door-room7.md`) |
+| 19 | `8E14` | rien ici (coffre) |
+| 1A a 1D | `8D70` | **niveau du fouet** `C416` = objet - 0x19 (1 a 4), puis `8E9A` (graphismes du fouet) et minuterie `C440` |
+| 1E | `8D8D` | `C701` bit 3 |
+
+Les noms des objets (croix, sablier, etc.) et leurs dessins ne sont pas releves : seuls les effets en RAM sont lus. Repartition des objets dans les 457 bougies : 01 (129), 02 (100), 15 (52), 1F (39), 00 (35), 09 (14), 18 (12), 1A (12), 10 (11), 17 (10), 08 (10), 07 (7), 06 (6), 14 (6), 05 (5), 0C (4), 0D (3), 11 (1), 1C (1).
