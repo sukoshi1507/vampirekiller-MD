@@ -9,5 +9,6 @@ class RenderTest(unittest.TestCase):
         self.assertIn('ROM composition already contains the visible lash',src)
     def test_facing_unchanged(self):
         src=(ROOT/'sgdk/src/main.c').read_text()
-        self.assertIn('const u16 source_half = whip.facing ? (u16)(1 - i) : i;',src)
+        # main.c now uses a local facing (crouch_facing) instead of whip.facing directly.
+        self.assertIn('const u16 source_half = facing ? (u16)(1 - i) : i;',src)
 if __name__=='__main__': unittest.main()

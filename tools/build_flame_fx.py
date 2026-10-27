@@ -27,7 +27,12 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'tools'))
 from probe import load_rom, reference_rom  # noqa: E402  (verifies the SHA-256)
-from intro_harness import IntroHarness  # noqa: E402
+try:
+    from intro_harness import IntroHarness  # noqa: E402
+except ModuleNotFoundError as error:
+    raise SystemExit(
+        f'Missing Python module {error.name!r}: install the project requirements in this interpreter '
+        f'({sys.executable} -m pip install -r requirements.txt).') from error
 
 ROOM = 0  # courtyard, stage 0 room 0 (same call path as extract_intro.py)
 BANK_SIZE = 0x2000
