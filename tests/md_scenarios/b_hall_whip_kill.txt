@@ -1,0 +1,28 @@
+# (b) Cour -> hall (salle 0) en tenant DROITE, un ennemi de type 1 apparait,
+# un coup de fouet le tue (lecture de enemy_state).
+include boot_to_courtyard.inc
+until game.area == 1 max 3000 RIGHT               # cour 0 -> 1 -> 2 -> hall a x >= 232
+expect front_mode == MODES['INTERIOR'] and game.room == 0 # hall, salle 0
+shot b-hall
+until enemies.alive > 0 max 600                    # minuterie de spawn du canal type 1
+set slot [i for i, e in enumerate(enemies.enemy) if e.active][0]
+dump spawn
+shot b-spawn
+expect enemies.enemy[slot].type in (0, 1) # type 1 MSX (A = 0 droite, B = 1 gauche)
+expect enemies.enemy[slot].dx == (1 if enemies.enemy[slot].x < game.player.x else -1) # avance vers Simon
+# Simon se tourne vers l'ennemi (2 images de direction, deplacement de 1 a 2 px).
+tap LEFT 2
+expect game.player.facing == 1 # face a gauche, vers l'ennemi
+# Boite du fouet face gauche x-32..x-8 ; ennemi (x de jeu = x ecran + 8) touche si
+# x-48 < ex <= x-8. On frappe quand ex atteint x-36 : le fouet devient actif ~4 images plus tard.
+until enemies.enemy[slot].x + 8 >= game.player.x - 36 max 600
+set energy0 enemies.energy
+dump avant-coup
+tap B 1
+until whip.timer == 0 or not enemies.enemy[slot].active max 30
+dump apres-coup
+wait 2                                             # la table des sprites suit d'une image
+shot b-apres-coup
+expect not enemies.enemy[slot].active # ennemi tue par le fouet
+expect enemies.enemy[slot].x + 8 > game.player.x - 48 # tue a portee de fouet, pas sorti de l'ecran
+expect enemies.energy == energy0 # aucun contact

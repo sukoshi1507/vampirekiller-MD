@@ -1,0 +1,18 @@
+# (c) Hall : Simon reste immobile, un ennemi de type 1 le touche, l'energie baisse de 2,
+# l'invulnerabilite et le recul demarrent.
+include boot_to_courtyard.inc
+until game.area == 1 max 3000 RIGHT
+until enemies.alive > 0 max 600
+expect enemies.energy == 32 # energie pleine avant contact
+until enemies.energy < 32 max 600                 # aucune entree : l'ennemi avance jusqu'a Simon
+dump contact
+shot c-contact
+expect enemies.energy == 30 # -2 par contact (ENEMY_CONTACT_DAMAGE)
+expect enemies.invuln > 0 # invulnerabilite lancee
+expect enemies.recoil > 0 # recul en cours
+set x_contact game.player.x
+wait 30
+dump apres-recul
+expect enemies.recoil == 0 # recul termine (22 images)
+expect game.player.x != x_contact # Simon repousse
+expect enemies.energy == 30 # pas de second degat pendant l'invulnerabilite

@@ -4,7 +4,9 @@
 Usage: check_whip_hitbox.py CORE.so SOURCE_ROM.zip MD_ROM.bin SYMBOLS.txt OUT_DIR
 
 Pilote Genesis Plus GX (libretro) comme tools/verify_play_mode.py, puis lit et ecrit
-la RAM systeme 68k aux adresses des symboles player, whip et test_target.
+la RAM systeme 68k aux adresses des symboles player, whip et de la cible. Dans la cour,
+la cible testee est courtyard_flame[0] (FLAME_A, meme structure VKTarget) : main.c ne
+teste plus test_target dans la cour. Repli sur test_target pour une ROM plus ancienne.
 Ecrit uniquement dans OUT_DIR (ne touche ni validation/ ni sgdk/src/).
 
 Boite attendue (sgdk/src/whip.c, vk_whip_bounds, bornes INCLUSIVES) : debout, face
@@ -188,9 +190,12 @@ class Emulator:
 
 def symbol_offsets(path):
     found = {}
-    for match in re.finditer(r'^([0-9a-fA-F]+)\s+[bB]\s+(player|whip|test_target)$',
+    for match in re.finditer(r'^([0-9a-fA-F]+)\s+[bB]\s+(player|whip|test_target|courtyard_flame)$',
                              path.read_text(), re.M):
         found[match[2]] = int(match[1], 16) & 0xFFFF
+    # La cour teste ses flammes (vk_targets_tick sur courtyard_flame), plus test_target.
+    if 'courtyard_flame' in found:
+        found['test_target'] = found['courtyard_flame']
     missing = {'player', 'whip', 'test_target'} - set(found)
     if missing:
         raise ValueError(f'symboles absents: {sorted(missing)}')

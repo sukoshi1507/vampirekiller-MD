@@ -19,25 +19,36 @@ def main():
     parser.add_argument('source_rom', type=Path)
     parser.add_argument('md_rom', type=Path)
     parser.add_argument('symbols', type=Path)
+    parser.add_argument('--out', type=Path, default=ROOT / 'validation',
+                        help='dossier des captures et du rapport (defaut : validation/)')
     args = parser.parse_args()
     match = re.search(r'^([0-9a-fA-F]+)\s+[bB]\s+player$', args.symbols.read_text(), re.M)
     if not match:
         raise ValueError('player RAM symbol not found')
     address = int(match[1], 16) & 65535
+    target = re.search(r'^([0-9a-fA-F]+)\s+[bB]\s+test_target$', args.symbols.read_text(), re.M)
+    target_address = int(target[1], 16) & 65535 if target else None
     images, states = {}, {}
-    out = ROOT / 'validation'
+    out = args.out
+    out.mkdir(parents=True, exist_ok=True)
 
     def memory(raw, step):
         # Genesis Plus GX stores 68k work RAM in host word order on little-endian hosts.
         values = [raw[(address + i) ^ 1] for i in range(7)]
         states[step] = dict(zip(('x', 'y', 'facing', 'mode', 'phase', 'clock', 'pose'), values))
+        if target_address is not None:
+            # VKTarget: int x, int y (32-bit big-endian words, byte-swapped in GPGX RAM).
+            word = lambda a: int.from_bytes(bytes(raw[(a + i) ^ 1] for i in range(4)), 'big', signed=True)
+            states[step]['target'] = (word(target_address), word(target_address + 4))
 
     def image(frame, step):
         images[step] = frame
 
     # Libretro controls: B=0, C=8, right=7, left=6.
+    # The jump is paced at 30 Hz (jump_frames, player.c): Simon lands 29 frames after
+    # step 6, so step 7 waits 40 frames (25 was enough for the old 60 Hz arc).
     script = [([0], 5), ([], 5), ([7], 30), ([], 5), ([8], 5), ([], 7),
-              ([], 25), ([6], 10), ([], 5)]
+              ([], 40), ([6], 10), ([], 5)]
     run(args.core, args.md_rom, out / 'md-player-left.png', script=script,
         memory_observer=memory, observe=image, startup=[([1], 5), ([], 5)])
     assert (states[2]['x'], states[2]['y']) == (16, 192)
@@ -64,9 +75,11 @@ def main():
                     expected.putpixel((x, y), palette[color])
                     own.add((x, y))
         diff = ImageChops.difference(expected, images[step].crop((0, 32, 256, 208)))
-        # The training target (sprite 7) is drawn at player + (48, -24) and is not
-        # composed here. Simon's own pixels are still compared inside that box.
-        target_x, target_y = states[2]['x'] + 48, states[2]['y'] - 24 - 32
+        # The training target (sprite 7) is not composed here; its position is read
+        # from RAM (test_target, set by reset_training_target), fallback player + (48, -24).
+        # Simon's own pixels are still compared inside that box.
+        target_x, target_y = states[2].get('target', (states[2]['x'] + 48, states[2]['y'] - 24))
+        target_y -= 32
         zero = (0,) * len(diff.getbands())
         for yy in range(target_y, target_y + 16):
             for xx in range(target_x, target_x + 16):

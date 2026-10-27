@@ -1,0 +1,18 @@
+# (a) Demarrage -> controle de Simon dans la cour, marche a droite, capture.
+include boot_to_courtyard.inc
+expect front_mode == MODES['COURTYARD'] # scene de la cour
+expect game.area == 0 and game.room == 0 # cour, salle 0
+expect (game.player.x, game.player.y, game.player.facing) == (16, 176, 0) # depart vk_game_begin
+expect enemies.energy == 32 # energie pleine (ENEMY_ENERGY_MAX)
+dump depart
+shot a-depart
+set x0 game.player.x
+hold RIGHT 60
+wait 2
+dump apres-marche
+shot a-marche
+expect game.player.x > x0 + 20 # Simon a avance vers la droite
+expect game.player.y == 176 and game.player.mode == 0 # toujours au sol
+expect game.player.facing == 0 # face a droite
+tap LEFT 2
+expect game.player.facing == 1 # demi-tour a gauche
