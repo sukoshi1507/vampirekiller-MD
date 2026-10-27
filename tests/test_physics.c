@@ -71,7 +71,7 @@ int main(void)
         /* Mount again, then JUMP dismounts into a jump. */
         start(&p,160);
         vk_player_tick_controls(&p,map,1,0,0,0,1);
-        assert(p.on_stairs && p.facing==1 && p.pose==3);
+        assert(p.on_stairs && p.facing==0 && p.pose==0);
         vk_player_tick_controls(&p,map,1,0,1,0,0);
         assert(!p.on_stairs && p.mode==1);
     }

@@ -3,6 +3,7 @@
 #include <string.h>
 #include "generated/stage1_collision.h"
 #include "gameplay.h"
+#include "room_manager.h"
 #include "generated/player_assets.h"
 
 /* Synthetic, empty collision maps isolate scene routing from graphical assets. */
@@ -88,6 +89,23 @@ int main(void)
     g.player.y = 192;
     g.player.mode = 0;
     assert(vk_game_tick_controls(&g, 0, 0, 1, 0) == VK_EVENT_NONE && !g.player.on_stairs);
+    /* Flight C (tile 13, 8 steps) from its foot (240,96) climbs past the top of the
+     * playfield: the hall link 1 -> 5 moves Simon to room 5, on a floor. */
+    assert(vk_game_debug_room(&g, 1));
+    g.player.x = 240;
+    g.player.y = 96;
+    g.player.mode = 0;
+    {
+        VKEvent event = VK_EVENT_NONE;
+        int frames;
+        for (frames = 0; frames < 300 && event != VK_EVENT_VERTICAL; frames++)
+            event = vk_game_tick_controls(&g, 0, 0, 1, 0);
+        assert(event == VK_EVENT_VERTICAL && g.room == 5 && !g.player.on_stairs);
+        /* The boundary is crossed at progress 65 of 72 (y 31), so x is 175. */
+        assert(g.player.x == 175 && g.player.y % 8 == 0 && g.player.y >= 40);
+    }
+    assert(vk_stage1_links[1].up == 5 && vk_stage1_links[5].down == 1);
+    assert(vk_stage1_links[3].up == 7 && vk_stage1_links[7].down == 3);
     assert(vk_game_debug_room(&g, 0) && g.collision_verified);
     assert(g.player.x == 16 && g.player.y == 192);
 

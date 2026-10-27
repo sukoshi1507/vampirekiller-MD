@@ -4,7 +4,7 @@ cd "$(dirname "$0")/.."
 BIN="$(mktemp /tmp/vk_gameplay.XXXXXX)"
 trap 'rm -f "$BIN"' EXIT INT TERM
 ${CC:-cc} -std=c99 -Wall -Wextra -Werror -Isgdk/src \
-    tests/test_gameplay.c sgdk/src/gameplay.c sgdk/src/player.c \
+    tests/test_gameplay.c sgdk/src/gameplay.c sgdk/src/player.c sgdk/src/room_manager.c \
     sgdk/src/generated/player_assets.c sgdk/src/generated/stage1_collision.c -o "$BIN"
 "$BIN"
 ${CC:-cc} -std=c99 -Wall -Wextra -Werror -Isgdk/src \

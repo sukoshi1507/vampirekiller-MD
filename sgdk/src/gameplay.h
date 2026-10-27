@@ -5,7 +5,8 @@
 
 /* Scene routing has no SGDK dependencies and can be unit-tested natively. */
 typedef enum { VK_AREA_COURTYARD = 0, VK_AREA_INTERIOR = 1 } VKArea;
-typedef enum { VK_EVENT_NONE = 0, VK_EVENT_ROOM = 1, VK_EVENT_ENTER = 2 } VKEvent;
+typedef enum { VK_EVENT_NONE = 0, VK_EVENT_ROOM = 1, VK_EVENT_ENTER = 2,
+               VK_EVENT_VERTICAL = 3 } VKEvent;
 typedef struct {
     VKPlayer player;
     VKArea area;

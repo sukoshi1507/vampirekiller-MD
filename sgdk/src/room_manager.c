@@ -1,10 +1,16 @@
 #include "room_manager.h"
-/* Hall (stage 1) left/right links: proven by openMSX traces and the ROM link
- * table (research/room-links.md, section 3.2). Vertical links (1<->5, 3<->7)
- * are not verified in game and are deliberately absent. */
+/* Hall (stage 1) links decoded from the ROM link table by
+ * tools/decode_room_links.py. Vertical links 1<->5 and 3<->7 are the table
+ * entries (reciprocal); they are not yet verified by a trace in game. */
 const VKRoomLink vk_stage1_links[VK_STAGE1_ROOM_COUNT] = {
-    {3,1,0},{0,2,0},{1,3,0},{2,0,0},
-    {VK_ROOM_NONE,5,0},{4,6,0},{5,7,0},{6,VK_ROOM_NONE,0}
+    {VK_ROOM_NONE,VK_ROOM_NONE,3,1,0},
+    {5,VK_ROOM_NONE,0,2,0},
+    {VK_ROOM_NONE,VK_ROOM_NONE,1,3,0},
+    {7,VK_ROOM_NONE,2,0,0},
+    {VK_ROOM_NONE,VK_ROOM_NONE,VK_ROOM_NONE,5,0},
+    {VK_ROOM_NONE,1,4,6,0},
+    {VK_ROOM_NONE,VK_ROOM_NONE,5,7,0},
+    {VK_ROOM_NONE,3,6,VK_ROOM_NONE,0}
 };
 int vk_room_try_edge(VKByte *room, VKPlayer *player, int direction)
 {

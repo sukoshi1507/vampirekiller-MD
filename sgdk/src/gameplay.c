@@ -4,6 +4,7 @@ extern const VKByte vk_courtyard_maps[3][768];
 extern const VKByte vk_courtyard_neighbors[3][4];
 #include "generated/player_assets.h"
 #include "generated/stage1_collision.h"
+#include "room_manager.h"
 
 /* Interior scene 6 is stage 1 / room 0 (extract_intro.py).
  * extract_player.py decodes the same original 768-byte tilemap as
@@ -24,6 +25,21 @@ void vk_game_begin(VKGame *game)
     game->room = 0;
     game->collision_verified = 1;
     game->player.y = 176;
+}
+
+/* Feet height of the lowest floor under x in a stage-1 room map, or 0 when the
+ * column has none. A floor is a solid row with an empty row above it. */
+static VKByte vk_floor_arrival(const VKByte *map, VKByte x)
+{
+    int row;
+    for (row = 23; row >= 2; row--)
+    {
+        const VKByte feet = (VKByte)(16 + 8 * row);
+        if (vk_tile_solid(vk_sample_tile(map, x, feet), 1, 0) &&
+            !vk_tile_solid(vk_sample_tile(map, x, (VKByte)(feet - 8)), 1, 0))
+            return feet;
+    }
+    return 0;
 }
 
 VKEvent vk_game_tick_controls(VKGame *game, int direction, int jump, int up, int down)
@@ -61,6 +77,25 @@ VKEvent vk_game_tick_controls(VKGame *game, int direction, int jump, int up, int
             { p->mode = 4; p->phase = 0; }
             return VK_EVENT_ROOM;
         }
+    }
+    /* Hall vertical link: leaving the top of the playfield (a stair exit at y 24
+     * counts) enters the room above, on its lowest floor in the same column. */
+    if (game->area == VK_AREA_INTERIOR && p->y < 32)
+    {
+        const VKByte target = vk_stage1_links[game->room].up;
+        if (target == VK_ROOM_NONE)
+        {
+            p->y = 32;
+            return VK_EVENT_NONE;
+        }
+        game->room = target;
+        p->y = vk_floor_arrival(vk_stage1_collision[target], p->x);
+        p->on_stairs = 0;
+        p->stair_anim = 0;
+        p->mode = p->y ? 0 : 4;
+        p->phase = 0;
+        if (!p->y) p->y = 200;
+        return VK_EVENT_VERTICAL;
     }
     return VK_EVENT_NONE;
 }

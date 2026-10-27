@@ -132,7 +132,7 @@ static int vk_stair_enter(VKPlayer *p, const VKByte *map)
     p->x = (VKByte)(dir ? cell_x : cell_x + 8);
     p->y = (VKByte)((y & ~7) + 8);
     p->stair_dir = (VKByte)dir;
-    p->facing = (VKByte)dir;
+    p->facing = (VKByte)!dir; /* facing 1 looks left, as in the walk code */
     p->stair_len = (VKByte)(8 * steps + 8);
     p->stair_anim = 0;
     p->on_stairs = 1;
@@ -172,7 +172,7 @@ static void vk_stair_tick(VKPlayer *p, int direction, int down, int up)
             moved = 1;
         }
     }
-    p->facing = p->stair_dir;
+    p->facing = (VKByte)!p->stair_dir;
     if (moved && (p->stair_anim == p->stair_len || p->stair_anim == 0))
     { p->on_stairs = 0; p->mode = 0; p->phase = 0; }
     /* Four-step walk cycle, one pose per eight pixels of progress. The poses are

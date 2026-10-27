@@ -577,6 +577,7 @@ int main(bool hardReset)
                     VDP_drawText("                         ", 1, 2);
                 if (event == VK_EVENT_ENTER) show_interior();
                 else if (event == VK_EVENT_ROOM) show_courtyard(game.room);
+                else if (event == VK_EVENT_VERTICAL) show_stage1_room(game.room);
                 else if (front_mode == FRONT_INTERIOR && direction &&
                          !(input.keys & BUTTON_A) &&
                          vk_room_try_edge(&game.room, &game.player, direction))
