@@ -67,8 +67,8 @@ Le décodage des motifs est **déduit** : l'ordre 4 bpp quadrants (UL, LL, UR, L
 
 ## Comparaison avec le portage actuel (`sgdk/src/whip.c`)
 
-- `vk_whip_bounds` utilise des portées de 24 px et une hauteur de y-20 à y-17 (accroupi y-10 à y-7).
-- Mesure : boîte y -31 à -16 (16 px de haut), x +8 à +39 (32 px de large) en debout. Hauteur et position verticale différentes ; la portée de 24 px sous-estime la mesure.
+- `vk_whip_bounds` (état actuel) : debout, boîte inclusive x+8..x+32 et y-22..y-15, soit la lanière visible mesurée en jeu (`research/whip-hitbox-ingame.md`). Accroupi : estimation, non mesurée. Ce ne sont pas les valeurs de la trace MSX ci-dessous.
+- Mesure MSX (cette trace) : boîte y -31 à -16, x +8 à +39 en debout. Elle est plus grande que la lanière visible en jeu et ne sert pas de boîte de collision.
 - Le texte de `ATTACK_TRACE_OPENMSX.md` disait « x-8 à x+39 ». La mesure ne montre **aucun pixel à x-8** (le plus à gauche est +8). À corriger dans la note.
 - Accroupi : non mesuré (aucun accroupissement capturé).
 
@@ -91,8 +91,8 @@ static const VkWhipCell vk_whip_cells_standing[] = {
 #define VK_WHIP_BOX_Y1 -16
 ```
 
-Changements nécessaires :
-- `vk_whip_bounds` : remplacer la portée de 24 px par la boîte ci-dessus (x +8 à +39), et la hauteur y-20..-17 par y-31..-16 en debout. Garder l'accroupi à part, non mesuré.
+Changements nécessaires (historique, partiellement appliqués) :
+- `vk_whip_bounds` : la boîte de la trace (x +8 à +39, y-31..-16) n'a pas été reprise. Le portage utilise la lanière mesurée en jeu (x+8..x+32, y-22..y-15, inclusive). Accroupi : non mesuré.
 - Fenêtre de collision : la lanière est visible de la phase timer 3 à 10 dans le jeu MD (`timer ≥ 8 : 16 px` à remplacer). Au MSX : sprite visible de t07 à t14, soit 8 ticks ; pour le portage, la fenêtre utile est donc le timer 3 à 10, en gardant le décalage de deux ticks.
 - Le décalage de deux ticks est **prouvé** dans les données, mais sa cause ne l'est pas. À confirmer avant de l'appliquer au timer MD.
 
