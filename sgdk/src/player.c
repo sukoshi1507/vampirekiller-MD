@@ -177,7 +177,7 @@ static int vk_stair_enter_top(VKPlayer *p, const VKByte *map)
     p->stair_len = (VKByte)(8 * steps + 8);
     p->stair_anim = p->stair_len; /* the progress starts at the top */
     p->stair_glide = 0;
-    p->facing = (VKByte)!dir;
+    p->facing = (VKByte)dir; /* entering from the top, Simon goes down */
     p->on_stairs = 1;
     p->mode = 0;
     p->phase = 0;
@@ -221,7 +221,8 @@ static void vk_stair_tick(VKPlayer *p, int direction, int down, int up)
             moved = 1;
         }
     }
-    p->facing = (VKByte)!p->stair_dir;
+    /* Simon looks along the direction of travel: up is !dir, down is dir. */
+    if (moved) p->facing = (VKByte)(want_up ? !p->stair_dir : p->stair_dir);
     if (p->stair_anim == p->stair_len) p->stair_glide = 0;
     if (moved && (p->stair_anim == p->stair_len || p->y >= 225 ||
                   (p->stair_anim == 0 && !p->stair_glide)))

@@ -137,6 +137,8 @@ int main(void)
     g.player.x = 176; g.player.y = 96; g.player.mode = 0;
     assert(vk_game_tick_controls(&g, 0, 0, 0, 1) == VK_EVENT_NONE);
     assert(g.player.on_stairs && g.player.x == 176 && g.player.y == 96 && !g.player.crouched);
+    /* Going down a right-up flight Simon looks down-left, that is left (facing 1). */
+    assert(g.player.facing == 1);
     {
         int frames;
         for (frames = 0; frames < 200 && g.player.on_stairs; frames++)
