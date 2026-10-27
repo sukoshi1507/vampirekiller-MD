@@ -107,12 +107,24 @@ static const u32 target_tiles[32] = {
 /* Prototype flame/impact animation generated from the V15 artwork.
  * Source and provenance: tools/build_flame_fx.py, NOT the original MSX ROM. */
 static u16 flame_clock;
-static u16 flame_burst;
 /* Courtyard torch positions (top-left of each 16x16 flame). */
 #define FLAME_A_X 64
 #define FLAME_A_Y 144
 #define FLAME_B_X 192
 #define FLAME_B_Y 144
+/* Torch A background once its flame is out. The MSX2 reference (openMSX VRAM
+ * after the hit) keeps the brazier and clears only the flame: these four 8x8
+ * tiles cover cells (8..9, 18..19), in the order TL, TR, BL, BR. Pixels come
+ * from the openMSX VRAM dump after the hit, not from the scene tile set. Index
+ * 1400 lies beyond the scene tiles (user index up to ~313) and the sprite tiles
+ * (1024..1359). */
+#define FLAME_A_CLEAR_TILE_INDEX 1400
+static const u32 flame_a_cleared_tiles[32] = {
+    0x00000000UL, 0x00000000UL, 0x00000000UL, 0x00000000UL, 0x00000000UL, 0x00000000UL, 0x00000000UL, 0x00000000UL,
+    0x00000000UL, 0x00000000UL, 0x00000000UL, 0x00000000UL, 0x00000000UL, 0x00000000UL, 0x00000000UL, 0x00000000UL,
+    0xCEC0CEC0UL, 0xDDD0DDD0UL, 0xDDD2DDD2UL, 0x02000200UL, 0x0C000C00UL, 0x0D000D00UL, 0xCDC0CDC0UL, 0x0C000C00UL,
+    0xCEC0CEC0UL, 0xDDD0DDD0UL, 0xDDD2DDD2UL, 0x02000200UL, 0x0C000C00UL, 0x0D000D00UL, 0xCDC0CDC0UL, 0x0C000C00UL,
+};
 static void reset_training_target(void)
 {
     if (front_mode == FRONT_COURTYARD)
@@ -121,7 +133,6 @@ static void reset_training_target(void)
         vk_target_init(&test_target, (int)player.x + 24, (int)player.y - 24, 16, 16);
     target_visible = TRUE;
     flame_clock = 0;
-    flame_burst = 0;
 }
 static void show_player(const VKPlayer *player)
 {
@@ -211,14 +222,13 @@ static void show_player(const VKPlayer *player)
         /* Courtyard flames stay at their fixed torch positions. Flame A carries
          * the hit zone (see reset_training_target) and shows the burst. */
         const u16 cycle = (flame_clock >> 3) & (VK_FLAME_FRAMES - 1);
-        const u16 flame_a = flame_burst ?
-            (VK_FLAME_FRAMES + ((12 - flame_burst) / 4)) : cycle;
-        /* Once hit, flame A stays out until the target is reset (A+B). */
-        const s16 flame_a_x = (test_target.active || flame_burst) ? FLAME_A_X : -32;
-        const s16 flame_a_y = (test_target.active || flame_burst) ? FLAME_A_Y : -32;
+        /* Once hit, flame A is out at once (the MSX2 reference shows no spark)
+         * and stays out until the target is reset (A+B). */
+        const s16 flame_a_x = test_target.active ? FLAME_A_X : -32;
+        const s16 flame_a_y = test_target.active ? FLAME_A_Y : -32;
         VDP_setSpriteFull(7, flame_a_x, flame_a_y, SPRITE_SIZE(2, 2),
             TILE_ATTR_FULL(PAL3, TRUE, FALSE, FALSE,
-                FLAME_TILE_INDEX + flame_a * VK_FLAME_TILES_PER_FRAME), 8);
+                FLAME_TILE_INDEX + cycle * VK_FLAME_TILES_PER_FRAME), 8);
         VDP_setSpriteFull(8, FLAME_B_X, FLAME_B_Y, SPRITE_SIZE(2, 2),
             TILE_ATTR_FULL(PAL3, TRUE, FALSE, FALSE,
                 FLAME_TILE_INDEX + cycle * VK_FLAME_TILES_PER_FRAME), 0);
@@ -227,8 +237,8 @@ static void show_player(const VKPlayer *player)
     }
     if (target_visible)
     {
-        VDP_setSpriteFull(7, (test_target.active || flame_burst) ? (s16)test_target.x : -32,
-            (test_target.active || flame_burst) ? (s16)test_target.y : -32, SPRITE_SIZE(2, 2),
+        VDP_setSpriteFull(7, test_target.active ? (s16)test_target.x : -32,
+            test_target.active ? (s16)test_target.y : -32, SPRITE_SIZE(2, 2),
             TILE_ATTR_FULL(PAL3, TRUE, FALSE, FALSE, TARGET_TILE_INDEX), 0);
     }
     VDP_updateSprites(target_visible ? 8 : 7, DMA_QUEUE);
@@ -325,6 +335,24 @@ static void load_actor(u16 scene)
     load_whip_graphics();
     if (scene == 6 || (scene >= 3 && scene <= 5)) reset_training_target();
     show_player(&player);
+}
+
+/* Courtyard rooms 0 and 1 (scenes 3 and 4) bake the torch-A flame into the
+ * background cells (8..9, 18..19); the sprite covers it while lit. Room 2
+ * has no baked flame there. lit=FALSE swaps in the cleared background. */
+static void set_courtyard_flame_a_background(int lit)
+{
+    const u16 scene = 3 + courtyard_room;
+    u16 i;
+    if (courtyard_room > 1) return;
+    if (!lit) VDP_loadTileData(flame_a_cleared_tiles, FLAME_A_CLEAR_TILE_INDEX, 4, CPU);
+    for (i = 0; i < 4; i++)
+    {
+        const u16 col = 8 + (i & 1), row = 18 + (i >> 1);
+        VDP_setTileMapXY(BG_A, lit ?
+            TILE_ATTR_FULL(PAL0, FALSE, FALSE, FALSE, TILE_USER_INDEX + vk_scenes[scene].map[row * 32 + col]) :
+            TILE_ATTR_FULL(PAL0, FALSE, FALSE, FALSE, FLAME_A_CLEAR_TILE_INDEX + i), col, row);
+    }
 }
 
 static void show_courtyard(u16 room)
@@ -466,6 +494,7 @@ int main(bool hardReset)
                     (input.keys & BUTTON_A) && (pressed & BUTTON_B))
                 {
                     reset_training_target();
+                    if (front_mode == FRONT_COURTYARD) set_courtyard_flame_a_background(TRUE);
                     VDP_drawText(front_mode == FRONT_COURTYARD ?
                         "FLAMME RALLUMEE! " : "CIBLE REINITIALISEE", 8, 3);
                 }
@@ -480,7 +509,7 @@ int main(bool hardReset)
                 }
                 if (target_visible && vk_target_tick(&test_target, &whip))
                 {
-                    if (front_mode == FRONT_COURTYARD) flame_burst = 12;
+                    if (front_mode == FRONT_COURTYARD) set_courtyard_flame_a_background(FALSE);
                     VDP_drawText(front_mode == FRONT_COURTYARD ?
                         "FLAMME ETEINTE! " : "CIBLE TOUCHEE!  ", 8, 3);
                 }
@@ -516,7 +545,7 @@ int main(bool hardReset)
                     player = game.player;
                     show_stage1_room(game.room);
                 }
-                else { ++flame_clock; if (flame_burst) --flame_burst; show_player(&player); }
+                else { ++flame_clock; show_player(&player); }
             }
         }
         else if (front_mode == FRONT_SOUND)
