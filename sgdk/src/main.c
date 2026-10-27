@@ -8,6 +8,8 @@
 #include "targets.h"
 #include "generated/player_assets.h"
 #include "generated/simon_attack_md.h"
+#include "generated/whip_level1_md.h"
+#include "generated/whip_level2_md.h"
 #include "generated/simon_crouch_md.h"
 #include "generated/flame_fx_md.h"
 #include "generated/intro_assets.h"
@@ -133,6 +135,14 @@ static u16 courtyard_room;
  * openMSX dump, not from the scene tile set. Index 1400 lies beyond the scene
  * tiles (user index up to ~313) and the sprite tiles (1024..1359). */
 #define FLAME_A_CLEAR_TILE_INDEX 1400
+/* Standing frames of whip levels 1 and 2 (6 frames: 3 right, 3 left, see
+ * whip_levels_manifest.json). Loaded only when such a level is selected; level 0
+ * keeps its frames at ATTACK_TILE_INDEX. */
+#define WHIP_LEVEL_TILE_INDEX (FLAME_A_CLEAR_TILE_INDEX + 4)
+#define WHIP_LEVEL_TILE_COUNT (VK_WHIP_LEVEL1_FRAME_COUNT * VK_WHIP_LEVEL1_TILES_PER_FRAME)
+/* Whip level chosen for the next load (0 by default). No input binds it yet, so
+ * the wired gameplay keeps the level 0 frames and the level 0 hit box. */
+static int whip_level_choice = 0;
 static const u32 flame_a_cleared_tiles[32] = {
     0x00000000UL, 0x00000000UL, 0x00000000UL, 0x00000000UL, 0x00000000UL, 0x00000000UL, 0x00000000UL, 0x00000000UL,
     0x00000000UL, 0x00000000UL, 0x00000000UL, 0x00000000UL, 0x00000000UL, 0x00000000UL, 0x00000000UL, 0x00000000UL,
@@ -244,20 +254,26 @@ static void show_player(const VKPlayer *player)
         const u16 facing = (u16)crouch_facing;
         const bool body = crouch_mode || attack_frame;
         const u16 frame_index = attack_frame ? (u16)vk_whip_visual_step(&whip) : 0;
+        /* Levels 1 and 2 hold their left-facing standing frames (3..5) as decoded
+         * pictures, so they are drawn without flip. Crouch frames stay on level 0. */
+        const bool level_frames = !crouch_mode && attack_frame && vk_whip_level(&whip) != 0;
+        const u16 flip = level_frames ? 0 : facing;
         const u16 base = crouch_mode
             ? CROUCH_TILE_INDEX + crouch_frame * VK_CROUCH_TILES_PER_FRAME
-            : ATTACK_TILE_INDEX + frame_index * VK_ATTACK_TILES_PER_FRAME;
+            : (level_frames
+                ? WHIP_LEVEL_TILE_INDEX + (frame_index + (facing ? 3 : 0)) * VK_ATTACK_TILES_PER_FRAME
+                : ATTACK_TILE_INDEX + frame_index * VK_ATTACK_TILES_PER_FRAME);
         const u16 tiles_per_half = crouch_mode ? VK_CROUCH_TILES_PER_HALF : VK_ATTACK_TILES_PER_HALF;
         const s16 origin_x = facing ? -39 : -24;
         const s16 origin_y = crouch_mode ? -25 : -30;
         for (i = 0; i < 2; ++i)
         {
-            const u16 source_half = facing ? (u16)(1 - i) : i;
+            const u16 source_half = flip ? (u16)(1 - i) : i;
             VDP_setSpriteFull((u16)(5 + i),
                 body ? (s16)player->x + origin_x + (s16)i * 32 : -32,
                 body ? (s16)player->y + origin_y : -32,
                 SPRITE_SIZE(4, 4),
-                TILE_ATTR_FULL(PAL2, TRUE, FALSE, facing,
+                TILE_ATTR_FULL(PAL2, TRUE, FALSE, flip,
                                base + source_half * tiles_per_half),
                 i == 0 ? 6 : (target_visible ? 7 : 0));
         }
@@ -302,6 +318,11 @@ static void load_whip_graphics(void)
                      (VK_FLAME_FRAMES + VK_SPARK_FRAMES) * VK_FLAME_TILES_PER_FRAME, CPU);
     VDP_loadTileData((const u32 *)vk_simon_crouch_tiles, CROUCH_TILE_INDEX, VK_CROUCH_TILE_COUNT, CPU);
     vk_whip_reset(&whip);
+    vk_whip_set_level(&whip, whip_level_choice);
+    if (vk_whip_level(&whip) == 1)
+        VDP_loadTileData((const u32 *)vk_whip_level1_tiles, WHIP_LEVEL_TILE_INDEX, WHIP_LEVEL_TILE_COUNT, CPU);
+    else if (vk_whip_level(&whip) == 2)
+        VDP_loadTileData((const u32 *)vk_whip_level2_tiles, WHIP_LEVEL_TILE_INDEX, WHIP_LEVEL_TILE_COUNT, CPU);
     target_visible = FALSE;
     last_attack_frame = -1;
 }

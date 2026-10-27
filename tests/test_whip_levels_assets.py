@@ -64,6 +64,15 @@ class WhipLevelAssetTest(unittest.TestCase):
                     self.assertEqual(c['pattern_file_offset'], f"{int(c['pattern_file_offset'], 16):05X}")
                     self.assertIn(c['index'], range(32))
 
+    def test_palettes_are_the_stage1_room0_palette_used_by_the_wired_body(self):
+        # main.c draws the whip body on PAL2, loaded with vk_palettes[0] (stage 1 room 0).
+        rooms = (GEN / 'rooms.c').read_text()
+        block = re.search(r'vk_palettes\[\]\[16\] = \{\s*\{(.*?)\}', rooms, re.S).group(1)
+        room0 = [int(x, 16) for x in re.findall(r'0x([0-9A-Fa-f]{4})', block)]
+        self.assertEqual(len(room0), 16)
+        for level in (1, 2):
+            self.assertEqual(_palette(f'whip_level{level}_md'), room0)
+
     def test_palette_source_and_index0(self):
         self.assertIn('transparent', self.manifest['index0'])
         self.assertEqual(len(self.manifest['palette_rgb333']), 16)

@@ -188,3 +188,14 @@ Trace de 220 s de marche sans forçage (`tools/trace_c416_writers.tcl`, PC lu da
 
 - `tools/measure_whip_levels.py`, `tools/measure_whip_levels.tcl`, `tools/analyze_whip_levels.py`, `tools/trace_c416_writers.tcl` (ajoutés au dépôt).
 - Mesures (hors dépôt) : `scratchpad/lvl/m/L{0..3}-r{1,2}/ticks.csv` (SHA-256 `L0-r1` : `d8d48a62dd50be0edf3e…`), `scratchpad/lvl/watch3/writes.csv` (SHA-256 `aced0137fcf759e0ae81…`).
+
+## Palette des fouets 0, 1 et 2 (décision, 27 octobre)
+
+**Décision** : le corps et le fouet (frames standing des niveaux 0, 1 et 2) sont dessinés sur **PAL2**, chargée avec la palette de la salle stage 1 salle 0 (`vk_palettes[0]`, `generated/rooms.c`). Les 16 mots de `vk_whip_level1_palette` et `vk_whip_level2_palette` sont identiques à `vk_palettes[0]` (test `test_palettes_are_the_stage1_room0_palette_used_by_the_wired_body`). Aucune palette propre au niveau n'est chargée.
+
+**Preuve** :
+- `main.c` (`enter_play`, `show_room`) : `PAL2 = vk_palettes[...]` ; `show_player` dessine le corps (sprites 5 et 6) avec `PAL2`.
+- `attack_palette` (`0x002A, 0x006E, 0x00CE`) est chargée sur **PAL3**, qui ne sert qu'aux tuiles placeholder (fouet, bras), aux flammes et à la cible : elle n'intervient pas dans le coup de Simon.
+- Les niveaux 0, 1 et 2 ont la même structure de couches (parité, CC) : mêmes indices de couleur 1 à 3 (VRAM 0xF400 pour le niveau 0 : 0x01 et 0x42).
+
+**Limite** : la palette RGB vivante de la VDP pendant le coup n'a pas été relue pour les niveaux 1 et 2 (openMSX absent de l'environnement de cette session). Le lien « palette vivante = palette de salle » est donc **déduit** de la structure MSX2 (une palette VDP partagée), pas mesuré. Statut : prouvé côté asset, non vérifié à l'écran.
