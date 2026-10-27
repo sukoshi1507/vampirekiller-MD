@@ -1,9 +1,10 @@
 #include "sound_test.h"
 #include "generated/music_md.h"
+#include "psg_player.h"
 
-/* Debug-only sound test. Music is the candidate XGM2 conversion of the MSX2
- * PSG capture (research/audio): not listened to yet, and the trigger mapping
- * for effects is not established. Effects will be added here once identified. */
+/* Debug-only sound test. Music is the candidate PSG stream from the MSX2 capture
+ * (research/audio), played by psg_player.c. The trigger mapping for effects is
+ * not established yet. Effects will be added here once identified. */
 
 static const u16 konami_keys[10] = {
     BUTTON_UP, BUTTON_UP, BUTTON_DOWN, BUTTON_DOWN, BUTTON_LEFT,
@@ -31,7 +32,7 @@ typedef struct {
 } SoundEntry;
 
 static const SoundEntry sound_entries[] = {
-    {"MUSIQUE CANDIDATE", vk_music_test},
+    {"CAPTURE PSG", vk_music_test},
     {"ARRET", NULL},
 };
 #define SOUND_ENTRY_COUNT ((u16)(sizeof(sound_entries) / sizeof(sound_entries[0])))
@@ -39,7 +40,6 @@ static const SoundEntry sound_entries[] = {
 static const u16 sound_palette[16] = {
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x0EEE
 };
-static bool driver_loaded;
 static u16 selected;
 static u16 playing = 0xFFFF;
 
@@ -66,11 +66,6 @@ void vk_sound_test_enter(void)
     PAL_setPalette(PAL1, sound_palette, CPU);
     VDP_setTextPalette(PAL1);
     VDP_drawText("SOUND TEST (DEBUG)", 8, 3);
-    if (!driver_loaded)
-    {
-        XGM2_loadDriver(TRUE);
-        driver_loaded = TRUE;
-    }
     selected = 0;
     playing = 0xFFFF;
     draw_menu();
@@ -79,9 +74,10 @@ void vk_sound_test_enter(void)
 
 bool vk_sound_test_tick(u16 pressed)
 {
+    vk_psg_update();
     if (pressed & BUTTON_B)
     {
-        XGM2_stop();
+        vk_psg_stop();
         return TRUE;
     }
     if (pressed & BUTTON_UP) selected = selected == 0 ? SOUND_ENTRY_COUNT - 1 : selected - 1;
@@ -90,12 +86,12 @@ bool vk_sound_test_tick(u16 pressed)
     {
         if (sound_entries[selected].music)
         {
-            XGM2_play(sound_entries[selected].music);
+            vk_psg_play(sound_entries[selected].music);
             playing = selected;
         }
         else
         {
-            XGM2_stop();
+            vk_psg_stop();
             playing = 0xFFFF;
         }
     }
