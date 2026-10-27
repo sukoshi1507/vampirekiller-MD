@@ -89,6 +89,7 @@ Remarques :
 ## 4. Escalier et sorties HAUT/BAS
 
 - Le hall 0 et le hall 1 ont un comportement de **pente** autour de x≈28–32 : BAS (hall 0) ou HAUT puis BAS (hall 1) déclenche une marche automatique diagonale vers la gauche. Simon traverse ensuite la limite de salle (hall 1 → hall 0 à x=246, hall 0 → hall 3 à x=246, y=176). Ce comportement ne correspond à aucun lien vertical de la table.
+  - **Correction** (rapport des escaliers, trace r1) : cette « pente » n'est pas un escalier. C'est un recul d'ennemi (C420 00→05, C423 00→01, C42D 00→59, C415 20→1E), suivi d'un mouvement de saut. Les vrais escaliers sont des tuiles de la carte (tuiles 12 et 13) : voir `research/stairs.md`.
 - Aucun passage HAUT/BAS n'a été trouvé en balayage à 16 px (salles 0, 1, 3 du hall, x de 16 à 240 ; salle 2 seulement de 12 à 84 et de 176 à 240) et à 4 px (salle 3, x de 12 à 236 ; salle 0, même plage). Les liens 1↔5 et 3↔7 de la table ne sont donc **pas** vérifiés.
 - Les escaliers et leur position exacte restent **inconnus**.
 
