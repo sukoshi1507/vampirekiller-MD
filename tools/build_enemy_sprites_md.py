@@ -9,9 +9,12 @@ by tools/extract_enemy_sprites.py (research/enemy-assets.md). Pattern N (0x40..0
 is stored at tile slot (N - 0x40) / 4 in the table, four 8x8 tiles per layer in
 UL, LL, UR, LR order: the column-major order of an SGDK SPRITE_SIZE(2, 2).
 
-Colour is NOT resolved (research/enemy-assets.md section 5). Pixels carry
-palette indices: the MSX2 colour of each layer (LAYER_COLOUR).
-The game uses PAL2 (the room palette) for them. Index 0 is transparent.
+Pixels carry palette indices: the MSX2 colour of each layer (LAYER_COLOUR), read
+in the sprite colour table (research/enemy-assets.md section 5). The second layer
+of each pair has CC set: where both layers have a pixel, the V9938 shows the OR of
+the two colours. The MD draws the first layer above the second, so that OR is
+baked into the first layer. The game uses PAL2 (the room palette) for them.
+Index 0 is transparent.
 """
 import hashlib
 from pathlib import Path
@@ -29,17 +32,12 @@ PATTERN_COUNT = 12
 TILES_PER_LAYER = 4
 LONGS_PER_TILE = 8
 # MSX2 colour of each layer, read from the sprite colour table (VRAM F400 + 16 per sprite,
-# byte 0 & 0x0F) of a capture of the type A and B enemies (research/enemy-assets.md, section 5):
-# 40 -> 2, 44 -> 4, 48 -> 1, 4C -> 2, 58 -> 2, 5C -> 4, 68 -> 1, 6C -> 2, 60 -> 2.
-# 50, 54 and 64 were not in that capture: they take the colour of their pose-A twin
-# (50 as 48, 54 as 4C, 64 as 5C). Unverified. The colour index is the MSX palette index,
-# which is the index of PAL2 (the room palette) in the game.
-LAYER_COLOUR = {
-    0x40: 2, 0x44: 4, 0x48: 1, 0x4C: 2,
-    0x50: 1, 0x54: 2,
-    0x58: 2, 0x5C: 4, 0x60: 2, 0x64: 4,
-    0x68: 1, 0x6C: 2,
-}
+# same SAT and colour table in one VRAM dump) of the hall captures at images 2222 and 2844
+# (research/enemy-assets.md, section 5): every first layer N has colour 02, every second
+# layer N+4 colour 44 (colour 4, CC). All 16 lines carry the same byte. 48/4C were not
+# on screen in those dumps and follow the same pairs. The colour index is the MSX palette
+# index, which is the index of PAL2 (the room palette) in the game.
+LAYER_COLOUR = {pattern: (4 if pattern & 4 else 2) for pattern in range(0x40, 0x70, 4)}
 
 
 def layers_of_types_a_and_b(rom):
@@ -61,15 +59,21 @@ def layers_of_types_a_and_b(rom):
     return layers
 
 
-def tile_longs(layer, index_value):
-    """Eight 32-bit rows per 8x8 tile, four tiles per 16x16 layer (UL, LL, UR, LR)."""
+def tile_longs(layer, index_value, cc_layer=None, cc_value=0):
+    """Eight 32-bit rows per 8x8 tile, four tiles per 16x16 layer (UL, LL, UR, LR).
+
+    cc_layer: the CC layer drawn with this one; its colour is ORed where both are set."""
     words = []
     for tile in range(TILES_PER_LAYER):
         for row in range(8):
             byte_row = layer[tile * 8 + row]
+            cc_row = cc_layer[tile * 8 + row] if cc_layer else 0
             word = 0
             for x in range(8):
-                pixel = index_value if (byte_row >> (7 - x)) & 1 else 0
+                bit = 1 << (7 - x)
+                pixel = 0
+                if byte_row & bit:
+                    pixel = index_value | (cc_value if cc_row & bit else 0)
                 word = (word << 4) | pixel
             words.append(word)
     assert len(words) == TILES_PER_LAYER * LONGS_PER_TILE
@@ -86,8 +90,13 @@ def generate(rom_path=None):
 
     longs = []
     for pattern in sorted(layers):
-        # Pattern N is the first layer of a pair (N, N+4 with N & 4 == 0), N+4 the second.
-        longs.append((pattern, tile_longs(layers[pattern], LAYER_COLOUR[pattern])))
+        # Pattern N is the first layer of a pair (N, N+4 with N & 4 == 0), N+4 the second (CC).
+        if pattern & 4:
+            words = tile_longs(layers[pattern], LAYER_COLOUR[pattern])
+        else:
+            words = tile_longs(layers[pattern], LAYER_COLOUR[pattern],
+                               layers[pattern + 4], LAYER_COLOUR[pattern + 4])
+        longs.append((pattern, words))
 
     OUT.mkdir(parents=True, exist_ok=True)
     tile_count = PATTERN_COUNT * TILES_PER_LAYER

@@ -10,7 +10,7 @@ et les limites. « Prouvé » = mesuré en trace openMSX ou lu dans la ROM ;
 | --- | --- | --- |
 | `enemy-behavior.md` | Spawn, mouvement, contact et mort des ennemis du hall (salles 0 à 7) | Prouvé pour les types 1 et 4 (spawn, trajectoire, contact, destruction au fouet via la table C800). Type 5 : ouvert. |
 | `enemy-spawn.md` | Table et routine de spawn de la salle 1 | Prouvé. À corriger : Y=40 et le type 1 ne sont pas liés au bloc décrit. |
-| `enemy-assets.md` | Motifs des ennemis, palette et couleurs (table F400) | Motifs prouvés (ROM et VRAM). Couleurs prouvées pour les types A et B ; motifs 50, 54, 64 non observés. |
+| `enemy-assets.md` | Motifs des ennemis, palette et couleurs (table F400) | Motifs prouvés (ROM et VRAM). Couleurs prouvées pour les types A et B (couche 1 : couleur 2, couche 2 : couleur 4 avec CC, recouvrement 6) ; 48/4C non observés à l'écran. |
 | `enemies-platforms.md` | Premier ennemi observé, cadence, absence de plateforme mobile | Historique. Section 5 (plan d'implémentation) réalisée depuis dans `enemies.c`. |
 | `player-health.md` | Énergie, contact, recul, invulnérabilité, mort, fin de partie | Prouvé par trace pour le contact et la mort. Le reste est lu dans le code. Porté : `enemies.c` (contact), `health.c` (vies, délais de mort et de fin de partie, test `tests/test_health.c`), `hud.c` (barre PLAYER, échelle provisoire). |
 | `whip-hitbox.md` | Forme de la lanière du fouet (openMSX) | Prouvé pour les pixels mesurés. |

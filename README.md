@@ -39,9 +39,7 @@ Ce qui n'est pas porté ou reste provisoire :
   relevés sur le MSX2. Les vies (`P-02`), les cœurs et le score du HUD restent figés.
   Pas d'animation de mort ni de clignotement d'invulnérabilité. La chute dans le vide
   ne tue pas.
-- **Provisoires** : vitesse de chute des ennemis, boîte de contact de Simon, couleurs
-  des motifs 50, 54 et 64 (non observés), combinaison CC des couches d'ennemi
-  (les couches se superposent au lieu de se combiner).
+- **Provisoires** : vitesse de chute des ennemis, boîte de contact de Simon.
 
 Le détail par sujet est dans [research/INDEX.md](research/INDEX.md).
 

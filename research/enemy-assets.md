@@ -39,12 +39,14 @@ Capture : `scratchpad/enemy-assets/work/run-a/vram-f02222.bin` (image trace 2222
 ## 5. Couleur (résolue pour les types A et B)
 
 - Les sprites du mode 2 du V9938 prennent leur couleur dans une table de couleur de 16 octets par sprite, placée 512 octets avant la SAT : `F400 + 16 * numéro de sprite` quand la SAT est en `F600`. Chaque octet = couleur (bits 0-3) et CC (bit 6, combinaison avec la couche dessous).
-- Mesure sur la capture à l'image 2222 (types A et B en salle 0, `scratchpad/enemy-assets/work/run-a/`), prouvé :
-  - haut : motif 40 couleur 2, 44 couleur 4 (CC) ; motif 58 couleur 2, 5C couleur 4 (CC) ;
-  - bas : motif 48 couleur 1, 4C couleur 2 (CC) ; motif 68 couleur 1, 6C couleur 2 (CC) ;
-  - motif 60 couleur 2 (sprites 22-23 de la même capture).
-- Non observés : 50, 54, 64. `tools/build_enemy_sprites_md.py` leur donne la couleur de leur jumeau (50 comme 48, 54 comme 4C, 64 comme 5C). **À vérifier.**
-- Indice de couleur = indice de la palette MSX2 de la salle, donc l'indice de PAL2 dans le jeu. Le jeu ne fait pas le OU des couches CC : chaque couche est un sprite séparé, donc une zone où les deux couches se recouvrent prend la couleur du sprite au-dessus (approximation).
+- Mesure corrigée (2026-10-27) : dans chaque vidage VRAM du hall (`scratchpad/enemy-assets/work/run-a/vram-f02222.bin` et `vram-f02844.bin`), la SAT (`F600`) et la table de couleur (`F400`) sont lues **dans le même vidage**. Toutes les paires suivent la même règle, prouvé pour 40/44, 50/54, 58/5C, 60/64, 68/6C :
+  - première couche N : octet `02` (couleur 2) ;
+  - seconde couche N+4 : octet `44` (couleur 4, CC) ;
+  - les 16 octets (une couleur par ligne) sont identiques.
+  - 48/4C ne sont pas à l'écran dans ces vidages : même règle supposée.
+- L'ancienne table (48 → 1, 4C → 2, 68 → 1, 6C → 2) associait la SAT de `info-f02222.txt` à la table de couleur du vidage VRAM, prises à des instants différents : les couleurs 1/2 étaient celles des sprites de Simon. Elle est abandonnée.
+- CC : là où les deux couches ont un pixel, le V9938 affiche le OU des couleurs (2 | 4 = 6). `tools/build_enemy_sprites_md.py` cuit ce OU dans la première couche, dessinée au-dessus sur MD : le rendu est exact sans combinaison matérielle.
+- Indice de couleur = indice de la palette MSX2 de la salle, donc l'indice de PAL2 dans le jeu.
 
 ## 6. Fichiers
 
