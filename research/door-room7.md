@@ -144,3 +144,10 @@ Sans poke, points d'arrêt sur `9327` et `9329`, dossiers `scratchpad/door7/c701
 - **C40C** reste à 0 après le boot dans tous les tests : la chaîne `9329` → `C40C` → état 0C → `440E` → `93FF` → `C708` → `8D30` (0x18) → `8E60` n'est pas amorcée.
 - **Ouvert** : l'appelant de `9329`. Il faut d'abord retrouver le vrai début de la routine `9327`/`9329` en banque 2 (le désassemblage est mal aligné autour de 9300-9330). Autres pistes : un contact réel de type 1 avec `C415` mesuré à chaque image, et une bougie du hall (non localisée dans les notes).
 
+## 13. Routine 9327/9329 : entrée non trouvée
+
+- **E1** : `9327`-`9332` = `LD A,FF ; LD (C40C),A ; LD A,(IX+9) ; LD (C703),A ; RET`, précédé de données en `9300`-`9326`. Aucun `CALL` ni `JP` vers `9300`-`9335` dans la ROM. Entrée indirecte (table ou trampoline `509F`), à confirmer. Dans aucune trace, `9327` ni `9329` ne sont atteints.
+- **E2 (contact réel de type 1)** : `C415` passe de 32 à 26 par contacts mesurés (images 1674, 2057, 2375), sans mort. `9329` et `C40C` ne changent pas. Les écritures de `C415` viennent de `4638` (banque 0).
+- **E3 (bougies du hall)** : pas de coup confirmé. En salle 0 et en salle 1, les bougies n'ont pas été atteintes (sortie de salle avant la portée). `9327`, `9329` et `C40C` ne changent jamais.
+- **Prochaines étapes** : retrouver l'entrée réelle de `9327` (table indexée ou trace de pile posée sur un point d'arrêt sur une partie longue) ; tester la bougie de la salle 1 en `(30,90)` depuis x 28 à 30, puis la salle 2 du hall ; pour la mort, continuer la marche contre les ennemis jusqu'à `C415` = 0.
+
