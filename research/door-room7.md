@@ -160,3 +160,13 @@ Sans poke, points d'arrêt sur `9327` et `9329`, dossiers `scratchpad/door7/c701
 - **Prochaine étape** : rejouer S2 à l'identique avec des points d'arrêt sur `4257`, `8580`, `7737` et `7752`, pour suivre le bit 0 jusqu'à `C5AC` (1 vers 2). Puis tester la variante sans fouet en salle 1.
 - **Preuves** (hors dépôt) : `scratchpad/door7/c701/runs/S2`, `S2b`, `S2c`, `S2d`, `S2e`.
 
+## 15. Suivi du bit 0 jusqu'à C5AC (runs S2f, S2r7, S2e2, S2g, S2d)
+
+- **Rejeu de S2** : même événement (image 3306). `8D30` avec A = 0x18 et IX = C520 (objet bougie X 80, Y A0, type 18). Simon en x 148, y 192. `C5AC` = 0 et `C5AE` = 0 à ce moment. La routine `7718` appelle la table à l'index 0 (RET), donc le gate `7737` n'est pas évalué en salle 2.
+- **Persistance** : `C701` = 1 reste à 1 en salle 3, puis en salle 7 (arrivée image 4362). `BB5D` met `C5AC` à 255, puis `53FC` le met à 1 (image 4381). Aucune autre écriture de `C701`.
+- **Blocage en salle 7** : `7718` → `772A` à chaque image, `8580` appelé à chaque image, mais `7737` n'est jamais atteint. `8580` ne renvoie une valeur que si X (ajusté de ±8 selon `C42C`) est dans `[C5AE, C5AE+8)` (`C5AE` = 236), donc X ≈ 228 à 235, et si Y est dans une bande liée à `C5AD` (valeur non relevée). Simon est bloqué à x ≈ 228 au sol (y 192), hors de la bande en Y. La zone est l'ouverture haute droite (y ≈ 96) : aucun accès naturel trouvé.
+- **Variantes** : `S2e` (sans fouet en salle 1) : pas de `8D30`, `C701` reste 0. `S2g` (fouets de la salle 1 gardés, fouets de la salle 2 retirés) : rien. `S2d` (fouet de la salle 2 seul) : rien. L'événement exige donc les deux séquences de fouet, ou un effet de timing (nombre d'images) non isolé.
+- **Cour** : `7737` est atteint en cour (D000 = 0), le gate y passe, et `C5AC` passe de 4 à 5 en `7752` (image 1451). Le mécanisme est confirmé.
+- **Condition manquante** : (a) bit 0 à 1, acquis par la bougie de la salle 2 (fragile) ; (b) Simon dans la zone de `8580` en salle 7 (X 228 à 235, Y dans la bande de `C5AD`). Ensuite `C5AC` 2 vers 3 passe par le compteur `C5AF` (`9147`, banque 2) ; 3 vers 4 n'est pas tracé.
+- **Prochaines étapes** : relever `C5AD` en salle 7 ; trouver un accès à l'ouverture (saut ou autre) ; isoler la condition de la bougie (S2 avec un seul des deux fouets, avec compteur d'images).
+
