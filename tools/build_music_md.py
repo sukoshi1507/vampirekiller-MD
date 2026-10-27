@@ -52,8 +52,13 @@ def generate(source, output):
     data = source.read_bytes()
     if data[:4] != b'Vgm ':
         raise ValueError(f'{source} is not a VGM file')
-    stream = bytearray()
     frames = frames_from_vgm(data)
+    # Drop leading frames until the first audible volume write. Their register
+    # writes are kept, merged into the first audible frame, so the state is intact.
+    first = next((n for n, w in enumerate(frames)
+                  if any((b & 0x90) == 0x90 and (b & 0x0F) != 0x0F for b in w)), 0)
+    frames = [sum(frames[:first], [])] + frames[first:]
+    stream = bytearray()
     for writes in frames:
         if len(writes) > 254:
             raise ValueError('more than 254 PSG writes in one frame')
@@ -75,7 +80,7 @@ def generate(source, output):
         '#include <genesis.h>\n'
         f'extern const u8 vk_music_test[{len(stream)}];\n'
         '#endif\n')
-    print(f'{len(frames)} frames, {len(stream)} bytes')
+    print(f'{len(frames)} frames (leading silence {first} frames merged), {len(stream)} bytes')
     return hashlib.sha256(bytes(stream)).hexdigest()
 
 

@@ -2,5 +2,5 @@
 #ifndef VK_MUSIC_MD_H
 #define VK_MUSIC_MD_H
 #include <genesis.h>
-extern const u8 vk_music_test[26932];
+extern const u8 vk_music_test[26096];
 #endif
