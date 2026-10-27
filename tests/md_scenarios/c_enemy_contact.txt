@@ -15,4 +15,5 @@ wait 30
 dump apres-recul
 expect enemies.recoil == 0 # recul termine (22 images)
 expect game.player.x != x_contact # Simon repousse
+expect 8 <= game.player.x <= 248 # recul borne aux limites de marche (vk_game_push)
 expect enemies.energy == 30 # pas de second degat pendant l'invulnerabilite

@@ -168,5 +168,46 @@ int main(void)
     g.player.x = 200;
     assert(vk_game_tick(&g, 1, 0, 0) == VK_EVENT_NONE);
     assert(g.area == VK_AREA_COURTYARD && g.room == 2 && g.player.x < 232);
+
+    /* Recoil keeps the walk limits: never past x 248, nothing on a staircase. */
+    vk_game_debug_room(&g, 0);
+    g.player.x = 240;
+    g.player.y = 176;
+    vk_game_push(&g, 22);
+    assert(g.player.x == 248);
+    g.player.on_stairs = 1;
+    vk_game_push(&g, -10);
+    assert(g.player.x == 248);
+    g.player.on_stairs = 0;
+    /* Recoil stops at the first wall of a hall room. */
+    {
+        VKByte room;
+        int found = 0;
+        for (room = 0; room < 8 && !found; room++)
+        {
+            int x;
+            vk_game_debug_room(&g, room);
+            for (x = 30; x < 240 && !found; x++)
+            {
+                int y;
+                for (y = 40; y < 200 && !found; y += 8)
+                    if (!vk_wall(vk_game_collision(&g), (VKByte)(x - 12), (VKByte)y, 1, 0, 1, 0) &&
+                        !vk_wall(vk_game_collision(&g), (VKByte)(x - 1), (VKByte)y, 1, 0, 1, 0) &&
+                        vk_wall(vk_game_collision(&g), (VKByte)x, (VKByte)y, 1, 0, 1, 0))
+                    {
+                        int k, open = 1;
+                        for (k = x - 12; k < x; k++)
+                            if (vk_wall(vk_game_collision(&g), (VKByte)k, (VKByte)y, 1, 0, 1, 0)) open = 0;
+                        if (!open) continue;
+                        g.player.x = (VKByte)(x - 12);
+                        g.player.y = (VKByte)y;
+                        vk_game_push(&g, 22);
+                        assert(g.player.x == x - 1);
+                        found = 1;
+                    }
+            }
+        }
+        assert(found);
+    }
     return 0;
 }

@@ -4,6 +4,10 @@
 #include "generated/whip_level2_md.h"
 #include "generated/enemy_sprites_md.h"
 #include "generated/stage1_collision.h"
+#include "hud.h"
+
+_Static_assert(ENEMY_TILE_INDEX + VK_ENEMY_TILE_COUNT <= HUD_TILE_INDEX,
+               "sprite tiles 400.. must end before the HUD tiles");
 
 /* Simon, whip and hall enemies on screen. Their gameplay lives in player.c,
  * whip.c and enemies.c; this module only feeds them and draws the result. */
@@ -48,7 +52,7 @@ static int whip_level_choice = 0;
 
 /* One gameplay frame of the hall enemies. The state follows the hall room: a room
  * change or a leave of the hall rebuilds it (key 0 outside the hall). Simon's
- * recoil moves him here, without the wall checks of the player tick (provisional). */
+ * recoil moves him here through vk_game_push (walls and walk limits). */
 void vk_step_enemies(void)
 {
     const u16 key = vk_front_mode == FRONT_INTERIOR ? (u16)(vk_game.room + 1) : 0;
@@ -78,10 +82,8 @@ void vk_step_enemies(void)
     }
     if (push)
     {
-        const int x = (int)vk_game.player.x + push;
-        const VKByte moved = (VKByte)(x < 0 ? 0 : (x > 255 ? 255 : x));
-        vk_game.player.x = moved;
-        vk_player.x = moved;
+        vk_game_push(&vk_game, push);
+        vk_player.x = vk_game.player.x;
     }
 }
 

@@ -164,6 +164,22 @@ void vk_game_respawn(VKGame *game)
     game->player.y = 176;
 }
 
+void vk_game_push(VKGame *game, int dx)
+{
+    VKPlayer *p = &game->player;
+    const int step = dx < 0 ? -1 : 1;
+    const VKByte stage = game->area == VK_AREA_COURTYARD ? 0 : 1;
+    if (p->on_stairs) return;
+    while (dx)
+    {
+        const int next = (int)p->x + step;
+        if (next < 8 || next > 248 ||
+            vk_wall(vk_game_collision(game), (VKByte)next, p->y, step, p->crouched, stage, 0)) break;
+        p->x = (VKByte)next;
+        dx -= step;
+    }
+}
+
 int vk_game_debug_room(VKGame *game, VKByte room)
 {
     if (room >= 8) return 0;

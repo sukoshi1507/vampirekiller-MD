@@ -23,6 +23,10 @@ const VKByte *vk_game_collision(const VKGame *game);
  * not traced (research/player-health.md). In the hall Simon restarts at the hall
  * entrance (room 0, x 232, as when he walks in); in the courtyard, at its start. */
 void vk_game_respawn(VKGame *game);
+/* Enemy contact recoil of dx pixels. PROVISIONAL (research/player-health.md):
+ * Simon moves pixel by pixel with the walk limits (x 8..248, side wall probes)
+ * and stops at the first blocked pixel; no recoil on a staircase. */
+void vk_game_push(VKGame *game, int dx);
 /* Explicit debug room selection; returns 0 for unsupported room. */
 int vk_game_debug_room(VKGame *game, VKByte room);
 

@@ -19,9 +19,11 @@
 #define TARGET_TILE_INDEX (ATTACK_TILE_INDEX + VK_ATTACK_FRAME_COUNT * VK_ATTACK_TILES_PER_FRAME)
 #define FLAME_TILE_INDEX (TARGET_TILE_INDEX + 4)
 #define CROUCH_TILE_INDEX (FLAME_TILE_INDEX + (VK_FLAME_FRAMES + VK_SPARK_FRAMES) * VK_FLAME_TILES_PER_FRAME)
-/* Torch background once its flame is out (room_view.c). Index 1400 lies beyond
- * the scene tiles (user index up to ~313) and the sprite tiles (1024..1359). */
-#define FLAME_A_CLEAR_TILE_INDEX 1400
+/* Torch background once its flame is out (room_view.c). The block from here
+ * (flame, whip levels, enemies: 400..643) sits in the free VRAM between the scene
+ * tiles (user index up to 313) and the HUD tiles (900, hud.h). Tiles from 1536 on
+ * hold the plane tables, so nothing may be loaded past the sprite tiles (1024..1382). */
+#define FLAME_A_CLEAR_TILE_INDEX 400
 /* Standing frames of whip levels 1 and 2 (6 frames: 3 right, 3 left, see
  * whip_levels_manifest.json). Loaded only when such a level is selected; level 0
  * keeps its frames at ATTACK_TILE_INDEX. */

@@ -27,6 +27,15 @@ static u16 diagnostic_timer;
 /* Lives, death and game over (health.c); the energy is vk_enemies.energy. */
 static VKHealth health;
 
+/* Short play message on row 26 (rows 0..3 hold the HUD bars); the play note
+ * comes back when diagnostic_timer runs out. */
+static void show_message(const char *text)
+{
+    diagnostic_timer = 40;
+    VDP_clearText(1, 26, 30);
+    VDP_drawText(text, 1, 26);
+}
+
 static void new_game(void)
 {
     vk_game_begin(&vk_game);
@@ -117,8 +126,8 @@ int main(bool hardReset)
                     (held & BUTTON_A) && (pressed & BUTTON_B))
                 {
                     vk_reset_training_target();
-                    VDP_drawText(vk_front_mode == FRONT_COURTYARD ?
-                        "FLAMME RALLUMEE! " : "CIBLE REINITIALISEE", 8, 3);
+                    show_message(vk_front_mode == FRONT_COURTYARD ?
+                        "FLAMME RALLUMEE!" : "CIBLE REINITIALISEE");
                 }
                 const VKEvent event = vk_game_tick_controls(&vk_game, direction,
                     jump, !!(held & BUTTON_UP),
@@ -129,28 +138,24 @@ int main(bool hardReset)
                     vk_whip_tick(&vk_whip, &vk_player, !!((pressed & BUTTON_B) && !(held & BUTTON_A)));
                     if (idle && vk_whip.timer == 14) vk_psg_play(vk_sfx_whip);
                 }
+                /* Make controller/attack state observable in BlastEm. No text
+                 * is reprinted every frame: refresh on input or at timeout. */
+                if (pressed & BUTTON_B)
+                    show_message(vk_player.on_stairs ? "B: BLOQUE SUR ESCALIER" :
+                        "B: ATTAQUE DETECTEE");
                 if (vk_front_mode == FRONT_COURTYARD)
                 {
                     if (vk_courtyard_flames_hit(&vk_whip) >= 0)
                     {
-                        VDP_drawText("FLAMME ETEINTE! ", 8, 3);
+                        show_message("FLAMME ETEINTE!");
                         /* Torch hit: the castlevania-md hit effect stands in for MSX 0x0C. */
                         vk_psg_play(vk_sfx_hit);
                     }
                 }
                 else if (vk_training_target_hit(&vk_whip))
-                    VDP_drawText("CIBLE TOUCHEE!  ", 8, 3);
+                    show_message("CIBLE TOUCHEE!");
                 vk_draw_attack_frame_label();
-                /* Make controller/attack state observable in BlastEm. No text
-                 * is reprinted every frame: refresh on input or at timeout. */
-                if (pressed & BUTTON_B)
-                {
-                    diagnostic_timer = 40;
-                    VDP_clearText(1, 26, 30);
-                    VDP_drawText(vk_player.on_stairs ? "B: BLOQUE SUR ESCALIER" :
-                        "B: ATTAQUE DETECTEE", 1, 26);
-                }
-                else if (diagnostic_timer && --diagnostic_timer == 0)
+                if (diagnostic_timer && --diagnostic_timer == 0)
                     vk_draw_play_note();
                 if (event == VK_EVENT_ENTER) vk_show_interior();
                 else if (event == VK_EVENT_ROOM) vk_show_courtyard(vk_game.room);
