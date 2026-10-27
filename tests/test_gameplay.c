@@ -39,11 +39,35 @@ int main(void)
     assert(g.area == VK_AREA_COURTYARD && g.room == 2);
     assert(vk_game_tick(&g, 0, 0, 1) == VK_EVENT_NONE);
     assert(g.area == VK_AREA_COURTYARD && g.room == 2);
-    /* Courtyard room 2 -> hall room 0: RIGHT at x=232 (openMSX run 6). */
-    g.player.x = 232;
+    /* Courtyard room 2 -> hall room 0 through the castle door (openMSX runs A and
+     * B, research/castle-entrance.md): facing right at x 216 starts the entrance. */
+    g.player.x = 216;
     g.player.y = 176;
     g.player.mode = 0;
+    g.player.facing = 0;
+    assert(vk_game_tick(&g, 1, 0, 0) == VK_EVENT_ENTRANCE);
+    assert(g.entrance == VK_ENTRANCE_WALK && vk_game_entrance_locked(&g));
+    {
+        /* Input is ignored; one pixel per four frames: x 217 at t 4, 232 at t 64. */
+        int t;
+        for (t = 1; t <= 64; t++)
+        {
+            assert(vk_game_tick(&g, t & 1 ? -1 : 0, 1, 0) == VK_EVENT_NONE);
+            assert(g.player.x == 216 + t / 4);
+            assert(g.area == VK_AREA_COURTYARD && g.player.y == 176);
+            if (t == 8) assert(g.player.pose == 1);   /* walk cycle 0,1,2,1 */
+        }
+        assert(g.entrance == VK_ENTRANCE_EXIT);
+        /* Courtyard shown 2 more frames, then 36 black frames, then the hall. */
+        assert(vk_game_tick(&g, 1, 0, 0) == VK_EVENT_NONE);
+        assert(vk_game_tick(&g, 1, 0, 0) == VK_EVENT_NONE);
+        assert(vk_game_tick(&g, 1, 0, 0) == VK_EVENT_ENTRANCE_DARK);
+        assert(g.area == VK_AREA_INTERIOR && g.room == 0);
+        for (t = 68; t < 103; t++) assert(vk_game_tick(&g, 1, 0, 0) == VK_EVENT_NONE);
+        assert(g.player.x == 16);
+    }
     assert(vk_game_tick(&g, 1, 0, 0) == VK_EVENT_ENTER);
+    assert(!vk_game_entrance_locked(&g));
     assert(g.area == VK_AREA_INTERIOR && g.room == 0 && g.collision_verified);
     assert(g.player.x == 16 && g.player.y == 192);   /* frame 1555, on the floor */
     assert(vk_grounded(vk_game_collision(&g), g.player.x, g.player.y, 1, 0));
@@ -158,7 +182,8 @@ int main(void)
     assert(vk_game_debug_room(&g, 0) && g.collision_verified);
     assert(g.player.x == 16 && g.player.y == 192);
 
-    /* Without walking right, x=232 is not a door; the old UP door is gone. */
+    /* x 232 is not a door, the old UP door is gone, and facing left in the zone
+     * does nothing (the left-facing zone of 8580 is not ported). */
     vk_game_begin(&g);
     g.room = 2;
     g.player.x = 232;
@@ -166,9 +191,29 @@ int main(void)
     assert(vk_game_tick(&g, 0, 0, 1) == VK_EVENT_NONE);
     assert(g.area == VK_AREA_COURTYARD && g.room == 2);
     g.player.x = 200;
-    g.player.x = 200;
     assert(vk_game_tick(&g, 1, 0, 0) == VK_EVENT_NONE);
     assert(g.area == VK_AREA_COURTYARD && g.room == 2 && g.player.x < 232);
+    g.player.x = 218;
+    g.player.facing = 1;
+    assert(vk_game_tick(&g, 0, 0, 0) == VK_EVENT_NONE && !g.entrance);
+    /* Out of the Y band [138, 194) nothing starts either. */
+    g.player.facing = 0;
+    g.player.y = 120;
+    g.player.mode = 0;
+    assert(vk_game_tick(&g, 0, 0, 0) != VK_EVENT_ENTRANCE && !g.entrance);
+    /* Airborne in the zone: the entrance starts, but the walk waits for the
+     * landing (778A returns while C420 != 0). The test maps have no floor. */
+    vk_game_begin(&g);
+    g.room = 2;
+    g.player.x = 216;
+    g.player.y = 150;
+    g.player.mode = 4;
+    assert(vk_game_tick(&g, 0, 0, 0) == VK_EVENT_ENTRANCE);
+    vk_game_tick(&g, 0, 0, 0);
+    vk_game_tick(&g, 0, 0, 0);
+    assert(g.player.x == 216 && g.player.y > 150 && g.entrance_step == 0);
+    vk_game_begin(&g);
+    assert(!g.entrance);
 
     /* Recoil keeps the walk limits: never past x 248, nothing on a staircase. */
     vk_game_debug_room(&g, 0);

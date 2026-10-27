@@ -1,0 +1,24 @@
+# (h) Entree du chateau (cour 2 -> hall 0), research/castle-entrance.md.
+# MSX (runs A et B) : porte a x 216 face a droite, marche seule de 1 px par 4 images
+# derriere le montant de la porte jusqu'a x 232 (64 images), courtyard encore 2 images,
+# ecran noir 36 images, hall a x 16, y 192.
+include boot_to_courtyard.inc
+until game.room == 2 max 1500 RIGHT                # cour 0 -> 1 -> 2
+until game.entrance == 1 max 600 RIGHT             # zone de la porte (8580)
+set t0 frame
+expect game.player.x == 216 and game.player.y == 176 and game.area == 0 # declenchement a x 216
+wait 40
+dump marche
+shot h-marche
+expect game.entrance == 1 and game.player.x == 216 + 40 // 4 # marche seule sans DROITE, 1 px / 4 images
+expect ram16('vdpSpriteCache+4') & 0x8000 == 0 # sprite 0 de Simon sans priorite : derriere le montant
+until game.entrance == 3 max 60
+expect frame - t0 == 67 # sortie a x 232 (t 64) + 3 images
+expect game.area == 1 and game.room == 0 and front_mode == MODES['COURTYARD'] # hall en logique, ecran noir
+wait 2
+shot h-noir
+until front_mode == MODES['INTERIOR'] max 60
+expect frame - t0 == 103 # 36 images noires
+expect game.entrance == 0 and game.player.x == 16 and game.player.y == 192 # retour en jeu (image 1555 MSX)
+wait 2
+shot h-hall

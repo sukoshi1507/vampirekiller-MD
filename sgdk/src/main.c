@@ -18,6 +18,7 @@
 #include "hud.h"
 #include "items.h"
 #include "item_view.h"
+#include "generated/intro_assets.h"
 
 /* Front-end state machine and game loop. Display lives in scene.c (logo, title,
  * castle), room_view.c (rooms, flames, target) and actors.c (Simon, whip, enemies). */
@@ -55,6 +56,52 @@ static void show_hall_room(u16 room)
 {
     vk_show_castle_room(vk_game.stage, room);
     vk_item_view_room(&items, &vk_game);
+}
+
+/* Castle door of courtyard room 2 (research/castle-entrance.md). The MSX copies the
+ * door jamb, X 224..239 and Y 144..175, into sprites 0..7 in front of Simon
+ * (routine 55EC); the copy is opaque. Here the jamb's eight background cells take
+ * the plane priority and Simon's sprite gives his up while he walks in. Under
+ * them, high-priority solid black cells on the otherwise unused plane B (system
+ * tile 2, PAL1 colour 2 = black) fill the jamb's transparent pixels. */
+#define DOOR_COL 28
+#define DOOR_ROW 18
+static void castle_door_front(bool front)
+{
+    u16 row, col;
+    for (row = DOOR_ROW; row < DOOR_ROW + 4; row++)
+        for (col = DOOR_COL; col < DOOR_COL + 2; col++)
+        {
+            if (front)
+                VDP_setTileMapXY(BG_A, TILE_ATTR_FULL(PAL0, TRUE, FALSE, FALSE,
+                    TILE_USER_INDEX + vk_scenes[5].map[row * 32 + col]), col, row);
+            VDP_setTileMapXY(BG_B, front ?
+                TILE_ATTR_FULL(PAL1, TRUE, FALSE, FALSE, TILE_SYSTEM_INDEX + 2) : 0, col, row);
+        }
+}
+
+/* One frame of the castle entrance: Simon walks in alone behind the door jamb,
+ * the screen goes black for 36 frames, then the hall comes up (gameplay.c). The
+ * MSX turns the display off (R1 bit 6); here the four palettes go black instead,
+ * because with the display off the VDP reports VBlank all the time and the game
+ * loop would no longer wait for the frame. The hall reloads all four palettes. */
+static void castle_entrance_step(void)
+{
+    static const u16 black[64] = {0};
+    const VKEvent event = vk_game_tick_controls(&vk_game, 0, 0, 0, 0);
+    vk_player = vk_game.player;
+    if (event == VK_EVENT_ENTER)
+    {
+        castle_door_front(FALSE);
+        show_hall_room(0);
+    }
+    else if (event == VK_EVENT_ENTRANCE_DARK) PAL_setColors(0, black, 64, DMA_QUEUE);
+    else if (vk_game.entrance != VK_ENTRANCE_DARK)
+    {
+        vk_flames_tick();
+        vk_show_player(&vk_player);
+        VDP_setSpritePriority(0, FALSE);
+    }
 }
 
 /* State 4 after a lost life: full energy, empty room, provisional restart place. */
@@ -119,7 +166,12 @@ int main(bool hardReset)
             const int direction = locked ? 0 : input.direction;
             const u16 held = locked ? 0 : input.keys;
             const bool jump = locked ? FALSE : input.jump_pressed;
-            if (pressed & BUTTON_START) vk_show_title();
+            if (pressed & BUTTON_START)
+            {
+                if (vk_game_entrance_locked(&vk_game)) castle_door_front(FALSE);
+                vk_show_title();
+            }
+            else if (vk_game_entrance_locked(&vk_game)) castle_entrance_step();
             else
             {
                 if (locked) pressed = 0;
@@ -171,6 +223,11 @@ int main(bool hardReset)
                 vk_draw_attack_frame_label();
                 if (diagnostic_timer && --diagnostic_timer == 0)
                     vk_draw_play_note();
+                if (event == VK_EVENT_ENTRANCE)
+                {
+                    castle_door_front(TRUE);
+                    vk_whip_reset(&vk_whip);
+                }
                 if (event == VK_EVENT_ENTER) show_hall_room(0);
                 else if (event == VK_EVENT_ROOM) vk_show_courtyard(vk_game.room);
                 else if (event == VK_EVENT_VERTICAL) show_hall_room(vk_game.room);

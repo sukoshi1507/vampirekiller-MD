@@ -30,6 +30,7 @@ et les limites. « Prouvé » = mesuré en trace openMSX ou lu dans la ROM ;
 | `down-stairs.md` | Descente par BAS | Entrée par la tuile 3 prouvée ; tuile 4 déduite. |
 | `vertical-links.md` | Liens HAUT/BAS du hall | Prouvé pour 1→5, 5→1, 3→7, 7→3 et 5→4, 5→6. |
 | `room-links.md` | Liens gauche/droite du stage 0 et du hall | Prouvé en jeu pour le stage 0 et le hall ; liens haut/bas et salles 4 à 7 : table seulement. |
+| `castle-entrance.md` | Entrée du château (cour 2 → hall 0) : porte, marche automatique, écran noir | Prouvé par trace (runs A et B) et code (`7718`, `778A`, `8580`, `55EC`) : zone x 216..223, marche 1 px / 4 images derrière le montant (sprites devant Simon), sortie x 232, 36 images noires, hall x 16, y 192. Porté (`gameplay.c`, `main.c`). Non porté : effet sonore 0x15. |
 | `room-format.md` | Formats de salles et adresses de carte (jalon 2) | Historique, à jour pour le chargement. |
 
 ## Décor, objets et sons

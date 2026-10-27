@@ -36,6 +36,13 @@ static VKByte vk_game_limit_stage(const VKGame *game)
     return game->area == VK_AREA_COURTYARD ? 0 : game->stage;
 }
 
+static void vk_entrance_clear(VKGame *game)
+{
+    game->entrance = VK_ENTRANCE_NONE;
+    game->entrance_step = 0;
+    game->entrance_timer = 0;
+}
+
 void vk_game_begin(VKGame *game)
 {
     vk_player_reset(&game->player);
@@ -44,10 +51,93 @@ void vk_game_begin(VKGame *game)
     game->stage = 1;
     game->collision_verified = 1;
     game->player.y = 176;
+    vk_entrance_clear(game);
+}
+
+/* Castle entrance, courtyard room 2 (research/castle-entrance.md, openMSX runs A
+ * and B). Door zone of routine 8580 with C5AD = 144, C5AE = 224: facing right,
+ * X in [216, 224) and Y in [138, 194). Then C5AC = 5 (7755): input is ignored and
+ * routine 778A walks Simon right by half a pixel per 30 Hz tick while he is on
+ * the ground (one pixel per four frames, X 216 -> 232 in 64 frames), with the
+ * walk poses at their usual cadence. Sprites 0..7 (55EC) copy the door jamb at
+ * X 224..239, Y 144..175 in front of Simon. The exit zone is X in [232, 240)
+ * (77C4). Three frames later the display goes off for 36 frames; Simon is put in
+ * hall room 0 at x 16, y 192 meanwhile, and play resumes when it comes back. */
+#define ENTRANCE_ROOM 2
+#define ENTRANCE_X_MIN 216
+#define ENTRANCE_X_END 224
+#define ENTRANCE_Y_MIN 138
+#define ENTRANCE_Y_END 194
+#define ENTRANCE_EXIT_X 232
+#define ENTRANCE_DARK_T 3      /* frames from the exit to the display off */
+#define ENTRANCE_HALL_T 39     /* frames from the exit to the hall on screen */
+
+int vk_game_entrance_locked(const VKGame *game)
+{
+    return game->entrance != VK_ENTRANCE_NONE;
+}
+
+static int vk_entrance_zone(const VKGame *game)
+{
+    const VKPlayer *p = &game->player;
+    /* PROVISIONAL: the facing-left zone of 8580 (X in [232, 240)) is read in the
+     * code only; it is not ported (no traced way to stand there facing left). */
+    return game->area == VK_AREA_COURTYARD && game->room == ENTRANCE_ROOM &&
+           !p->facing && !p->on_stairs &&
+           p->x >= ENTRANCE_X_MIN && p->x < ENTRANCE_X_END &&
+           p->y >= ENTRANCE_Y_MIN && p->y < ENTRANCE_Y_END;
+}
+
+static VKEvent vk_entrance_tick(VKGame *game)
+{
+    VKPlayer *p = &game->player;
+    if (game->entrance == VK_ENTRANCE_WALK)
+    {
+        if (p->mode != 0)
+        {
+            /* 778A returns while C420 != 0: no walk until Simon lands. */
+            vk_player_tick_controls(p, vk_game_collision(game), 0, 0, 0, 0, 0);
+            return VK_EVENT_NONE;
+        }
+        {
+            /* MSX2 walk cycle (player.c): poses 0,1,2,1 held 8 frames each. */
+            static const VKByte walk_frames[4] = {0, 1, 2, 1};
+            p->clock++;
+            p->pose = walk_frames[(p->clock >> 3) & 3];
+        }
+        game->entrance_step++;
+        if ((game->entrance_step & 3) == 0) p->x++;
+        if (p->x >= ENTRANCE_EXIT_X)
+        {
+            game->entrance = VK_ENTRANCE_EXIT;
+            game->entrance_timer = 0;
+        }
+        return VK_EVENT_NONE;
+    }
+    game->entrance_timer++;
+    if (game->entrance == VK_ENTRANCE_EXIT && game->entrance_timer >= ENTRANCE_DARK_T)
+    {
+        /* 4347: D000 0 -> 1, D001 = 0; Simon placed while the screen is off. */
+        game->entrance = VK_ENTRANCE_DARK;
+        game->area = VK_AREA_INTERIOR;
+        game->room = 0;
+        game->collision_verified = 1;
+        vk_player_reset(p);
+        p->x = 16;
+        p->y = 192;   /* hall floor (row 22) */
+        return VK_EVENT_ENTRANCE_DARK;
+    }
+    if (game->entrance == VK_ENTRANCE_DARK && game->entrance_timer >= ENTRANCE_HALL_T)
+    {
+        vk_entrance_clear(game);
+        return VK_EVENT_ENTER;
+    }
+    return VK_EVENT_NONE;
 }
 
 void vk_game_enter_stage(VKGame *game, VKByte stage)
 {
+    vk_entrance_clear(game);
     game->area = VK_AREA_INTERIOR;
     game->stage = stage;
     game->room = 0;
@@ -76,19 +166,16 @@ VKEvent vk_game_tick_controls(VKGame *game, int direction, int jump, int up, int
 {
     VKPlayer *p = &game->player;
     const VKRoomLink *links = game->area == VK_AREA_INTERIOR ? vk_stage_links(game->stage) : 0;
-    /* Courtyard room 2 -> hall room 0: walking RIGHT at x=232 (openMSX run 6).
-     * UP at x=192..216 does not change room. Simon comes back into play at the
-     * left of the hall, x = 16 (frame 1555, research/door-room7.md). */
-    if (game->area == VK_AREA_COURTYARD && game->room == 2 &&
-        direction > 0 && p->x >= 232)
+    /* Courtyard room 2 -> hall room 0 through the castle door (see above). UP at
+     * x=192..216 does not change room. */
+    if (game->entrance) return vk_entrance_tick(game);
+    if (vk_entrance_zone(game))
     {
-        game->area = VK_AREA_INTERIOR;
-        game->room = 0;
-        game->collision_verified = 1;
-        vk_player_reset(p);
-        p->x = 16;
-        p->y = 192;   /* hall floor (row 22) */
-        return VK_EVENT_ENTER;
+        game->entrance = VK_ENTRANCE_WALK;
+        game->entrance_step = 0;
+        game->entrance_timer = 0;
+        p->crouched = 0;
+        return VK_EVENT_ENTRANCE;
     }
 
     vk_player_tick_controls(p, vk_game_collision(game), vk_game_limit_stage(game),
@@ -191,6 +278,7 @@ void vk_game_respawn(VKGame *game)
         vk_game_enter_stage(game, game->stage);
         return;
     }
+    vk_entrance_clear(game);
     game->room = 0;
     game->collision_verified = 1;
     vk_player_reset(&game->player);
@@ -218,6 +306,7 @@ int vk_game_debug_room(VKGame *game, VKByte room)
 {
     if (game->area != VK_AREA_INTERIOR) game->stage = 1;
     if (room >= vk_stage_room_count(game->stage)) return 0;
+    vk_entrance_clear(game);
     game->area = VK_AREA_INTERIOR;
     game->room = room;
     /* Hidden rows of hall rooms 1-7 and of stage 2 are unverified. */

@@ -61,6 +61,8 @@ Colonnes : **Trace** = sortie observée en jeu (run, frame) ; **Table** = nibble
 
 Le passage cour 2 → hall est déclenché par la **droite à x=232**. HAUT seul à x=192..208 ne change pas de salle.
 
+Précision (`research/castle-entrance.md`) : x = 232 est la sortie de la **porte du château**. Simon y arrive par une marche automatique qui commence à x = 216 (zone de `8580`, `C5AC` 4 → 5) : 1 px toutes les 4 images, touches ignorées, derrière le montant de la porte ; puis 36 images d'écran noir avant le hall.
+
 ### 3.2 Hall (stage 1)
 
 | Salle | GAUCHE (table / trace) | DROITE (table / trace) | HAUT (table) | BAS (table) |
@@ -126,7 +128,7 @@ Conclusion : le graphe de test `vk_stage1_links` est une chaîne 0-1-2-...-7 et 
 3. Salles 4 à 7 du hall : non atteintes en jeu.
 4. Caller de `B963` et rôle de `C41B` / `C41C` (index probable : direction ou sous-sortie) : non établi.
 5. Mécanisme des pentes (marche automatique) près de x≈28–32 dans le hall : non établi.
-6. Déclencheur exact de la porte de cour (x≥232 au passage, `C000=10`) : mesuré, mais pas le seuil exact ni la raison de l'état 10.
+6. Déclencheur de la porte de cour : **résolu**, voir `research/castle-entrance.md` (zone x 216..223 regard à droite, marche automatique jusqu'à x 232, état 10 = passage de stage `4387`).
 7. Stages 2 à 18 : table décodée, réciprocité non garantie (22 cas), aucun lien vérifié en jeu.
 8. Lecture des banques (`romblocks`) : la sortie des banques dans `writes.csv` n'était pas fiable pendant ce travail. Les PC et les valeurs de `D000`/`D001` sont fiables.
 

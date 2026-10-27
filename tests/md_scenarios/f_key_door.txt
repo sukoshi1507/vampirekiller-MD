@@ -2,7 +2,7 @@
 # (research/door-room7.md, section 16 ; sgdk/src/items.c). items : keys, white_key_taken,
 # door (0 fermee, 1 levee, 2 sortie a pied, 3 faite), timer.
 include boot_to_courtyard.inc
-until game.area == 1 max 3000 RIGHT
+until front_mode == MODES['INTERIOR'] max 3000 RIGHT
 # Changement de salle debug du hall : A tenu, puis A+DROITE (le premier front est perdu).
 hold A 3
 hold A+RIGHT 3

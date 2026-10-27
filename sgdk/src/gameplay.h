@@ -6,16 +6,30 @@
 /* Scene routing has no SGDK dependencies and can be unit-tested natively. */
 typedef enum { VK_AREA_COURTYARD = 0, VK_AREA_INTERIOR = 1 } VKArea;
 typedef enum { VK_EVENT_NONE = 0, VK_EVENT_ROOM = 1, VK_EVENT_ENTER = 2,
-               VK_EVENT_VERTICAL = 3 } VKEvent;
+               VK_EVENT_VERTICAL = 3,
+               VK_EVENT_ENTRANCE = 4,       /* castle door reached: Simon walks in alone */
+               VK_EVENT_ENTRANCE_DARK = 5   /* courtyard left: the screen goes black */
+             } VKEvent;
+/* Castle entrance of courtyard room 2 (research/castle-entrance.md). */
+typedef enum { VK_ENTRANCE_NONE = 0,
+               VK_ENTRANCE_WALK = 1,        /* C5AC 5: slow walk behind the door jamb */
+               VK_ENTRANCE_EXIT = 2,        /* door passed, courtyard still shown */
+               VK_ENTRANCE_DARK = 3         /* display off, Simon already in the hall */
+             } VKEntrance;
 typedef struct {
     VKPlayer player;
     VKArea area;
     VKByte room;
     VKByte collision_verified;
     VKByte stage;            /* castle stage of the interior rooms: 1 (hall) or 2 */
+    VKByte entrance;         /* VKEntrance */
+    VKByte entrance_step;    /* grounded walk frames since the door (half pixel per 2) */
+    VKByte entrance_timer;   /* frames since the door was passed */
 } VKGame;
 
 void vk_game_begin(VKGame *game);
+/* The castle entrance owns Simon: the player's controls are ignored. */
+int vk_game_entrance_locked(const VKGame *game);
 VKEvent vk_game_tick_controls(VKGame *game, int direction, int jump,
                               int up, int down);
 VKEvent vk_game_tick(VKGame *game, int direction, int jump, int up);

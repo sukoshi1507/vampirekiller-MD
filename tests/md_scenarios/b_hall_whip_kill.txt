@@ -1,7 +1,7 @@
 # (b) Cour -> hall (salle 0) en tenant DROITE, un ennemi de type 1 apparait,
 # un coup de fouet le tue (lecture de enemy_state).
 include boot_to_courtyard.inc
-until game.area == 1 max 3000 RIGHT               # cour 0 -> 1 -> 2 -> hall (sortie a x >= 232)
+until front_mode == MODES['INTERIOR'] max 3000 RIGHT               # cour 0 -> 1 -> 2 -> porte (x 216), entree auto -> hall
 expect front_mode == MODES['INTERIOR'] and game.room == 0 # hall, salle 0
 expect game.player.x == 16 and game.player.y == 192 # retour en jeu a gauche du hall (image 1555 MSX)
 shot b-hall

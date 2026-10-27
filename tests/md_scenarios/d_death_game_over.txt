@@ -2,7 +2,7 @@
 # un contact la met a 0 : mort, refill, vie perdue, reapparition a l'entree du hall.
 # Puis vies forcees a 0 (run 5) : fin de partie et retour au titre.
 include boot_to_courtyard.inc
-until game.area == 1 max 3000 RIGHT
+until front_mode == MODES['INTERIOR'] max 3000 RIGHT
 expect health.lives == 2 and health.phase == 0 # C410 = 2 en jeu, vivant
 until enemies.alive > 0 max 600
 poke enemy_state+72 2                              # C415 = 2
