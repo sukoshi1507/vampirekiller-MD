@@ -29,15 +29,22 @@ int main(void)
     assert(g.player.mode == 1 && g.player.phase != 0);
     assert(vk_game_collision(&g) == vk_courtyard_maps[1]);
 
+    /* Courtyard room 2: UP at x=192..216 does not change room (openMSX). */
     g.room = 2;
-    g.player.x = 248;
-    assert(vk_game_tick(&g, 1, 0, 0) == VK_EVENT_NONE);
-    assert(g.room == 2);
-
-    g.player.x = 210;
+    g.player.x = 200;
+    g.player.y = 176;
     g.player.mode = 0;
-    assert(vk_game_tick(&g, 0, 0, 1) == VK_EVENT_ENTER);
-    assert(g.area == VK_AREA_INTERIOR && g.collision_verified);
+    assert(vk_game_tick(&g, 0, 0, 1) == VK_EVENT_NONE);
+    assert(g.area == VK_AREA_COURTYARD && g.room == 2);
+    assert(vk_game_tick(&g, 0, 0, 1) == VK_EVENT_NONE);
+    assert(g.area == VK_AREA_COURTYARD && g.room == 2);
+    /* Courtyard room 2 -> hall room 0: RIGHT at x=232 (openMSX run 6). */
+    g.player.x = 232;
+    g.player.y = 176;
+    g.player.mode = 0;
+    assert(vk_game_tick(&g, 1, 0, 0) == VK_EVENT_ENTER);
+    assert(g.area == VK_AREA_INTERIOR && g.room == 0 && g.collision_verified);
+    assert(g.player.x == 232 && g.player.y == 176);
     assert(memcmp(vk_game_collision(&g), vk_player_room, 768) == 0);
     assert(vk_game_debug_room(&g,1));
     assert(g.room == 1 && !g.collision_verified);
@@ -60,10 +67,16 @@ int main(void)
     assert(vk_game_debug_room(&g, 0) && g.collision_verified);
     assert(g.player.x == 16 && g.player.y == 192);
 
+    /* Without walking right, x=232 is not a door; the old UP door is gone. */
     vk_game_begin(&g);
     g.room = 2;
-    g.player.x = 180;
+    g.player.x = 232;
     g.player.mode = 0;
-    assert(vk_game_tick(&g, 0, 0, 1) != VK_EVENT_ENTER);
+    assert(vk_game_tick(&g, 0, 0, 1) == VK_EVENT_NONE);
+    assert(g.area == VK_AREA_COURTYARD && g.room == 2);
+    g.player.x = 200;
+    g.player.x = 200;
+    assert(vk_game_tick(&g, 1, 0, 0) == VK_EVENT_NONE);
+    assert(g.area == VK_AREA_COURTYARD && g.room == 2 && g.player.x < 232);
     return 0;
 }

@@ -1,7 +1,7 @@
 #ifndef VK_ROOM_MANAGER_H
 #define VK_ROOM_MANAGER_H
 #include "player.h"
-/* Stage-1 prototype graph: visually decoded rooms; edges are NOT ROM-verified. */
+/* Stage-1 (hall) left/right graph: proven by openMSX traces. No vertical links. */
 typedef struct {
     VKByte left, right;
     VKByte verified_collision;

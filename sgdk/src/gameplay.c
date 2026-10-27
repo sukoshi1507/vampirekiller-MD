@@ -29,13 +29,17 @@ void vk_game_begin(VKGame *game)
 VKEvent vk_game_tick_controls(VKGame *game, int direction, int jump, int up, int down)
 {
     VKPlayer *p = &game->player;
+    /* Courtyard room 2 -> hall room 0: walking RIGHT at x=232 (openMSX run 6).
+     * UP at x=192..216 does not change room. */
     if (game->area == VK_AREA_COURTYARD && game->room == 2 &&
-        up && p->mode == 0 && p->x >= 192 && p->x <= 216)
+        direction > 0 && p->x >= 232)
     {
         game->area = VK_AREA_INTERIOR;
         game->room = 0;
         game->collision_verified = 1;
         vk_player_reset(p);
+        p->x = 232;
+        p->y = 176;
         return VK_EVENT_ENTER;
     }
 
