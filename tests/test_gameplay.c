@@ -106,6 +106,13 @@ int main(void)
     }
     assert(vk_stage1_links[1].up == 5 && vk_stage1_links[5].down == 1);
     assert(vk_stage1_links[3].up == 7 && vk_stage1_links[7].down == 3);
+    /* Bottom edge Y 225 in room 5 sends Simon down to room 1 at its top. */
+    g.player.x = 192;
+    g.player.y = 225;
+    g.player.mode = 4;
+    g.player.on_stairs = 0;
+    assert(vk_game_tick_controls(&g, 0, 0, 0, 0) == VK_EVENT_VERTICAL);
+    assert(g.room == 1 && g.player.y == 48 && g.player.x == 192);
     assert(vk_game_debug_room(&g, 0) && g.collision_verified);
     assert(g.player.x == 16 && g.player.y == 192);
 

@@ -419,16 +419,18 @@ static void draw_debug_room_label(void)
     char yard[16] = "COUR SALLE 0";
     if (key == debug_room_key) return;
     debug_room_key = key;
-    VDP_drawText("               ", 25, 0);
+    /* The screen is 32 columns wide (VDP_setScreenWidth256): the longest label,
+     * 15 characters, starts at column 16 to end before column 31. */
+    VDP_drawText("               ", 16, 0);
     if (!key) return;
     if (courtyard)
     {
         yard[11] = (char)('0' + game.room);
-        VDP_drawText(yard, 28, 0);
+        VDP_drawText(yard, 16, 0);
         return;
     }
     hall[14] = (char)('0' + game.room);
-    VDP_drawText(hall, 25, 0);
+    VDP_drawText(hall, 16, 0);
 }
 
 static void show_courtyard(u16 room)

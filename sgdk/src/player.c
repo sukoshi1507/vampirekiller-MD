@@ -82,7 +82,7 @@ static int vk_move_vertical(VKPlayer *p, const VKByte *map, VKByte stage,
     {
         int next = (int)p->y + step;
         if (next < 32) return -1;
-        if (next >= 208) { p->y = 208; return 0; }
+        if (next >= 225) { p->y = 225; return 0; }
         if (step < 0 && vk_ceiling(map, p->x, (VKByte)next, stage)) return -1;
         if (step > 0 && vk_grounded(map, p->x, (VKByte)next, stage, 0))
         {
@@ -250,7 +250,6 @@ void vk_player_tick_controls(VKPlayer *p, const VKByte *map, VKByte stage,
             else if (p->phase < 3) p->phase++;
         }
     }
-    if (p->y >= 208) { vk_player_reset(p); if (stage == 0) p->y = 176; }
     if (p->mode != 0) p->crouched = 0;
     if (p->mode == 1 || p->mode == 4) p->pose = p->facing ? 7 : 6;
     else
@@ -266,6 +265,9 @@ void vk_player_tick_map(VKPlayer *p, const VKByte *map, VKByte stage,
                         int direction, int jump_pressed)
 {
     vk_player_tick_controls(p, map, stage, direction, jump_pressed, 0, 0);
+    /* Falling out of the playfield restarts the test player. Gameplay checks the
+     * bottom edge itself, because a hall room may send Simon down a link. */
+    if (p->y >= 225) { vk_player_reset(p); if (stage == 0) p->y = 176; }
 }
 
 void vk_player_tick(VKPlayer *p, int direction, int jump_pressed)

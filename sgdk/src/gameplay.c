@@ -78,6 +78,26 @@ VKEvent vk_game_tick_controls(VKGame *game, int direction, int jump, int up, int
             return VK_EVENT_ROOM;
         }
     }
+    /* Bottom edge (Y 225, measured in openMSX): a hall room with a down link sends
+     * Simon to the room below, at its top. Otherwise he is restarted as before. */
+    if (p->y >= 225)
+    {
+        const VKByte target = game->area == VK_AREA_INTERIOR ?
+            vk_stage1_links[game->room].down : VK_ROOM_NONE;
+        if (target != VK_ROOM_NONE)
+        {
+            game->room = target;
+            p->y = 48;
+            p->on_stairs = 0;
+            p->stair_anim = 0;
+            p->mode = 4;
+            p->phase = 0;
+            return VK_EVENT_VERTICAL;
+        }
+        vk_player_reset(p);
+        if (game->area == VK_AREA_COURTYARD) p->y = 176;
+        return VK_EVENT_NONE;
+    }
     /* Hall vertical link: leaving the top of the playfield (a stair exit at y 24
      * counts) enters the room above, on its lowest floor in the same column. */
     if (game->area == VK_AREA_INTERIOR && p->y < 32)
