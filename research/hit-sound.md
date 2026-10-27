@@ -109,3 +109,14 @@ Au point d'ecriture `517D`, l'adresse de retour lue en pile est :
 - Donnees non commitees : `scratchpad/hit-sound/`.
 - Scripts de l'enquete precedente : `tools/candle_drop_trace.tcl`, `tools/candle_drop_repeat.tcl`, `tools/trace_psg_openmsx.tcl`.
 - Notes liees : `research/candles-and-drops.md`, `research/sound-triggers.md`, `research/audio/whip-sfx-castlevania.md`, `research/castle-candles.md`.
+
+## 7. Donnees PSG Mega Drive pour le coup (0C) : repli SFX_14
+
+Statut : **genere, non ecoute**. Decodage de la table MSX : **impossible a ce stade**.
+
+- Table d'effets MSX relue (banques 8 KiB : banque 14 a `8000` = fichier `1C000`, banque 15 a `A000` = fichier `1E000`). Les pointeurs `8E11` (0C) et `8E23` (0F) sont confirmes. Les flux `A5DF`/`A5FD`/`A621` (0C) et `A822` (0F, les trois voies pointent sur le meme flux) sont lisibles, mais leur format (commandes `E0`-`FF`, notes) est celui du pilote MSX, dont l'interpreteur n'est pas identifie dans la note : le decodage n'a pas ete tente. Sans emulateur ni trace du pilote, il n'y a pas de rendu de reference.
+- Repli retenu pour 0C : `SFX_14` de castlevania-md (« a hit », `main.c`). C'est un son de bruit seul (`$400C`, `$400E`, `$400F`), donc le modele de `tools/build_sfx_md.py` s'applique sans changement. Difference de format : le NES ecrit des registres APU (paires registre/valeur, `FE n` = attente, `FF` = fin d'image) ; le MSX ecrit un flux de commandes du pilote MSX. Le son n'est donc pas identique au coup MSX, seulement de meme fonction.
+- Generateur : `tools/build_sfx_hit_md.py` (reutilise les fonctions de `tools/build_sfx_md.py`, qui n'est pas modifie). Sortie : `sgdk/src/generated/sfx_hit_md.c` et `.h`, symbole `vk_sfx_hit`, 73 octets, 22 images a 60 Hz. Meme structure que `vk_sfx_whip` (compte par image, puis octets PSG, `FF` de fin).
+- Verification : `cc -std=c99 -Wall -Wextra -Werror` passe avec un `genesis.h` minimal pour `sfx_hit_md.c` et `sfx_md.c`. Avec les vrais en-tetes SGDK, le compilateur hote echoue sur les conflits de builtins de `memset`/`strlen` (`SGDK/inc/memory.h`, `string.h`), y compris pour `sfx_md.c` deja present : probleme de l'environnement, non du fichier genere. `sfx_md.c` regenere est identique au fichier committe.
+- Effet `0F` (ramassage) : **non genere**. Le flux MSX n'est pas decode et le son NES equivalent n'est pas identifie (l'appelant de `0F` est inconnu, voir section 5). Le son de tresor `SFX_17` (`main.c`, ligne 1939) est un candidat faible, non verifie.
+- Branchement : non fait. Le parent doit appeler `vk_psg_play(vk_sfx_hit)` au coup sur torche ou bougie, en incluant `generated/sfx_hit_md.h`.

@@ -16,6 +16,7 @@
 #include "sound_test.h"
 #include "psg_player.h"
 #include "generated/sfx_md.h"
+#include "generated/sfx_hit_md.h"
 
 /* Room explorer plus a movement prototype in the first room. */
 static const u16 hud_palette[16] = {
@@ -585,6 +586,8 @@ int main(bool hardReset)
                     {
                         set_courtyard_flame_background((u16)flame, FALSE);
                         VDP_drawText("FLAMME ETEINTE! ", 8, 3);
+                        /* Torch hit: the castlevania-md hit effect stands in for MSX 0x0C. */
+                        vk_psg_play(vk_sfx_hit);
                     }
                 }
                 else if (target_visible && vk_target_tick(&test_target, &whip))
