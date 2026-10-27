@@ -1,0 +1,53 @@
+# (f) Cle blanche de la salle 2, porte de la salle 7, sortie vers le stage 2
+# (research/door-room7.md, section 16 ; sgdk/src/items.c). items : keys, white_key_taken,
+# door (0 fermee, 1 levee, 2 sortie a pied, 3 faite), timer.
+include boot_to_courtyard.inc
+until game.area == 1 max 3000 RIGHT
+# Changement de salle debug du hall : A tenu, puis A+DROITE (le premier front est perdu).
+hold A 3
+hold A+RIGHT 3
+wait 10
+hold A 3
+hold A+RIGHT 3
+wait 10
+hold A 3
+hold A+RIGHT 3
+wait 10
+expect game.room == 2 # salle 2 du hall
+poke vk_game+0 166
+poke vk_game+1 192
+wait 4
+shot f-cle-au-sol
+until ram8('items') & 1 max 200 LEFT
+expect ram8('items') == 1 and ram8('items+1') == 1 # cle blanche prise (C701 bit 0)
+expect 140 <= game.player.x <= 152 # ramassage au contact (K1 : x 148)
+wait 4
+shot f-cle-prise
+# Salle 7, sur le rebord y 96 a gauche de la porte.
+hold A 3
+hold A+RIGHT 3
+wait 10
+hold A 3
+hold A+RIGHT 3
+wait 10
+hold A 3
+hold A+RIGHT 3
+wait 10
+hold A 3
+hold A+RIGHT 3
+wait 10
+hold A 3
+hold A+RIGHT 3
+wait 10
+expect game.room == 7 # salle 7 du hall
+poke vk_game+0 200
+poke vk_game+1 96
+wait 4
+shot f-porte-fermee
+until ram8('items+2') == 1 max 120 RIGHT
+expect game.player.x == 228 # ouverture a x 228, regard a droite
+expect ram8('items') == 0 # cle consommee (7743)
+wait 40
+shot f-porte-levee
+until front_mode == MODES['VIEWER'] max 200
+expect ram8('items+2') == 3 # porte franchie

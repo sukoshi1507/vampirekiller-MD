@@ -354,7 +354,11 @@ class Harness:
         m = self.machine
 
         def addr(x):
-            return lookup(self.symbols, x)[0] if isinstance(x, str) else x
+            # 'symbole' ou 'symbole+OFF' (OFF decimal ou 0x..), sinon une adresse.
+            if not isinstance(x, str):
+                return x
+            name, _, off = x.partition('+')
+            return lookup(self.symbols, name)[0] + (int(off, 0) if off else 0)
         env = {k: ns(v) for k, v in self.state().items()}
         env.update(ram8=lambda a: m.rd8(addr(a)), ram16=lambda a: m.rd16(addr(a)),
                    ram32=lambda a: m.rd32(addr(a)), abs=abs, min=min, max=max, any=any, all=all,

@@ -203,3 +203,11 @@ Correction de §14-15 : l'événement de la « bougie » est un **ramassage par 
 - **Porte de la salle 7** : barreau dans l'ouverture haute droite (x ≈ 236-244, y 48-96), dessiné dans le décor. Condition d'ouverture : clé blanche, Simon regard à droite, X dans [228, 236), Y dans [42, 98). Effet : la clé blanche est retirée, le barreau se lève en 44 pas de 2 images (environ 88 images), Simon avance seul jusqu'à x 248, puis sortie vers stage 2, salle 0, x 16.
 - **Sans clé** : la porte est un mur à x 228 ; rien ne se passe.
 - **Panthère** sur le rebord y 96 : elle saute sur Simon quand il approche de x ≈ 124-144 au palier y 128. Hors sujet de la porte, mais elle gêne l'accès à l'escalier.
+
+## 17. Portage MD (2026-10-27)
+
+- `sgdk/src/items.c` (sans SGDK, testé par `tests/test_items.c`) : clé blanche de la salle 2 (ramassage au contact, Simon pris sur x-5..x+5, y-31..y : **provisoire**, calé sur le ramassage de K1 à x 148 en marchant vers la gauche), porte de la salle 7 (mur à x 228 sur le rebord y 42..97 tant qu'elle est fermée, ouverture regard à droite en X [228, 236)), levée du barreau et sortie à pied, puis sortie du stage.
+- Chronologie mesurée (K3 rejoué avec un instantané par image, `scratchpad/door7/lift/`) : le barreau, une image de 16 x 48 px en x 232..247, y 48..95, remonte de `C5AF` px (`C5AF` = t / 2 depuis l'ouverture, plafonné à 43 à l'écran : il reste 4 rangées visibles) ; vérifié sur les 168 instantanés. Simon reste à x 228 jusqu'à t 90, puis gagne 1 px toutes les 4 images (x 229 à t 91, x 248 à t 167) ; `D000` passe à 2 à t 168.
+- Graphismes : le jeu dessine la clé, l'icône du HUD et le barreau dans le bitmap SCREEN 5 ; ils ne sont pas stockés tels quels dans la ROM (recherche brute négative). `tools/build_door_key_md.py` les lit dans les instantanés VRAM de K3 (`scratchpad/door7/key/runs/K3/snaps`, non versionnés) et écrit `sgdk/src/generated/door_key_md.c`. L'extrémité rouge de la barre ENEMY du MSX (x 144) est retirée de la case du HUD.
+- Non porté : clé dorée (bit 1, coffre bleu), pose de Simon pendant la sortie à pied (il reste debout ; non relevée), cause du blocage à x 166 en salle 2 (rien ne bloque sur MD). Le stage 2 s'ouvre pour l'instant dans la visionneuse de salles.
+- Non-régression : `tests/md_scenarios/f_key_door.txt` (clé prise à x 140..152, ouverture à x 228, clé consommée, sortie).

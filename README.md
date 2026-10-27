@@ -20,6 +20,9 @@ Ce qui fonctionne dans la ROM Mega Drive :
   apparition, mouvement, animation, contact (-2 d'énergie, recul, invulnérabilité),
   chute sur le sol et couleurs d'après la table de couleur du MSX2.
   **Le fouet tue les ennemis de types 1 et 4** (type 1 confirmé à l'émulateur).
+- **Clé et porte** : la clé blanche de la salle 2 se ramasse au contact et s'affiche
+  dans le HUD ; la porte de la salle 7 bloque Simon sans elle, s'ouvre avec (barreau
+  qui se lève, Simon qui sort seul) et mène vers le stage 2.
 - **Énergie, vies, mort, game over** : la barre PLAYER du HUD suit l'énergie (32 points).
   À 0, Simon meurt ; 252 images plus tard l'énergie revient au maximum et, 27 images
   après, il perd une vie et reprend. Sans vie, « GAME OVER » puis le titre (378 images).
@@ -32,8 +35,9 @@ Ce qui n'est pas porté ou reste provisoire :
   MSX2 ; tué par le fouet d'après la table des objets (boîte provisoire, direction
   du fouet non vérifiée, `research/enemy-behavior.md`).
 - **Type 5** (salles 2, 3, 7) : non porté (apparition, mouvement, graphisme inconnus).
-- **Porte de la salle 7** : la zone de sortie est identifiée, mais son accès naturel
-  depuis la salle ne l'est pas (`research/door-room7.md`).
+- **Stage 2** : la porte de la salle 7 y mène, mais il n'est pas jouable ; sa première
+  salle s'ouvre dans la visionneuse de salles.
+- **Clé dorée** et coffre : non portés.
 - **Stages 2 et suivants, châteaux, attaques autres que le fouet** : non portés.
 - **Énergie (provisoire)** : échelle de la barre (2 px par point), lieu de reprise
   (entrée du hall), commandes bloquées pendant la mort, écran de game over : non
@@ -83,6 +87,7 @@ Les données extraites de la ROM sont versionnées dans `sgdk/src/generated/` et
 | `tools/build_enemy_sprites_md.py` | `generated/enemy_sprites_md.c/.h` | ROM via `VK_ROM_PATH` |
 | `tools/build_sfx_md.py` | `generated/sfx_md.c` (son du fouet) | dépôt castlevania-md voisin |
 | `tools/build_sfx_hit_md.py` | `generated/sfx_hit_md.c` (son de coup) | dépôt castlevania-md voisin |
+| `tools/build_door_key_md.py` | `generated/door_key_md.c/.h` (clé, case du HUD, barreau) | instantanés VRAM openMSX du run K3 (`scratchpad/`, non versionnés) |
 
 ## Organisation
 

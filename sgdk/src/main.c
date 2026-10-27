@@ -16,6 +16,8 @@
 #include "enemies.h"
 #include "health.h"
 #include "hud.h"
+#include "items.h"
+#include "item_view.h"
 
 /* Front-end state machine and game loop. Display lives in scene.c (logo, title,
  * castle), room_view.c (rooms, flames, target) and actors.c (Simon, whip, enemies). */
@@ -26,6 +28,8 @@ VKWhip vk_whip;
 static u16 diagnostic_timer;
 /* Lives, death and game over (health.c); the energy is vk_enemies.energy. */
 static VKHealth health;
+/* White key and room 7 door (items.c). */
+static VKItems items;
 
 /* Short play message on row 26 (rows 0..3 hold the HUD bars); the play note
  * comes back when diagnostic_timer runs out. */
@@ -41,7 +45,16 @@ static void new_game(void)
     vk_game_begin(&vk_game);
     vk_reset_enemies();
     vk_health_begin(&health);
+    vk_items_begin(&items);
     vk_show_courtyard(0);
+}
+
+/* A hall room, then the key, door and HUD key box of items.c over it. */
+static void show_hall_room(u16 room)
+{
+    if (room == 0) vk_show_interior();
+    else vk_show_stage1_room(room);
+    vk_item_view_room(&items, &vk_game);
 }
 
 /* State 4 after a lost life: full energy, empty room, provisional restart place. */
@@ -49,7 +62,7 @@ static void respawn(void)
 {
     vk_game_respawn(&vk_game);
     vk_reset_enemies();
-    if (vk_game.area == VK_AREA_INTERIOR) vk_show_interior();
+    if (vk_game.area == VK_AREA_INTERIOR) show_hall_room(vk_game.room);
     else vk_show_courtyard(vk_game.room);
 }
 
@@ -99,8 +112,10 @@ int main(bool hardReset)
         }
         else if (vk_front_mode == FRONT_COURTYARD || vk_front_mode == FRONT_INTERIOR)
         {
-            /* From a fatal contact to the respawn, only START (title) is read. */
-            const bool locked = vk_health_controls_locked(&health);
+            /* From a fatal contact to the respawn, and while the door opens, only
+             * START (title) is read. */
+            const bool locked = vk_health_controls_locked(&health) ||
+                                vk_items_controls_locked(&items);
             const int direction = locked ? 0 : input.direction;
             const u16 held = locked ? 0 : input.keys;
             const bool jump = locked ? FALSE : input.jump_pressed;
@@ -117,7 +132,7 @@ int main(bool hardReset)
                     int target = (int)vk_game.room + ((pressed & BUTTON_RIGHT) ? 1 : -1);
                     if (target >= 0 && target < 8 && vk_game_debug_room(&vk_game, (VKByte)target))
                     {
-                        vk_show_stage1_room((u16)target);
+                        show_hall_room((u16)target);
                     }
                     SYS_doVBlankProcess();
                     continue;
@@ -157,9 +172,9 @@ int main(bool hardReset)
                 vk_draw_attack_frame_label();
                 if (diagnostic_timer && --diagnostic_timer == 0)
                     vk_draw_play_note();
-                if (event == VK_EVENT_ENTER) vk_show_interior();
+                if (event == VK_EVENT_ENTER) show_hall_room(0);
                 else if (event == VK_EVENT_ROOM) vk_show_courtyard(vk_game.room);
-                else if (event == VK_EVENT_VERTICAL) vk_show_stage1_room(vk_game.room);
+                else if (event == VK_EVENT_VERTICAL) show_hall_room(vk_game.room);
                 else if (vk_front_mode == FRONT_INTERIOR && direction &&
                          !(held & BUTTON_A) &&
                          vk_room_try_edge(&vk_game.room, &vk_game.player, direction))
@@ -167,10 +182,23 @@ int main(bool hardReset)
                     /* Keep player state across edge; collision map changes on
                      * next gameplay tick. No fabricated vertical connections. */
                     vk_player = vk_game.player;
-                    vk_show_stage1_room(vk_game.room);
+                    show_hall_room(vk_game.room);
                 }
                 else
                 {
+                    const VKItemEvent item = vk_items_tick(&items, &vk_game);
+                    vk_player = vk_game.player;
+                    if (item == VK_ITEM_STAGE_EXIT)
+                    {
+                        /* PROVISIONAL: stage 2 is not playable yet; its first room
+                         * opens in the room viewer (L/R rooms, B test player). */
+                        stage = 2; room = 0; atlas = FALSE;
+                        vk_show_room(stage, room, atlas);
+                        vk_front_mode = FRONT_VIEWER;
+                        SYS_doVBlankProcess();
+                        continue;
+                    }
+                    vk_item_view_event(item, &items, &vk_game);
                     vk_step_enemies();
                     vk_flames_tick();
                     vk_show_player(&vk_player);

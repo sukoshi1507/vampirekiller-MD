@@ -25,4 +25,8 @@ ${CC:-cc} -std=c99 -Wall -Wextra -Werror -Isgdk/src tests/test_health.c sgdk/src
     sgdk/src/gameplay.c sgdk/src/player.c sgdk/src/room_manager.c \
     sgdk/src/generated/player_assets.c sgdk/src/generated/stage1_collision.c -o "$BIN"
 "$BIN"
-echo 'Native gameplay, physics, whip, room manager, enemy and health tests: PASS'
+${CC:-cc} -std=c99 -Wall -Wextra -Werror -Isgdk/src tests/test_items.c sgdk/src/items.c \
+    sgdk/src/gameplay.c sgdk/src/player.c sgdk/src/room_manager.c \
+    sgdk/src/generated/player_assets.c sgdk/src/generated/stage1_collision.c -o "$BIN"
+"$BIN"
+echo 'Native gameplay, physics, whip, room manager, enemy, health and item tests: PASS'
