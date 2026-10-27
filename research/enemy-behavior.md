@@ -99,6 +99,8 @@ Les deux sprites ne sont pas deux types : ce sont deux sens (droite et gauche) d
 
 ### 3.4 Type 5 (salles 2, 3, 7 ; drapeau `00`)
 
+**Remplacé par la section « Type 5 : la panthère » en fin de document** (créateur, déclencheur, trajectoire, dessin, contact et fouet). Le tableau ci-dessous est l'ancienne mesure.
+
 | Propriété | Valeur | Preuve |
 |---|---|---|
 | Création | environ 20 images après l'arrivée dans la salle, une seule fois (salles 2, 3, 7) | prouvé (3 salles, 4 créations) |
@@ -163,6 +165,8 @@ Les deux sprites ne sont pas deux types : ce sont deux sens (droite et gauche) d
 
 ## 7. Inconnues
 
+Les points 1, 2 et 7 sont résolus dans la section « Type 5 : la panthère ».
+
 1. **Créateur du type 5** (salles 2, 3, 7) : le bloc `C800` est écrit par `5F82` (appelé par `5F1D`). La pile au moment de l'écriture a été lue (`scratchpad/enemy-behavior/runD-c/callers.txt`). Un mot de pile (`4382`) est compatible avec un retour après `CALL 62F5` (`437F`, routine de chargement de salle), mais ce n'est pas confirmé. Aucun des sites d'appel de `5F1D` examinés ne charge `C = 5` directement : le type vient donc probablement d'une table ou d'un calcul (déduit).
 2. **Déclencheur d'activation du type 5** (et sa portée).
 3. **Points de vie** de chaque type, **points**, et **drop** : aucun ennemi détruit.
@@ -196,3 +200,118 @@ Les deux sprites ne sont pas deux types : ce sont deux sens (droite et gauche) d
 Mesurée image par image en salle 4 (2026-10-27, `scratchpad/type4/gfx/out3/sat4.csv`, 8 épisodes) : la courbe Y est identique à chaque tir et dans les deux sens. Par pas de 2 images depuis l'apparition, Y SAT = 170, 171, 172, 174, 175, 175, 176, 177, 178, 178, 179 (×8), 178, 178, 177, 177, 176 … jusqu'au haut 158 (pas 42 à 45), puis redescend à 178 (pas 68 à 76). Le pas 18 manque (clignotement du multiplexage), interpolé à 178. Table complète : `kType4Y` dans `sgdk/src/enemies.c`.
 
 Dessin : flux RLE de la ROM en `0x154DE`, octets 271 à 462 (paires 48/4C, 50/54, 58/5C) ; vers la droite, les mêmes paires en miroir (60/64, 68/6C, 70/74). Vérifié pixel par pixel contre la VRAM de la salle 4. Couleurs : 02 et 44 (CC), comme les types 1. Il ressemble à une chauve-souris (corps noir, contour cyan, face beige).
+
+## Type 5 : la panthère (salles 2, 3 et 7)
+
+Relevé du 2026-10-27/28 (openMSX, SAT et objets lus à chaque image, plus lecture du code). Il **remplace le tableau du §3.4** et ferme les points 1, 2 et 7 du §7. Le type 5 est une panthère : elle est assise, bondit vers Simon quand il approche, saute au bord des plateformes et retombe, puis repart vers Simon.
+
+Repère : celui de la table des objets (`C800`), qui est celui de Simon (`C427` = X, `C425` = Y des pieds). Objet : `+1` état, `+2/+3` Y en 8.8, `+4/+5` X en 8.8, `+6` déplacement actif, `+7/+8` vitesse Y (8.8, signée), `+9/+A` vitesse X, `+B` pose, `+C` compteur d'animation, `+D` points de vie, `+E` drapeaux (bit 0 : touchable au fouet, bit 1 : contact), `+F` numéro de l'entrée de liste.
+
+Bancs : routines du type 5 en `A000`, banque fichier `0x6000` (fichier = `0x6000 + (adresse - A000)`) ; `8000` = banque fichier `0x4000` ; `6000` = banque fichier `0x2000`. Mapping lu dans un vidage mémoire (`scratchpad/type5/out/B/mem_f2700.bin`, `slots_f2700.txt`) et confirmé par les PC des écritures (`out/B/objpcs.csv`).
+
+### Apparition (prouvé)
+
+| Point | Valeur | Preuve |
+|---|---|---|
+| Source | Liste d'objets du hall en ROM fichier `0x1C674` (CPU `8674`, banque `0x0E`), 14 octets `00 00 05 88 00 85 46 00 00 00 00 85 6C FF` (SHA-256 `9d9e008b07cd5dc9885be4a296d7e6e6effd715a589c8e1056af10b85f5cd904`). Format : paires `type, position` par salle, `00` passe à la salle suivante, `FF` termine | lu dans le code (`6181`) et dans la RAM `DB00` (vidage) |
+| Copie | Au chargement de chaque salle, `62F5` appelle `6154` (recopie de la liste vers `DB00 + 16 × salle`, 4 entrées de 4 octets) puis `JP 61BB` (création). La liste est relue à chaque entrée : **la panthère réapparaît à chaque visite**, même tuée | code ; trace : 2 créations en salle 3 et 2 en salle 7 dans `out/A` |
+| Création | `61BB` : pour chaque entrée non nulle, `C = type & 7F`, `E = position & F0` (Y), `D = (position & 0F) × 16` (X), `A = numéro d'entrée` (vers `+F`), puis `CALL 5F1F`. Le bit 7 du type (`85` en salles 3 et 7, `05` en salle 2) est masqué ; son rôle ailleurs est inconnu | code ; PC `5F82` et pile `61F9` dans `out/A/objwrites.csv` |
+| Positions | salle 2 : X `80`, Y `80` ; salle 3 : X `60`, Y `40` ; salle 7 : X `C0`, Y `60` | prouvé (`out/A/sat5.csv`) |
+| Instant | 21 ou 22 images après l'écriture de `D001` (fin du chargement de salle) : 2667→2688, 2929→2950, 3601→3622, 4361→4383, 5223→5245 | prouvé |
+| Nombre | une seule panthère par salle (une entrée de liste) | prouvé |
+| Initialisation (`A85C`) | pose `43` (assise, tournée à droite) si `C427 >= X`, sinon `3F` (assise, à gauche) ; `+6 = 1`, `+C = 0`, vitesses X et Y nulles ; état 0. Points de vie `+D = 1` (table `60E1 + type`), `+E = 7`, 4 entrées SAT (table `6057 + type`) | code ; valeurs lues dans `out/B/objpcs.csv` (`5FC0` écrit `+D = 1`) |
+
+### Mise à jour (prouvé)
+
+Les objets sont mis à jour **une image sur deux**. À chaque mise à jour, dans cet ordre (boucle `98EC`) : routine du type (`A87D`), déplacement (`99B9` : `Y += vy`, `X += vx` en 8.8 si `+6 ≠ 0`), bornes (`99E5`).
+
+1. **Sortie à gauche** : si `X < 18` au début de la routine, l'objet est supprimé (`JP 99F6`). Le déplacement s'applique encore, d'où le X `10` lu après la suppression. Dernier X affiché : `14`.
+2. **État 0, assise** (`A891`) : `d = |C427 - X|`. Si `d < 40` (64 px), `vx = +0x0400` si `C427 >= X`, sinon `-0x0400`, puis état 1. Aucune condition sur Y. Trace : activation à `d = 62` dans les 5 cas (salle 3 : Simon 158 et 34, panthère 96 ; salle 2 : 190 contre 128 ; salle 7 : 130 contre 192). Le pas de Simon (2 px par mise à jour) ne permet pas de distinguer 62 et 63 ; le code donne `< 64`.
+3. **État 1, course** (`A8AC`) : animation (`A909`), puis test de sol au point `(X, Y)` et `(X - 10, Y)` (`7B98` = `7D2F` + `7C5E`, les mêmes fonctions que `vk_sample_tile` et `vk_tile_solid` du port). S'il y a du sol en l'un des deux points, la course continue. Sinon : `vy = -0x0108`, pose `46` (vers la droite) ou `42` (vers la gauche, bit 7 de `+A`), état 2. **Pas de demi-tour pendant la course**, même si Simon est dépassé (salle 2, run A ; tests `WS4`/`WS8`).
+4. **État 2, saut ou chute** (`A8D2`) : `vy += 0x00A0`, plafonnée à `0x07FF` dès que l'octet fort atteint 8 (`A549`). Test de sol au point `(X, Y)` et `(X - 10, Y)`. S'il y a du sol : atterrissage, `vx` vers Simon (`+0x0400` si `C427 >= X`, sinon `-0x0400`), `+C = 0`, état 1, `Y = Y & F8` (fraction à 0), `vy = 0`. La pose reste celle du saut jusqu'à la mise à jour suivante.
+5. **Bornes** (`99E5`, communes) : suppression si `Y >= E4`, `X >= F1` ou `X < 07`. Sortie à droite observée : X `F0` affiché, suppression à `F4` (salle 2).
+
+Vitesse X : 4 px par mise à jour, soit **2 px par image**, en course comme en saut. La vitesse X ne change qu'à l'activation et à l'atterrissage.
+
+### Courbe du saut (prouvé, table complète)
+
+Pas = une mise à jour (2 images), depuis la mise à jour qui déclenche le saut (le déplacement s'applique dans la même mise à jour). Y de départ entier (fraction 0). `ΔY` = Y 8.8 cumulé, `Y` = partie entière pour un départ en `80`.
+
+| Pas | vy (8.8) | ΔY (1/256 px) | Y (départ 80) |
+|---|---|---|---|
+| 0 | `-0x0108` | -264 | `7E` |
+| 1 | `-0x0068` | -368 | `7E` |
+| 2 | `+0x0038` | -312 | `7E` |
+| 3 | `+0x00D8` | -96 | `7F` |
+| 4 | `+0x0178` | 280 | `81` |
+| 5 | `+0x0218` | 816 | `83` |
+| 6 | `+0x02B8` | 1512 | `85` |
+| 7 | `+0x0358` | 2368 | `89` |
+| 8 | `+0x03F8` | 3384 | `8D` |
+| 9 | `+0x0498` | 4560 | `91` |
+| 10 | `+0x0538` | 5896 | `97` |
+| 11 | `+0x05D8` | 7392 | `9C` |
+| 12 | `+0x0678` | 9048 | `A3` |
+| 13 | `+0x0718` | 10864 | `AA` |
+| 14 | `+0x07B8` | 12840 | `B2` |
+| 15 et suivants | `+0x07FF` | +2047 par pas | `BA`, `C2`, `CA`, `D2`… |
+
+Les 6 sauts de `out/A` (départs Y `40`, `80`, `80`, `60`, `80`, `A0`) suivent cette table à l'octet près, fraction comprise (`scratchpad/type5/analysis/jump.py`). Exemples d'atterrissage : salle 3, départ `40` à X `84`, posé en Y `80` à X `C4` (17 pas) ; salle 7, `60` vers `80` (13 pas), puis `80` vers `A0`, puis `A0` vers `C0`.
+
+### Animation et dessin des poses (prouvé)
+
+Compteur `+C` : `+1` par mise à jour en course, de 1 à 12 puis retour à 1 (`A909`). Pose de base `41` (vers la gauche) ou `45` (vers la droite) pour 1-3, base + 1 pour 4-9, base - 1 pour 10-12. Cycle de 12 mises à jour = 24 images : 6 images, 12 images, 6 images. Le compteur est figé pendant le saut (pose `42` ou `46`). Après l'activation, la pose assise reste une mise à jour, puis le cycle commence à 1.
+
+Motifs : `N = 40 + 16 × (pose - 3F)`, deux cellules 16 × 16, chacune à deux couches (N et N+4). Positions par rapport à l'objet (X, Y), mesurées sur 981 images sans exception (`analysis/offsets.py`) :
+
+| Pose | Usage | Cellule gauche (couches) | Cellule droite (couches) |
+|---|---|---|---|
+| `3F` | assise, tournée à gauche | `40/44` en X-9 | `48/4C` en X+7 |
+| `40` | course gauche, 10-12 | `50/54` en X-16 | `58/5C` en X |
+| `41` | course gauche, 1-3 | `60/64` en X-16 | `68/6C` en X |
+| `42` | course gauche, 4-9, et saut | `70/74` en X-16 | `78/7C` en X |
+| `43` | assise, tournée à droite | `88/8C` en X-23 | `80/84` en X-7 |
+| `44` | course droite, 10-12 | `98/9C` en X-16 | `90/94` en X |
+| `45` | course droite, 1-3 | `A8/AC` en X-16 | `A0/A4` en X |
+| `46` | course droite, 4-9, et saut | `B8/BC` en X-16 | `B0/B4` en X |
+
+- SAT Y = Y - 16 pour toutes les poses (lignes Y-15 à Y à l'écran).
+- **Décalage d'affichage** : la SAT lue à l'image f montre l'objet de l'image f-2 (une mise à jour de retard), sur les deux parités d'image (146 sur 150 contre 0 sur 150 pour les autres décalages ; les 4 écarts sont des transitions).
+- **Miroir** : la couche `N + 40` est le miroir horizontal exact de la couche N (16 paires, `mirror_layer` de `tools/extract_enemy_sprites.py`). Le corps est symétrique autour de X - 0,5 : la pose à droite est la pose à gauche retournée.
+
+### Graphismes (prouvé)
+
+- Flux RLE en **ROM fichier `0x15AB9`** (banque 10, décalage `0x1AB9`), 417 octets avec le `00` final (`0x15AB9` à `0x15C59`), sans saut `80` ; décodage par `rle_decode` de `tools/extract_enemy_sprites.py`. SHA-256 des octets bruts : `97bbe84c677bd4a9338cb2e0fdda5065e1b2d7cb6e0b7b4d6347ab4f4415c697`.
+- Sortie : **512 octets = les 16 couches `40` à `7C`** dans l'ordre (32 octets par couche, quadrants UL, LL, UR, LR). SHA-256 de la sortie : `c0845ef045b49981e35d7b640acc6ea6438668f075197a49573b34cbed39c4df`. Les couches `80` à `BC` sont les miroirs (calculés par le jeu).
+- Vérification : les 32 couches `40` à `BC` lues en VRAM (`F800 + 8 × N`) sont identiques octet pour octet dans 38 instantanés des salles 2, 3 et 7 (`out/A/snaps/`), et les 16 premières sont égales à la sortie du flux. Le flux a été trouvé en décodant chaque décalage de la ROM (`analysis/findrle.py`) : c'est le seul. Aperçu : `analysis/poses.png`.
+- Couleur : table de couleur (512 octets avant la SAT) à `02` pour la couche N et `44` (couleur 4, CC) pour la couche N+4, sur les 16 lignes, dans les 76 entrées vérifiées. Recouvrement = couleur 6. Même règle que les types 1 et 4.
+
+### Palette (prouvé)
+
+Palette VDP des salles 2, 3 et 7 (37 instantanés) : `0000 08AE 0222 064C 0CC8 0800 004C 0040 020E 0006 0008 0268 0AAA 0444 0EEE 0E00` en format MD, **égale à `vk_palettes[2]`, `[3]` et `[7]`** de `sgdk/src/generated/rooms.c` (hall = `vk_stages[0]`, premier index 0). Couleurs utiles : 2 = `0222` (corps noir), 4 = `0CC8` (contour), 6 = `004C` (taches). Les salles 0 et 1 ont d'autres valeurs en 4 et 6 (`0C2E`, `0ACE`).
+
+### Contact (prouvé)
+
+- Test `8290` (même boucle `7E7D` que les autres types), classe 2 de la table `82CB` (type 5 → `03`), paramètres `HL = 0A0C` (`83D2`) : touche si `|C427 - X| < 17` et `0 <= C425 - 2 - Y + 10 < 36` (debout ; `28` si `C420` vaut 1 ou 2, et `C425 - 8` si `C420 = 1`). Debout, cela donne Y de `C425 - 27` à `C425 + 8`.
+- **Dégât : 6** (`81CE`, entrée du type 5 = `01 03` : base 3, doublée si le bit 4 de `C701` est nul, `816C`). Trois contacts mesurés : 24 → 18 (salle 7, `out/A` image 5421, panthère en saut), 32 → 26 (`WC10`, `WS4`, `WS8`, salle 2). Recul et invulnérabilité `C42D = 89` comme pour les autres types. La panthère continue sa course à travers Simon.
+
+### Fouet (prouvé)
+
+- Test `7DAD` : uniquement en phase `C422 = 3`, pour les objets dont le bit 0 de `+E` est mis ; boîte `84A7` avec les mêmes paramètres (`L = 0C`, `H = 0A`) : X du fouet = `C427 + 20` (droite, `C42C = 0`) ou `C427 - 20` (gauche). Touche si `|X fouet - X| < 24` (12 + 12). Si `C416 = 1` (niveau de fouet, lu dans le code), la portée passe à 24 et la demi-largeur à 28 et `C425 - B - 3 <= Y <= C425 - B + 10`, avec `B = 18` debout et `B = 10` accroupi (`C420 = 2`).
+- Conséquence : **debout, le fouet passe au-dessus d'une panthère posée au même niveau que Simon** (Y de `C425 - 21` à `C425 - 8`) ; **accroupi, il la touche** (Y de `C425 - 13` à `C425`).
+- Points de vie 1 : `+D` passe à 0 au premier coup (2 si `C416 ≠ 0`), puis `81AB` (score, octet `01` de `81CE`, comme le type 1) et `9A3E` (mort : objet `1E` à la même position, drop aléatoire commun à tous les ennemis).
+- Mesure (salle 2, Simon posé sur la plateforme de la panthère en `x 194, y 128` par poke, tourné à gauche, puis un pas à gauche pour l'activer) : accroupi (`WC4`, `WC6`, `WC8`), **mort au premier coup**, à la première image de phase 3, panthère en X 160, 164 et 168 ; `C800` passe de `05` à `1E` puis `00`. Debout (`WS4`, `WS8`) : phase 3 avec la panthère en X 160 et 168, **pas de mort**, puis contact et -6. `WC10` : contact avant la phase 3.
+
+### Reste ouvert
+
+- Rôle du bit 7 du type dans la liste (`85` contre `05`) : ignoré par `61BB`, aucun autre lecteur trouvé.
+- Points de score : octet `01` de `81CE`, même valeur que le type 1 (déduit, non mesuré pour le type 5).
+- Le niveau de fouet (`C416`) des tests n'a pas été lu ; les tests valent pour le fouet de départ.
+- Bornes exactes du contact et du fouet : données par le code, non balayées au pixel en trace (les cas mesurés sont compatibles).
+
+### Fichiers (hors dépôt)
+
+- Outils : `scratchpad/type5/tool/` (copies de `harness.tcl`, `run.py`, `render_snap.py` ; `t5_extra.tcl` : SAT et couleur par image en salles 2, 3, 7, objets `C800/C880`, écritures avec PC et pile, instantanés VRAM à chaque nouvel ensemble de motifs ; `t5_code.tcl` : vidage mémoire et PC des écritures dans l'objet).
+- Plans : `scratchpad/type5/plans/` (`K1` : chemin naturel salles 3, 2, 3, 7 ; `B` : jusqu'à la salle 2 ; `WC4`-`WC10`, `WS4`, `WS8` : tests du fouet).
+- Traces : `scratchpad/type5/out/A/sat5.csv` (2876 images en salles 2, 3, 7), `out/A/objwrites.csv`, `out/A/snaps/` ; `out/B/` (vidage mémoire) ; `out/WC*/`, `out/WS*/` (fouet).
+- Analyses : `scratchpad/type5/analysis/` (`norm.py`, `A_norm.txt`, `offsets.py`, `offsets2.py`, `layers.py`, `vram_layers.bin`, `findrle.py`, `poses.png`).
