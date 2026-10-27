@@ -22,7 +22,7 @@ int main(void)
     assert(vk_whip_arm_frame(&w)==1);
     assert(vk_whip_visual_step(&w)==2);
     vk_whip_bounds(&w,&l,&t,&r,&b);
-    assert(r-l==24);
+    assert(r-l==32); /* Measured standing lash box: x+8..x+39. */
     while(w.timer) vk_whip_tick(&w,&p,0);
     assert(vk_whip_segments(&w)==0);
     assert(vk_whip_arm_frame(&w)==0);
