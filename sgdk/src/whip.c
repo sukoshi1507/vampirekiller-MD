@@ -20,7 +20,7 @@ int vk_whip_segments(const VKWhip *w)
 void vk_whip_tick(VKWhip *w, const VKPlayer *p, int attack_pressed)
 {
     if (w->timer) w->timer--;
-    else if (attack_pressed && !p->on_stairs) w->timer = 14;
+    else if (attack_pressed) w->timer = 14;
     /* Latch attack direction and origin at startup; the whip cannot teleport
      * across Simon when facing changes during an active swing. */
     if (w->timer == 14) { w->facing = p->facing; w->x = p->x; w->y = p->y; w->crouched = p->crouched; }

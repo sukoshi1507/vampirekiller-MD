@@ -60,6 +60,15 @@ int main(void)
             else assert(vk_whip_segments(&w)==0);
         }
     }
+    /* On a staircase the whip starts as on the floor (the MSX allows it). */
+    vk_whip_reset(&w);
+    p.on_stairs=1; p.facing=0; p.crouched=0; p.x=100; p.y=150;
+    vk_whip_tick(&w,&p,1);
+    assert(w.timer==14 && w.x==100 && w.y==150);
+    for(i=0;i<4;i++) vk_whip_tick(&w,&p,0);
+    assert(vk_whip_active(&w));
+    while(w.timer) vk_whip_tick(&w,&p,0);
+    p.on_stairs=0;
     /* Whip levels: default 0, levels 1 and 2 accepted, level 3 (no asset) refused.
      * Hit box per level: 0 reaches x +32 (y -22..-15), 1 reaches x +39, and 2
      * reaches x +12 with y -19..-15. */

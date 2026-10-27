@@ -156,8 +156,7 @@ int main(bool hardReset)
                 /* Make controller/attack state observable in BlastEm. No text
                  * is reprinted every frame: refresh on input or at timeout. */
                 if (pressed & BUTTON_B)
-                    show_message(vk_player.on_stairs ? "B: BLOQUE SUR ESCALIER" :
-                        "B: ATTAQUE DETECTEE");
+                    show_message("B: ATTAQUE DETECTEE");
                 if (vk_front_mode == FRONT_COURTYARD)
                 {
                     if (vk_courtyard_flames_hit(&vk_whip) >= 0)

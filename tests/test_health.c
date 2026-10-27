@@ -139,7 +139,7 @@ static void test_respawn_place(void)
     g.player.x = 40;
     vk_game_respawn(&g);
     CHECK(g.area == VK_AREA_INTERIOR && g.room == 0, "hall : salle 0");
-    CHECK(g.player.x == 232 && g.player.y == 176, "hall : x 232, y 176 (entree)");
+    CHECK(g.player.x == 16 && g.player.y == 192, "hall : x 16, y 192 (entree)");
     vk_game_begin(&g);
     g.room = 2;
     g.player.x = 100;

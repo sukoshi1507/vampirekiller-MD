@@ -22,7 +22,7 @@ VKEvent vk_game_tick(VKGame *game, int direction, int jump, int up);
 const VKByte *vk_game_collision(const VKGame *game);
 /* Restart after a lost life (health.c). PROVISIONAL: the MSX respawn place is
  * not traced (research/player-health.md). In the hall Simon restarts at the hall
- * entrance (room 0, x 232, as when he walks in); in the courtyard, at its start. */
+ * entrance (room 0, x 16, as when he walks in); in the courtyard, at its start. */
 void vk_game_respawn(VKGame *game);
 /* Enemy contact recoil of dx pixels. PROVISIONAL (research/player-health.md):
  * Simon moves pixel by pixel with the walk limits (x 8..248, side wall probes)

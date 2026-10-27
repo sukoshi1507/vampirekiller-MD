@@ -45,7 +45,8 @@ int main(void)
     g.player.mode = 0;
     assert(vk_game_tick(&g, 1, 0, 0) == VK_EVENT_ENTER);
     assert(g.area == VK_AREA_INTERIOR && g.room == 0 && g.collision_verified);
-    assert(g.player.x == 232 && g.player.y == 176);
+    assert(g.player.x == 16 && g.player.y == 192);   /* frame 1555, on the floor */
+    assert(vk_grounded(vk_game_collision(&g), g.player.x, g.player.y, 1, 0));
     assert(memcmp(vk_game_collision(&g), vk_player_room, 768) == 0);
     assert(vk_game_debug_room(&g,1));
     assert(g.room == 1 && !g.collision_verified);
