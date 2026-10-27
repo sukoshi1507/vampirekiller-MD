@@ -68,7 +68,7 @@ static void show_room(u16 stage, u16 room, bool atlas)
 static VKGame game;
 static VKPlayer player;
 static VKWhip whip;
-/* Hall enemies (enemies.c). Their colours are provisional: PAL2 indices 1 and 2. */
+/* Hall enemies (enemies.c). Their tiles use PAL2 indices given by the MSX2 colour table. */
 static EnemyState enemy_state;
 static EnemySpawnTimer enemy_timer;
 static u16 enemy_room_key = 0xFFFF;   /* hall room + 1 while the enemies belong to it, else 0 */

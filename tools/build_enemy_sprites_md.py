@@ -10,7 +10,7 @@ is stored at tile slot (N - 0x40) / 4 in the table, four 8x8 tiles per layer in
 UL, LL, UR, LR order: the column-major order of an SGDK SPRITE_SIZE(2, 2).
 
 Colour is NOT resolved (research/enemy-assets.md section 5). Pixels carry
-provisional palette indices: 1 for the layer N, 2 for the layer N+4 of each pair.
+palette indices: the MSX2 colour of each layer (LAYER_COLOUR).
 The game uses PAL2 (the room palette) for them. Index 0 is transparent.
 """
 import hashlib
@@ -28,8 +28,18 @@ FIRST_PATTERN = 0x40
 PATTERN_COUNT = 12
 TILES_PER_LAYER = 4
 LONGS_PER_TILE = 8
-PROVISIONAL_INDEX_N = 1      # layer N
-PROVISIONAL_INDEX_N4 = 2     # layer N+4
+# MSX2 colour of each layer, read from the sprite colour table (VRAM F400 + 16 per sprite,
+# byte 0 & 0x0F) of a capture of the type A and B enemies (research/enemy-assets.md, section 5):
+# 40 -> 2, 44 -> 4, 48 -> 1, 4C -> 2, 58 -> 2, 5C -> 4, 68 -> 1, 6C -> 2, 60 -> 2.
+# 50, 54 and 64 were not in that capture: they take the colour of their pose-A twin
+# (50 as 48, 54 as 4C, 64 as 5C). Unverified. The colour index is the MSX palette index,
+# which is the index of PAL2 (the room palette) in the game.
+LAYER_COLOUR = {
+    0x40: 2, 0x44: 4, 0x48: 1, 0x4C: 2,
+    0x50: 1, 0x54: 2,
+    0x58: 2, 0x5C: 4, 0x60: 2, 0x64: 4,
+    0x68: 1, 0x6C: 2,
+}
 
 
 def layers_of_types_a_and_b(rom):
@@ -77,15 +87,14 @@ def generate(rom_path=None):
     longs = []
     for pattern in sorted(layers):
         # Pattern N is the first layer of a pair (N, N+4 with N & 4 == 0), N+4 the second.
-        value = PROVISIONAL_INDEX_N if (pattern & 4) == 0 else PROVISIONAL_INDEX_N4
-        longs.append((pattern, tile_longs(layers[pattern], value)))
+        longs.append((pattern, tile_longs(layers[pattern], LAYER_COLOUR[pattern])))
 
     OUT.mkdir(parents=True, exist_ok=True)
     tile_count = PATTERN_COUNT * TILES_PER_LAYER
     lines = [
         '/* Generated from the Vampire Killer MSX2 ROM by tools/build_enemy_sprites_md.py.',
-        ' * Types A and B of the stage 1 hall (patterns 0x40..0x6C). Provisional colour',
-        ' * indices 1 (layer N) and 2 (layer N+4): see research/enemy-assets.md. Never hand edit. */',
+        ' * Types A and B of the stage 1 hall (patterns 0x40..0x6C). Colour index = MSX2 colour',
+        ' * of each layer (LAYER_COLOUR): see research/enemy-assets.md. Never hand edit. */',
         '#include "enemy_sprites_md.h"',
         f'const unsigned long vk_enemy_tiles[{tile_count * LONGS_PER_TILE}] = {{',
     ]

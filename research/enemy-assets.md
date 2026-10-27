@@ -36,12 +36,15 @@ Capture : `scratchpad/enemy-assets/work/run-a/vram-f02222.bin` (image trace 2222
 - Palette VDP lue par `debug read_block {VDP palette}` pendant la capture 2222 : 16 entrées, identique à la palette de la salle (stage 1, salle 0) décodée par `tools/extract_rooms.py` (`decode_room(data, 1, 0)`). Palette écrite dans le manifeste et utilisée par les PNG (aperçu seulement).
 - Index 0 = transparent dans les PNG.
 
-## 5. Couleur : non résolue
+## 5. Couleur (résolue pour les types A et B)
 
-- Le SAT ne porte aucune couleur utile (octet 3 = `00` sur toutes les entrées ennemies, en RAM comme en VRAM, sur toutes les images capturées). Le mécanisme qui rend ces sprites visibles reste à établir.
-- La table VRAM `F400-F47F` contient des valeurs de couleur (`01`, `02`, `42`, `44`...), mais elle change d'une scène à l'autre (`F470` = `42` en 2222, `00` en 2844). Elle n'est donc pas une correspondance motif -> couleur stable.
-- Les PNG utilisent les **indices de couche** : 1 = couche N seule, 2 = couche N+4 seule, 3 = les deux. Ce ne sont pas des couleurs de jeu.
-- Pour trancher : une capture d'écran réelle (openMSX `screenshot` refusé avec le rendu de cette session) ou une trace de l'écriture de `F400` (routine qui écrit la table).
+- Les sprites du mode 2 du V9938 prennent leur couleur dans une table de couleur de 16 octets par sprite, placée 512 octets avant la SAT : `F400 + 16 * numéro de sprite` quand la SAT est en `F600`. Chaque octet = couleur (bits 0-3) et CC (bit 6, combinaison avec la couche dessous).
+- Mesure sur la capture à l'image 2222 (types A et B en salle 0, `scratchpad/enemy-assets/work/run-a/`), prouvé :
+  - haut : motif 40 couleur 2, 44 couleur 4 (CC) ; motif 58 couleur 2, 5C couleur 4 (CC) ;
+  - bas : motif 48 couleur 1, 4C couleur 2 (CC) ; motif 68 couleur 1, 6C couleur 2 (CC) ;
+  - motif 60 couleur 2 (sprites 22-23 de la même capture).
+- Non observés : 50, 54, 64. `tools/build_enemy_sprites_md.py` leur donne la couleur de leur jumeau (50 comme 48, 54 comme 4C, 64 comme 5C). **À vérifier.**
+- Indice de couleur = indice de la palette MSX2 de la salle, donc l'indice de PAL2 dans le jeu. Le jeu ne fait pas le OU des couches CC : chaque couche est un sprite séparé, donc une zone où les deux couches se recouvrent prend la couleur du sprite au-dessus (approximation).
 
 ## 6. Fichiers
 
