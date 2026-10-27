@@ -18,9 +18,9 @@ void vk_whip_tick(VKWhip *w, const VKPlayer *p, int attack_pressed)
      * across Simon when facing changes during an active swing. */
     if (w->timer == 14) { w->facing = p->facing; w->x = p->x; w->y = p->y; w->crouched = p->crouched; }
 }
-/* Standing lash box measured from the openMSX sprite trace (research/whip-hitbox.md):
- * x +8..+32 and y -22..-15 relative to Simon: the visible lash measured in-game
- * (research/whip-hitbox-ingame.md), which replaces the earlier sprite-cell estimate.
+/* Standing lash box, inclusive: x +8..+32 and y -22..-15 relative to Simon.
+ * These are the visible lash measured in-game (research/whip-hitbox-ingame.md),
+ * not the openMSX trace box (research/whip-hitbox.md, x +8..+39, y -31..-16).
  * The left-facing box is the mirror image. The crouched box is not measured yet. */
 void vk_whip_bounds(const VKWhip *w, int *left, int *top, int *right, int *bottom)
 {
