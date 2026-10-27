@@ -19,12 +19,12 @@ Ce qui fonctionne dans la ROM Mega Drive :
 - **Ennemis du hall** : type 1 (salles 0, 1, 5, 6) et type 4 (salle 4), avec
   apparition, mouvement, animation, contact (-2 d'énergie, recul, invulnérabilité),
   chute sur le sol et couleurs d'après la table de couleur du MSX2.
-  **Le fouet tue les ennemis de type 1** (confirmé à l'émulateur).
+  **Le fouet tue les ennemis de types 1 et 4** (type 1 confirmé à l'émulateur).
 
 Ce qui n'est pas porté ou reste provisoire :
 
-- **Type 4** : le fouet ne le touche pas. Sa règle de destruction n'est pas mesurée
-  (`research/enemy-behavior.md`).
+- **Type 4** : tué par le fouet, d'après la table des objets (boîte provisoire,
+  direction du fouet non vérifiée, `research/enemy-behavior.md`).
 - **Type 5** (salles 2, 3, 7) : non porté (apparition, mouvement, graphisme inconnus).
 - **Porte de la salle 7** : la zone de sortie est identifiée, mais son accès naturel
   depuis la salle ne l'est pas (`research/door-room7.md`).

@@ -92,3 +92,14 @@ Observations :
 - Trace et scripts : `tools/door_room7_trace.tcl`, `tools/run_door_room7_trace.py`, `tools/door_room7_scan.py`.
 - Journaux (non versionnés) : `scratchpad/door7/runs/t0`, `p1`, `p2`, `p3b`, `p4`, `p5`, `p6`. Dumps de la carte : `scratchpad/door7/runs/p3b/room_*.bin`, `p4/room_s*.bin`.
 - Données existantes : `research/room-links.md`, `research/down-stairs.md`, `research/mechanics-remaining.md` (M33, U5).
+
+## 8. Setter de C701 bit 0 (analyse statique et dynamique)
+
+- **Setter unique** (preuve par octets de la ROM) : `LD B,1 ; CALL 8E6D` en CPU 8E60 (banque 2, octet fichier 0x4E60). `8E6D` fait `LD HL,C701 ; OR B ; LD (HL),A`. Aucun autre `SET 0` ni OR sur C701.
+- **Entrée** : une seule, la table de sauts en CPU 8D3E (entrée 23, état A = 0x18), atteinte par `8D30`. Appelants de `8D30` : `94E8` (A = C708), `8D29` (A = (IX+4), depuis 8BFE et 2046C), `8D2C` (depuis 9A9E).
+- **Gate de sortie** : `7737` (banque 1) efface le bit 0 et laisse passer `772A` (qui fait `INC C5AC`) seulement si le bit était à 1. Passer de C5AC = 1 à 5 exige donc au moins deux événements « bit 0 » (1 vers 2, puis 4 vers 5). Entre les deux, un compteur `C5AF` en banque 2 (`9147`).
+- **Dynamique** (openMSX, watchpoints) : parcours naturel 1 vers 0 vers 3, puis montée vers 7. Toutes les écritures de C701 valent 0. Le bit 0 n'a jamais été mis à 1, et `8E60` n'a jamais été atteint. Le chemin naturel vers la sortie n'est donc **pas trouvé**.
+- **Adresses** : le mapping CPU = offset + 0x4000 vaut pour les fenêtres 4000 et 6000, mais pas pour 8000, qui change de banque pendant le jeu (`509F` écrit 0x0E dans (8000h)). Le code de banque 2 lu statiquement n'est donc pas forcément celui exécuté.
+- **Ce qui tranchera** : trouver ce qui produit A = 0x18 en `8D30` (watch de C419 pendant le jeu), identifier la banque mappée en 8000 dans la salle 7, et tracer les écritures de C5AC non étudiées (1EC3, 2559, 2B12, 2B5D, 2C81, 303C, 37B3, 383A, 3868, 388A, 3917, 5147, 516A).
+- **Preuves** (hors dépôt) : `scratchpad/door7/c701/`.
+

@@ -8,7 +8,7 @@ et les limites. « Prouvé » = mesuré en trace openMSX ou lu dans la ROM ;
 
 | Note | Sujet | Statut |
 | --- | --- | --- |
-| `enemy-behavior.md` | Spawn, mouvement, contact et mort des ennemis du hall (salles 0 à 7) | Prouvé pour les types 1 et 4 (spawn, trajectoire, contact). Type 4 : destruction au fouet ouverte. Type 5 : ouvert. |
+| `enemy-behavior.md` | Spawn, mouvement, contact et mort des ennemis du hall (salles 0 à 7) | Prouvé pour les types 1 et 4 (spawn, trajectoire, contact, destruction au fouet via la table C800). Type 5 : ouvert. |
 | `enemy-spawn.md` | Table et routine de spawn de la salle 1 | Prouvé. À corriger : Y=40 et le type 1 ne sont pas liés au bloc décrit. |
 | `enemy-assets.md` | Motifs des ennemis, palette et couleurs (table F400) | Motifs prouvés (ROM et VRAM). Couleurs prouvées pour les types A et B ; motifs 50, 54, 64 non observés. |
 | `enemies-platforms.md` | Premier ennemi observé, cadence, absence de plateforme mobile | Historique. Section 5 (plan d'implémentation) réalisée depuis dans `enemies.c`. |
@@ -16,7 +16,7 @@ et les limites. « Prouvé » = mesuré en trace openMSX ou lu dans la ROM ;
 | `whip-hitbox.md` | Forme de la lanière du fouet (openMSX) | Prouvé pour les pixels mesurés. |
 | `whip-hitbox-ingame.md` | Boîte du fouet et cible d'entraînement, en jeu (MD) | Prouvé pour la boîte debout ; accroupi non mesuré. |
 | `whip-variants.md` | Fouets : variantes, séquence accroupie | Prouvé pour les niveaux 0 à 2 ; niveau 3 sans asset. |
-| `door-room7.md` | Porte de sortie de la salle 7 du hall | Sortie prouvée (test forcé, arrivée stage 2 à x 16). Accès naturel : ouvert (bit 0 de C701 sans setter identifié). |
+| `door-room7.md` | Porte de sortie de la salle 7 du hall | Sortie prouvée (test forcé, arrivée stage 2 à x 16). Setter de C701 bit 0 identifié (une seule routine, `8E60`). Accès naturel : ouvert, jamais atteint en jeu. |
 
 ## Mécaniques du joueur
 
