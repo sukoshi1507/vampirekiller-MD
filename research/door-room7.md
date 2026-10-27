@@ -151,3 +151,12 @@ Sans poke, points d'arrêt sur `9327` et `9329`, dossiers `scratchpad/door7/c701
 - **E3 (bougies du hall)** : pas de coup confirmé. En salle 0 et en salle 1, les bougies n'ont pas été atteintes (sortie de salle avant la portée). `9327`, `9329` et `C40C` ne changent jamais.
 - **Prochaines étapes** : retrouver l'entrée réelle de `9327` (table indexée ou trace de pile posée sur un point d'arrêt sur une partie longue) ; tester la bougie de la salle 1 en `(30,90)` depuis x 28 à 30, puis la salle 2 du hall ; pour la mort, continuer la marche contre les ennemis jusqu'à `C415` = 0.
 
+## 14. Setter atteint en jeu naturel (run S2)
+
+- **Chemin** (plan `scratchpad/door7/c701/plans/S2.txt`, sans poke) : titre, S0 à S3 (hall 1 à x 10), fouet en salle 1 (x 24, 40, 50), chemin 1 vers 0 vers 3 vers 2 (`R1_TO_R0`, `R0_TO_R3`, `R3_TO_R2`), puis marche à gauche à x 204, deux fouets, marche à gauche vers x 124.
+- **Événement** (reproduit à l'identique, runs `S2` et `S2b`, image 3306) : `8D30` avec A = 0x18 et IX = C520, appelé via le trampoline `509F`. L'objet C520 a Y = 0xA0 (160), X = 0x80 (128), type 0x18. Puis `8E60` (même image), puis écriture de `C701` = 01 en `8E77`. Simon est en x 148, y 192, état `C000` = 5, salle D001 = 2.
+- **Lecture** : c'est la bougie de la salle 2 en (128,160) (table `castle-candles.md`, bougie en (80,A0) pour le même décor) qui est traitée par le dispatch d'objet, et qui arme le bit 0.
+- **Non reproduit** : S2c (même trajet sans fouet, marche seule), S2d (fouet à x 204), S2e (sans les fouets de la salle 1). La condition exacte reste à départager : fouets de la salle 1, ou effet de timing à l'image près.
+- **Prochaine étape** : rejouer S2 à l'identique avec des points d'arrêt sur `4257`, `8580`, `7737` et `7752`, pour suivre le bit 0 jusqu'à `C5AC` (1 vers 2). Puis tester la variante sans fouet en salle 1.
+- **Preuves** (hors dépôt) : `scratchpad/door7/c701/runs/S2`, `S2b`, `S2c`, `S2d`, `S2e`.
+
