@@ -209,5 +209,22 @@ int main(void)
         }
         assert(found);
     }
+
+    /* Stage 2 after the door of hall room 7: room 0 at x 16, y 96, on a floor of
+     * its own map; the six rooms and the ROM links (U2 D4 R1 for room 0). */
+    vk_game_begin(&g);
+    vk_game_enter_stage(&g, 2);
+    assert(g.area == VK_AREA_INTERIOR && g.stage == 2 && g.room == 0);
+    assert(g.player.x == 16 && g.player.y == 96);
+    assert(vk_grounded(vk_game_collision(&g), g.player.x, g.player.y, 2, 0));
+    assert(vk_stage_room_count(2) == 6);
+    assert(vk_stage_links(2)[0].up == 2 && vk_stage_links(2)[0].down == 4 &&
+           vk_stage_links(2)[0].left == VK_ROOM_NONE && vk_stage_links(2)[0].right == 1);
+    assert(vk_game_debug_room(&g, 5) && g.stage == 2 && !vk_game_debug_room(&g, 6));
+    g.player.x = 248;
+    g.room = 0;
+    assert(vk_room_try_edge(g.stage, &g.room, &g.player, 1) && g.room == 1);
+    vk_game_respawn(&g);
+    assert(g.stage == 2 && g.room == 0 && g.player.x == 16 && g.player.y == 96);
     return 0;
 }

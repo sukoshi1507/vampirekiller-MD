@@ -1,4 +1,4 @@
-# (f) Cle blanche de la salle 2, porte de la salle 7, sortie vers le stage 2
+# (f) Cle blanche de la salle 2, porte de la salle 7, entree dans le stage 2 jouable
 # (research/door-room7.md, section 16 ; sgdk/src/items.c). items : keys, white_key_taken,
 # door (0 fermee, 1 levee, 2 sortie a pied, 3 faite), timer.
 include boot_to_courtyard.inc
@@ -49,5 +49,18 @@ expect game.player.x == 228 # ouverture a x 228, regard a droite
 expect ram8('items') == 0 # cle consommee (7743)
 wait 40
 shot f-porte-levee
-until front_mode == MODES['VIEWER'] max 200
+until game.stage == 2 max 200
 expect ram8('items+2') == 3 # porte franchie
+expect front_mode == MODES['INTERIOR'] and game.room == 0 # stage 2 jouable, salle 0
+expect game.player.x == 16 and game.player.y == 96 # arrivee (door-room7.md section 16)
+wait 10
+shot f-stage2-salle0
+# Sortie droite par l'etage haut (sol y 64, colonnes 20-31) que l'escalier dessert.
+poke vk_game+0 200
+poke vk_game+1 64
+wait 4
+until game.room == 1 max 300 RIGHT
+expect game.stage == 2 and game.player.x == 10 # salle 1 du stage 2 par la droite (lien R1)
+expect game.player.y == 64 and game.player.mode == 0 # sur le sol haut (colonnes 0-7)
+wait 30
+shot f-stage2-salle1

@@ -3,7 +3,7 @@
 Outil : `tools/md_harness.py`. Il charge `sgdk/out/rom.bin` dans le core libretro Genesis Plus GX (`/usr/lib/libretro/genesis_plus_gx_libretro.so`, via ctypes, sans fenêtre ni son), rejoue un script d'entrées, lit la RAM 68000 par les symboles et écrit des captures PNG. Le mode d'emploi complet est dans la docstring du script.
 
 - Symboles : `m68k-elf-nm -S` sur `sgdk/out/release/rom.out` (adresse et taille), avec repli sur `sgdk/out/release/symbol.txt`. `--symbols-only` les liste.
-- Structures décodées : `game` (VKGame), `player`, `whip`, `enemy_state` (4 ennemis, énergie, invulnérabilité, recul), `test_target`, `courtyard_flame[2]` et `front_mode`. La taille de chaque symbole est vérifiée : si une structure change dans `sgdk/src`, l'outil s'arrête avec un message explicite au lieu de lire de mauvaises valeurs.
+- Structures décodées : `game` (VKGame, avec `stage`), `player`, `whip`, `enemy_state` (4 ennemis, énergie, invulnérabilité, recul), `test_target`, `courtyard_flame[2]` et `front_mode`. La taille de chaque symbole est vérifiée : si une structure change dans `sgdk/src`, l'outil s'arrête avec un message explicite au lieu de lire de mauvaises valeurs.
 - RAM GPGX : les octets sont permutés dans chaque mot (l'octet à l'adresse `a` se lit à l'index `a ^ 1`).
 - Boutons (libretro → MD) : B=0 → B, Y=1 → A, START=3, haut, bas, gauche et droite = 4 à 7, A=8 → C.
 - Sorties dans `--out` : `dumps.json` et `dumps.csv` (une ligne par `dump`), `trace.csv` (avec `--trace N`), les PNG et `result.json` (les assertions).
@@ -19,7 +19,7 @@ Outil : `tools/md_harness.py`. Il charge `sgdk/out/rom.bin` dans le core libretr
 | `b_hall_whip_kill` | DROITE tenu jusqu'au hall (image 865, x=232) ; ennemi type B (type 1 MSX) à x=10 image 1003 ; Simon se tourne, fouet quand l'ennemi est à x-36 ; ennemi tué image 1175 (whip.timer=10), énergie intacte | 8/8 |
 | `d_death_game_over` | contact jusqu'à 0 d'énergie : mort (état 6 à +252 images), vies 2 → 1, reprise salle 0 x 232 ; puis vies forcées à 0 : game over et retour au titre | 8/8 |
 | `e_room4_bat` | hall, salle 4 par le changement de salle debug ; le type 4 apparaît, X recule de 30 px en 20 images, Y suit la courbe (179 au pas 10, 158 en haut) | 5/5 |
-| `f_key_door` | salle 2 : clé prise au contact (x 140..152) ; salle 7 sur le rebord : ouverture à x 228, clé consommée, sortie vers le stage 2 | 7/7 |
+| `f_key_door` | salle 2 : clé prise au contact (x 140..152) ; salle 7 sur le rebord : ouverture à x 228, clé consommée ; stage 2 en jeu (salle 0, x 16, y 96), puis salle 1 par la droite depuis l'étage haut (y 64) | 11/11 |
 | `c_enemy_contact` | même chemin sans attaquer ; contact image 1192 : énergie 32 → 30, invulnérabilité et recul ; après 30 images, recul fini, pas de second dégât | 7/7 |
 
 Le chemin vers le hall n'utilise aucun mode debug : il suffit de tenir DROITE depuis la cour (cour 0 → 1 → 2, puis x ≥ 232). Le changement de salle debug du hall (A + gauche/droite) reste disponible avec `hold A+RIGHT 1`.

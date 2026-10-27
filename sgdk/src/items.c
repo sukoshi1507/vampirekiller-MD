@@ -36,7 +36,7 @@ void vk_items_begin(VKItems *items)
 
 static int in_hall_room(const VKGame *game, VKByte room)
 {
-    return game->area == VK_AREA_INTERIOR && game->room == room;
+    return game->area == VK_AREA_INTERIOR && game->stage == 1 && game->room == room;
 }
 
 int vk_items_key_shown(const VKItems *items, const VKGame *game)

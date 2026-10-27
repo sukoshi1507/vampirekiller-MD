@@ -12,6 +12,7 @@ typedef struct {
     VKArea area;
     VKByte room;
     VKByte collision_verified;
+    VKByte stage;            /* castle stage of the interior rooms: 1 (hall) or 2 */
 } VKGame;
 
 void vk_game_begin(VKGame *game);
@@ -27,7 +28,11 @@ void vk_game_respawn(VKGame *game);
  * Simon moves pixel by pixel with the walk limits (x 8..248, side wall probes)
  * and stops at the first blocked pixel; no recoil on a staircase. */
 void vk_game_push(VKGame *game, int dx);
-/* Explicit debug room selection; returns 0 for unsupported room. */
+/* Start of a castle stage after the door of the stage before (items.c): room 0,
+ * Simon standing at x 16, y 96 (stage 2, research/door-room7.md section 16). */
+void vk_game_enter_stage(VKGame *game, VKByte stage);
+/* Explicit debug room selection in the current stage; returns 0 for an
+ * unsupported room. */
 int vk_game_debug_room(VKGame *game, VKByte room);
 
 #endif

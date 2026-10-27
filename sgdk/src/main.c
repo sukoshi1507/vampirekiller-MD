@@ -49,11 +49,11 @@ static void new_game(void)
     vk_show_courtyard(0);
 }
 
-/* A hall room, then the key, door and HUD key box of items.c over it. */
+/* A castle room of the current stage, then the key, door and HUD key box of
+ * items.c over it. */
 static void show_hall_room(u16 room)
 {
-    if (room == 0) vk_show_interior();
-    else vk_show_stage1_room(room);
+    vk_show_castle_room(vk_game.stage, room);
     vk_item_view_room(&items, &vk_game);
 }
 
@@ -130,7 +130,7 @@ int main(bool hardReset)
                     (pressed & (BUTTON_RIGHT | BUTTON_LEFT)))
                 {
                     int target = (int)vk_game.room + ((pressed & BUTTON_RIGHT) ? 1 : -1);
-                    if (target >= 0 && target < 8 && vk_game_debug_room(&vk_game, (VKByte)target))
+                    if (target >= 0 && vk_game_debug_room(&vk_game, (VKByte)target))
                     {
                         show_hall_room((u16)target);
                     }
@@ -177,7 +177,7 @@ int main(bool hardReset)
                 else if (event == VK_EVENT_VERTICAL) show_hall_room(vk_game.room);
                 else if (vk_front_mode == FRONT_INTERIOR && direction &&
                          !(held & BUTTON_A) &&
-                         vk_room_try_edge(&vk_game.room, &vk_game.player, direction))
+                         vk_room_try_edge(vk_game.stage, &vk_game.room, &vk_game.player, direction))
                 {
                     /* Keep player state across edge; collision map changes on
                      * next gameplay tick. No fabricated vertical connections. */
@@ -190,11 +190,10 @@ int main(bool hardReset)
                     vk_player = vk_game.player;
                     if (item == VK_ITEM_STAGE_EXIT)
                     {
-                        /* PROVISIONAL: stage 2 is not playable yet; its first room
-                         * opens in the room viewer (L/R rooms, B test player). */
-                        stage = 2; room = 0; atlas = FALSE;
-                        vk_show_room(stage, room, atlas);
-                        vk_front_mode = FRONT_VIEWER;
+                        /* Stage 2 room 0 (PROVISIONAL: no enemies nor items yet). */
+                        vk_game_enter_stage(&vk_game, 2);
+                        vk_reset_enemies();
+                        show_hall_room(0);
                         SYS_doVBlankProcess();
                         continue;
                     }

@@ -63,7 +63,7 @@ BUTTONS = {'B': 0, 'A': 1, 'START': 3, 'UP': 4, 'DOWN': 5, 'LEFT': 6, 'RIGHT': 7
 FRONT_MODES = ['LOGO', 'TITLE', 'CASTLE', 'COURTYARD', 'INTERIOR', 'VIEWER', 'TEST', 'SOUND']
 
 # Tailles attendues (octets) des globales decodees : garde-fou contre une derive des structures.
-EXPECTED_SIZES = {'player': 14, 'game': 20, 'whip': 6, 'enemy_state': 56,
+EXPECTED_SIZES = {'player': 14, 'game': 22, 'whip': 6, 'enemy_state': 56,
                   'test_target': 18, 'courtyard_flame': 36, 'front_mode': 2, 'health': 4}
 # Noms C actuels des globales partagees (sgdk/src/frontend.h, actors.h) ; les scenarios
 # gardent les noms courts. test_target et courtyard_flame sont statiques (room_view.c).
@@ -280,7 +280,8 @@ class Game_View:
         if 'game' in A:
             a = A['game']
             state['game'] = {'player': self.player_at(a), 'area': m.rd32(a + 14),
-                             'room': m.rd8(a + 18), 'collision_verified': m.rd8(a + 19)}
+                             'room': m.rd8(a + 18), 'collision_verified': m.rd8(a + 19),
+                             'stage': m.rd8(a + 20)}
         if 'player' in A:
             state['player'] = self.player_at(A['player'])
         if 'whip' in A:

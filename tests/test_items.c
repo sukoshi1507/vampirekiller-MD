@@ -72,6 +72,12 @@ int main(void)
     assert(vk_items_tick(&it, &g) == VK_ITEM_STAGE_EXIT && it.door == VK_DOOR_DONE);
     assert(!vk_items_controls_locked(&it));
 
+    /* Stage 2 room 2 holds no white key and room 7 no door. */
+    vk_items_begin(&it);
+    hall(&g, 2, 148, 192);
+    g.stage = 2;
+    assert(!vk_items_key_shown(&it, &g) && vk_items_tick(&it, &g) == VK_ITEM_NONE && !it.keys);
+
     printf("test_items: OK\n");
     return 0;
 }

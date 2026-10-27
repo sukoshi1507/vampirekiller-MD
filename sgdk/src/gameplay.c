@@ -4,7 +4,16 @@ extern const VKByte vk_courtyard_maps[3][768];
 extern const VKByte vk_courtyard_neighbors[3][4];
 #include "generated/player_assets.h"
 #include "generated/stage1_collision.h"
+#include "generated/stage2_maps.h"
 #include "room_manager.h"
+
+/* Collision map of a castle room (stage 1 hall or stage 2), NULL if none. */
+static const VKByte *vk_castle_map(VKByte stage, VKByte room)
+{
+    if (stage == 1 && room < VK_STAGE1_ROOM_COUNT) return vk_stage1_collision[room];
+    if (stage == 2 && room < VK_STAGE2_ROOM_COUNT) return vk_stage2_collision[room];
+    return 0;
+}
 
 /* Interior scene 6 is stage 1 / room 0 (extract_intro.py).
  * extract_player.py decodes the same original 768-byte tilemap as
@@ -13,9 +22,18 @@ const VKByte *vk_game_collision(const VKGame *game)
 {
     if (game->area == VK_AREA_COURTYARD && game->room < 3)
         return vk_courtyard_maps[game->room];
-    if (game->area == VK_AREA_INTERIOR && game->room < 8)
-        return vk_stage1_collision[game->room];
+    if (game->area == VK_AREA_INTERIOR)
+    {
+        const VKByte *map = vk_castle_map(game->stage, game->room);
+        if (map) return map;
+    }
     return vk_player_room; /* Fallback for invalid game state. */
+}
+
+/* Index of vk_collision_limits: 0 in the courtyard, the stage number inside. */
+static VKByte vk_game_limit_stage(const VKGame *game)
+{
+    return game->area == VK_AREA_COURTYARD ? 0 : game->stage;
 }
 
 void vk_game_begin(VKGame *game)
@@ -23,20 +41,32 @@ void vk_game_begin(VKGame *game)
     vk_player_reset(&game->player);
     game->area = VK_AREA_COURTYARD;
     game->room = 0;
+    game->stage = 1;
     game->collision_verified = 1;
     game->player.y = 176;
 }
 
-/* Feet height of the lowest floor under x in a stage-1 room map, or 0 when the
+void vk_game_enter_stage(VKGame *game, VKByte stage)
+{
+    game->area = VK_AREA_INTERIOR;
+    game->stage = stage;
+    game->room = 0;
+    game->collision_verified = 0;   /* hidden rows zero-filled, as hall rooms 1-7 */
+    vk_player_reset(&game->player);
+    game->player.x = 16;
+    game->player.y = 96;
+}
+
+/* Feet height of the lowest floor under x in a castle room map, or 0 when the
  * column has none. A floor is a solid row with an empty row above it. */
-static VKByte vk_floor_arrival(const VKByte *map, VKByte x)
+static VKByte vk_floor_arrival(const VKByte *map, VKByte x, VKByte stage)
 {
     int row;
     for (row = 23; row >= 2; row--)
     {
         const VKByte feet = (VKByte)(16 + 8 * row);
-        if (vk_tile_solid(vk_sample_tile(map, x, feet), 1, 0) &&
-            !vk_tile_solid(vk_sample_tile(map, x, (VKByte)(feet - 8)), 1, 0))
+        if (vk_tile_solid(vk_sample_tile(map, x, feet), stage, 0) &&
+            !vk_tile_solid(vk_sample_tile(map, x, (VKByte)(feet - 8)), stage, 0))
             return feet;
     }
     return 0;
@@ -45,6 +75,7 @@ static VKByte vk_floor_arrival(const VKByte *map, VKByte x)
 VKEvent vk_game_tick_controls(VKGame *game, int direction, int jump, int up, int down)
 {
     VKPlayer *p = &game->player;
+    const VKRoomLink *links = game->area == VK_AREA_INTERIOR ? vk_stage_links(game->stage) : 0;
     /* Courtyard room 2 -> hall room 0: walking RIGHT at x=232 (openMSX run 6).
      * UP at x=192..216 does not change room. */
     if (game->area == VK_AREA_COURTYARD && game->room == 2 &&
@@ -59,8 +90,7 @@ VKEvent vk_game_tick_controls(VKGame *game, int direction, int jump, int up, int
         return VK_EVENT_ENTER;
     }
 
-    vk_player_tick_controls(p, vk_game_collision(game),
-                            game->area == VK_AREA_COURTYARD ? 0 : 1,
+    vk_player_tick_controls(p, vk_game_collision(game), vk_game_limit_stage(game),
                             direction, jump, down, up);
 
     if (game->area == VK_AREA_COURTYARD && direction != 0 &&
@@ -82,8 +112,7 @@ VKEvent vk_game_tick_controls(VKGame *game, int direction, int jump, int up, int
      * Simon to the room below, at its top. Otherwise he is restarted as before. */
     if (p->y >= 225)
     {
-        const VKByte target = game->area == VK_AREA_INTERIOR ?
-            vk_stage1_links[game->room].down : VK_ROOM_NONE;
+        const VKByte target = links ? links[game->room].down : VK_ROOM_NONE;
         if (target != VK_ROOM_NONE)
         {
             /* From an arrival glide, the MSX exit shifts X by 16 (207 -> 192). */
@@ -110,11 +139,10 @@ VKEvent vk_game_tick_controls(VKGame *game, int direction, int jump, int up, int
     /* MSX up exit: on a flight with HAUT at Y < 48 (research/vertical-links.md).
      * Simon lands at X +16 (-16 on a right-up flight), Y 224, and glides back up
      * the 32 px diagonal to the floor of the room above. */
-    if (game->area == VK_AREA_INTERIOR && p->on_stairs && p->y < 48 &&
-        vk_stage1_links[game->room].up != VK_ROOM_NONE)
+    if (links && p->on_stairs && p->y < 48 && links[game->room].up != VK_ROOM_NONE)
     {
         const int dir = p->stair_dir;
-        game->room = vk_stage1_links[game->room].up;
+        game->room = links[game->room].up;
         p->x = (VKByte)(dir ? p->x - 16 : p->x + 16);
         p->y = 224;
         p->stair_len = 32;
@@ -125,16 +153,16 @@ VKEvent vk_game_tick_controls(VKGame *game, int direction, int jump, int up, int
     }
     /* Hall vertical link: leaving the top of the playfield (a stair exit at y 24
      * counts) enters the room above, on its lowest floor in the same column. */
-    if (game->area == VK_AREA_INTERIOR && p->y < 32)
+    if (links && p->y < 32)
     {
-        const VKByte target = vk_stage1_links[game->room].up;
+        const VKByte target = links[game->room].up;
         if (target == VK_ROOM_NONE)
         {
             p->y = 32;
             return VK_EVENT_NONE;
         }
         game->room = target;
-        p->y = vk_floor_arrival(vk_stage1_collision[target], p->x);
+        p->y = vk_floor_arrival(vk_castle_map(game->stage, target), p->x, game->stage);
         p->on_stairs = 0;
         p->stair_anim = 0;
         p->mode = p->y ? 0 : 4;
@@ -157,6 +185,11 @@ void vk_game_respawn(VKGame *game)
         vk_game_begin(game);
         return;
     }
+    if (game->stage != 1)
+    {
+        vk_game_enter_stage(game, game->stage);
+        return;
+    }
     game->room = 0;
     game->collision_verified = 1;
     vk_player_reset(&game->player);
@@ -168,7 +201,7 @@ void vk_game_push(VKGame *game, int dx)
 {
     VKPlayer *p = &game->player;
     const int step = dx < 0 ? -1 : 1;
-    const VKByte stage = game->area == VK_AREA_COURTYARD ? 0 : 1;
+    const VKByte stage = vk_game_limit_stage(game);
     if (p->on_stairs) return;
     while (dx)
     {
@@ -182,10 +215,12 @@ void vk_game_push(VKGame *game, int dx)
 
 int vk_game_debug_room(VKGame *game, VKByte room)
 {
-    if (room >= 8) return 0;
+    if (game->area != VK_AREA_INTERIOR) game->stage = 1;
+    if (room >= vk_stage_room_count(game->stage)) return 0;
     game->area = VK_AREA_INTERIOR;
     game->room = room;
-    game->collision_verified = (room == 0); /* hidden rows 1-7 unverified */
+    /* Hidden rows of hall rooms 1-7 and of stage 2 are unverified. */
+    game->collision_verified = (game->stage == 1 && room == 0);
     vk_player_reset(&game->player);
     return 1;
 }

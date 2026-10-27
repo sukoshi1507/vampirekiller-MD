@@ -23,6 +23,9 @@ Ce qui fonctionne dans la ROM Mega Drive :
 - **Clé et porte** : la clé blanche de la salle 2 se ramasse au contact et s'affiche
   dans le HUD ; la porte de la salle 7 bloque Simon sans elle, s'ouvre avec (barreau
   qui se lève, Simon qui sort seul) et mène vers le stage 2.
+- **Stage 2 (jouable, sans ennemis)** : six salles avec les collisions et les liens
+  de la ROM (`tools/build_stage_maps_md.py`) ; arrivée en salle 0 à x 16, y 96, comme
+  sur le MSX2.
 - **Énergie, vies, mort, game over** : la barre PLAYER du HUD suit l'énergie (32 points).
   À 0, Simon meurt ; 252 images plus tard l'énergie revient au maximum et, 27 images
   après, il perd une vie et reprend. Sans vie, « GAME OVER » puis le titre (378 images).
@@ -35,10 +38,11 @@ Ce qui n'est pas porté ou reste provisoire :
   MSX2 ; tué par le fouet d'après la table des objets (boîte provisoire, direction
   du fouet non vérifiée, `research/enemy-behavior.md`).
 - **Type 5** (salles 2, 3, 7) : non porté (apparition, mouvement, graphisme inconnus).
-- **Stage 2** : la porte de la salle 7 y mène, mais il n'est pas jouable ; sa première
-  salle s'ouvre dans la visionneuse de salles.
+- **Stage 2** : ni ennemis ni objets. Après une mort, Simon reprend en salle 0
+  (x 16, y 96), lieu provisoire. Les liens haut/bas viennent de la table de la ROM,
+  sans trace en jeu.
 - **Clé dorée** et coffre : non portés.
-- **Stages 2 et suivants, châteaux, attaques autres que le fouet** : non portés.
+- **Stages 3 et suivants, châteaux, attaques autres que le fouet** : non portés.
 - **Énergie (provisoire)** : échelle de la barre (2 px par point), lieu de reprise
   (entrée du hall), commandes bloquées pendant la mort, écran de game over : non
   relevés sur le MSX2. Les vies (`P-02`), les cœurs et le score du HUD restent figés.

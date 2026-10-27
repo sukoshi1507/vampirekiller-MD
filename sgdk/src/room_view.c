@@ -234,13 +234,13 @@ static void show_play_overlay(const char *note, bool hud_labels)
 
 void vk_debug_label_toggle(void) { debug_room_label = !debug_room_label; }
 
-/* Draws "COUR SALLE n" or "ETAPE 1 SALLE n" at the top right while the debug
+/* Draws "COUR SALLE n" or "ETAPE s SALLE n" at the top right while the debug
  * overlay is on, and clears it when off. Only redraws when the key changes. */
 void vk_debug_label_draw(void)
 {
     const int courtyard = vk_game.area == VK_AREA_COURTYARD;
     const u16 key = debug_room_label ?
-        (u16)(1 + (courtyard ? 0 : 8) + vk_game.room) : 0;
+        (u16)(1 + (courtyard ? 0 : 8 * vk_game.stage) + vk_game.room) : 0;
     char hall[16] = "ETAPE 1 SALLE 0";
     char yard[16] = "COUR SALLE 0";
     const u16 previous = debug_room_key;
@@ -258,6 +258,7 @@ void vk_debug_label_draw(void)
         VDP_drawText(yard, 16, 0);
         return;
     }
+    hall[6] = (char)('0' + vk_game.stage);
     hall[14] = (char)('0' + vk_game.room);
     VDP_drawText(hall, 16, 0);
 }
@@ -275,29 +276,31 @@ void vk_show_courtyard(u16 room)
     show_play_overlay("", FALSE);
 }
 
-/* Stage-1 playable room loader: common VRAM/player setup for test navigation.
- * The room graph is intentionally marked experimental. */
-void vk_show_stage1_room(u16 room)
+/* Playable castle room loader (stage 1 hall or stage 2): common VRAM/player
+ * setup. Hall room 0 is the intro scene 6. */
+void vk_show_castle_room(u16 stage, u16 room)
 {
     debug_room_key = 0xFFFF;
-    if (room == 0)
+    if (stage == 1 && room == 0)
     {
         vk_show_interior();
         return;
     }
-    vk_show_room(1, room, FALSE);
+    vk_show_room(stage, room, FALSE);
     vk_player = vk_game.player;
     VDP_loadTileData((const u32 *)vk_player_tiles, PLAYER_TILE_INDEX,
         VK_PLAYER_POSES * VK_PLAYER_TILES_PER_POSE, CPU);
-    PAL_setPalette(PAL2, vk_palettes[vk_stages[0].first + room], CPU);
+    PAL_setPalette(PAL2, vk_palettes[vk_stages[stage - 1].first + room], CPU);
     vk_load_whip_graphics();
     vk_reset_training_target();
     /* The room viewer text of rows 1..2 gives way to the HUD bars. */
     VDP_clearText(0, 1, 32);
     VDP_clearText(0, 2, 32);
-    VDP_drawText(room == 1 ? "A+HAUT ESCALIER B FOUET" :
+    VDP_clearText(0, 27, 32);
+    VDP_drawText(stage == 1 && room == 1 ? "A+HAUT ESCALIER B FOUET" :
         "B FOUET / A+L-R SALLE", 1, 27);
-    show_play_overlay("PARCOURS TEST / LIENS NON MSX2", TRUE);
+    show_play_overlay(stage == 1 ? "PARCOURS TEST / LIENS NON MSX2" :
+        "ETAPE 2: SANS ENNEMIS", TRUE);
     vk_show_player(&vk_player);
     vk_front_mode = FRONT_INTERIOR;
 }

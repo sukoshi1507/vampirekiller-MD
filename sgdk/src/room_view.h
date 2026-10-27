@@ -16,7 +16,7 @@ void vk_show_room(u16 stage, u16 room, bool atlas);
 /* Play scenes. They copy vk_game.player into vk_player and set vk_front_mode. */
 void vk_show_courtyard(u16 room);
 void vk_show_interior(void);
-void vk_show_stage1_room(u16 room);
+void vk_show_castle_room(u16 stage, u16 room);
 /* Movement test in the first stage room (viewer B). */
 void vk_enter_play(VKPlayer *player);
 

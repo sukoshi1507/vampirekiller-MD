@@ -51,11 +51,13 @@ static const u32 target_tiles[32] = {
 static int whip_level_choice = 0;
 
 /* One gameplay frame of the hall enemies. The state follows the hall room: a room
- * change or a leave of the hall rebuilds it (key 0 outside the hall). Simon's
+ * change or a leave of the hall rebuilds it (key 0 outside the hall and in stage 2,
+ * whose enemies are not ported yet). Simon's
  * recoil moves him here through vk_game_push (walls and walk limits). */
 void vk_step_enemies(void)
 {
-    const u16 key = vk_front_mode == FRONT_INTERIOR ? (u16)(vk_game.room + 1) : 0;
+    const u16 key = vk_front_mode == FRONT_INTERIOR && vk_game.stage == 1 ?
+        (u16)(vk_game.room + 1) : 0;
     EnemyRoomVars vars;
     int push = 0;
     if (key != enemy_room_key)

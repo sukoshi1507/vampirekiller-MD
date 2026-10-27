@@ -58,7 +58,7 @@ void vk_item_view_room(const VKItems *items, const VKGame *game)
     draw_hud_box(items);
     if (vk_items_key_shown(items, game))
         draw_block(KEY_TILE_INDEX, VK_KEY_CELL_X, VK_KEY_CELL_Y, 2, 2);
-    if (game->area == VK_AREA_INTERIOR && game->room == 7)
+    if (game->area == VK_AREA_INTERIOR && game->stage == 1 && game->room == 7)
     {
         draw_door(vk_items_door_lift(items));
         draw_block(DOOR_TILE_INDEX, VK_DOOR_CELL_X, VK_DOOR_CELL_Y, DOOR_COLS, DOOR_CELLS);
