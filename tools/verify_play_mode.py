@@ -55,13 +55,23 @@ def main():
         pose = state['pose']
         pixels, _ = extract_pose(data, *POSES[pose], pose >= 6)
         expected = background.copy()
+        own = set()
         for yy in range(32):
             for xx in range(24):
                 color = pixels[yy * 24 + xx]
                 x, y = state['x'] - 8 + xx, state['y'] - 31 + yy - 32
                 if color and 0 <= x < 256 and 0 <= y < 176:
                     expected.putpixel((x, y), palette[color])
+                    own.add((x, y))
         diff = ImageChops.difference(expected, images[step].crop((0, 32, 256, 208)))
+        # The training target (sprite 7) is drawn at player + (48, -24) and is not
+        # composed here. Simon's own pixels are still compared inside that box.
+        target_x, target_y = states[2]['x'] + 48, states[2]['y'] - 24 - 32
+        zero = (0,) * len(diff.getbands())
+        for yy in range(target_y, target_y + 16):
+            for xx in range(target_x, target_x + 16):
+                if (xx, yy) not in own:
+                    diff.putpixel((xx, yy), zero)
         if diff.getbbox():
             diff.save(out / f'player-difference-{step}.png')
             raise AssertionError(f'Sprite pixels do not match ROM masks at step {step}')
