@@ -15,36 +15,35 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 END = 0xFF
+SAMPLES_PER_FRAME = 735  # 44.1 kHz VGM samples in one 60 Hz frame.
 
 
 def frames_from_vgm(data):
     """Return one list of PSG bytes per 60 Hz frame, from SN76489 VGM commands."""
     offset = struct.unpack_from('<I', data, 0x34)[0]
     i = 0x40 if offset == 0 else 0x34 + offset
+    # Writes are placed by their time, not by the wait commands that follow them:
+    # the recorder emits many 2 to 6 sample waits, so each wait is not a frame.
     frames = []
-    current = []
+    elapsed = 0
     while i < len(data):
         cmd = data[i]
         if cmd == 0x50:
-            current.append(data[i + 1])
+            index = elapsed // SAMPLES_PER_FRAME
+            while len(frames) <= index:
+                frames.append([])
+            frames[index].append(data[i + 1])
             i += 2
         elif cmd == 0x61:
-            # VGM waits are in 44.1 kHz samples; one 60 Hz frame is 735 samples.
-            samples = struct.unpack_from('<H', data, i + 1)[0]
-            frames.append(current)
-            current = []
-            for _ in range(max(0, round(samples / 735) - 1)):
-                frames.append([])
+            elapsed += struct.unpack_from('<H', data, i + 1)[0]
             i += 3
         elif cmd in (0x62, 0x63):
-            frames.append(current)
-            current = []
+            elapsed += 735 if cmd == 0x62 else 882
             i += 1
         elif cmd == 0x66:
             break
         else:
             raise ValueError(f'unsupported VGM command 0x{cmd:02X} at 0x{i:X}')
-    frames.append(current)
     return frames
 
 
