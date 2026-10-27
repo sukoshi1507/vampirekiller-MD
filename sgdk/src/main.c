@@ -208,7 +208,10 @@ static void show_player(const VKPlayer *player)
         const u16 cycle = (flame_clock >> 3) & (VK_FLAME_FRAMES - 1);
         const u16 flame_a = flame_burst ?
             (VK_FLAME_FRAMES + ((12 - flame_burst) / 4)) : cycle;
-        VDP_setSpriteFull(7, FLAME_A_X, FLAME_A_Y, SPRITE_SIZE(2, 2),
+        /* Once hit, flame A stays out until the target is reset (A+B). */
+        const s16 flame_a_x = (test_target.active || flame_burst) ? FLAME_A_X : -32;
+        const s16 flame_a_y = (test_target.active || flame_burst) ? FLAME_A_Y : -32;
+        VDP_setSpriteFull(7, flame_a_x, flame_a_y, SPRITE_SIZE(2, 2),
             TILE_ATTR_FULL(PAL3, TRUE, FALSE, FALSE,
                 FLAME_TILE_INDEX + flame_a * VK_FLAME_TILES_PER_FRAME), 8);
         VDP_setSpriteFull(8, FLAME_B_X, FLAME_B_Y, SPRITE_SIZE(2, 2),
