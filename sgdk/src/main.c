@@ -11,6 +11,7 @@
 #include "generated/simon_crouch_md.h"
 #include "generated/flame_fx_md.h"
 #include "generated/intro_assets.h"
+#include "sound_test.h"
 
 /* Room explorer plus a movement prototype in the first room. */
 static const u16 hud_palette[16] = {
@@ -234,7 +235,7 @@ static void enter_play(VKPlayer *player)
 }
 
 enum { FRONT_LOGO, FRONT_TITLE, FRONT_CASTLE, FRONT_COURTYARD,
-       FRONT_INTERIOR, FRONT_VIEWER, FRONT_TEST };
+       FRONT_INTERIOR, FRONT_VIEWER, FRONT_TEST, FRONT_SOUND };
 static u16 front_mode;
 static u16 front_timer;
 static u16 courtyard_room;
@@ -388,6 +389,7 @@ int main(bool hardReset)
         else if (front_mode == FRONT_TITLE)
         {
             if (pressed & BUTTON_START) begin_castle();
+            else if (vk_konami_step(pressed)) { vk_sound_test_enter(); front_mode = FRONT_SOUND; }
             else if (pressed & BUTTON_A)
             {
                 stage = 1; room = 0; atlas = FALSE;
@@ -484,6 +486,10 @@ int main(bool hardReset)
                 }
                 else { ++flame_clock; if (flame_burst) --flame_burst; show_player(&player); }
             }
+        }
+        else if (front_mode == FRONT_SOUND)
+        {
+            if (vk_sound_test_tick(pressed)) show_title();
         }
         else if (front_mode == FRONT_TEST)
         {

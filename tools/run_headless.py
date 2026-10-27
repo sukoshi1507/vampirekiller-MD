@@ -10,7 +10,7 @@ from PIL import Image
 
 
 def run(core_path, rom_path, output, frames=180, buttons=(), observe=None,
-        script=None, memory_observer=None, startup=None):
+        script=None, memory_observer=None, startup=None, audio_out=None):
     core = C.CDLL(str(core_path.resolve()))
     state = {'format': 2, 'frame': None, 'buttons': set()}
     directory = C.create_string_buffer(str(output.parent.resolve()).encode())
@@ -74,6 +74,9 @@ def run(core_path, rom_path, output, frames=180, buttons=(), observe=None,
 
     @Batch
     def batch(data, count):
+        # Optional capture: stereo int16 frames, appended as raw bytes per call.
+        if audio_out is not None:
+            audio_out.append(C.string_at(data, count * 4))
         return count
 
     @Poll
