@@ -158,15 +158,11 @@ static void show_player(const VKPlayer *player)
                 TILE_ATTR_FULL(PAL3, TRUE, FALSE, FALSE, tile), (u16)(segment + 2));
         }
     }
-    /* Retired placeholder arm: ROM-derived body already contains the arm. */
+    /* Retired placeholder arm: ROM-derived body already contains the arm, so
+     * this sprite stays parked off-screen. */
     {
-        int ax = -32, ay = -32;
         int frame = vk_whip_arm_frame(&whip);
-        if (frame && !attack_frame)
-        {
-            vk_whip_arm_position(&whip, &ax, &ay);
-        }
-        VDP_setSpriteFull(4, (s16)ax, (s16)ay, SPRITE_SIZE(1, 1),
+        VDP_setSpriteFull(4, -32, -32, SPRITE_SIZE(1, 1),
             TILE_ATTR_FULL(PAL3, TRUE, FALSE, whip.facing,
                            ARM_TILE_INDEX + (frame ? (u16)(frame - 1) : 0)), 5);
     }
