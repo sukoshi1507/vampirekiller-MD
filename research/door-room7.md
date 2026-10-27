@@ -120,3 +120,12 @@ Observations :
 - **Conclusion** : sur le chemin testé, le bit 0 de `C701` n'est jamais mis à 1 ; la salle 7 reste bloquée à `C5AC` = 1.
 - **Ouvert** : l'état `C000` (ou le flag `C00B`) de la routine `43xx` qui appelle `440E`. Il faut relever la table d'états de `43xx` et tracer `C000` sur d'autres parties naturelles (retour aux salles 0 à 3 après une mort, ramassage de bougies).
 
+## 11. Dispatcher d'états (banque 0) et écrivain de C40C
+
+- **Table d'états** (appel `406B` en `415E`, index = C000, sous-état C001) : 0 `417D`, 1 `41A0`, 2 `41AB`, 3 `41D1`, 4 `422C`, 5 `4257`, 6 `4294`, 7 `42B2`, 8 `4324`, 9 `4377`, A `4387`, B `43DA`, C `43F0`, D `4414`.
+- **Chemin vers `440E`** : en état 5 (`4257`), si `C40C` != 0, alors `C000` := 0C (`4260`). Dans l'état 0C, `C001` = 0 ou au moins 3 mène à `440E` → `9387` → `93FF` (écrit `C708`). `C001` = 1 mène à `94BA` → `94E8` → `8D30` → `8E60`.
+- **Écrivain de `C40C`** : `9329` (met `C40C` à FF et `C703` à `IX+9`), dans une routine de la banque 2. Son appelant n'est pas trouvé statiquement.
+- **Mesure naturelle** (titre, cour, hall 1, 0, 3, 2, escaliers jusqu'à la salle 7, marche, fouet) : états `C000` vus = 0, 1, 3, 4, 5, 9, 10 seulement. L'état 5 passe environ 1 885 fois, l'état 0C jamais.
+- **Points jamais atteints** : `9327`, `9329`, `43F0`, `440E`, `9387`, `93FF`, `4414`, et `4387` (sauf l'état 0A une fois).
+- **Ouvert** : ce qui appelle `9327` ou `9329`. Candidats à tester un par un sans poke : contact du fouet sur un objet (`944F` et `9221` tournent déjà en salle 7, pas `9329`), ramassage de bougie dans la cour et le hall, mort de Simon, passage dans la cour seule.
+
