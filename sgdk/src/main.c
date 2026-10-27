@@ -17,6 +17,9 @@
 #include "psg_player.h"
 #include "generated/sfx_md.h"
 #include "generated/sfx_hit_md.h"
+#include "enemies.h"
+#include "generated/enemy_sprites_md.h"
+#include "generated/stage1_collision.h"
 
 /* Room explorer plus a movement prototype in the first room. */
 static const u16 hud_palette[16] = {
@@ -65,6 +68,11 @@ static void show_room(u16 stage, u16 room, bool atlas)
 static VKGame game;
 static VKPlayer player;
 static VKWhip whip;
+/* Hall enemies (enemies.c). Their colours are provisional: PAL2 indices 1 and 2. */
+static EnemyState enemy_state;
+static EnemySpawnTimer enemy_timer;
+static u16 enemy_room_key = 0xFFFF;   /* hall room + 1 while the enemies belong to it, else 0 */
+#define ENEMY_SPRITE_BASE 9           /* hardware sprites 9.. (0..8 are Simon, whip, target) */
 static VKTarget test_target;
 static bool target_visible = FALSE;
 static u16 diagnostic_timer;
@@ -146,6 +154,9 @@ static u16 debug_room_key = 0xFFFF;
  * keeps its frames at ATTACK_TILE_INDEX. */
 #define WHIP_LEVEL_TILE_INDEX (FLAME_A_CLEAR_TILE_INDEX + 4)
 #define WHIP_LEVEL_TILE_COUNT (VK_WHIP_LEVEL1_FRAME_COUNT * VK_WHIP_LEVEL1_TILES_PER_FRAME)
+/* Hall enemy layers: VK_ENEMY_TILE_COUNT tiles after the whip levels; pattern N uses
+ * tile ENEMY_TILE_INDEX + (N - VK_ENEMY_FIRST_PATTERN). */
+#define ENEMY_TILE_INDEX (WHIP_LEVEL_TILE_INDEX + WHIP_LEVEL_TILE_COUNT)
 /* Whip level chosen for the next load (0 by default). No input binds it yet, so
  * the wired gameplay keeps the level 0 frames and the level 0 hit box. */
 static int whip_level_choice = 0;
@@ -195,8 +206,68 @@ static void reset_training_target(void)
     target_visible = TRUE;
     flame_clock = 0;
 }
+/* One gameplay frame of the hall enemies. The state follows the hall room: a room
+ * change or a leave of the hall rebuilds it (key 0 outside the hall). Simon's
+ * recoil moves him here, without the wall checks of the player tick (provisional). */
+static void step_enemies(void)
+{
+    const u16 key = front_mode == FRONT_INTERIOR ? (u16)(game.room + 1) : 0;
+    EnemyRoomVars vars;
+    int push = 0;
+    if (key != enemy_room_key)
+    {
+        enemy_room_key = key;
+        Enemies_setRoom(&enemy_state);
+        Enemies_spawnTimerInit(&enemy_timer);
+        if (key) VDP_loadTileData((const u32 *)vk_enemy_tiles, ENEMY_TILE_INDEX, VK_ENEMY_TILE_COUNT, CPU);
+    }
+    if (!key) return;
+    vars.stage = 1;
+    vars.room = game.room;
+    vars.simonX = game.player.x;
+    vars.simonY = game.player.y;
+    vars.sideFlag = 0;
+    vars.difficulty = 0;
+    vars.map = vk_stage1_collision[game.room];   /* floor for falling enemies */
+    (void)Enemies_frame(&enemy_state, &enemy_timer, &vars, &push);
+    if (push)
+    {
+        const int x = (int)game.player.x + push;
+        const VKByte moved = (VKByte)(x < 0 ? 0 : (x > 255 ? 255 : x));
+        game.player.x = moved;
+        player.x = moved;
+    }
+}
+
+/* Enemy layers as hardware sprites from ENEMY_SPRITE_BASE, one 16x16 sprite each,
+ * chained in order. Returns the count, 0 outside the hall room the state belongs to. */
+static u16 show_enemy_sprites(void)
+{
+    EnemySprite list[ENEMY_MAX * ENEMY_SPRITES];
+    u16 count = 0;
+    u16 i;
+    if (front_mode != FRONT_INTERIOR || enemy_room_key != (u16)(game.room + 1)) return 0;
+    for (i = 0; i < ENEMY_MAX; i++)
+    {
+        EnemySprite sprites[ENEMY_SPRITES];
+        const int n = Enemies_sprites(&enemy_state, (EnemyU8)i, sprites);
+        int k;
+        for (k = 0; k < n; k++) list[count++] = sprites[k];
+    }
+    for (i = 0; i < count; i++)
+        VDP_setSpriteFull((u16)(ENEMY_SPRITE_BASE + i), list[i].x, list[i].y, SPRITE_SIZE(2, 2),
+            TILE_ATTR_FULL(PAL2, TRUE, FALSE, FALSE,
+                (u16)(ENEMY_TILE_INDEX + list[i].pattern - VK_ENEMY_FIRST_PATTERN)),
+            (u16)(i + 1 < count ? ENEMY_SPRITE_BASE + i + 1 : 0));
+    return count;
+}
+
 static void show_player(const VKPlayer *player)
 {
+    /* Enemy sprites come after the player chain: sprite 6 (or 7 when the target is
+     * shown) links to ENEMY_SPRITE_BASE when there are enemies. */
+    const u16 enemy_count = show_enemy_sprites();
+    const u16 enemy_link = enemy_count ? ENEMY_SPRITE_BASE : 0;
     const int attack_frame = vk_whip_arm_frame(&whip);
     const int crouch_mode = !player->on_stairs && (player->crouched || (attack_frame && whip.crouched));
     const u16 crouch_frame = attack_frame ? (u16)vk_whip_crouch_visual_step(&whip) : 0;
@@ -281,7 +352,7 @@ static void show_player(const VKPlayer *player)
                 SPRITE_SIZE(4, 4),
                 TILE_ATTR_FULL(PAL2, TRUE, FALSE, flip,
                                base + source_half * tiles_per_half),
-                i == 0 ? 6 : (target_visible ? 7 : 0));
+                i == 0 ? 6 : (target_visible ? 7 : enemy_link));
         }
     }
     if (target_visible && front_mode == FRONT_COURTYARD)
@@ -307,9 +378,9 @@ static void show_player(const VKPlayer *player)
     {
         VDP_setSpriteFull(7, test_target.active ? (s16)test_target.x : -32,
             test_target.active ? (s16)test_target.y : -32, SPRITE_SIZE(2, 2),
-            TILE_ATTR_FULL(PAL3, TRUE, FALSE, FALSE, TARGET_TILE_INDEX), 0);
+            TILE_ATTR_FULL(PAL3, TRUE, FALSE, FALSE, TARGET_TILE_INDEX), enemy_link);
     }
-    VDP_updateSprites(target_visible ? 8 : 7, DMA_QUEUE);
+    VDP_updateSprites(enemy_count ? ENEMY_SPRITE_BASE + enemy_count : (target_visible ? 8 : 7), DMA_QUEUE);
 }
 
 static void load_whip_graphics(void)
@@ -539,7 +610,7 @@ int main(bool hardReset)
         }
         else if (front_mode == FRONT_CASTLE)
         {
-            if (pressed & BUTTON_START || ++front_timer >= 320) { vk_game_begin(&game); show_courtyard(0); }
+            if (pressed & BUTTON_START || ++front_timer >= 320) { vk_game_begin(&game); Enemies_init(&enemy_state); show_courtyard(0); }
             else show_castle_frame(front_timer);
         }
         else if (front_mode == FRONT_COURTYARD || front_mode == FRONT_INTERIOR)
@@ -625,7 +696,7 @@ int main(bool hardReset)
                     player = game.player;
                     show_stage1_room(game.room);
                 }
-                else { ++flame_clock; show_player(&player); }
+                else { step_enemies(); ++flame_clock; show_player(&player); }
             }
         }
         else if (front_mode == FRONT_SOUND)
