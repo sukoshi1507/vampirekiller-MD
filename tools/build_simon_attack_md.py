@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
-"""Generate conservative 8-frame SGDK attack candidates from verified ROM layers.
+"""Generate the 3 SGDK attack frames observed in an openMSX whip trace.
 
-The graphics are ROM-derived. Phase assignment is NOT verified by a live Z80 trace.
+Pairs are (lower index, upper index) as read from C42E/C42F during one SPACE attack:
+upper 6 for 2 frames, 7 for 2 frames, 8 for 8 frames, lower fixed at 0.
+See research/simon-assets/ATTACK_TRACE_OPENMSX.md. The lash itself is not generated here.
 """
 import argparse,hashlib,json,sys
 from pathlib import Path
@@ -10,7 +12,7 @@ from decode_extended_simon import components,render
 from extract_rooms import decode_room
 from probe import load_rom
 
-PAIRS=[(0,0),(0,2),(0,6),(0,9),(1,9),(1,6),(1,2),(0,0)]
+PAIRS=[(0,6),(0,7),(0,8)]
 W=64;H=32
 
 def generate(rom,out):
@@ -23,8 +25,15 @@ def generate(rom,out):
         pic,orphans,bounds=render([components(rom,low,'lower'),components(rom,up,'upper')],colors)
         if orphans:raise ValueError(f'Incomplete candidate {low}/{up}: {len(orphans)} layers unplaced')
         canvas=Image.new('RGBA',(W,H))
-        dx=bounds['min_x']+32;dy=bounds['min_y']+30
-        if dx<0 or dy<0 or dx+pic.width>W or dy+pic.height>H:raise ValueError('Candidate cannot fit anchored 64x32 buffer')
+        # Canvas origin is Simon x-24 / y-30: the traced frames span x-32..x+40, but the
+        # columns left of x-24 are transparent in frames 6 and 7 (checked, not assumed).
+        dx=bounds['min_x']+24;dy=bounds['min_y']+30
+        if dx<0:
+            cut=-dx
+            if any(pic.getpixel((x,y))[3] for x in range(cut) for y in range(pic.height)):
+                raise ValueError(f'Opaque pixels outside the anchored buffer for {low}/{up}')
+            pic=pic.crop((cut,0,pic.width,pic.height));dx=0
+        if dy<0 or dx+pic.width>W or dy+pic.height>H:raise ValueError('Candidate cannot fit anchored 64x32 buffer')
         canvas.alpha_composite(pic,(dx,dy))
         canvas.save(out/f'attack-candidate-{index}.png')
         rgba=list(canvas.getdata())
@@ -47,18 +56,18 @@ def generate(rom,out):
     header='''/* Generated ROM-derived candidate frames. Never hand edit. */
 #ifndef VK_SIMON_ATTACK_MD_H
 #define VK_SIMON_ATTACK_MD_H
-#define VK_ATTACK_FRAME_COUNT 8
+#define VK_ATTACK_FRAME_COUNT {frames}
 #define VK_ATTACK_TILES_PER_FRAME 32
 #define VK_ATTACK_TILES_PER_HALF 16
-extern const unsigned long vk_simon_attack_tiles[2048];
+extern const unsigned long vk_simon_attack_tiles[{words}];
 #endif
-'''
+'''.format(frames=len(PAIRS),words=len(alltiles))
     (out/'simon_attack_md.h').write_text(header)
-    lines=['/* Generated from Vampire Killer MSX2 ROM. Phase sequence HYPOTHETICAL. */','#include "simon_attack_md.h"','const unsigned long vk_simon_attack_tiles[2048] = {']
+    lines=['/* Generated from Vampire Killer MSX2 ROM. Phase sequence from the openMSX trace. */','#include "simon_attack_md.h"',f'const unsigned long vk_simon_attack_tiles[{len(alltiles)}] = {{']
     for i in range(0,len(alltiles),8):lines.append('    '+', '.join('0x%08XUL'%x for x in alltiles[i:i+8])+',')
     lines.append('};')
     (out/'simon_attack_md.c').write_text('\n'.join(lines)+'\n')
-    (out/'attack_candidates_manifest.json').write_text(json.dumps({'rom_sha256':hashlib.sha256(rom).hexdigest(),'asset_source':'MSX2 original, position/mask tables','phase_order_verified':False,'canvas_anchor':'image origin at Simon x-32,y-30; mirror only for left-facing','frame_assignments':manifest},indent=2)+'\n')
+    (out/'attack_candidates_manifest.json').write_text(json.dumps({'rom_sha256':hashlib.sha256(rom).hexdigest(),'asset_source':'MSX2 original, position/mask tables','phase_order_verified':False,'canvas_anchor':'image origin at Simon x-24,y-30; mirror only for left-facing','frame_assignments':manifest},indent=2)+'\n')
     return manifest
 
 if __name__=='__main__':
