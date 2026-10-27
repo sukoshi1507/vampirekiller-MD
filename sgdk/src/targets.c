@@ -16,3 +16,12 @@ int vk_target_tick(VKTarget *t, const VKWhip *w)
     t->active = 0;
     return 1;
 }
+int vk_targets_tick(VKTarget *targets, int count, const VKWhip *whip)
+{
+    int i, hit = -1;
+    for (i = 0; i < count; i++)
+    {
+        if (vk_target_tick(&targets[i], whip) && hit < 0) hit = i;
+    }
+    return hit;
+}
