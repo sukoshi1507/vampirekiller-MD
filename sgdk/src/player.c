@@ -29,7 +29,11 @@ int vk_wall(const VKByte *map, VKByte x, VKByte y, int direction,
 {
     VKByte row;
     const VKByte count = crouched ? 3 : 4;
-    const VKByte side = (VKByte)(x + (direction < 0 ? -8 : 8));
+    const int side_x = (int)x + (direction < 0 ? -8 : 8);
+    /* Past the screen edge the probe would wrap to the opposite column. Room
+     * edges are crossed by the room manager, so nothing blocks there. */
+    if (side_x < 0 || side_x > 255) return 0;
+    const VKByte side = (VKByte)side_x;
     for (row = 0; row < count; row++)
         if (vk_tile_solid(vk_sample_tile(map, side, (VKByte)(y - 2 - row * 8)), stage, special))
             return 1;

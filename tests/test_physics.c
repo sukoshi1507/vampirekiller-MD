@@ -38,6 +38,13 @@ int main(void)
     start(&p,120); p.mode=1; p.phase=1;
     for(i=0;i<12;i++) vk_player_tick_map(&p,map,1,1,0);
     assert(p.x<=88);
+    /* The right edge probe must not wrap to column 0: a solid left column does not
+     * stop Simon from reaching x 248, where the room manager takes over. */
+    memset(map,0,sizeof(map)); row(18);
+    for(i=0;i<24;i++) map[i*32]=1;
+    start(&p,160); p.x=247;
+    vk_player_tick_map(&p,map,1,1,0);
+    assert(p.x==248);
     /* Crouch: stationary, immune to jump while DOWN is held. */
     memset(map,0,sizeof(map)); row(18);
     start(&p,160);
