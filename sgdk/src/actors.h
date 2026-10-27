@@ -1,0 +1,51 @@
+#ifndef VK_ACTORS_H
+#define VK_ACTORS_H
+
+#include <genesis.h>
+#include "player.h"
+#include "enemies.h"
+#include "generated/player_assets.h"
+#include "generated/simon_attack_md.h"
+#include "generated/whip_level1_md.h"
+#include "generated/simon_crouch_md.h"
+#include "generated/flame_fx_md.h"
+
+/* Sprite VRAM layout, shared by every scene that shows Simon. */
+#define PLAYER_TILE_INDEX 1024
+#define WHIP_TILE_INDEX (PLAYER_TILE_INDEX + VK_PLAYER_POSES * VK_PLAYER_TILES_PER_POSE)
+#define ARM_TILE_INDEX (WHIP_TILE_INDEX + 3)
+#define ATTACK_TILE_INDEX (ARM_TILE_INDEX + 4)
+/* 16x16 training target, deliberately NOT an original ROM asset. */
+#define TARGET_TILE_INDEX (ATTACK_TILE_INDEX + VK_ATTACK_FRAME_COUNT * VK_ATTACK_TILES_PER_FRAME)
+#define FLAME_TILE_INDEX (TARGET_TILE_INDEX + 4)
+#define CROUCH_TILE_INDEX (FLAME_TILE_INDEX + (VK_FLAME_FRAMES + VK_SPARK_FRAMES) * VK_FLAME_TILES_PER_FRAME)
+/* Torch background once its flame is out (room_view.c). Index 1400 lies beyond
+ * the scene tiles (user index up to ~313) and the sprite tiles (1024..1359). */
+#define FLAME_A_CLEAR_TILE_INDEX 1400
+/* Standing frames of whip levels 1 and 2 (6 frames: 3 right, 3 left, see
+ * whip_levels_manifest.json). Loaded only when such a level is selected; level 0
+ * keeps its frames at ATTACK_TILE_INDEX. */
+#define WHIP_LEVEL_TILE_INDEX (FLAME_A_CLEAR_TILE_INDEX + 4)
+#define WHIP_LEVEL_TILE_COUNT (VK_WHIP_LEVEL1_FRAME_COUNT * VK_WHIP_LEVEL1_TILES_PER_FRAME)
+/* Hall enemy layers: VK_ENEMY_TILE_COUNT tiles after the whip levels; pattern N uses
+ * tile ENEMY_TILE_INDEX + (N - VK_ENEMY_FIRST_PATTERN). */
+#define ENEMY_TILE_INDEX (WHIP_LEVEL_TILE_INDEX + WHIP_LEVEL_TILE_COUNT)
+#define ENEMY_SPRITE_BASE 9           /* hardware sprites 9.. (0..8 are Simon, whip, target) */
+
+/* Hall enemies (enemies.c). Energy and invulnerability live here across rooms. */
+extern EnemyState vk_enemies;
+
+/* New game or new life: Enemies_init (full energy, no invulnerability or
+ * recoil) and a rebuild of the room's enemies on the next step. */
+void vk_reset_enemies(void);
+/* Loads the whip, attack, crouch, target and flame tiles and resets the whip. */
+void vk_load_whip_graphics(void);
+/* Simon, the whip, the hall enemies and the targets of room_view.c, as hardware
+ * sprites, then queues the sprite table. */
+void vk_show_player(const VKPlayer *player);
+/* One gameplay frame of the hall enemies (spawn, move, contact, whip hits, recoil). */
+void vk_step_enemies(void);
+/* "F0".."F4" whip keyframe check at the top right, redrawn on change only. */
+void vk_draw_attack_frame_label(void);
+
+#endif

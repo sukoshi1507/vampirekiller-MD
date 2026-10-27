@@ -20,6 +20,11 @@ Ce qui fonctionne dans la ROM Mega Drive :
   apparition, mouvement, animation, contact (-2 d'énergie, recul, invulnérabilité),
   chute sur le sol et couleurs d'après la table de couleur du MSX2.
   **Le fouet tue les ennemis de types 1 et 4** (type 1 confirmé à l'émulateur).
+- **Énergie, vies, mort, game over** : la barre PLAYER du HUD suit l'énergie (32 points).
+  À 0, Simon meurt ; 252 images plus tard l'énergie revient au maximum et, 27 images
+  après, il perd une vie et reprend. Sans vie, « GAME OVER » puis le titre (378 images).
+  Délais et compteur de vies (`C410`, 2 en jeu, 3 morts au total) mesurés sur le MSX2
+  (`research/player-health.md`).
 
 Ce qui n'est pas porté ou reste provisoire :
 
@@ -29,7 +34,11 @@ Ce qui n'est pas porté ou reste provisoire :
 - **Porte de la salle 7** : la zone de sortie est identifiée, mais son accès naturel
   depuis la salle ne l'est pas (`research/door-room7.md`).
 - **Stages 2 et suivants, châteaux, attaques autres que le fouet** : non portés.
-- **Énergie** : pas de HUD d'énergie, pas de mort ni de game over pour l'instant.
+- **Énergie (provisoire)** : échelle de la barre (2 px par point), lieu de reprise
+  (entrée du hall), commandes bloquées pendant la mort, écran de game over : non
+  relevés sur le MSX2. Les vies (`P-02`), les cœurs et le score du HUD restent figés.
+  Pas d'animation de mort ni de clignotement d'invulnérabilité. La chute dans le vide
+  ne tue pas.
 - **Provisoires** : vitesse de chute des ennemis, boîte de contact de Simon, couleurs
   des motifs 50, 54 et 64 (non observés), combinaison CC des couches d'ennemi
   (les couches se superposent au lieu de se combiner).
@@ -80,7 +89,7 @@ Les données extraites de la ROM sont versionnées dans `sgdk/src/generated/` et
 
 | Chemin | Contenu |
 | --- | --- |
-| `sgdk/src/` | Code du jeu : `player.c` (physique, escaliers), `whip.c`, `enemies.c`, `gameplay.c`, `room_manager.c`, `main.c` |
+| `sgdk/src/` | Code du jeu : `player.c` (physique, escaliers), `whip.c`, `enemies.c`, `gameplay.c`, `room_manager.c`, `health.c` (vies, mort), `main.c` (boucle), `scene.c` (logo, titre, château), `room_view.c` (salles, flammes), `actors.c` (sprites de Simon, du fouet, des ennemis), `hud.c` (barre d'énergie) |
 | `sgdk/src/generated/` | Données générées depuis la ROM (cartes, sprites, sons) |
 | `tests/` | Tests natifs (C) et Python |
 | `tools/` | Extraction, désassemblage, traces openMSX (`*.tcl`), générateurs |

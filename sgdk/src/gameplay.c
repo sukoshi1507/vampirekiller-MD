@@ -150,6 +150,20 @@ VKEvent vk_game_tick(VKGame *game, int direction, int jump, int up)
     return vk_game_tick_controls(game, direction, jump, up, 0);
 }
 
+void vk_game_respawn(VKGame *game)
+{
+    if (game->area != VK_AREA_INTERIOR)
+    {
+        vk_game_begin(game);
+        return;
+    }
+    game->room = 0;
+    game->collision_verified = 1;
+    vk_player_reset(&game->player);
+    game->player.x = 232;
+    game->player.y = 176;
+}
+
 int vk_game_debug_room(VKGame *game, VKByte room)
 {
     if (room >= 8) return 0;

@@ -1,0 +1,33 @@
+# (d) Hall : energie forcee a 2 (comme le run 4 MSX, research/player-health.md 3.4),
+# un contact la met a 0 : mort, refill, vie perdue, reapparition a l'entree du hall.
+# Puis vies forcees a 0 (run 5) : fin de partie et retour au titre.
+include boot_to_courtyard.inc
+until game.area == 1 max 3000 RIGHT
+expect health.lives == 2 and health.phase == 0 # C410 = 2 en jeu, vivant
+until enemies.alive > 0 max 600
+poke enemy_state+48 2                              # C415 = 2
+wait 2
+shot d-energy2
+until enemies.energy == 0 max 600
+set f_contact frame
+expect health.phase == 1 # mort au contact fatal
+shot d-dying
+until health.phase == 2 max 400
+expect 248 <= frame - f_contact <= 256 # etat 6 environ 252 images apres le contact
+expect enemies.energy == 32 # refill (62D0)
+until health.phase == 0 max 100
+expect health.lives == 1 # C410 2 -> 1
+expect game.area == 1 and game.room == 0 and game.player.x == 232 # reapparition (provisoire) a l'entree du hall
+wait 2
+shot d-respawn
+until enemies.alive > 0 max 600
+poke health 0                                      # C410 = 0
+poke enemy_state+48 2
+until enemies.energy == 0 max 600
+set f_contact frame
+until health.phase == 3 max 400
+expect 248 <= frame - f_contact <= 256 # fin de partie a l'etat 6
+wait 2
+shot d-game-over
+until front_mode == MODES['TITLE'] max 800
+expect 620 <= frame - f_contact <= 640 # contact -> titre environ 630 images (40,617 s -> 51,13 s)

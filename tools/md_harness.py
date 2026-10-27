@@ -34,6 +34,7 @@ Les EXPR sont du Python evalue sur l'etat : frame, front_mode, game.area, game.r
 game.player.x/.y/.facing/.mode/.crouched/.on_stairs..., player (copie affichee),
 whip.timer/.facing/.x/.y, enemies.energy/.invuln/.recoil/.alive (nb actifs),
 enemies.enemy[i].active/.type/.x/.y/.dx/.age, target (test_target), flames[0..1],
+health.lives/.phase/.timer (C410 ; phase 0 vivant, 1 mort, 2 reapparition, 3 fin de partie),
 ram8/ram16/ram32(addr|'symbole'), et les noms memorises par `set`.
 Boutons : A B C START UP DOWN LEFT RIGHT (manette 3 boutons, port 1).
 Correspondance libretro (Genesis Plus GX) : B=0 (MD B), Y=1 (MD A), START=3,
@@ -63,7 +64,11 @@ FRONT_MODES = ['LOGO', 'TITLE', 'CASTLE', 'COURTYARD', 'INTERIOR', 'VIEWER', 'TE
 
 # Tailles attendues (octets) des globales decodees : garde-fou contre une derive des structures.
 EXPECTED_SIZES = {'player': 14, 'game': 20, 'whip': 6, 'enemy_state': 56,
-                  'test_target': 18, 'courtyard_flame': 36, 'front_mode': 2}
+                  'test_target': 18, 'courtyard_flame': 36, 'front_mode': 2, 'health': 4}
+# Noms C actuels des globales partagees (sgdk/src/frontend.h, actors.h) ; les scenarios
+# gardent les noms courts. test_target et courtyard_flame sont statiques (room_view.c).
+SYMBOL_ALIASES = {'game': 'vk_game', 'player': 'vk_player', 'whip': 'vk_whip',
+                  'enemy_state': 'vk_enemies', 'front_mode': 'vk_front_mode'}
 
 
 class Game(C.Structure):
@@ -113,6 +118,8 @@ def load_symbols(elf=None, symbol_txt=None):
 def lookup(symbols, name):
     if name in symbols:
         return symbols[name]
+    if SYMBOL_ALIASES.get(name) in symbols:
+        return symbols[SYMBOL_ALIASES[name]]
     # LTO renomme parfois les statiques (nom.lto_priv.N) : un seul candidat accepte.
     hits = [k for k in symbols if k.split('.')[0] == name]
     if len(hits) == 1:
@@ -294,6 +301,9 @@ class Game_View:
                                 'recoil': m.rd8(b + 3), 'recoilDir': s8(m.rd8(b + 4)),
                                 'parity': m.rd8(b + 5), 'type4Frames': m.rd8(b + 6),
                                 'type4Side': m.rd8(b + 7)}
+        if 'health' in A:
+            a = A['health']   # VKHealth (health.h), statique de main.c
+            state['health'] = {'lives': m.rd8(a), 'phase': m.rd8(a + 1), 'timer': m.rd16(a + 2)}
         if 'test_target' in A:
             state['target'] = self.target_at(A['test_target'])
         if 'courtyard_flame' in A:

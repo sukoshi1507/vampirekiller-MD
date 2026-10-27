@@ -19,6 +19,10 @@ VKEvent vk_game_tick_controls(VKGame *game, int direction, int jump,
                               int up, int down);
 VKEvent vk_game_tick(VKGame *game, int direction, int jump, int up);
 const VKByte *vk_game_collision(const VKGame *game);
+/* Restart after a lost life (health.c). PROVISIONAL: the MSX respawn place is
+ * not traced (research/player-health.md). In the hall Simon restarts at the hall
+ * entrance (room 0, x 232, as when he walks in); in the courtyard, at its start. */
+void vk_game_respawn(VKGame *game);
 /* Explicit debug room selection; returns 0 for unsupported room. */
 int vk_game_debug_room(VKGame *game, VKByte room);
 

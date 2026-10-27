@@ -12,7 +12,7 @@ et les limites. « Prouvé » = mesuré en trace openMSX ou lu dans la ROM ;
 | `enemy-spawn.md` | Table et routine de spawn de la salle 1 | Prouvé. À corriger : Y=40 et le type 1 ne sont pas liés au bloc décrit. |
 | `enemy-assets.md` | Motifs des ennemis, palette et couleurs (table F400) | Motifs prouvés (ROM et VRAM). Couleurs prouvées pour les types A et B ; motifs 50, 54, 64 non observés. |
 | `enemies-platforms.md` | Premier ennemi observé, cadence, absence de plateforme mobile | Historique. Section 5 (plan d'implémentation) réalisée depuis dans `enemies.c`. |
-| `player-health.md` | Énergie, contact, recul, invulnérabilité, mort, fin de partie | Prouvé par trace pour le contact et la mort. Le reste est lu dans le code. |
+| `player-health.md` | Énergie, contact, recul, invulnérabilité, mort, fin de partie | Prouvé par trace pour le contact et la mort. Le reste est lu dans le code. Porté : `enemies.c` (contact), `health.c` (vies, délais de mort et de fin de partie, test `tests/test_health.c`), `hud.c` (barre PLAYER, échelle provisoire). |
 | `whip-hitbox.md` | Forme de la lanière du fouet (openMSX) | Prouvé pour les pixels mesurés. |
 | `whip-hitbox-ingame.md` | Boîte du fouet et cible d'entraînement, en jeu (MD) | Prouvé pour la boîte debout ; accroupi non mesuré. |
 | `whip-variants.md` | Fouets : variantes, séquence accroupie | Prouvé pour les niveaux 0 à 2 ; niveau 3 sans asset. |
