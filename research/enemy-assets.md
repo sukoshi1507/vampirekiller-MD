@@ -1,81 +1,62 @@
-# Ennemis de la salle 1 : graphismes et animation (état)
+# Ennemis de la salle 1 du hall : graphismes et palette (état)
 
-Statut : **extraction des tuiles non réussie**. Ce document consigne ce qui est prouvé
-(chronologie et géométrie SAT), ce qui est déduit, et le blocage restant. Aucun PNG
-d'ennemi n'est produit : aucun motif n'a pu être relié à une source ROM, et un PNG non
-vérifié serait un asset « candidate » sans preuve.
+Statut : **motifs des types A, B et C extraits de la ROM et vérifiés octet pour octet contre la VRAM d'openMSX**. Les PNG sont produits par `tools/extract_enemy_sprites.py` dans `scratchpad/enemy-assets/sprites/` (non versionné). **La couleur de jeu n'est pas résolue** : les PNG utilisent des indices de couche.
 
-ROM de référence : SHA-256 `99eabaae...`, chargée via `tools/probe.py`. Adresses CPU
-sauf mention contraire.
+ROM de référence : SHA-256 interne `99eabaae...` (copie `scratchpad/rom/`). Adresses CPU sauf mention contraire.
 
-## 1. Prouvé (trace openMSX, RAM SAT `D600-D67F`)
+## 1. Motifs VRAM : emplacement (corrigé)
 
-Source : trace VBLANK (4028), entrées SPACE puis RIGHT, identique à `research/enemies-platforms.md`
-(1.2). Fichier brut hors dépôt. Script de lecture : `tools/extract_enemy_timeline.py`.
+- Table des motifs de sprites : `R#6 = 31`, base `F800`. Un motif N occupe `F800 + 8*N` (8 octets par motif 8x8). Un sprite 16x16 utilise `N & FC` ; la couche est dans l'ordre UL (octets 0-7), LL (8-15), UR (16-23), LR (24-31).
+- L'ancienne formule `F800 + (N & FC) * 32` (ici et dans `whip/render.py`) est **fausse** pour les 16x16 : elle faisait sortir N >= 40 de la VRAM. Avec `*8` (déjà utilisé par `research/whip-variants.md`), N = 40..6C tombe dans `FA00-FB7F`, où la VRAM contient des motifs de sprites cohérents.
+- SAT : `F600` en VRAM (copie RAM `D600`), 4 octets par entrée (Y, X, N, couleur). `Y = E0` / `D0` : entrée masquée.
 
-| Ennemi | Première image | Position | Motifs (haut / bas) |
+## 2. Correspondance type -> motifs (prouvé, VRAM openMSX)
+
+Capture : `scratchpad/enemy-assets/work/run-a/vram-f02222.bin` (image trace 2222, deux ennemis en salle 1, D000=1, D001=0). Chaque ennemi = deux cellules 16x16 empilées (Y A0 puis B0), même X ; chaque cellule = deux couches N et N+4.
+
+| Type | Cellule haute (Y A0) | Cellule basse (Y B0) | Source |
 |---|---|---|---|
-| 1 | 908 | X départ `E5`, Y `A0/B0` | haut `40/44` fixe ; bas `48/4C` ↔ `50/54` |
-| 2 | 1012 | X départ `0A`, Y `A0/B0` | haut `58/5C` fixe ; bas `68/6C` ↔ `60/64` |
+| A (X 68 à l'image 2222) | 40/44 | 48/4C ou 50/54 (alternance) | pairs 0 (haut), 1 et 2 (bas) du flux `0x153E8` |
+| B (X 19 à l'image 2222) | 58/5C = miroir de 40/44 | 60/64 = miroir de 48/4C, 68/6C = miroir de 50/54 | même flux, **miroir horizontal** |
+| C (Y 70, D001=2, image 2844) | 70/74 (X 5C) et 78/7C (X 6C), côte à côte | - | flux `0x15947`, offsets 1002 et 1066 |
 
-Chronologie (images VBLANK, 60 Hz) de l'ennemi 1 : `909-922` pose `48/4C` (14 images,
-spawn compris), puis alternance de 8 images : `50/54` (923-930), `48/4C` (931-938), etc.
-Le script `tools/extract_enemy_timeline.py` reproduit cette séquence.
+- Le miroir horizontal : les quadrants gauche/droite sont échangés (UL<->UR, LL<->LR) et chaque octet est inversé bit à bit. Vérifié pour les 6 couches de B.
+- Dans les images de type D001=1 et 2, les mêmes N (40..6C) réapparaissent à Y 70 (`vram` non capturée seule, SAT observée dans `sat-log.txt`).
+- Animation de A et B : haut fixe, bas alterne toutes les 8 images (cf. `research/enemies-platforms.md`, 1.2). Les deux poses bas sont donc deux cellules distinctes.
 
-Géométrie SAT : chaque partie du corps est un couple de sprites 16x16 de même X et de même
-Y (N et N+4), ce qui suit le même schéma que Simon (couches de 16x16 par partie du corps,
-`research/player-format.md`). Ennemi complet : 16 px de large, 32 px de haut
-(Y `A0` puis `B0`). Les entrées sont à l'ordre SAT 14-17 (ennemi 1) et 18-21 (ennemi 2).
+## 3. Source ROM (prouvé)
 
-Vitesse : -1 px par image pour l'ennemi 1 (mesure de `enemies-platforms.md`, 1.2).
+- Flux RLE 1 : **fichier `0x153E8`** (banque 10 du fichier, décalage `0x13E8` dans la banque ; adresse CPU selon la fenêtre choisie par le jeu, non établie). Décodé par le même RLE que Simon (`tools/extract_player.py`) : 0 termine, 80 saute à une adresse 16 bits, 81-FF copie `n & 7F` octets, 01-7F répète l'octet suivant. Sortie : **192 octets = 3 paires de 64 octets** (couches 40/44, 48/4C, 50/54).
+- Flux RLE 2 : **fichier `0x15947`** (banque 10, décalage `0x1947`). Sortie : 1130 octets ; les couches 70/74 sont à l'octet 1002, 78/7C à l'octet 1066.
+- Un saut `80` est résolu dans la même banque 8 Ko (hypothèse, suffisante pour ces flux : les 6+4 couches sont retrouvées telles quelles).
+- Vérification : les 16 couches du manifeste (A, B, C) sont égales aux octets VRAM de `vram-f02222.bin` (A, B) et `vram-f02844.bin` (C).
 
-## 2. Prouvé mais partiel (VRAM, openMSX, images 900-1060)
+## 4. Palette (prouvé)
 
-- Registres VDP (identiques entre 1000 et 1060) : R0=6, R1=98 (sprites 16x16), R5=239
-  (SAT à `F600`), R6=31 (motifs de sprites à `F800`), R11=1.
-- Palette VDP lue par `debug read "VDP palette"` : 16 entrées au format ROM (octet 0 =
-  `R<<4|B`, octet 1 = `G`), niveaux 0-7. Le format et l'ordre sont cohérents avec
-  `tools/extract_rooms.py` (`palette_patch`). Palette de l'image 1030 enregistrée dans
-  `scratchpad/enemy-assets/cap1/f1030.txt`.
-- Le SAT en VRAM est une **rotation** du SAT RAM (ordre des entrées décalé d'une image sur
-  l'autre). Les entrées ennemies sont identiques en contenu. Les entrées de Simon diffèrent
-  (VRAM : Y=`DE`, masqué ; RAM : Y=`A2`). Cette différence **n'est pas expliquée**.
+- Palette VDP lue par `debug read_block {VDP palette}` pendant la capture 2222 : 16 entrées, identique à la palette de la salle (stage 1, salle 0) décodée par `tools/extract_rooms.py` (`decode_room(data, 1, 0)`). Palette écrite dans le manifeste et utilisée par les PNG (aperçu seulement).
+- Index 0 = transparent dans les PNG.
 
-## 3. Bloqué : emplacement des motifs ennemis
+## 5. Couleur : non résolue
 
-- Formule `F800 + (N & FC) * 32` (même que `whip/render.py`) : pour N=`40..6C`, l'adresse
-  sort de la plage de 64 Ko et tombe en zone vide (`10000`) ; avec masquage 16 bits,
-  l'adresse retombe sur les tuiles de fond (`0000-0600`), ce qui est incohérent.
-- Le bloc de VRAM `4800-4AFF` change d'une image à l'autre, mais il contient des tuiles de
-  **fond** (grille, statue, mur doré), pas des motifs d'ennemis.
-- Aucun motif VRAM ne correspond octet pour octet à une tuile de la ROM (recherche de
-  32 octets : 3 correspondances seulement, sans rapport avec les ennemis). Les motifs de
-  sprites ne sont donc pas copiés tels quels depuis la ROM : ils doivent être générés à
-  partir de masques (comme Simon, `research/player-format.md`) ou décompressés (RLE).
-- Capture d'écran : `screenshot -raw` d'openMSX fonctionne avec `SDL_VIDEODRIVER=offscreen`
-  (320x240, cadre avec bordure). Le personnage visible à gauche ne correspond pas aux
-  positions de la SAT RAM. La calibration pixel à pixel a échoué (au plus 43 pixels
-  concordants sur 600). Ce point reste **non résolu** et doit être revu avant de juger
-  n'importe quel rendu.
-
-## 4. Déduit (non vérifié)
-
-- Les motifs ennemis sont probablement décodés depuis la banque 0B/0C/0D (même chargeur
-  que Simon, `56E1`, table `A281/A2D1`) avec masques 1bpp et couleurs : **non vérifié**.
-- Le mode écran est SCREEN 4 (`R0` bits M3/M4 à 1, `R1` bits M1/M2 à 0), sprites 16x16 en
-  4 bpp. Le format 4 bpp est déduit de `whip-hitbox.md`, non prouvé pour ces motifs.
-
-## 5. Ce qui manque pour finir
-
-1. Trouver la routine qui écrit les motifs ennemis en VRAM (watchpoint sur le port `98`
-   ou sur `VRAM pointer` pendant le chargement de la salle 1, entre les images 839 et 908).
-2. Confirmer la formule d'adresse des motifs 16x16 (N ≥ 0x40) en comparant avec un rendu
-   de référence, ce qui exige une calibration validée sur Simon d'abord.
-3. Générer les PNG indexés 4 bits seulement après cette étape, avec manifeste
-   (offset ROM, banque, adresse CPU, palette, statut `candidate` ou `decoded`).
+- Le SAT ne porte aucune couleur utile (octet 3 = `00` sur toutes les entrées ennemies, en RAM comme en VRAM, sur toutes les images capturées). Le mécanisme qui rend ces sprites visibles reste à établir.
+- La table VRAM `F400-F47F` contient des valeurs de couleur (`01`, `02`, `42`, `44`...), mais elle change d'une scène à l'autre (`F470` = `42` en 2222, `00` en 2844). Elle n'est donc pas une correspondance motif -> couleur stable.
+- Les PNG utilisent les **indices de couche** : 1 = couche N seule, 2 = couche N+4 seule, 3 = les deux. Ce ne sont pas des couleurs de jeu.
+- Pour trancher : une capture d'écran réelle (openMSX `screenshot` refusé avec le rendu de cette session) ou une trace de l'écriture de `F400` (routine qui écrit la table).
 
 ## 6. Fichiers
 
-- `tools/extract_enemy_timeline.py` : chronologie des poses à partir d'une trace RAM (aucune ROM lue).
-- Données de travail (hors dépôt) : `scratchpad/enemy-assets/` (captures VRAM, registres,
-  palette, scripts d'exploration). Les `.bin` VRAM ne sont pas committés.
+- `tools/extract_enemy_sprites.py` : `python3 -I tools/extract_enemy_sprites.py ROM.rom [SORTIE]`. Écrit 5 cadres PNG 4 bits (typeA_frame0/1, typeB_frame0/1, typeC_frame0) et `manifest.json` (décalages, SHA-256 des couches, palette). Défaut de sortie : `scratchpad/enemy-assets/sprites/`.
+- Captures de travail (hors dépôt) : `scratchpad/enemy-assets/work/run-a/` (SAT, VRAM aux instants où N change, `info-*.txt`), `run-b/` (registres VDP et palette), scripts de recherche `search_*.py`, `map_layers.py`.
+- Trace : `scratchpad/enemy-assets/work/trace-a.tcl` (titre SPACE, RIGHT de 25 s à 60 s, dump VRAM à chaque nouvel ensemble de N).
+
+## 7. Types restants
+
+- Hors du hall stage 1 (D000=1) : N = 00..0C (Simon), 10..3C (scène d'intro et pièce de départ, D000=0), non extraits.
+- Type C : seul le couple 70/74 + 78/7C est vu ; sa pose (une seule image observée) et sa couleur restent à confirmer.
+- Non fait : hauteur et boîte de contact des types A/B/C, couleur, et les autres salles du stage 1 (flags 85CF, bits 1 à 5).
+
+## 8. Inconnues
+
+- Quelle routine choisit le flux (`0x153E8` ou `0x15947`) selon le type et la phase : non identifiée (les tables de `research/enemy-spawn.md` donnent le type, pas le motif).
+- Adresse CPU exacte de la banque 10 pendant la salle 1.
+- Mécanisme de couleur (section 5).
