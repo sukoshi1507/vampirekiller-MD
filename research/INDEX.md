@@ -40,7 +40,8 @@ et les limites. « Prouvé » = mesuré en trace openMSX ou lu dans la ROM ;
 | `candles-and-drops.md` | Bougies, torches et drops de la cour | Partiel : un cas complet prouvé (torche B, 17 répétitions). |
 | `castle-candles.md` | Positions des bougies des 156 salles | Partiel mais solide pour les positions. |
 | `courtyard-flames.md` | Graphismes des flammes de la cour | Prouvé. |
-| `hit-sound.md` | Son du coup sur torche | Effet MSX 0x0C prouvé ; son MD = `SFX_14` de castlevania-md, identité déduite. |
+| `hit-sound.md` | Son du coup sur torche | Effet MSX 0x0C prouvé ; table d'effets corrigée par `audio-driver.md` ; le son MD est maintenant le 0C de la ROM. |
+| `audio-driver.md` | Pilote son MSX, tous les effets et musiques | Pilote prouvé, extraction par émulation conforme à la trace openMSX (8A, 80, 05) ; lecteur MD musique + effets ; identités en partie provisoires. |
 | `sound-triggers.md` | Déclencheurs sonores du pilote MSX2 | Partiel (fouet, musique, arrêt du fouet). |
 | `animation-inventory.md` | Inventaire des animations | Inventaire. |
 | `mechanics-remaining.md` | Mécaniques restantes | Inventaire d'analyse. |

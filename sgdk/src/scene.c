@@ -3,6 +3,7 @@
 #include "actors.h"
 #include "room_view.h"
 #include "generated/intro_assets.h"
+#include "psg_player.h"
 
 static u16 front_timer;
 
@@ -15,6 +16,8 @@ void vk_show_title(void)
     VDP_drawText("PRESS START", 10, 20);
     vk_front_mode = FRONT_TITLE;
     front_timer = 0;
+    /* The MSX title is silent (no 509F request in states 0 to 2). */
+    vk_psg_stop();
 }
 
 static void show_castle_frame(u16 frame)

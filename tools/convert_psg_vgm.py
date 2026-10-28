@@ -5,8 +5,8 @@ Hypothese de conversion (documentee, candidate) :
 - Ton : periode AY P (12 bits) -> periode SN N = P. Avec horloge MSX 1789773 Hz (AY, diviseur 16)
   et horloge MD 3579545 Hz (SN, diviseur 32), la frequence est identique pour N = P. N est borne a 1..1023 ;
   les depassements sont comptes (`tone_clipped`), pas inventes.
-- Volume : AY 0..15 (environ 1.5 dB par pas) -> attenuation SN 0..15 (2 dB par pas), 15 = silence.
-  Volume 0 -> silence. L'enveloppe AY (registres 11-13, bit 4 des volumes) n'est pas reproduite :
+- Volume : AY 0..15 (3 dB par pas, table d'openMSX AY8910) -> attenuation SN 0..15 (2 dB par pas),
+  soit att = arrondi(1,5 x (15 - v)), 15 = silence. Volume 0 -> silence. L'enveloppe AY (registres 11-13, bit 4 des volumes) n'est pas reproduite :
   elle est comptee (`envelope_writes`) et doit etre traitee separement si elle apparait.
 - Bruit : une seule source SN. Le bruit AY (registre 6) est ramene au taux SN le plus proche (512/1024/2048)
   en bruit blanc. Plusieurs canaux bruites : le plus fort est conserve (`noise_conflicts`).
@@ -18,6 +18,7 @@ VGM source (voir README dans research/audio/).
 """
 import argparse
 import json
+import math
 import struct
 import sys
 from collections import Counter
@@ -82,9 +83,10 @@ def sn_latch_tone(channel, n):
 
 
 def ay_volume_to_sn_attenuation(volume):
-    if volume == 0:
+    """AY level (3 dB steps) to SN attenuation (2 dB steps); AY 0 is silence."""
+    if volume <= 0:
         return 15
-    return min(14, round((15 - volume) * 1.5 / 2))
+    return min(15, int((15 - volume) * 3 / 2 + 0.5))
 
 
 def nearest_noise_rate(np):
@@ -211,6 +213,187 @@ def build_vgm(events, total_samples):
     struct.pack_into('<I', header, 0x18, total_samples)
     struct.pack_into('<I', header, 0x34, 0x40 - 0x34)
     return bytes(header) + bytes(body)
+
+
+# ---------------------------------------------------------------------------
+# Per-frame conversion (driver output of tools/extract_msx_sound.py).
+#
+# Input: one list of AY writes (reg, value) per 60 Hz frame. Output: one bytes
+# object of SN76489 writes per frame. Rules (status in research/audio-driver.md):
+# - tone: SN N = AY P (same frequency, see above); P > 1023 is raised by octaves
+#   until it fits (the note keeps its pitch class; counted in 'tone_folded');
+# - volume: ay_volume_to_sn_attenuation; a channel whose tone is off is silent on
+#   its SN tone channel (its noise goes to the SN noise channel);
+# - noise: the loudest AY channel with noise on drives the SN noise channel
+#   (white). When SN tone 2 is free (AY C has no audible tone), the noise is
+#   clocked by tone 2 with N = AY noise period: the exact AY noise rate. Else the
+#   nearest fixed rate is used ('noise_fixed_rate');
+# - envelope (R11-R13, volume bit 4): the AY envelope is run in software and its
+#   mean amplitude over the frame becomes the volume. A continuous envelope faster
+#   than the frame on a channel without an audible tone (tone off or P < 16) is
+#   heard as a buzz: the SN tone takes the envelope frequency (PROVISIONAL).
+# ---------------------------------------------------------------------------
+FRAME_SECONDS = 1 / 60
+SN_TONE_MAX = 1023
+
+
+def fold_tone_period(period):
+    """SN period for an AY period: same value, raised by octaves above 1023."""
+    period = max(1, period)
+    folded = 0
+    while period > SN_TONE_MAX:
+        period = (period + 1) >> 1
+        folded += 1
+    return period, folded
+
+
+def envelope_level(shape, steps):
+    """AY envelope level (0..15) after `steps` envelope steps (16 per cycle)."""
+    cont, attack, alternate, hold = (shape >> 3) & 1, (shape >> 2) & 1, (shape >> 1) & 1, shape & 1
+    cycle, pos = divmod(int(steps), 16)
+    if not cont:
+        if cycle == 0:
+            return pos if attack else 15 - pos
+        return 0
+    if cycle > 0 and hold:
+        end_high = attack ^ alternate
+        return 15 if end_high else 0
+    rising = attack ^ (alternate and cycle & 1)
+    return pos if rising else 15 - pos
+
+
+def ay_amplitude(level):
+    return 0.0 if level <= 0 else 2 ** (-(15 - level) / 2)
+
+
+def amplitude_to_level(amplitude):
+    if amplitude <= ay_amplitude(1) / 2:
+        return 0
+    return max(1, min(15, int(round(15 + 2 * math.log2(amplitude)))))
+
+
+def envelope_period(regs):
+    return max(1, regs[11] | regs[12] << 8)
+
+
+def envelope_frame_level(regs, start):
+    """Mean envelope amplitude over one frame starting `start` seconds after R13."""
+    step_seconds = 16 * envelope_period(regs) / AY_CLOCK
+    samples = 64
+    total = 0.0
+    for i in range(samples):
+        t = start + (i + 0.5) * FRAME_SECONDS / samples
+        total += ay_amplitude(envelope_level(regs[13] & 15, t / step_seconds))
+    return amplitude_to_level(total / samples)
+
+
+def envelope_buzz_period(regs):
+    """SN tone period of a fast continuous envelope, or None when it is not a buzz."""
+    shape = regs[13] & 15
+    if not shape & 8 or shape in (9, 11, 13, 15):
+        return None
+    cycle_steps = 32 if shape in (10, 14) else 16
+    cycle_seconds = cycle_steps * 16 * envelope_period(regs) / AY_CLOCK
+    if cycle_seconds >= FRAME_SECONDS:
+        return None
+    # f = AY_CLOCK / (16 * 16 * EP) for a saw; SN N = SN_CLOCK / (32 f).
+    return round(SN_CLOCK * cycle_seconds / 32)
+
+
+class FrameConverter:
+    """AY register state to SN76489 writes, frame by frame, with SN state diffing."""
+
+    def __init__(self, channels=(0, 1, 2), initial_mixer=0xBC):
+        self.channels = tuple(channels)
+        self.regs = [0] * 16
+        self.regs[7] = initial_mixer
+        self.env_time = 0.0
+        self.sn_tone = [None] * 3
+        self.sn_att = [None] * 4
+        self.sn_noise = None
+        self.stats = Counter()
+
+    def forget(self):
+        """Next frame writes the full SN state (stream start, loop point)."""
+        self.sn_tone = [None] * 3
+        self.sn_att = [None] * 4
+        self.sn_noise = None
+
+    def frame(self, writes):
+        regs = self.regs
+        for reg, value in writes:
+            regs[reg & 15] = value & 0xFF
+            if reg == 13:
+                self.env_time = 0.0
+        mixer = regs[7]
+        target_tone = [None] * 3
+        target_att = [15] * 4
+        noise = None
+        noise_sources = []
+        for ch in range(3):
+            level = regs[8 + ch] & 0x0F
+            period = ay_tone_period(regs, ch)
+            tone_on = not (mixer >> ch) & 1
+            noise_on = not (mixer >> (3 + ch)) & 1
+            buzz = None
+            if regs[8 + ch] & 0x10:
+                self.stats['envelope_frames'] += 1
+                level = envelope_frame_level(regs, self.env_time)
+                if not tone_on or period < 16:
+                    buzz = envelope_buzz_period(regs)
+            if buzz is not None:
+                self.stats['envelope_buzz'] += 1
+                n, folded = fold_tone_period(buzz)
+                target_tone[ch] = n
+                target_att[ch] = ay_volume_to_sn_attenuation(level)
+            elif tone_on and level:
+                n, folded = fold_tone_period(period)
+                if folded:
+                    self.stats['tone_folded'] += 1
+                target_tone[ch] = n
+                target_att[ch] = ay_volume_to_sn_attenuation(level)
+            if noise_on and level:
+                noise_sources.append((level, ch))
+        if noise_sources:
+            if len(noise_sources) > 1:
+                self.stats['noise_conflicts'] += 1
+            level, ch = max(noise_sources)
+            np = max(1, regs[6] & 0x1F)
+            if target_att[2] == 15 and 2 in self.channels:
+                noise = 0xE7                      # white noise clocked by tone 2
+                target_tone[2] = np
+            else:
+                self.stats['noise_fixed_rate'] += 1
+                noise = 0xE4 | nearest_noise_rate(np)
+            target_att[3] = ay_volume_to_sn_attenuation(level)
+        self.env_time += FRAME_SECONDS
+        out = bytearray()
+        for ch in self.channels:
+            n = target_tone[ch]
+            if n is not None and n != self.sn_tone[ch]:
+                out += sn_latch_tone(ch, n)
+                self.sn_tone[ch] = n
+            if target_att[ch] != self.sn_att[ch]:
+                out.append(0x90 | ch << 5 | target_att[ch])
+                self.sn_att[ch] = target_att[ch]
+        if noise is not None and noise != self.sn_noise:
+            out.append(noise)
+            self.sn_noise = noise
+        if target_att[3] != self.sn_att[3]:
+            out.append(0xF0 | target_att[3])
+            self.sn_att[3] = target_att[3]
+        return bytes(out)
+
+
+def convert_frames(frames, channels=(0, 1, 2), loop=None):
+    """SN writes per frame for AY frames; the loop frame restates the full SN state."""
+    conv = FrameConverter(channels)
+    out = []
+    for index, writes in enumerate(frames):
+        if index == loop:
+            conv.forget()
+        out.append(conv.frame(writes))
+    return out, conv.stats
 
 
 def main():

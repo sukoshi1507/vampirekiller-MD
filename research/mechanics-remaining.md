@@ -44,7 +44,7 @@ La demande parle de « progression entre les 3 zones ». Le dépôt ne définit 
 | Cible d'entraînement, flamme de la cour | `main.c` (`reset_training_target`), `targets.c` | partiel : prototype (voir M17) |
 | Flammes de la cour, 2 états ROM | `generated/flame_fx_md.h` (commit `19819d0`) | partiel : tuiles ROM, cadence `flame_clock>>3` sur 4 trames A,A,B,B ; décalage de 4 ticks non porté |
 | Explorateur de 152 fonds + 153 cartes | `main.c` (`show_room`), `generated/rooms.c` | porté (outil de test, pixels comparés dans Genesis Plus GX, `README.md`) |
-| Musique et effets | `psg_player.c`, `generated/music_md.c`, `generated/sfx_md.c` | partiel : voir M29 et M30 |
+| Musique et effets | `psg_core.c`, `psg_player.c`, `generated/msx_sound_md.c` | porté : voir M29 et M30, `research/audio-driver.md` |
 | Mode test « Konami » / sound test | `sound_test.c` | hors jeu |
 
 ### 0.2 Limites de l'analyse
@@ -147,8 +147,8 @@ Les identifiants `M01`-`M28` servent à la section 3 (dépendances) et à la sec
 
 | ID | Mécanique | Statut | Preuves | Dépendances | Priorité |
 |---|---|---|---|---|---|
-| M29 | Musique de jeu (titre, cour, partie) | partiel | `sound-triggers.md` : démarrage musique prouvé (`C000=3` routine `5109`, `C000=5` même routine). MD : `music_md.c` est une **capture PSG candidate** (`research/audio/`), jouée seulement dans `sound_test.c`, pas en jeu. | M22 (ne bloque pas) | P3 |
-| M30 | Effet du fouet | partiel, hors périmètre | `generated/sfx_md.c` : **le son du fouet est emprunté au projet castlevania-md (SFX_0A NES)**, pas à la ROM MSX2. | M06 | hors périmètre |
+| M29 | Musique de jeu (titre, cour, partie) | porté | `research/audio-driver.md` : les 15 musiques sont extraites par émulation du pilote (8A et 80 identiques à la trace openMSX). En jeu : 8A au château, 80 (table `7972`) au début et après une vie perdue, 89 à la mort, 8B en fin de partie, titre muet. | - | - |
+| M30 | Effets sonores | porté (identités en partie provisoires) | `research/audio-driver.md` : 28 effets extraits de la ROM (fouet 05 identique à la trace). Branchés : fouet, coup, bloc, cœur, arme, clé, coffre, dégâts, eau, porte. | M06 | - |
 | M31 | Sons de dégât, mort, ramassage, impact, changement de salle | absent | `sound-triggers.md` : tous « inconnu ». Non déclenchés en test. | M11, M15, M20 | P3 |
 
 ### 2.7 Progression et monde
@@ -254,6 +254,6 @@ Priorité estimée pour un portage jouable (P0 = fait ou bloquant immédiat).
 
 ## 7. Fichiers consultés
 
-- Code : `sgdk/src/main.c`, `gameplay.c`, `player.c`, `player.h`, `room_manager.c`, `targets.c`, `whip.c`, `input.c`, `generated/flame_fx_md.h`, `generated/rooms.c`, `generated/stage1_collision.c`, `generated/player_assets.c`, `generated/sfx_md.c`, `generated/music_md.c`.
+- Code : `sgdk/src/main.c`, `gameplay.c`, `player.c`, `player.h`, `room_manager.c`, `targets.c`, `whip.c`, `input.c`, `generated/flame_fx_md.h`, `generated/rooms.c`, `generated/stage1_collision.c`, `generated/player_assets.c`, `generated/msx_sound_md.c`.
 - Recherche : `research/enemies-platforms.md`, `animation-inventory.md`, `sound-triggers.md`, `room-format.md`, `player-format.md`, `intro-format.md`, `diagnostic.md`, `input-gate.md`, `courtyard-flames.md`, `castlevania-nes-comparison.md`, `loading-and-states.asm`, `known.asm`, `castle-navigation/*.md`, `RETROENGINEERING_NEXT.md`, `ENGINE_CHANGES.md`.
 - ROM : `Vampire Killer (Japan, Europe) (En).rom` (dans `/tmp/claude-1000/-home-sukoshi-Documents-githubsuko-vampirekiller-MD/13d81fab-4688-46e1-bcca-3d7f6368905e/scratchpad/rom-ext/`, hors dépôt), lecture seule.

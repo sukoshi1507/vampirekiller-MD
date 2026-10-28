@@ -11,8 +11,6 @@
 #include "scene.h"
 #include "sound_test.h"
 #include "psg_player.h"
-#include "generated/sfx_md.h"
-#include "generated/sfx_hit_md.h"
 #include "enemies.h"
 #include "health.h"
 #include "hud.h"
@@ -44,6 +42,32 @@ static void show_message(const char *text)
 
 static void show_courtyard(u16 room);
 
+/* Stage music (research/audio-driver.md): table 7972 indexed by D000, played by
+ * 794F in state 4 at the start of play and after a lost life. The courtyard is
+ * D000 = 0, the hall and stage 2 are D000 = stage. */
+static const u8 stage_music[19] = {
+    0x80, 0x80, 0x80, 0x80, 0x81, 0x81, 0x81, 0x82, 0x82, 0x82,
+    0x85, 0x81, 0x81, 0x84, 0x84, 0x84, 0x83, 0x83, 0x85
+};
+static void play_stage_music(void)
+{
+    const u16 d000 = vk_game.area == VK_AREA_INTERIOR ? vk_game.stage : 0;
+    if (d000 < sizeof(stage_music)) vk_psg_music(stage_music[d000]);
+}
+
+/* Death jingle 89 (70A0-70AC): the music stops and 89 starts when C428 runs out.
+ * Fall: C428 = 30 frames in the water stages, 1 elsewhere (76BC). Fatal contact:
+ * PROVISIONAL 79 frames (C0A7 = 7 at 41.94 s after the contact at 40.617 s,
+ * research/player-health.md). */
+#define DEATH_JINGLE_CONTACT_FRAMES 79
+static u16 death_jingle_timer;
+static void step_death_jingle(void)
+{
+    if (!death_jingle_timer || --death_jingle_timer) return;
+    vk_psg_stop();
+    vk_psg_music(VK_MUSIC_DEATH);
+}
+
 static void new_game(void)
 {
     vk_game_begin(&vk_game);
@@ -53,6 +77,8 @@ static void new_game(void)
     vk_candles_begin(&vk_candles);
     vk_set_whip_level(0);
     show_courtyard(0);
+    death_jingle_timer = 0;
+    play_stage_music();
 }
 
 /* A courtyard screen, then its torches' objects and the heart count. */
@@ -76,13 +102,15 @@ static void show_hall_room(u16 room)
 static void step_candles(void)
 {
     int hit;
+    const VKByte gold_keys = vk_candles.gold_keys;
     const int events = vk_candles_tick(&vk_candles, &vk_game, &vk_whip, &hit);
     if (events & VK_CANDLE_EVENT_HIT)
     {
         vk_courtyard_flame_out(hit);
         vk_candle_view_out(hit);
-        /* The castlevania-md hit effect stands in for MSX 0x0C (0x0E for a block). */
-        vk_psg_play(vk_sfx_hit);
+        /* 7FD8: effect 0C on the contact; 87D8: effect 0E for a block (mode >= 2). */
+        vk_psg_effect(VK_SFX_HIT);
+        if (vk_candles_def(&vk_candles, hit)->mode >= 2) vk_psg_effect(VK_SFX_BLOCK);
     }
     if (events & VK_CANDLE_EVENT_WHITE_KEY)
     {
@@ -91,6 +119,12 @@ static void step_candles(void)
     }
     if (events & VK_CANDLE_EVENT_HEARTS) vk_candle_view_hearts();
     if (events & VK_CANDLE_EVENT_WEAPON) vk_set_whip_level(vk_candles.weapon);
+    /* Pickup effects, returned by the 8D3E handlers to 509F: hearts 0F (8DAF,
+     * 8DB7), whip 12 (8D8A), gold key 14 (8E5D); a chest uses a key: 11 (8F7B). */
+    if (events & VK_CANDLE_EVENT_HEARTS) vk_psg_effect(VK_SFX_HEART);
+    if (events & VK_CANDLE_EVENT_WEAPON) vk_psg_effect(VK_SFX_ITEM);
+    if (events & VK_CANDLE_EVENT_GOLD_KEY)
+        vk_psg_effect(vk_candles.gold_keys < gold_keys ? VK_SFX_CHEST : VK_SFX_KEY);
 }
 
 /* Castle door of courtyard room 2 (research/castle-entrance.md). The MSX copies the
@@ -149,6 +183,8 @@ static void respawn(void)
     vk_set_whip_level(0);
     if (vk_game.area == VK_AREA_INTERIOR) show_hall_room(vk_game.room);
     else show_courtyard(vk_game.room);
+    /* 4242: C40D = 1 after a lost life, so 794F starts the stage music again. */
+    play_stage_music();
 }
 
 /* One frame of health.c after the enemy contact; redraws the HUD bar. */
@@ -157,6 +193,8 @@ static void step_health(void)
     const bool fell = health.fell;
     const VKHealthEvent life = vk_health_tick(&health, vk_enemies.energy);
     if (life == VK_HEALTH_TITLE) { vk_show_title(); return; }
+    if (life == VK_HEALTH_DIED && !fell) death_jingle_timer = DEATH_JINGLE_CONTACT_FRAMES;
+    step_death_jingle();
     /* End of a fall (70B4): no more than 5 hearts. */
     if (fell && (life == VK_HEALTH_REFILL || life == VK_HEALTH_GAME_OVER) &&
         vk_candles.hearts > VK_HEALTH_HEARTS_AFTER_FALL)
@@ -167,7 +205,11 @@ static void step_health(void)
     if (life == VK_HEALTH_REFILL) vk_enemies.energy = ENEMY_ENERGY_MAX;
     else if (life == VK_HEALTH_RESPAWN) respawn();
     /* PROVISIONAL: the MSX game over screen (state 7) is not captured. */
-    else if (life == VK_HEALTH_GAME_OVER) VDP_drawText("GAME OVER", 11, 13);
+    else if (life == VK_HEALTH_GAME_OVER)
+    {
+        VDP_drawText("GAME OVER", 11, 13);
+        vk_psg_music(VK_MUSIC_GAME_OVER);   /* 42AB, state 6 without lives */
+    }
     vk_hud_update(vk_enemies.energy);
 }
 int main(bool hardReset)
@@ -191,7 +233,11 @@ int main(bool hardReset)
             vk_logo_tick(pressed);
         else if (vk_front_mode == FRONT_TITLE)
         {
-            if (pressed & BUTTON_START) vk_begin_castle();
+            if (pressed & BUTTON_START)
+            {
+                vk_begin_castle();
+                vk_psg_music(VK_MUSIC_START);   /* 4222: state 3, before the stage */
+            }
             else if (vk_konami_step(pressed)) { vk_sound_test_enter(); vk_front_mode = FRONT_SOUND; }
             else if (pressed & BUTTON_A)
             {
@@ -254,7 +300,7 @@ int main(bool hardReset)
                     /* No whip while knocked back: C420 = 5 ignores the controls. */
                     vk_whip_tick(&vk_whip, &vk_player, !!((pressed & BUTTON_B) && !(held & BUTTON_A)) &&
                                  !vk_game_recoiling(&vk_game));
-                    if (idle && vk_whip.timer == 14) vk_psg_play(vk_sfx_whip);
+                    if (idle && vk_whip.timer == 14) vk_psg_effect(VK_SFX_WHIP);   /* 7225 */
                 }
                 /* Make controller/attack state observable in BlastEm. No text
                  * is reprinted every frame: refresh on input or at timeout. */
@@ -267,6 +313,7 @@ int main(bool hardReset)
                 {
                     castle_door_front(TRUE);
                     vk_whip_reset(&vk_whip);
+                    vk_psg_effect(VK_SFX_DOOR);   /* 7774: C5AC = 5 */
                 }
                 if (event == VK_EVENT_ENTER) show_hall_room(0);
                 else if (event == VK_EVENT_ROOM) show_courtyard(vk_game.room);
@@ -276,6 +323,13 @@ int main(bool hardReset)
                     vk_whip_reset(&vk_whip);
                     vk_health_fall(&health, vk_game.area == VK_AREA_INTERIOR ? vk_game.stage : 0);
                     show_message("CHUTE!");
+                    /* 76BC: splash 09 in the water stages (D000 2 or 10). */
+                    if (vk_game.area == VK_AREA_INTERIOR && (vk_game.stage == 2 || vk_game.stage == 10))
+                    {
+                        vk_psg_effect(VK_SFX_WATER);
+                        death_jingle_timer = 30;
+                    }
+                    else death_jingle_timer = 1;
                 }
                 else if (vk_front_mode == FRONT_INTERIOR && direction &&
                          !(held & BUTTON_A) && !vk_game_recoiling(&vk_game) &&
@@ -301,7 +355,16 @@ int main(bool hardReset)
                         continue;
                     }
                     vk_item_view_event(item, &items, &vk_game);
-                    vk_step_enemies();
+                    /* 8E68: white key 14. PROVISIONAL: the room 7 door gives 1A
+                     * (7772: 15 only when C5AC reaches 5, at the castle door). */
+                    if (item == VK_ITEM_KEY_TAKEN) vk_psg_effect(VK_SFX_KEY);
+                    else if (item == VK_ITEM_DOOR_OPENED) vk_psg_effect(VK_SFX_DOOR_1A);
+                    {
+                        /* 6F9A: effect 13 when a contact starts the recoil (C42D set). */
+                        const EnemyU8 invuln = vk_enemies.invuln;
+                        vk_step_enemies();
+                        if (!invuln && vk_enemies.invuln) vk_psg_effect(VK_SFX_DAMAGE);
+                    }
                     step_candles();
                     vk_flames_tick();
                     vk_show_player(&vk_player);

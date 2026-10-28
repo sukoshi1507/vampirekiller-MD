@@ -1,0 +1,25 @@
+# (m) Sons MSX aux evenements (research/audio-driver.md) : musique 80 au debut de la
+# cour (794F, table 7972), fouet 05 (7225), coup sur la torche A 0C (7FD8), coeur
+# ramasse 0F (8DAF), puis la musique continue apres l'effet.
+# vk_psg (psg_core.h, 44 octets) : music_id +20, effect_id +21, last_effect +22,
+# effect_count +24 (16 bits), c_muted +27.
+include boot_to_courtyard.inc
+expect ram8('vk_psg+20') == 0x80 # musique des stages 0 a 3
+expect ram8('vk_psg+21') == 0 # aucun effet
+hold B 2
+until ram8('vk_psg+22') == 0x05 max 4 # fouet a vide
+expect ram8('vk_psg+21') == 0x05
+until ram8('vk_psg+21') == 0 max 20 # l'effet 05 dure 13 images
+expect ram8('vk_psg+20') == 0x80 # la musique continue
+until (ram8('vk_psg+27')) == 0 max 120 # voie C rendue a la note suivante
+wait 10
+poke vk_game+0 44
+wait 4
+hold B 2
+until ram8('vk_psg+22') == 0x0C max 20 # coup sur la torche A
+expect ram8('vk_candles+4') == 2 # torche A eteinte
+until ram8('vk_candles+6') == 3 max 400 # le coeur est pose
+until ram8('vk_psg+22') == 0x0F max 200 RIGHT # coeur ramasse
+expect ram8('vk_candles+118') == 1
+expect ram16('vk_psg+24') == 4 # 05, 05 puis 0C (comme 517D sur MSX : fouet puis coup), 0F
+expect ram8('vk_psg+20') == 0x80

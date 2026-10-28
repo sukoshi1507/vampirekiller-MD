@@ -95,8 +95,7 @@ Les données extraites de la ROM sont versionnées dans `sgdk/src/generated/` et
 | Script | Produit | Entrée |
 | --- | --- | --- |
 | `tools/build_enemy_sprites_md.py` | `generated/enemy_sprites_md.c/.h` | ROM via `VK_ROM_PATH` |
-| `tools/build_sfx_md.py` | `generated/sfx_md.c` (son du fouet) | dépôt castlevania-md voisin |
-| `tools/build_sfx_hit_md.py` | `generated/sfx_hit_md.c` (son de coup) | dépôt castlevania-md voisin |
+| `tools/build_msx_sound_md.py` | `generated/msx_sound_md.c/.h` (tous les effets et musiques, pilote son MSX émulé) et `research/audio/msx_sounds.json` | ROM via `VK_ROM_PATH` ou en argument |
 | `tools/build_door_key_md.py` | `generated/door_key_md.c/.h` (clé, case du HUD, barreau) | instantanés VRAM openMSX du run K3 (`scratchpad/`, non versionnés) |
 
 ## Organisation

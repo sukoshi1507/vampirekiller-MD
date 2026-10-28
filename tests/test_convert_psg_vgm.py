@@ -55,5 +55,43 @@ class PsgConversionTests(unittest.TestCase):
         self.assertEqual(vgm[-1], 0x66)
 
 
+class FrameConversionTests(unittest.TestCase):
+    def test_volume_is_three_db_per_ay_step(self):
+        self.assertEqual(conv.ay_volume_to_sn_attenuation(13), 3)
+        self.assertEqual(conv.ay_volume_to_sn_attenuation(5), 15)
+
+    def test_low_tone_is_raised_by_octaves(self):
+        self.assertEqual(conv.fold_tone_period(1000), (1000, 0))
+        self.assertEqual(conv.fold_tone_period(2000), (1000, 1))
+        self.assertEqual(conv.fold_tone_period(4095), (512, 3))
+        self.assertEqual(conv.fold_tone_period(0), (1, 0))
+
+    def test_envelope_shapes(self):
+        self.assertEqual(conv.envelope_level(0, 0), 15)     # decay
+        self.assertEqual(conv.envelope_level(0, 20), 0)
+        self.assertEqual(conv.envelope_level(13, 40), 15)   # attack then hold high
+        self.assertEqual(conv.envelope_level(10, 16), 0)    # triangle: decay then attack
+        self.assertEqual(conv.envelope_level(10, 31), 15)
+
+    def test_effect_on_channel_c_only(self):
+        fc = conv.FrameConverter(channels=(2,))
+        out = fc.frame([(7, 0xB8), (4, 0x80), (5, 0), (10, 15), (8, 15), (0, 0x10)])
+        self.assertEqual(out, bytes([0xC0, 0x08, 0xD0, 0xFF]))
+
+    def test_noise_clocked_by_tone_two_when_free(self):
+        fc = conv.FrameConverter(channels=(2,))
+        # Mixer 9C: tone C off, noise C on; noise period 26.
+        out = fc.frame([(7, 0x9C), (6, 26), (10, 14)])
+        self.assertIn(bytes(conv.sn_latch_tone(2, 26)), out)
+        self.assertIn(0xE7, out)
+        self.assertIn(0xF0 | conv.ay_volume_to_sn_attenuation(14), out)
+
+    def test_unchanged_state_writes_nothing_and_loop_restates(self):
+        frames = [[(7, 0xB8), (0, 100), (8, 15)], [(7, 0xB8)], [(0, 100)]]
+        out, _ = conv.convert_frames(frames, (0,), loop=2)
+        self.assertEqual(out[1], b'')
+        self.assertEqual(out[2], bytes([0x84, 0x06, 0x90, 0xFF]))   # noise silence too
+
+
 if __name__ == '__main__':
     unittest.main()
