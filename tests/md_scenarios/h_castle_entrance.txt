@@ -17,8 +17,13 @@ expect frame - t0 == 67 # sortie a x 232 (t 64) + 3 images
 expect game.area == 1 and game.room == 0 and front_mode == MODES['COURTYARD'] # hall en logique, ecran noir
 wait 2
 shot h-noir
-until front_mode == MODES['INTERIOR'] max 60
+# Les 36 images noires se comptent sur la logique (game.entrance revient a 0). Le mode
+# INTERIOR n'est pose qu'a la fin du dessin du hall (scene 6, environ une image de 68000
+# dans le meme tour de boucle) : depuis que le lecteur PSG tourne en V-Int, ce dessin
+# commence un peu plus tard dans l'image et peut finir sur l'image suivante.
+until game.entrance == 0 max 60
 expect frame - t0 == 103 # 36 images noires
+until front_mode == MODES['INTERIOR'] max 1
 expect game.entrance == 0 and game.player.x == 16 and game.player.y == 192 # retour en jeu (image 1555 MSX)
 wait 2
 shot h-hall

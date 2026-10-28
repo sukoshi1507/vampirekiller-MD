@@ -7,9 +7,12 @@
 
 /* MSX2 sound requests on the Mega Drive PSG. The ids are those the game passes to
  * the MSX request routine 509F (research/audio-driver.md): 0x01..0x1C effects,
- * 0x80..0x8E music. Channel sharing and priority: psg_core.h. Call
- * vk_psg_update once per frame. */
+ * 0x80..0x8E music. Channel sharing and priority: psg_core.h. vk_psg_init
+ * installs the player in the vertical interrupt (one step per VBLANK, as the MSX
+ * driver in H.TIMI); the requests below are safe from the main loop. */
 extern VKPsg vk_psg;
+
+void vk_psg_init(void);
 
 bool vk_psg_music(u8 id);       /* 509F with A = 80..8E */
 bool vk_psg_effect(u8 id);      /* 509F with A = 01..1C; FALSE when refused */
@@ -19,7 +22,6 @@ void vk_psg_pause(void);        /* 509F with A = FD: pause jingle, the rest froz
 void vk_psg_resume(void);       /* 509F with A = FE */
 /* Sound test: any stream on the music voice (FB timed item, FD pause jingle). */
 void vk_psg_play_stream(const VKSoundStream *stream);
-void vk_psg_update(void);
 
 /* MSX request ids used by the game code (callers: research/audio-driver.md). */
 #define VK_SFX_WHIP 0x05         /* 7225 */
