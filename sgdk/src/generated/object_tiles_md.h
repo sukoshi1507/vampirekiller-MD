@@ -4,4 +4,7 @@
 #include <genesis.h>
 extern const u32 vk_object_tiles[1088];
 extern const u32 vk_hud_digit_tiles[80];
+#define VK_MSX_FONT_FIRST 0x20
+#define VK_MSX_FONT_COUNT 64
+extern const u32 vk_msx_font_tiles[512];
 #endif

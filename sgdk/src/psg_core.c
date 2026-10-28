@@ -84,6 +84,23 @@ void vk_psg_core_fade(VKPsg *p)
     if (p->music.playing && !p->fade_timer) p->fade_timer = VK_PSG_FADE_FRAMES;
 }
 
+void vk_psg_core_pause(VKPsg *p, const VKSoundStream *s)
+{
+    if (p->paused) return;
+    p->paused = 1;
+    p->pause_edge = 1;
+    if (s && s->data) voice_start(&p->pause, s);
+    else p->pause.playing = 0;
+}
+
+void vk_psg_core_resume(VKPsg *p)
+{
+    if (!p->paused) return;
+    p->paused = 0;
+    p->pause.playing = 0;
+    p->pause_edge = 2;
+}
+
 /* Music volume byte with the fade: one AY step (3 dB) is 1.5 SN steps (2 dB). */
 static VKPsgByte faded(const VKPsg *p, VKPsgByte b)
 {
@@ -193,9 +210,44 @@ static int effect_frame(VKPsg *p, VKPsgByte *out)
     return n;
 }
 
+/* One frame of the pause jingle; at its end its channels go silent. */
+static int pause_frame(VKPsg *p, VKPsgByte *out)
+{
+    VKPsgVoice *v = &p->pause;
+    VKPsgByte header = *v->cursor;
+    int count, i;
+    if (header == VK_PSG_FRAME_END)
+    {
+        if (v->stream->loop == VK_PSG_NO_LOOP)
+        {
+            v->playing = 0;
+            return vk_psg_core_silence(out);
+        }
+        v->cursor = v->stream->data + v->stream->loop;
+        header = *v->cursor;
+    }
+    count = header & VK_PSG_COUNT_MASK;
+    for (i = 0; i < count; i++) out[i] = v->cursor[1 + i];
+    v->cursor += 1 + count;
+    return count;
+}
+
 int vk_psg_core_frame(VKPsg *p, VKPsgByte *out)
 {
     int n = 0;
+    if (p->pause_edge == 1)
+        n += vk_psg_core_silence(out);
+    else if (p->pause_edge == 2 && p->music.playing)
+        /* 522D: the saved registers go back; channel C waits for the effect or
+         * its next note as after an effect. */
+        n += restore(p, out, 0x0F & ~music_mask(p));
+    p->pause_edge = 0;
+    /* 8964 with C098 bit 0: only the pause voice runs. */
+    if (p->paused)
+    {
+        if (p->pause.playing) n += pause_frame(p, out + n);
+        return n;
+    }
     /* 8964 order: the three music channels, then the effect channel. */
     if (p->music.playing)
     {

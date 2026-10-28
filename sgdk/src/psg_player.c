@@ -43,6 +43,16 @@ void vk_psg_fade(void)
     vk_psg_core_fade(&vk_psg);
 }
 
+void vk_psg_pause(void)
+{
+    vk_psg_core_pause(&vk_psg, &vk_msx_pause);
+}
+
+void vk_psg_resume(void)
+{
+    vk_psg_core_resume(&vk_psg);
+}
+
 void vk_psg_update(void)
 {
     const u16 rate = IS_PAL_SYSTEM ? 50 : 60;

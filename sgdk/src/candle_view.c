@@ -4,6 +4,7 @@
 #include "generated/object_tiles_md.h"
 #include "generated/rooms.h"
 #include "hud.h"
+#include "msx_text.h"
 
 /* Free VRAM between the HUD tiles (hud.h) and the sprite tiles of actors.h (1024).
  * Not past the sprite tiles: SGDK keeps its font at 1440..1535. */
@@ -20,8 +21,8 @@
 #define HUD_DIGIT_COL 24
 #define CANDLE_FRAME_TICKS 8          /* PROVISIONAL: the MSX candle cadence is not measured */
 
-_Static_assert(GOLD_KEY_TILE_INDEX + 4 <= PLAYER_TILE_INDEX,
-               "candle tiles must end before the sprite tiles");
+_Static_assert(GOLD_KEY_TILE_INDEX + 4 <= MSX_TEXT_TILE_INDEX,
+               "candle tiles must end before the text tiles (msx_text.h)");
 _Static_assert(CROUCH_TILE_INDEX + VK_CROUCH_TILE_COUNT <= 1440,   /* TILE_FONT_INDEX, 1536 - 96 */
                "sprite tiles must end before the SGDK font");
 

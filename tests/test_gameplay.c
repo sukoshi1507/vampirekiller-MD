@@ -282,6 +282,22 @@ int main(void)
     vk_game_hit(&g, -1, 0);
     assert(!vk_game_recoiling(&g));
 
+    /* Effect 07 (6F7E): a fall begun on the ground ends with VK_EVENT_LAND; a
+     * jump lands without it (6D26, CFF0 not ported). */
+    vk_game_debug_room(&g, 0);
+    g.player.x = 120;
+    g.player.y = 150;
+    {
+        int f, lands = 0;
+        for (f = 0; f < 120; f++)
+            if (vk_game_tick_controls(&g, 0, 0, 0, 0) == VK_EVENT_LAND) lands++;
+        assert(lands == 1 && g.player.y == 192 && g.player.mode == 0);
+        assert(vk_game_tick_controls(&g, 0, 1, 0, 0) == VK_EVENT_NONE && g.player.mode == 1);
+        for (f = 0; f < 120; f++)
+            if (vk_game_tick_controls(&g, 0, 0, 0, 0) == VK_EVENT_LAND) lands++;
+        assert(lands == 1 && g.player.y == 192 && g.player.mode == 0);
+    }
+
     /* Stage 2 after the door of hall room 7: room 0 at x 16, y 96, on a floor of
      * its own map; the six rooms and the ROM links (U2 D4 R1 for room 0). */
     vk_game_begin(&g);

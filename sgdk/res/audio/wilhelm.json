@@ -1,0 +1,16 @@
+{
+  "source_page": "https://commons.wikimedia.org/wiki/File:Wilhelm_Scream.ogg",
+  "source_url": "https://upload.wikimedia.org/wikipedia/commons/d/d9/Wilhelm_Scream.ogg",
+  "source_license": "CC0, as indicated on the Commons file page",
+  "source_sha256": "360097c9715f55abcc26ab73f12f69b730c660fbf019fc63caa685bfa9b6585b",
+  "sha256": "d3ca0e60d0b3ca2ce2f52c9cb64c627df7e8964a2ca59b4bacb3480d9f9b5c42",
+  "rate": 22050,
+  "channels": 1,
+  "bits": 8,
+  "signed": true,
+  "samples": 34839,
+  "bytes": 35072,
+  "seconds": 1.5905668934240362,
+  "loop": false,
+  "alignment": 256
+}

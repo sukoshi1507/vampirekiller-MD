@@ -15,6 +15,8 @@ bool vk_psg_music(u8 id);       /* 509F with A = 80..8E */
 bool vk_psg_effect(u8 id);      /* 509F with A = 01..1C; FALSE when refused */
 void vk_psg_stop(void);         /* 509F with A = 00 */
 void vk_psg_fade(void);         /* 509F with A = FF */
+void vk_psg_pause(void);        /* 509F with A = FD: pause jingle, the rest frozen */
+void vk_psg_resume(void);       /* 509F with A = FE */
 /* Sound test: any stream on the music voice (FB timed item, FD pause jingle). */
 void vk_psg_play_stream(const VKSoundStream *stream);
 void vk_psg_update(void);

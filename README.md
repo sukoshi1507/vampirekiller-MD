@@ -32,7 +32,13 @@ Ce qui fonctionne dans la ROM Mega Drive :
   À 0, Simon meurt ; 252 images plus tard l'énergie revient au maximum et, 27 images
   après, il perd une vie et reprend. Sans vie, « GAME OVER » puis le titre (378 images).
   Délais et compteur de vies (`C410`, 2 en jeu, 3 morts au total) mesurés sur le MSX2
-  (`research/player-health.md`).
+  (`research/player-health.md`). L'écran de fin de partie reprend celui du MSX2
+  (écran effacé, « GAME  OVER » à la police MSX).
+- **Pause** : START met le jeu en pause avec le son du MSX2 (silence, jingle, puis
+  reprise de la musique où elle était) ; A+START retourne au titre (raccourci de debug).
+- **Son** : musiques et effets MSX2 émulés depuis le pilote de la ROM sur le PSG
+  (`research/audio-driver.md`). Ajout du port : le cri de Wilhelm (CC0) quand Simon
+  tombe dans un trou ou dans l'eau.
 
 Ce qui n'est pas porté ou reste provisoire :
 
@@ -50,8 +56,7 @@ Ce qui n'est pas porté ou reste provisoire :
 - **Clé dorée** et coffre : non portés.
 - **Stages 3 et suivants, châteaux, attaques autres que le fouet** : non portés.
 - **Énergie (provisoire)** : échelle de la barre (2 px par point), lieu de reprise
-  (entrée du hall), commandes bloquées pendant la mort, écran de game over : non
-  relevés sur le MSX2. Les vies (`P-02`), les cœurs et le score du HUD restent figés.
+  (entrée du hall), commandes bloquées pendant la mort : non relevés sur le MSX2. Les vies (`P-02`), les cœurs et le score du HUD restent figés.
   Pas d'animation de mort ni de clignotement d'invulnérabilité. La chute dans le vide
   ne tue pas.
 - **Provisoires** : vitesse de chute des ennemis, boîte de contact de Simon.

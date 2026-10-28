@@ -60,6 +60,9 @@ typedef struct {
     VKPsgByte noise;             /* last music noise control byte, 0 = none yet */
     VKPsgByte pending;           /* channel of the last music tone latch */
     VKPsgByte effect_new;        /* the effect starts this frame: clear its channels */
+    VKPsgVoice pause;            /* FD jingle (C01A), the only voice while paused */
+    VKPsgByte paused;            /* C098 bit 0 */
+    VKPsgByte pause_edge;        /* 1: silence everything (FD), 2: restore (FE) */
 } VKPsg;
 
 void vk_psg_core_reset(VKPsg *p);
@@ -68,6 +71,10 @@ int vk_psg_core_music(VKPsg *p, const VKSoundStream *s, VKPsgByte id);
 int vk_psg_core_effect(VKPsg *p, const VKSoundStream *s, VKPsgByte id);
 void vk_psg_core_stop(VKPsg *p);
 void vk_psg_core_fade(VKPsg *p);
+/* FD (51C4): every channel silent, music and effect frozen, the pause jingle s
+ * alone. FE (522D): the music channels come back where they were. */
+void vk_psg_core_pause(VKPsg *p, const VKSoundStream *s);
+void vk_psg_core_resume(VKPsg *p);
 /* Bytes to silence the PSG (written by a stop). */
 int vk_psg_core_silence(VKPsgByte *out);
 /* One 60 Hz frame: fills out with the PSG bytes to write, returns their count. */

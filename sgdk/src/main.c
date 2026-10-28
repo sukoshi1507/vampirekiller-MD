@@ -11,6 +11,7 @@
 #include "scene.h"
 #include "sound_test.h"
 #include "psg_player.h"
+#include "msx_text.h"
 #include "enemies.h"
 #include "health.h"
 #include "hud.h"
@@ -19,6 +20,7 @@
 #include "candle_view.h"
 #include "generated/intro_assets.h"
 #include "room_freeze.h"
+#include "wilhelm_audio.h"
 
 /* Front-end state machine and game loop. Display lives in scene.c (logo, title,
  * castle), room_view.c (rooms, flames, target) and actors.c (Simon, whip, enemies). */
@@ -231,6 +233,26 @@ static void room_freeze_step(void)
     }
 }
 
+/* Pause (5C3A, state 11): "PAUSE" copied at (108, 88) over the room (4495), the
+ * pause jingle FD; the key again restores the room (44B8) and plays FE. */
+#define PAUSE_X 108
+#define PAUSE_Y 88
+static bool paused;
+
+static void pause_start(void)
+{
+    paused = TRUE;
+    vk_msx_text(BG_B, PAUSE_X, PAUSE_Y, "PAUSE", MSX_TEXT_TILE_INDEX, TRUE);
+    vk_psg_pause();
+}
+
+static void pause_end(void)
+{
+    paused = FALSE;
+    vk_msx_text_clear(BG_B, PAUSE_X, PAUSE_Y, 5);
+    vk_psg_resume();
+}
+
 /* State 4 after a lost life: full energy, empty room, provisional restart place. */
 static void respawn(void)
 {
@@ -243,6 +265,19 @@ static void respawn(void)
     else show_courtyard(vk_game.room);
     /* 4242: C40D = 1 after a lost life, so 794F starts the stage music again. */
     play_stage_music();
+}
+
+/* State 7 (42E3): the screen is cleared (47B9), "GAME  OVER" written at (88, 88)
+ * (text 4D3A) and the HUD drawn again (4513). The HUD rows 0..3 are kept here, as
+ * 4513 redraws them as they were. "F5 _ CONTINUE" (4300) needs E600, set by 5C92
+ * only with a second Konami cartridge in another slot: not on the Mega Drive.
+ * PROVISIONAL: the HUD gold key (a sprite here, 8EE6) is not shown. */
+static void show_game_over(void)
+{
+    hide_sprites();
+    VDP_clearTileMapRect(BG_A, 0, 4, 32, 24);
+    VDP_clearTileMapRect(BG_B, 0, 0, 32, 28);
+    vk_msx_text(BG_A, 88, 88, "GAME  OVER", MSX_TEXT_TILE_INDEX, FALSE);
 }
 
 /* One frame of health.c after the enemy contact; redraws the HUD bar. */
@@ -265,7 +300,7 @@ static void step_health(void)
     /* PROVISIONAL: the MSX game over screen (state 7) is not captured. */
     else if (life == VK_HEALTH_GAME_OVER)
     {
-        VDP_drawText("GAME OVER", 11, 13);
+        show_game_over();
         vk_psg_music(VK_MUSIC_GAME_OVER);   /* 42AB, state 6 without lives */
     }
     vk_hud_update(vk_enemies.energy);
@@ -280,6 +315,8 @@ int main(bool hardReset)
     VDP_setScreenWidth256();
     VDP_setScreenHeight224();
     JOY_init();
+    /* Loaded once here: a load at the first scream would cost a frame. */
+    SND_PCM_loadDriver(TRUE);
     vk_logo_start();
     while (TRUE)
     {
@@ -318,11 +355,23 @@ int main(bool hardReset)
             const bool jump = locked ? FALSE : input.jump_pressed;
             /* State 9: every key, START included, waits for the end of the freeze. */
             if (vk_room_freeze_active(&room_freeze)) room_freeze_step();
-            else if (pressed & BUTTON_START)
+            /* State 11 (43DA): only the pause key is read. */
+            else if (paused)
+            {
+                if (pressed & BUTTON_START) pause_end();
+            }
+            /* Debug: A+START goes back to the title. */
+            else if ((pressed & BUTTON_START) && (input.keys & BUTTON_A))
             {
                 if (vk_game_entrance_locked(&vk_game)) castle_door_front(FALSE);
                 vk_show_title();
             }
+            /* 5C3A: the pause key in state 5 (alive or dying, not states 6 and 7). */
+            else if ((pressed & BUTTON_START) &&
+                     (health.phase == VK_LIFE_ALIVE || health.phase == VK_LIFE_DYING))
+                pause_start();
+            /* State 7: only the countdown to the title runs. */
+            else if (health.phase == VK_LIFE_GAME_OVER) step_health();
             else if (vk_game_entrance_locked(&vk_game)) castle_entrance_step();
             else
             {
@@ -375,6 +424,7 @@ int main(bool hardReset)
                     vk_whip_reset(&vk_whip);
                     vk_psg_effect(VK_SFX_DOOR);   /* 7774: C5AC = 5 */
                 }
+                if (event == VK_EVENT_LAND) vk_psg_effect(VK_SFX_LANDING);   /* 6F7E */
                 if (event == VK_EVENT_ENTER) show_hall_room(0);
                 else if (event == VK_EVENT_ROOM || event == VK_EVENT_VERTICAL) begin_room_freeze();
                 else if (event == VK_EVENT_FALL)
@@ -382,6 +432,9 @@ int main(bool hardReset)
                     vk_whip_reset(&vk_whip);
                     vk_health_fall(&health, vk_game.area == VK_AREA_INTERIOR ? vk_game.stage : 0);
                     show_message("CHUTE!");
+                    /* Port addition, not in the ROM: the Wilhelm scream on the
+                     * DAC (FM channel 6), the PSG keeps the MSX sounds. */
+                    SND_PCM_startPlay(wilhelm_pcm, sizeof(wilhelm_pcm), SOUND_PCM_RATE_22050, SOUND_PAN_CENTER, FALSE);
                     /* 76BC: splash 09 in the water stages (D000 2 or 10). */
                     if (vk_game.area == VK_AREA_INTERIOR && (vk_game.stage == 2 || vk_game.stage == 10))
                     {

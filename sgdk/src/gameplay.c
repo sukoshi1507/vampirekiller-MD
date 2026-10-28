@@ -80,6 +80,7 @@ static void vk_entrance_clear(VKGame *game)
     game->entrance_step = 0;
     game->entrance_timer = 0;
     game->recoil = VK_RECOIL_NONE;
+    game->ground_fall = 0;
 }
 
 void vk_game_begin(VKGame *game)
@@ -288,6 +289,7 @@ VKEvent vk_game_tick_controls(VKGame *game, int direction, int jump, int up, int
     VKPlayer *p = &game->player;
     const VKRoomLink *links = game->area == VK_AREA_INTERIOR ? vk_stage_links(game->stage) : 0;
     const int recoiling = game->recoil != VK_RECOIL_NONE;
+    int landed = 0;
     /* Courtyard room 2 -> hall room 0 through the castle door (see above). UP at
      * x=192..216 does not change room. */
     if (game->entrance) return vk_entrance_tick(game);
@@ -305,8 +307,20 @@ VKEvent vk_game_tick_controls(VKGame *game, int direction, int jump, int up, int
     }
 
     if (!recoiling)
+    {
+        const VKByte mode = p->mode;
         vk_player_tick_controls(p, vk_game_collision(game), vk_game_limit_stage(game),
                                 direction, jump, down, up);
+        /* The MSX falls in state 4 only from the ground (6BA5); its jump lands in
+         * state 1 (6D26), where effect 07 needs CFF0 != 0 (PROVISIONAL, not ported). */
+        if (mode == 0 && p->mode == 4) game->ground_fall = 1;
+        else if (p->mode == 1) game->ground_fall = 0;
+        else if (mode == 4 && p->mode == 0 && game->ground_fall)
+        {
+            game->ground_fall = 0;
+            landed = 1;
+        }
+    }
 
     if (!recoiling && game->area == VK_AREA_COURTYARD && direction != 0 &&
         ((direction > 0 && p->x >= 248) || (direction < 0 && p->x <= 8)))
@@ -388,7 +402,7 @@ VKEvent vk_game_tick_controls(VKGame *game, int direction, int jump, int up, int
         if (!p->y) p->y = 200;
         return VK_EVENT_VERTICAL;
     }
-    return VK_EVENT_NONE;
+    return landed ? VK_EVENT_LAND : VK_EVENT_NONE;
 }
 
 VKEvent vk_game_tick(VKGame *game, int direction, int jump, int up)

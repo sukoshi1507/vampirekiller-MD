@@ -1,0 +1,20 @@
+# (o) Pause (5C3A, etat 11 en 43DA) : START gele le jeu, ecrit PAUSE en (108, 88) et joue
+# le jingle FD (51C4 : toutes les voies coupees, seule la voie de pause tourne) ; START
+# encore efface le texte, joue FE (522D) et le jeu reprend.
+# vk_psg : music_id +20, paused +54 (C098 bit 0).
+include boot_to_courtyard.inc
+wait 20
+expect ram8('vk_psg+20') == 0x80 and ram8('vk_psg+54') == 0
+tap START
+wait 2
+expect ram8('vk_psg+54') == 1 # FD : pause du son
+set x0 game.player.x
+hold RIGHT+B 40
+expect game.player.x == x0 and whip.timer == 0 # touches ignorees en pause
+shot o-pause
+tap START
+wait 2
+expect ram8('vk_psg+54') == 0 and ram8('vk_psg+20') == 0x80 # FE : la musique reprend
+hold RIGHT 20
+expect game.player.x > x0 # le jeu reprend
+shot o-reprise

@@ -9,7 +9,8 @@ typedef enum { VK_EVENT_NONE = 0, VK_EVENT_ROOM = 1, VK_EVENT_ENTER = 2,
                VK_EVENT_VERTICAL = 3,
                VK_EVENT_ENTRANCE = 4,       /* castle door reached: Simon walks in alone */
                VK_EVENT_ENTRANCE_DARK = 5,  /* courtyard left: the screen goes black */
-               VK_EVENT_FALL = 6            /* bottom edge without a room below: life lost */
+               VK_EVENT_FALL = 6,           /* bottom edge without a room below: life lost */
+               VK_EVENT_LAND = 7            /* landing of a fall begun on the ground (6F7E) */
              } VKEvent;
 /* Castle entrance of courtyard room 2 (research/castle-entrance.md). */
 typedef enum { VK_ENTRANCE_NONE = 0,
@@ -30,6 +31,7 @@ typedef struct {
     VKByte recoil_count;     /* C42A: arc step in the air, then frames on the floor */
     VKByte recoil_land;      /* C42A on landing: 4, or 16 when the energy is 0 (6FFF) */
     signed char recoil_dir;  /* -1 pushed left (6C2F), 1 pushed right (6C53) */
+    VKByte ground_fall;      /* C420 = 4: a fall from the ground (6BA5), not a jump */
 } VKGame;
 /* Enemy contact recoil (research/player-health.md, "Recul au coup recu"). */
 typedef enum { VK_RECOIL_NONE = 0,

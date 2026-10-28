@@ -100,6 +100,25 @@ int main(void)
     n = vk_psg_core_frame(&p, out);
     assert(n == 2 && out[0] == 0xC6);             /* looped to frame 1 */
 
+    /* Pause (FD): every channel silent, the jingle alone, the music frozen;
+     * FE puts the music channels back and the music goes on where it was. */
+    vk_psg_core_reset(&p);
+    vk_psg_core_music(&p, &music, 0x80);
+    vk_psg_core_frame(&p, out);
+    vk_psg_core_pause(&p, &effect);
+    n = vk_psg_core_frame(&p, out);
+    assert(n == 4 + 3 && out[0] == 0x9F && out[3] == 0xFF && out[4] == 0xCA);
+    n = vk_psg_core_frame(&p, out);
+    assert(n == 1 && out[0] == 0xF1);
+    n = vk_psg_core_frame(&p, out);
+    assert(n == 4 && !p.pause.playing);           /* jingle over: silence */
+    n = vk_psg_core_frame(&p, out);
+    assert(n == 0 && p.paused);
+    vk_psg_core_resume(&p);
+    n = vk_psg_core_frame(&p, out);
+    assert(contains(out, n, 0x81) && contains(out, n, 0x90) && contains(out, n, 0xD2));
+    assert(contains(out, n, 0xC6));               /* then music frame 1, not frame 2 */
+
     /* An effect takes tone 2 and the noise; music tone 0 goes on. */
     vk_psg_core_reset(&p);
     vk_psg_core_music(&p, &music, 0x80);

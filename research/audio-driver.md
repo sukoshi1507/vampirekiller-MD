@@ -167,8 +167,12 @@ Vérification contre la trace openMSX `research/audio/long1-bios-giwrte.csv.gz` 
 | Chute dans l'eau (stage 2) | 09 | `76E5` | `main.c` |
 | Mort | arrêt puis 89 : chute 30 images (eau) ou 1 image ; contact **79 images** (PROVISOIRE, mesuré `player-health.md` : 40,617 s → 41,94 s) | `70A0`-`70AC` | `main.c` |
 | Fin de partie | 8B | `42AB` | `main.c` |
+| Atterrissage d'une chute commencée au sol (mode 0 → 4) | 07 | `6F7E` | `main.c` (`VK_EVENT_LAND`) ; l'atterrissage d'un saut (`6D38`, si `CFF0 ≠ 0`) n'est pas porté (**PROVISOIRE**) |
+| START en partie (pause) | FD : silence, jingle `9463` seul, musique et effet figés | `51C4` | `main.c` (`pause_start`), `psg_core.c` |
+| START pendant la pause | FE : voies de musique restaurées, la musique reprend où elle était | `522D` | `main.c` (`pause_end`) |
+| Chute dans un trou ou dans l'eau | cri de Wilhelm (PCM, DAC) | **ajout du port**, absent de la ROM | `main.c` (voir §7.1) |
 
-Non branchés (événements non portés) : 01, 02, 03/06 (escaliers : à brancher quand le pas d'escalier sera relevé), 04, 07 (atterrissage : condition `CFF0` non relevée), 08, 0A, 0B, 0D, 10, 16-19, 1B, 1C, 81-88, 8C-8E, FB, FD, FF. Tous sont jouables dans le menu de test son (code Konami au titre).
+Non branchés (événements non portés) : 01, 02, 03/06 (escaliers : à brancher quand le pas d'escalier sera relevé), 04, 07 depuis un saut (condition `CFF0` non relevée), 08, 0A, 0B, 0D, 10, 16-19, 1B, 1C, 81-88, 8C-8E, FB, FF. Les sons 03 et 06 ne viennent pas des escaliers mais des projectiles des armes secondaires (`72DE`, `7473`), non portées. Tous sont jouables dans le menu de test son (code Konami au titre).
 
 ## 8. Fichiers
 

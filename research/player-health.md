@@ -103,6 +103,14 @@ Chute dans le vide : **non testée**. La cause de `C000=9` observée sur le bord
 
 Voir 3.4 (run 5). Le chemin « continuer » (`42D3` : `C410=3`, `C405/C407=0`) demande `E600≠0` et une touche SNSMAT (`4314`). `E600` est à `0` en partie dans tous les runs ; ce chemin **n'a pas été exercé**.
 
+### 3.6 Écran de fin de partie (port, 2026-10-29)
+
+`42E3` (état 7) : `47B9` efface l'écran, texte « GAME  OVER » (`4D3A`), HUD redessiné par `4513`, attente `C004 = 0x78` images. Le port (`show_game_over` dans `main.c`) cache les sprites, efface `BG_A` (lignes 4 à 27) et `BG_B`, écrit « GAME  OVER » en (88, 88) avec la police MSX (`msx_text.c`) ; seule `step_health()` tourne pendant cet état (scénario `d`). « F5 _ CONTINUE » (`4300`) n'apparaît que si `E600 ≠ 0`, posé par `5C92` quand une seconde cartouche Konami est présente : sans objet sur Mega Drive. PROVISOIRE : l'icône de clé dorée du HUD n'est pas réaffichée.
+
+### 3.7 Pause (port, 2026-10-29)
+
+START en partie (Simon vivant ou mourant) : son FD (`51C4`), texte « PAUSE » en (108, 88) sur `BG_B`, jeu figé, seul START est lu ; un second START joue FE (`522D`) et reprend. A+START retourne au titre (raccourci de debug). Scénario `o_pause`.
+
 ## 4. Scénarios et preuves
 
 | Run | Script | Scénario | Preuve obtenue | Données |
