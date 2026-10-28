@@ -165,3 +165,17 @@ Méthode : la recherche statique des références aux octets candidats (`scratch
 - Les cœurs `C417` ne sont pas touchés, sauf le plafond de 5 après une chute.
 
 **Port** : `vk_items_new_life` et `vk_candles_new_life`, appelés par `respawn()` dans `main.c`, avec le retour du fouet au niveau 0.
+
+## Recul au coup reçu : machine d'états (lecture du code, 2026-10-28)
+
+**Prouvé (code, banque 1 en 6000)**, non encore porté :
+- Contact (`7EC1`, `7F1B`) : `C420 := 5`, `C423 := 0`, `C422 := 0` (fouet coupé), `C43C := 1` si le bit 7 de `IX+10` de l'ennemi est à 0, sinon 0.
+- `C420 = 5` : aiguillage sur `C423` (table `6F8B`) : 0 → `6F93`, 1 → `6FD4`, 2 → `7017`, 3 → `701D`.
+- Phase 0 (`6F93`) : son 0x13 (si `C002` bit 6), `C42D := 5A`. Sur un escalier (`C42B ≠ 0`) avec de l'énergie : `C420 := 3`, `C42F := 2`, pas de recul. Sinon `C42C := C43C`, `C423 := C43C + 1`, `C42A := 0`, pose `C42E/C42F := 07/03` (+10/+15 tournée à gauche, `765F`).
+- Phase 1 (`6FD4`) : `6C2F`, 2 px vers la gauche (`C42C := 1` ; 2,5 px si `C431` bit 3), arrêt au mur `7C05` ou à x < 16 sans salle à gauche. Phase 2 (`7017`) : `6C53`, même chose vers la droite (`C42C := 0`, mur `7BA9`, x ≥ F0 sans salle à droite).
+- Arc (`6D4D`) : `C42A += 1`, Y += table `707D[min(C42A, 21) - 1]` = `FD FD FE FE FE FF FF FF FF 00 00 00 00 01 01 01 01 02 02 02 03` (montée de 16 px, puis 3 px par image au-delà).
+- À partir de `C42A ≥ 11`, sol testé (`7B88`) : à l'atterrissage, Y &= F8, `C423 := 3`, `C42A := 4` (16 si `C415 = 0`), pose +1 (08/04).
+- Phase 3 (`701D`) : `C42A` décompte ; à 0, `C420`, `C421`, `C423`, `C422`, `C42A`, `C428 := 0` : retour au contrôle.
+- Simon ne répond à aucune touche pendant `C420 = 5`.
+
+**Port actuel** (`enemies.c`, `vk_game_push`) : 22 images à 2 px horizontaux seulement, sans arc ni pose, avec le contrôle laissé au joueur. **À reprendre** d'après ce qui précède. Il reste à identifier les poses 07/03 et 08/04 dans la planche de Simon.
