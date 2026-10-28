@@ -231,46 +231,56 @@ int main(void)
     vk_game_begin(&g);
     assert(!g.entrance);
 
-    /* Recoil keeps the walk limits: never past x 248, nothing on a staircase. */
+    /* Enemy contact recoil (6F85): one frame to set the hit pose, then the 707D
+     * arc at 2 px a frame, landing after 22 steps (44 px, as traced: X 136 -> 92),
+     * 4 frames on the floor, controls ignored all along. */
     vk_game_debug_room(&g, 0);
-    g.player.x = 240;
-    g.player.y = 176;
-    vk_game_push(&g, 22);
-    assert(g.player.x == 248);
-    g.player.on_stairs = 1;
-    vk_game_push(&g, -10);
-    assert(g.player.x == 248);
-    g.player.on_stairs = 0;
-    /* Recoil stops at the first wall of a hall room. */
+    g.player.x = 120;
+    g.player.y = 192;
+    assert(vk_grounded(vk_game_collision(&g), 120, 192, 1, 0));
+    vk_game_hit(&g, -1, 0);
+    assert(vk_game_recoiling(&g));
+    vk_game_tick_controls(&g, 1, 1, 0, 0);
+    assert(g.player.x == 120 && g.player.y == 192 && g.player.pose == VK_PLAYER_RECOIL_POSE);
     {
-        VKByte room;
-        int found = 0;
-        for (room = 0; room < 8 && !found; room++)
+        int f, top = 192;
+        for (f = 0; f < 22; f++)
         {
-            int x;
-            vk_game_debug_room(&g, room);
-            for (x = 30; x < 240 && !found; x++)
-            {
-                int y;
-                for (y = 40; y < 200 && !found; y += 8)
-                    if (!vk_wall(vk_game_collision(&g), (VKByte)(x - 12), (VKByte)y, 1, 0, 1, 0) &&
-                        !vk_wall(vk_game_collision(&g), (VKByte)(x - 1), (VKByte)y, 1, 0, 1, 0) &&
-                        vk_wall(vk_game_collision(&g), (VKByte)x, (VKByte)y, 1, 0, 1, 0))
-                    {
-                        int k, open = 1;
-                        for (k = x - 12; k < x; k++)
-                            if (vk_wall(vk_game_collision(&g), (VKByte)k, (VKByte)y, 1, 0, 1, 0)) open = 0;
-                        if (!open) continue;
-                        g.player.x = (VKByte)(x - 12);
-                        g.player.y = (VKByte)y;
-                        vk_game_push(&g, 22);
-                        assert(g.player.x == x - 1);
-                        found = 1;
-                    }
-            }
+            vk_game_tick_controls(&g, 1, 1, 0, 0);
+            if (g.player.y < top) top = g.player.y;
         }
-        assert(found);
+        assert(top == 176);
     }
+    assert(g.player.x == 76 && g.player.y == 192 && g.recoil == VK_RECOIL_FLOOR);
+    assert(g.player.pose == VK_PLAYER_RECOIL_POSE + 2 && g.player.facing == 1);
+    vk_game_tick_controls(&g, 1, 1, 0, 0);
+    vk_game_tick_controls(&g, 1, 1, 0, 0);
+    vk_game_tick_controls(&g, 1, 1, 0, 0);
+    assert(vk_game_recoiling(&g));
+    vk_game_tick_controls(&g, 1, 1, 0, 0);
+    assert(!vk_game_recoiling(&g) && g.player.x == 76);
+    /* Pushed right: the left-facing hit pose (+10/+15), 16 floor frames at energy 0. */
+    vk_game_hit(&g, 1, 1);
+    vk_game_tick_controls(&g, 0, 0, 0, 0);
+    assert(g.player.pose == VK_PLAYER_RECOIL_POSE + 1);
+    {
+        int f;
+        for (f = 0; f < 22; f++) vk_game_tick_controls(&g, 0, 0, 0, 0);
+        assert(g.player.x == 120 && g.recoil == VK_RECOIL_FLOOR && g.recoil_count == 16);
+    }
+    /* No room on that side: no step left of X 16 (6C3A). Nothing on a staircase. */
+    vk_game_debug_room(&g, 4);
+    g.player.x = 15;
+    g.player.y = 192;
+    vk_game_hit(&g, -1, 0);
+    vk_game_tick_controls(&g, 0, 0, 0, 0);
+    vk_game_tick_controls(&g, 0, 0, 0, 0);
+    vk_game_tick_controls(&g, 0, 0, 0, 0);
+    assert(g.player.x == 15);
+    vk_game_debug_room(&g, 0);
+    g.player.on_stairs = 1;
+    vk_game_hit(&g, -1, 0);
+    assert(!vk_game_recoiling(&g));
 
     /* Stage 2 after the door of hall room 7: room 0 at x 16, y 96, on a floor of
      * its own map; the six rooms and the ROM links (U2 D4 R1 for room 0). */

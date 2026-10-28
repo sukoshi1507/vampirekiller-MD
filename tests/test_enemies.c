@@ -382,7 +382,7 @@ static void test_type4_timer(void)
     EnemyState s;
     EnemySpawnTimer t;
     EnemyRoomVars v;
-    int f, push;
+    int f;
 
     v.stage = 1;
     v.room = 4;
@@ -394,14 +394,14 @@ static void test_type4_timer(void)
     Enemies_init(&s);
     Enemies_spawnTimerInit(&t);
     s.invuln = 0xFF;   /* pas de contact dans ce test (510 images) */
-    for (f = 1; f <= 167; f++) (void)Enemies_frame(&s, &t, &v, &push);
+    for (f = 1; f <= 167; f++) (void)Enemies_frame(&s, &t, &v);
     CHECK(!s.enemy[0].active, "type 4 : aucun tir avant 168 images");
-    (void)Enemies_frame(&s, &t, &v, &push);
+    (void)Enemies_frame(&s, &t, &v);
     CHECK(s.enemy[0].active && s.enemy[0].type == ENEMY_TYPE_4 && s.enemy[0].dx == -1 && s.enemy[0].x == 0xE5,
           "type 4 : premier tir a 168 images, cote droit");
     CHECK(s.enemy[0].y == ENEMY_TYPE4_Y, "type 4 : Y SAT 0xAA pour C425 = C0");
-    for (f = 169; f <= 335; f++) (void)Enemies_frame(&s, &t, &v, &push);
-    (void)Enemies_frame(&s, &t, &v, &push);
+    for (f = 169; f <= 335; f++) (void)Enemies_frame(&s, &t, &v);
+    (void)Enemies_frame(&s, &t, &v);
     /* Le premier tir est sorti vers 320 images : son slot (0) est reutilise. */
     CHECK(s.enemy[0].active && s.enemy[0].type == ENEMY_TYPE_4 && s.enemy[0].dx == 1 && s.enemy[0].x == 0x0B,
           "type 4 : second tir a 336 images, cote gauche (slot libere reutilise)");
@@ -420,7 +420,7 @@ static void test_type4_timer(void)
         for (f = 1; f <= 1000; f++) {
             int k, before = 0, after = 0;
             for (k = 0; k < ENEMY_MAX; k++) before += s.enemy[k].active && s.enemy[k].age == 0;
-            (void)Enemies_frame(&s, &t, &v, &push);
+            (void)Enemies_frame(&s, &t, &v);
             if (f % 200 == 0) s.invuln = 0xFF;
             for (k = 0; k < ENEMY_MAX; k++) after += s.enemy[k].type == ENEMY_TYPE_4 && s.enemy[k].active && s.enemy[k].age == 0;
             if (after > before) {
@@ -438,18 +438,20 @@ static void test_type4_timer(void)
     Enemies_init(&s);
     Enemies_spawnTimerInit(&t);
     v.room = 2;
-    for (f = 1; f <= 400; f++) (void)Enemies_frame(&s, &t, &v, &push);
+    for (f = 1; f <= 400; f++) (void)Enemies_frame(&s, &t, &v);
     for (f = 0; f < ENEMY_MAX; f++)
         CHECK(!s.enemy[f].active || s.enemy[f].type == ENEMY_TYPE_5, "salle 2 : aucun ennemi de type 1 ni 4");
 }
 
-/* 7. Contact : -2, recul de 22 images a 2 px, invulnerabilite de 180 images. Ennemi maintenu sur Simon. */
+/* 7. Contact : -2, invulnerabilite de 180 images ; pas de contact pendant le recul
+ * (C420 = 5, mis par le contact et efface par l'appelant : ici 27 images, comme
+ * vk_game_hit au sol). Ennemi maintenu sur Simon. */
 static void test_contact_recoil_invuln(void)
 {
     EnemyState s;
     EnemySpawnTimer t;
     EnemyRoomVars v;
-    int f, push, sum = 0, contacts[8], n = 0;
+    int f, contacts[8], n = 0, recoil_end = 0;
 
     v.stage = 1;
     v.room = 2;        /* salle sans spawn : seul l'ennemi de test existe */
@@ -465,12 +467,13 @@ static void test_contact_recoil_invuln(void)
     for (f = 1; f <= 400; f++) {
         s.enemy[0].x = 126;            /* maintenu en contact avec Simon */
         s.enemy[0].exiting = 0;
-        if (Enemies_frame(&s, &t, &v, &push) && n < 8) contacts[n++] = f;
-        if (f >= 2 && f <= 23) sum += push;
-        if (f == 1) CHECK(push == 0 && s.invuln == ENEMY_INVULN_START, "contact image 1 : invulnerabilite 0x5A");
-        if (f == 24) CHECK(push == 0, "recul termine a l'image 23 (attendu push 0 a 24)");
+        if (f == recoil_end) s.recoil = 0;
+        if (Enemies_frame(&s, &t, &v) && n < 8) {
+            contacts[n++] = f;
+            recoil_end = f + 27;
+        }
+        if (f == 1) CHECK(s.recoil == 1 && s.invuln == ENEMY_INVULN_START, "contact image 1 : recul et invulnerabilite 0x5A");
     }
-    CHECK(sum == -44, "recul : 22 images a -2 px (attendu -44, obtenu %d)", sum);
     CHECK(n == 3 && contacts[0] == 1 && contacts[1] == 181 && contacts[2] == 361,
           "contacts aux images 1, 181, 361 (obtenu n=%d)", n);
     CHECK(s.energy == 0x20 - 3 * ENEMY_CONTACT_DAMAGE, "energie : 0x20 - 3 contacts x 2");
@@ -484,7 +487,6 @@ static void test_fall_to_floor(void)
     EnemyState s;
     EnemySpawnTimer t;
     EnemyRoomVars v;
-    int push;
     int i;
 
     memset(map, 0, sizeof map);
@@ -499,7 +501,7 @@ static void test_fall_to_floor(void)
     Enemies_spawnTimerInit(&t);
     (void)Enemies_spawn(&s, ENEMY_SIDE_LEFT, ENEMY_TYPE_B, 0xA0, 15);
     /* Pas de sol : chute de ENEMY_FALL_SPEED par image. */
-    (void)Enemies_frame(&s, &t, &v, &push);
+    (void)Enemies_frame(&s, &t, &v);
     CHECK(s.enemy[0].y == 0xA0 + ENEMY_FALL_SPEED, "chute sans sol : 2 px par image (obtenu %d)", s.enemy[0].y);
     /* Sol en rangee 22 de la carte (ligne de 32 tuiles, pieds a Y 192). Le spawn a 0xA0
      * (pieds 191) tombe d'un pixel et s'arrete. */
@@ -507,9 +509,9 @@ static void test_fall_to_floor(void)
     for (i = 0; i < 32; i++) map[22 * 32 + i] = 1;
     Enemies_init(&s);
     (void)Enemies_spawn(&s, ENEMY_SIDE_LEFT, ENEMY_TYPE_B, 0xA0, 15);
-    (void)Enemies_frame(&s, &t, &v, &push);
+    (void)Enemies_frame(&s, &t, &v);
     CHECK(s.enemy[0].y == 0xA1, "chute sur sol : s'arrete a Y 0xA1 (pieds 192), obtenu %d", s.enemy[0].y);
-    (void)Enemies_frame(&s, &t, &v, &push);
+    (void)Enemies_frame(&s, &t, &v);
     CHECK(s.enemy[0].y == 0xA1, "sur le sol : reste a Y 0xA1");
 }
 
@@ -552,42 +554,42 @@ static void test_type5(void)
     EnemyRoomVars v;
     EnemySprite sp[ENEMY_SPRITES];
     Enemy *e = &s.enemy[0];
-    int push = 0, f, k;
+    int f, k;
     memset(map, 0, sizeof map);
     for (k = 0; k < 32; k++) map[18 * 32 + k] = 1;   /* sol en Y A0..A7 */
     Enemies_init(&s);
     Enemies_spawnTimerInit(&t);
     memset(&v, 0, sizeof v);
     v.stage = 1; v.room = 2; v.simonX = 10; v.simonY = 192; v.map = map;
-    for (f = 1; f < ENEMY_TYPE5_DELAY; f++) (void)Enemies_frame(&s, &t, &v, &push);
+    for (f = 1; f < ENEMY_TYPE5_DELAY; f++) (void)Enemies_frame(&s, &t, &v);
     CHECK(!e->active, "type 5 : pas encore cree a l'image %d", f - 1);
-    (void)Enemies_frame(&s, &t, &v, &push);
+    (void)Enemies_frame(&s, &t, &v);
     CHECK(e->active && e->type == ENEMY_TYPE_5 && e->x == 0x80 && e->y == 0x80 && e->pose == 0x3F,
           "type 5 : cree en 80,80 assis a gauche");
     CHECK(Enemies_sprites(&s, 0, sp) == 4 && sp[0].pattern == 0x40 && sp[1].pattern == 0x44 &&
           sp[2].pattern == 0x48 && sp[3].pattern == 0x4C && sp[0].x == 0x80 - 9 && sp[2].x == 0x80 + 7 &&
           sp[0].y == 0x80 - 15 && sp[0].bank == 1, "type 5 : pose 3F en X-9 / X+7");
-    for (k = 0; k < 4; k++) (void)Enemies_frame(&s, &t, &v, &push);
+    for (k = 0; k < 4; k++) (void)Enemies_frame(&s, &t, &v);
     CHECK(e->state == 0 && e->x == 0x80, "type 5 : Simon a 118 px, reste assise");
     v.simonX = 0x80 + 62;
-    (void)Enemies_frame(&s, &t, &v, &push);
-    if (e->state == 0) (void)Enemies_frame(&s, &t, &v, &push);
+    (void)Enemies_frame(&s, &t, &v);
+    if (e->state == 0) (void)Enemies_frame(&s, &t, &v);
     CHECK(e->state == 1 && e->dx == 1 && e->x == 0x84 && e->pose == 0x3F,
           "type 5 : activation a 62 px, 4 px vers Simon, pose assise une mise a jour");
     v.simonX = 0;   /* pas de demi-tour en course ni en saut */
     for (k = 0; k < 13; k++) {
-        (void)Enemies_frame(&s, &t, &v, &push);
-        (void)Enemies_frame(&s, &t, &v, &push);
+        (void)Enemies_frame(&s, &t, &v);
+        (void)Enemies_frame(&s, &t, &v);
         CHECK(e->y == jumpY[k], "type 5 : saut pas %d, Y %02X attendu %02X", k, jumpY[k], e->y);
         CHECK(e->state == 2 && e->pose == 0x46, "type 5 : saut pas %d, pose 46", k);
     }
     CHECK(e->x == 0x84 + 4 * 13, "type 5 : 4 px par mise a jour en saut (X %d)", e->x);
-    (void)Enemies_frame(&s, &t, &v, &push);
-    (void)Enemies_frame(&s, &t, &v, &push);
+    (void)Enemies_frame(&s, &t, &v);
+    (void)Enemies_frame(&s, &t, &v);
     CHECK(e->state == 1 && e->y == 0xA0 && e->sub == 0 && e->vy == 0 && e->dx == -1,
           "type 5 : posee en A0, repart vers Simon");
-    (void)Enemies_frame(&s, &t, &v, &push);
-    (void)Enemies_frame(&s, &t, &v, &push);
+    (void)Enemies_frame(&s, &t, &v);
+    (void)Enemies_frame(&s, &t, &v);
     CHECK(e->anim == 1 && e->pose == 0x41, "type 5 : course gauche, pose 41 au compteur 1");
     CHECK(Enemies_sprites(&s, 0, sp) == 4 && sp[0].pattern == 0x60 && sp[2].pattern == 0x68 &&
           sp[0].x == e->x - 16 && sp[2].x == e->x, "type 5 : pose 41 en X-16 / X");
@@ -600,11 +602,11 @@ static void test_type5(void)
     e->x = 100; e->y = 0xA0; e->state = 0; e->dx = 0;
     v.simonX = 116; v.simonY = 0xA0 - 8;
     s.energy = 32; s.invuln = 0; s.recoil = 0;
-    CHECK(Enemies_frame(&s, &t, &v, &push) == 1 && s.energy == 26 && s.recoilDir == 1,
+    CHECK(Enemies_frame(&s, &t, &v) == 1 && s.energy == 26 && s.recoilDir == 1,
           "type 5 : contact -6, recul a l'oppose");
     /* La panthere s'est reveillee : Simon 28 px plus bas qu'elle est hors de la boite. */
     s.invuln = 0; s.recoil = 0; s.energy = 32; v.simonX = (EnemyU8)e->x; v.simonY = 0xA0 + 28;
-    CHECK(Enemies_frame(&s, &t, &v, &push) == 0 && s.energy == 32, "type 5 : Y = C425 - 28, pas de contact");
+    CHECK(Enemies_frame(&s, &t, &v) == 0 && s.energy == 32, "type 5 : Y = C425 - 28, pas de contact");
 
     /* Fouet : debout, il passe au-dessus d'une panthere au niveau de Simon ; accroupi, il la tue. */
     e->x = 100; e->y = 0xA0;
@@ -744,12 +746,12 @@ static int stage2_contact(int objX, int objY)
     EnemySpawnTimer t;
     EnemyRoomVars v;
     EnemyState s;
-    int push;
+
     vars_stage2_room2(&v);
     Enemies_init(&s);
     Enemies_spawnTimerInit(&t);
     put_stage2_type1(&s, objX, objY, ENEMY_SIDE_RIGHT);
-    return Enemies_frame(&s, &t, &v, &push) && s.energy == ENEMY_ENERGY_MAX - 2;
+    return Enemies_frame(&s, &t, &v) && s.energy == ENEMY_ENERGY_MAX - 2;
 }
 
 static void test_stage2_type1_contact_whip(void)
@@ -803,7 +805,7 @@ static void test_stage2_type1_contact_whip(void)
     v.map = map;
     Enemies_init(&s);
     Enemies_spawnTimerInit(&t);
-    for (i = 0; i < 40; i++) { int push; (void)Enemies_frame(&s, &t, &v, &push); }
+    for (i = 0; i < 40; i++) { (void)Enemies_frame(&s, &t, &v); }
     CHECK(s.enemy[0].active && s.enemy[0].y == 0x81, "stage 2 : pose au sol, Y 81 (obtenu %02X)", s.enemy[0].y);
 }
 
@@ -840,7 +842,7 @@ static void test_type2_spawn(void)
     EnemyState s;
     EnemySpawnTimer t;
     EnemyRoomVars v;
-    int n, push, k, created[4], c = 0;
+    int n, k, created[4], c = 0;
     vars_stage2_room4(&v);
     Enemies_init(&s);
     Enemies_spawnTimerInit(&t);
@@ -848,7 +850,7 @@ static void test_type2_spawn(void)
     /* Tirs mesures : +51 (X D0), +67 (X 30), +267 (X 90), +467 (X A0) ; deux gouttes chacun. */
     for (n = 1; n <= 467; n++) {
         int before = count_type(&s, ENEMY_TYPE_2);
-        (void)Enemies_frame(&s, &t, &v, &push);
+        (void)Enemies_frame(&s, &t, &v);
         if (count_type(&s, ENEMY_TYPE_2) > before && c < 4) created[c++] = n;
         if (n == 51) {
             k = find_type2(&s, 0xD0);
@@ -872,7 +874,7 @@ static void test_type2_spawn(void)
     v.room = 5;
     v.simonX = 40;
     Enemies_init(&s);
-    for (n = 1; n <= 67; n++) (void)Enemies_frame(&s, &t, &v, &push);
+    for (n = 1; n <= 67; n++) (void)Enemies_frame(&s, &t, &v);
     CHECK(find_type2(&s, 0x50) >= 0, "garde : X 30 decale en 50");
 }
 
@@ -882,12 +884,12 @@ static void test_type2_trajectory(void)
     EnemySpawnTimer t;
     EnemyRoomVars v;
     Enemy *e = &s.enemy[0];
-    int n, push, minY = 255, landed = 0, fell = 0, gone = 0;
+    int n, minY = 255, landed = 0, fell = 0, gone = 0;
     vars_stage2_room4(&v);
     Enemies_init(&s);
     Enemies_spawnTimerInit(&t);
     for (n = 1; n <= 200; n++) {
-        (void)Enemies_frame(&s, &t, &v, &push);
+        (void)Enemies_frame(&s, &t, &v);
         if (n < 51 || n > 183) continue;
         if (e->active && e->type == ENEMY_TYPE_2 && e->y < minY) minY = e->y;
         if (!landed && e->type == ENEMY_TYPE_2 && e->state == 1) landed = n;
@@ -912,7 +914,7 @@ static void test_type2_contact_whip(void)
     EnemySpawnTimer t;
     EnemyRoomVars v;
     EnemySprite sp[ENEMY_SPRITES];
-    int push, k;
+    int k;
     /* Contact (6273) : homme-poisson en chute en (67, 85), Simon (72, 112) : -4. */
     vars_stage2_room4(&v);
     v.room = 0;                       /* pas de tir dans ce test */
@@ -921,15 +923,15 @@ static void test_type2_contact_whip(void)
     k = 0;
     s.enemy[k].active = 1; s.enemy[k].type = ENEMY_TYPE_2; s.enemy[k].x = 67; s.enemy[k].y = 85;
     s.enemy[k].pose = 0x0B;
-    (void)Enemies_frame(&s, &t, &v, &push);
+    (void)Enemies_frame(&s, &t, &v);
     CHECK(s.energy == ENEMY_ENERGY_MAX - 4, "contact : -4 (obtenu %d)", s.energy);
     /* Boite 8378 : |C427 - X| < 10 et Y de C425 - 27 a C425 + 22. */
     Enemies_init(&s);
     s.enemy[0].active = 1; s.enemy[0].type = ENEMY_TYPE_2; s.enemy[0].x = 82; s.enemy[0].y = 112 + 22;
-    (void)Enemies_frame(&s, &t, &v, &push);
+    (void)Enemies_frame(&s, &t, &v);
     CHECK(s.energy == ENEMY_ENERGY_MAX, "pas de contact a |d| = 10");
     s.enemy[0].x = 81;
-    (void)Enemies_frame(&s, &t, &v, &push);
+    (void)Enemies_frame(&s, &t, &v);
     CHECK(s.energy == ENEMY_ENERGY_MAX - 4, "contact a |d| = 9, Y = C425 + 22");
     /* Fouet (P2, 6235) : Simon (236, 112) tourne a gauche, X du fouet 216 ; homme-poisson en
      * (208, 112) tue, en (208, 74) (phase 3 de 6207) epargne. */
@@ -966,7 +968,7 @@ static void test_type2_sat_budget(void)
     EnemyState s;
     EnemySpawnTimer t;
     EnemyRoomVars v;
-    int push, i;
+    int i;
     vars_stage2_room4(&v);
     Enemies_init(&s);
     Enemies_spawnTimerInit(&t);
@@ -975,7 +977,7 @@ static void test_type2_sat_budget(void)
         s.enemy[i].active = 1; s.enemy[i].type = ENEMY_TYPE_SPLASH; s.enemy[i].x = 160; s.enemy[i].y = 180;
     }
     s.type2Frames = 50;
-    (void)Enemies_frame(&s, &t, &v, &push);
+    (void)Enemies_frame(&s, &t, &v);
     CHECK(s.type2Shots == 1 && count_type(&s, ENEMY_TYPE_2) == 1, "tir perdu faute d'entrees SAT");
     CHECK(count_type(&s, ENEMY_TYPE_SPLASH) == 4, "et sans gouttes");
 }

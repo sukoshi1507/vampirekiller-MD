@@ -2,9 +2,10 @@
 #ifndef VK_PLAYER_ASSETS_H
 #define VK_PLAYER_ASSETS_H
 #include "../player.h"
-#define VK_PLAYER_POSES 8
+#define VK_PLAYER_POSES 12
 #define VK_PLAYER_TILES_PER_POSE 12
-extern const unsigned long vk_player_tiles[8][96];
+#define VK_PLAYER_RECOIL_POSE 8     /* 8, 9: hit (right, left); 10, 11: landed */
+extern const unsigned long vk_player_tiles[12][96];
 extern const VKByte vk_player_room[768];
 extern const signed char vk_jump_deltas[19];
 extern const VKByte vk_fall_deltas[4];

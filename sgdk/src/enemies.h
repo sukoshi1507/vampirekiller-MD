@@ -35,8 +35,6 @@ typedef short EnemyS16;
 #define ENEMY_ENERGY_MAX 0x20       /* C415 : energie de Simon au depart (research/player-health.md) */
 #define ENEMY_CONTACT_DAMAGE 2      /* -2 par contact (observe) */
 #define ENEMY_INVULN_START 0x5A     /* C42D : decremente une fois sur deux images, fenetre mesuree 180 images */
-#define ENEMY_RECOIL_FRAMES 22      /* C427 : 2 px par image, de 136 a 92 (44 px) */
-#define ENEMY_RECOIL_STEP 2
 #define ENEMY_TYPE4_PERIOD 168      /* 8 x 21 images entre deux tirs (table 9DBB : 14 -> 21 x 8) */
 #define ENEMY_TYPE4_PERIOD_LONG 328 /* un tir sur quatre : 28 -> 41 x 8 (mesure au stage 2) */
 #define ENEMY_TYPE4_Y 0xAA          /* Y SAT du type 4 au spawn dans le hall (Simon au sol, Y C0), puis courbe kType4Y */
@@ -103,7 +101,7 @@ typedef struct {
     EnemyU8 energy;          /* C415 */
     EnemyU8 invuln;          /* C42D : compte a rebours d'invulnerabilite */
     EnemyU8 invulnPhase;     /* C42D ne decroit qu'une image sur deux */
-    EnemyU8 recoil;          /* images restantes de recul */
+    EnemyU8 recoil;          /* C420 = 5 : recul en cours (gameplay.c), contact coupe */
     EnemyS8 recoilDir;       /* sens du recul = sens de l'ennemi touche */
     EnemyU8 parity;          /* 9CC3 est appele une image sur deux */
     EnemyU16 type4Frames;    /* images depuis le dernier tir de type 4 */
@@ -172,7 +170,7 @@ int Enemies_spawnTimerTick(EnemySpawnTimer *t, const EnemyRoomVars *v, EnemyStat
  * salles 2, 3 et 7), contact, invulnerabilite.
  * *pushX reçoit le deplacement de Simon de cette image (px, signe) ; 0 hors recul.
  * Retourne 1 si un contact a ete compte cette image (energie -2, -6 pour le type 5), 0 sinon. */
-int Enemies_frame(EnemyState *s, EnemySpawnTimer *t, const EnemyRoomVars *v, int *pushX);
+int Enemies_frame(EnemyState *s, EnemySpawnTimer *t, const EnemyRoomVars *v);
 
 /* Coup de fouet : tue les ennemis (types 1, A, B et 4) dont la boite touche la boite du fouet.
  * La boite du fouet est en coordonnees de jeu, inclusive (vk_whip_bounds). Les ennemis sont

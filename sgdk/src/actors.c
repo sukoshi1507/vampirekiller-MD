@@ -58,8 +58,8 @@ static int whip_level_choice = 0;
  * room change or a leave of the castle rebuilds it (key 0 outside). In stage 2 the
  * type 4 (rooms 0, 1, 3) and the type 1 of room 2 are ported (enemies.c,
  * kEnemyStage2RoomFlags); the type 1 reuses the hall layers of vk_enemy_tiles
- * (same VRAM patterns 40..6C, checked in the room 2 trace). Simon's
- * recoil moves him here through vk_game_push (walls and walk limits). */
+ * (same VRAM patterns 40..6C, checked in the room 2 trace). A contact starts
+ * Simon's recoil in gameplay.c (vk_game_hit). */
 /* Castle room the enemy state belongs to: stage 1 rooms 1..8, stage 2 rooms 9..14. */
 static u16 room_key(void)
 {
@@ -71,7 +71,6 @@ void vk_step_enemies(void)
 {
     const u16 key = room_key();
     EnemyRoomVars vars;
-    int push = 0;
     if (key != enemy_room_key)
     {
         enemy_room_key = key;
@@ -96,7 +95,15 @@ void vk_step_enemies(void)
     vars.sideFlag = 0;
     vars.difficulty = 0;
     vars.map = vk_game_collision(&vk_game);   /* floor for falling enemies */
-    (void)Enemies_frame(&vk_enemies, &enemy_timer, &vars, &push);
+    /* C420 = 5 while Simon is knocked back: no enemy contact (7EF4). */
+    vk_enemies.recoil = (EnemyU8)vk_game_recoiling(&vk_game);
+    if (Enemies_frame(&vk_enemies, &enemy_timer, &vars))
+    {
+        /* 7EC1: the whip stops (C422 := 0) and Simon is knocked back. */
+        vk_whip_reset(&vk_whip);
+        vk_game_hit(&vk_game, vk_enemies.recoilDir, vk_enemies.energy == 0);
+        vk_enemies.recoil = (EnemyU8)vk_game_recoiling(&vk_game);
+    }
     if (vk_whip_active(&vk_whip))
     {
         int left = 0, top = 0, right = 0, bottom = 0;
@@ -115,11 +122,6 @@ void vk_step_enemies(void)
             (void)Enemies_whipHitType2(&vk_enemies, vk_whip.x, vk_whip.y,
                                        vk_whip.facing, vk_whip.crouched);
         }
-    }
-    if (push)
-    {
-        vk_game_push(&vk_game, push);
-        vk_player.x = vk_game.player.x;
     }
 }
 
@@ -187,7 +189,9 @@ void vk_show_player(const VKPlayer *shown)
             TILE_ATTR_FULL(PAL2, TRUE, FALSE, FALSE,
                            PLAYER_TILE_INDEX + player->pose * VK_PLAYER_TILES_PER_POSE), 1);
     else
-        VDP_setSpriteFull(0, (s16) player->x - 8, (s16) player->y - 31, SPRITE_SIZE(3, 4),
+        /* The recoil poses reach one pixel higher (extract_player.py POSE_TOP). */
+        VDP_setSpriteFull(0, (s16) player->x - 8,
+            (s16) player->y - (player->pose >= VK_PLAYER_RECOIL_POSE ? 32 : 31), SPRITE_SIZE(3, 4),
             TILE_ATTR_FULL(PAL2, TRUE, FALSE, FALSE,
                            PLAYER_TILE_INDEX + player->pose * VK_PLAYER_TILES_PER_POSE), 1);
     {

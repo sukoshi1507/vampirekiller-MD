@@ -251,7 +251,9 @@ int main(bool hardReset)
                 vk_player = vk_game.player;
                 {
                     const bool idle = vk_whip.timer == 0;
-                    vk_whip_tick(&vk_whip, &vk_player, !!((pressed & BUTTON_B) && !(held & BUTTON_A)));
+                    /* No whip while knocked back: C420 = 5 ignores the controls. */
+                    vk_whip_tick(&vk_whip, &vk_player, !!((pressed & BUTTON_B) && !(held & BUTTON_A)) &&
+                                 !vk_game_recoiling(&vk_game));
                     if (idle && vk_whip.timer == 14) vk_psg_play(vk_sfx_whip);
                 }
                 /* Make controller/attack state observable in BlastEm. No text
@@ -276,7 +278,7 @@ int main(bool hardReset)
                     show_message("CHUTE!");
                 }
                 else if (vk_front_mode == FRONT_INTERIOR && direction &&
-                         !(held & BUTTON_A) &&
+                         !(held & BUTTON_A) && !vk_game_recoiling(&vk_game) &&
                          vk_room_try_edge(vk_game.stage, &vk_game.room, &vk_game.player, direction))
                 {
                     /* Keep player state across edge; collision map changes on

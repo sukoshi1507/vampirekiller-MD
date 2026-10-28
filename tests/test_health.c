@@ -107,7 +107,7 @@ static void test_contact_to_death(void)
     EnemySpawnTimer t;
     EnemyRoomVars v;
     VKHealth h;
-    int f, push, died = 0;
+    int f, died = 0;
     v.stage = 1;
     v.room = 2;        /* salle sans spawn : seul l'ennemi de test existe */
     v.simonX = 120;
@@ -123,7 +123,8 @@ static void test_contact_to_death(void)
     for (f = 1; f <= 400 && !died; f++) {
         s.enemy[0].x = 126;
         s.enemy[0].exiting = 0;
-        (void)Enemies_frame(&s, &t, &v, &push);
+        if (f == 28) s.recoil = 0;     /* fin du recul au sol (gameplay.c, 27 images) */
+        (void)Enemies_frame(&s, &t, &v);
         if (vk_health_tick(&h, s.energy) == VK_HEALTH_DIED) died = f;
     }
     CHECK(died == 181, "deuxieme contact (image 181, apres l'invulnerabilite) : mort (obtenu %d)", died);

@@ -79,6 +79,7 @@ static void vk_entrance_clear(VKGame *game)
     game->entrance = VK_ENTRANCE_NONE;
     game->entrance_step = 0;
     game->entrance_timer = 0;
+    game->recoil = VK_RECOIL_NONE;
 }
 
 void vk_game_begin(VKGame *game)
@@ -200,17 +201,101 @@ static VKByte vk_floor_arrival(const VKByte *map, VKByte x, VKByte stage)
     return 0;
 }
 
+/* Y steps of the recoil arc (707D): 16 px up, then down, 3 px a frame at the end. */
+static const signed char vk_recoil_arc[VK_RECOIL_STEPS] = {
+    -3, -3, -2, -2, -2, -1, -1, -1, -1, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 3
+};
+
+void vk_game_hit(VKGame *game, int dir, int dead)
+{
+    VKPlayer *p = &game->player;
+    if (p->on_stairs) return;
+    game->recoil = VK_RECOIL_START;
+    game->recoil_dir = (signed char)(dir < 0 ? -1 : 1);
+    game->recoil_land = (VKByte)(dead ? 16 : 4);
+    game->recoil_count = 0;
+}
+
+int vk_game_recoiling(const VKGame *game)
+{
+    return game->recoil != VK_RECOIL_NONE;
+}
+
+/* 6C2F / 6C53: 2 px towards the push, unless a wall (7C05 / 7BA9) or, without
+ * a room on that side, the screen side (X < 16 / X >= F0) stops it. The 2.5 px
+ * step of C431 bit 3 is not ported. PROVISIONAL: with a room on that side the
+ * port stops at its walk limits (8, 248) instead of changing room. */
+static void vk_recoil_move(VKGame *game, const VKRoomLink *links)
+{
+    VKPlayer *p = &game->player;
+    const int dir = game->recoil_dir;
+    int open;
+    int next;
+    if (game->area == VK_AREA_COURTYARD)
+        open = vk_courtyard_neighbors[game->room][dir > 0 ? 3 : 2] < 3;
+    else
+        open = links && (dir > 0 ? links[game->room].right : links[game->room].left) != VK_ROOM_NONE;
+    p->facing = (VKByte)(dir < 0);
+    if (!open && (dir < 0 ? p->x < 16 : p->x >= 0xF0)) return;
+    if (vk_wall(vk_game_collision(game), p->x, p->y, dir, 0, vk_game_limit_stage(game), 0)) return;
+    next = (int)p->x + 2 * dir;
+    if (next < 8) next = 8;
+    if (next > 248) next = 248;
+    p->x = (VKByte)next;
+}
+
+/* One frame of C420 = 5 (6F85): the controls are ignored. */
+static void vk_recoil_tick(VKGame *game, const VKRoomLink *links)
+{
+    VKPlayer *p = &game->player;
+    /* Hit pose 07/03, +10/+15 when C43C = 1 (pushed right: Simon faces left). */
+    const VKByte pose = (VKByte)(VK_PLAYER_RECOIL_POSE + (game->recoil_dir > 0));
+    if (game->recoil == VK_RECOIL_START)
+    {
+        p->mode = 0;
+        p->phase = 0;
+        p->crouched = 0;
+        p->pose = pose;
+        game->recoil = VK_RECOIL_AIR;
+        return;
+    }
+    if (game->recoil == VK_RECOIL_AIR)
+    {
+        VKByte step;
+        vk_recoil_move(game, links);
+        step = ++game->recoil_count;
+        if (step > VK_RECOIL_STEPS) step = VK_RECOIL_STEPS;
+        p->y = (VKByte)(p->y + vk_recoil_arc[step - 1]);
+        p->pose = pose;
+        if (game->recoil_count < VK_RECOIL_LAND_TEST ||
+            !vk_grounded(vk_game_collision(game), p->x, p->y, vk_game_limit_stage(game), 0))
+            return;
+        /* 6FF2: on the floor, Y to the tile row, landed pose (+1, +1). */
+        p->y &= 0xF8;
+        game->recoil = VK_RECOIL_FLOOR;
+        game->recoil_count = game->recoil_land;
+        p->pose = (VKByte)(pose + 2);
+        return;
+    }
+    /* 7024: then 702A gives the controls back. */
+    if (--game->recoil_count) return;
+    game->recoil = VK_RECOIL_NONE;
+    p->pose = (VKByte)(p->facing ? 3 : 0);
+}
+
 VKEvent vk_game_tick_controls(VKGame *game, int direction, int jump, int up, int down)
 {
     VKPlayer *p = &game->player;
     const VKRoomLink *links = game->area == VK_AREA_INTERIOR ? vk_stage_links(game->stage) : 0;
+    const int recoiling = game->recoil != VK_RECOIL_NONE;
     /* Courtyard room 2 -> hall room 0 through the castle door (see above). UP at
      * x=192..216 does not change room. */
     if (game->entrance) return vk_entrance_tick(game);
     /* After a fall Simon stays below the screen until the respawn (C420 = 6:
      * 767B and the player routines return at once). */
     if (p->y == VK_FALL_Y) return VK_EVENT_NONE;
-    if (vk_entrance_zone(game))
+    if (recoiling) vk_recoil_tick(game, links);
+    else if (vk_entrance_zone(game))
     {
         game->entrance = VK_ENTRANCE_WALK;
         game->entrance_step = 0;
@@ -219,10 +304,11 @@ VKEvent vk_game_tick_controls(VKGame *game, int direction, int jump, int up, int
         return VK_EVENT_ENTRANCE;
     }
 
-    vk_player_tick_controls(p, vk_game_collision(game), vk_game_limit_stage(game),
-                            direction, jump, down, up);
+    if (!recoiling)
+        vk_player_tick_controls(p, vk_game_collision(game), vk_game_limit_stage(game),
+                                direction, jump, down, up);
 
-    if (game->area == VK_AREA_COURTYARD && direction != 0 &&
+    if (!recoiling && game->area == VK_AREA_COURTYARD && direction != 0 &&
         ((direction > 0 && p->x >= 248) || (direction < 0 && p->x <= 8)))
     {
         const VKByte neighbor = vk_courtyard_neighbors[game->room][direction > 0 ? 3 : 2];
@@ -328,22 +414,6 @@ void vk_game_respawn(VKGame *game)
     vk_player_reset(&game->player);
     game->player.x = 16;
     game->player.y = 192;
-}
-
-void vk_game_push(VKGame *game, int dx)
-{
-    VKPlayer *p = &game->player;
-    const int step = dx < 0 ? -1 : 1;
-    const VKByte stage = vk_game_limit_stage(game);
-    if (p->on_stairs) return;
-    while (dx)
-    {
-        const int next = (int)p->x + step;
-        if (next < 8 || next > 248 ||
-            vk_wall(vk_game_collision(game), (VKByte)next, p->y, step, p->crouched, stage, 0)) break;
-        p->x = (VKByte)next;
-        dx -= step;
-    }
 }
 
 int vk_game_debug_room(VKGame *game, VKByte room)

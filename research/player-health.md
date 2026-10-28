@@ -178,4 +178,14 @@ Méthode : la recherche statique des références aux octets candidats (`scratch
 - Phase 3 (`701D`) : `C42A` décompte ; à 0, `C420`, `C421`, `C423`, `C422`, `C42A`, `C428 := 0` : retour au contrôle.
 - Simon ne répond à aucune touche pendant `C420 = 5`.
 
-**Port actuel** (`enemies.c`, `vk_game_push`) : 22 images à 2 px horizontaux seulement, sans arc ni pose, avec le contrôle laissé au joueur. **À reprendre** d'après ce qui précède. Il reste à identifier les poses 07/03 et 08/04 dans la planche de Simon.
+**Porté** (`gameplay.c` `vk_game_hit` / `vk_recoil_tick`, appelé par `actors.c` au contact ; `enemies.c` garde seulement le drapeau `recoil` = `C420 = 5` qui coupe le contact) :
+- une image de pose, puis l'arc de `707D` avec 2 px par image, le sol testé à partir du 11e pas, l'atterrissage avec Y aligné sur 8, puis 4 images au sol (16 à énergie nulle) ;
+- touches ignorées pendant tout le recul : pas de saut, pas de marche, pas de fouet (`main.c`), le fouet en cours est coupé (`C422 := 0`) ;
+- poses de la ROM (`tools/extract_player.py`, poses 8 à 11) : 07/03 (poussé à gauche, Simon tourné à droite), 17/18 (poussé à droite), puis 08/04 et 18/19 au sol. Ces poses montent un pixel plus haut que les autres et sont dessinées en y − 32.
+- Vérifié : la chute de l'arc retombe au sol après 22 pas, soit 44 px, comme la trace (X 136 → 92) ; tests `test_gameplay.c` et scénario `c_enemy_contact`.
+
+**PROVISOIRE** :
+- avec une salle voisine du côté de la poussée, le port borne X à 8 / 248 et ne change pas de salle pendant le recul ; le comportement MSX au bord n'est pas tracé ;
+- le pas de 2,5 px (`C431` bit 3) et la plateforme mobile (`C439`) ne sont pas portés ;
+- coup reçu sur un escalier (`C420 := 3`, `765F`) : le port garde Simon sur l'escalier sans réaction ;
+- le son 0x13 du coup n'est pas joué par ce module (branchement du son à part).

@@ -31,7 +31,8 @@ Script (une commande par ligne, `#` = commentaire ; "image" = un appel a retro_r
   echo EXPR              affiche une valeur
   include FICHIER        execute un autre script (chemin relatif au script courant)
 Les EXPR sont du Python evalue sur l'etat : frame, front_mode, game.area, game.room,
-game.player.x/.y/.facing/.mode/.crouched/.on_stairs..., player (copie affichee),
+game.player.x/.y/.facing/.mode/.crouched/.on_stairs..., game.recoil/.recoil_count/.recoil_dir,
+player (copie affichee),
 whip.timer/.facing/.x/.y, enemies.energy/.invuln/.recoil/.alive (nb actifs),
 enemies.enemy[i].active/.type/.x/.y/.dx/.age/.romBox/.timer (i < 7), target (test_target), flames[0..1],
 health.lives/.phase/.timer/.fell (C410 ; phase 0 vivant, 1 mort, 2 reapparition, 3 fin de partie),
@@ -65,7 +66,7 @@ FRONT_MODES = ['LOGO', 'TITLE', 'CASTLE', 'COURTYARD', 'INTERIOR', 'VIEWER', 'TE
 # Blocs d'ennemis (ENEMY_MAX de enemies.h : les 7 blocs C800..CB00 de la ROM).
 ENEMY_SLOTS = 7
 # Tailles attendues (octets) des globales decodees : garde-fou contre une derive des structures.
-EXPECTED_SIZES = {'player': 14, 'game': 24, 'whip': 6, 'enemy_state': 144,
+EXPECTED_SIZES = {'player': 14, 'game': 28, 'whip': 6, 'enemy_state': 144,
                   'test_target': 18, 'courtyard_flame': 36, 'front_mode': 2, 'health': 6}
 # Noms C actuels des globales partagees (sgdk/src/frontend.h, actors.h) ; les scenarios
 # gardent les noms courts. test_target et courtyard_flame sont statiques (room_view.c).
@@ -284,7 +285,9 @@ class Game_View:
             state['game'] = {'player': self.player_at(a), 'area': m.rd32(a + 14),
                              'room': m.rd8(a + 18), 'collision_verified': m.rd8(a + 19),
                              'stage': m.rd8(a + 20), 'entrance': m.rd8(a + 21),
-                             'entrance_step': m.rd8(a + 22), 'entrance_timer': m.rd8(a + 23)}
+                             'entrance_step': m.rd8(a + 22), 'entrance_timer': m.rd8(a + 23),
+                             'recoil': m.rd8(a + 24), 'recoil_count': m.rd8(a + 25),
+                             'recoil_land': m.rd8(a + 26), 'recoil_dir': s8(m.rd8(a + 27))}
         if 'player' in A:
             state['player'] = self.player_at(A['player'])
         if 'whip' in A:

@@ -18,7 +18,8 @@
  *   - Cote = type (A droite, B gauche)                     enemy-behavior 6.3
  *   - Mouvement, animation, sortie du type 1               observe (trace frames.txt)
  *   - Type 4 : cadence 168 images, 1,5 px/image, sortie    observe (4 creations)
- *   - Contact -2, recul 22 images a 2 px, invulnerabilite 180 images   observe (run 3, run 6)
+ *   - Contact -2, invulnerabilite 180 images               observe (run 3, run 6) ;
+ *     le recul lui-meme est dans gameplay.c (vk_game_hit)
  *   - Type 1 du stage 2 (salle 2) : spawn 9CFC (E = A0, cote = bit 1 de CF01), sortie 99E5,
  *     contact 8290 et fouet 7DAD de la classe 1 : code lu et trace (enemy-behavior.md,
  *     section « Type 1 au stage 2 »). Mouvement et motifs : ceux du hall (meme routine A964).
@@ -761,18 +762,11 @@ static void type2Frame(EnemyState *s, const EnemyRoomVars *v)
         if (s->enemy[i].active && s->enemy[i].type == ENEMY_TYPE_SPLASH) s->enemy[i].age = 1;
 }
 
-int Enemies_frame(EnemyState *s, EnemySpawnTimer *t, const EnemyRoomVars *v, int *pushX)
+int Enemies_frame(EnemyState *s, EnemySpawnTimer *t, const EnemyRoomVars *v)
 {
     EnemyRoomVars w = *v;
     EnemyU8 i;
     int hit = 0;
-
-    /* Recul : 2 px par image dans le sens de l'ennemi touche (C427 de 136 a 92). */
-    *pushX = 0;
-    if (s->recoil) {
-        *pushX = ENEMY_RECOIL_STEP * s->recoilDir;
-        s->recoil--;
-    }
 
     Enemies_update(s);
     if (v->map) {
@@ -836,7 +830,7 @@ int Enemies_frame(EnemyState *s, EnemySpawnTimer *t, const EnemyRoomVars *v, int
             s->energy = (s->energy > damage) ? (EnemyU8)(s->energy - damage) : 0;
             s->invuln = ENEMY_INVULN_START;
             s->invulnPhase = 0;
-            s->recoil = ENEMY_RECOIL_FRAMES;
+            s->recoil = 1;    /* C420 := 5 : l'appelant l'efface a la fin du recul */
             /* Panthere assise (dx 0) : recul a l'oppose d'elle (PROVISOIRE, non mesure). */
             s->recoilDir = e->dx ? e->dx : (EnemyS8)(v->simonX >= e->x ? 1 : -1);
             hit = 1;
