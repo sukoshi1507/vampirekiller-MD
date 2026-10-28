@@ -612,6 +612,200 @@ static void test_type5(void)
     CHECK(Enemies_whipHitType5(&s, 120, 0xA0, 1, 1) == 1 && !e->active, "type 5 : fouet accroupi, mort");
 }
 
+/* 7. Type 1 du stage 2, salle 2 (trace scratchpad/s2t1/out/O1 et W1, research/enemy-behavior.md
+ * section « Type 1 au stage 2 »). Age = image depuis l'ecriture de C800 - 1. */
+static void vars_stage2_room2(EnemyRoomVars *v)
+{
+    v->stage = 2;
+    v->room = 2;
+    v->simonX = 145;   /* Simon en haut de l'escalier de la salle 2 */
+    v->simonY = 160;
+    v->sideFlag = 0;
+    v->difficulty = 0;
+    v->map = 0;
+}
+
+static void test_stage2_type1_spawn(void)
+{
+    /* Cotes D, G, G, D, D, G, G (9D1F : bit 1 de CF01) ; 104, 152, 104, 104, 104, 152 images
+     * entre les tirs (6238, 6342, 6494, 6598, 6702, 6806, 6958 dans la trace O1). */
+    static const int side[7] = { ENEMY_SIDE_RIGHT, ENEMY_SIDE_LEFT, ENEMY_SIDE_LEFT,
+                                 ENEMY_SIDE_RIGHT, ENEMY_SIDE_RIGHT, ENEMY_SIDE_LEFT, ENEMY_SIDE_LEFT };
+    static const int gapFrames[6] = { 104, 152, 104, 104, 104, 152 };
+    EnemySpawnTimer t;
+    EnemyRoomVars v;
+    EnemyState s;
+    EnemySprite sp[ENEMY_SPRITES];
+    int call, shots = 0, last = 0, room;
+
+    vars_stage2_room2(&v);
+    v.sideFlag = 1;    /* ignore au stage 2 */
+    Enemies_init(&s);
+    Enemies_spawnTimerInit(&t);
+    for (call = 1; call <= 600 && shots < 7; call++) {
+        if (!Enemies_spawnTimerTick(&t, &v, &s)) continue;
+        if (shots == 0) CHECK(call == 16, "stage 2 : premier tir a l'appel 16 (obtenu %d)", call);
+        else CHECK(2 * (call - last) == gapFrames[shots - 1], "stage 2 : ecart %d attendu %d images, obtenu %d",
+                   shots, gapFrames[shots - 1], 2 * (call - last));
+        CHECK(s.enemy[0].active && s.enemy[0].romBox, "stage 2 : tir %d marque romBox", shots);
+        CHECK(s.enemy[0].y == 0x80, "stage 2 : Y SAT 80 (E = A0), obtenu %02X", s.enemy[0].y);
+        CHECK(s.enemy[0].dx == (side[shots] == ENEMY_SIDE_RIGHT ? -1 : 1), "stage 2 : cote du tir %d", shots);
+        CHECK(s.enemy[0].x == (side[shots] == ENEMY_SIDE_RIGHT ? 0xE5 : 0x0A), "stage 2 : X SAT du tir %d", shots);
+        CHECK(Enemies_sprites(&s, 0, sp) == ENEMY_SPRITES &&
+              sp[0].pattern == (side[shots] == ENEMY_SIDE_RIGHT ? 0x40 : 0x58) &&
+              sp[0].y == 0x80 && sp[2].y == 0x90, "stage 2 : motifs et rangs (80, 90) du tir %d", shots);
+        last = call;
+        shots++;
+        Enemies_setRoom(&s);
+    }
+    CHECK(shots == 7, "stage 2 : 7 tirs attendus, obtenu %d", shots);
+
+    /* Drapeau bit 0 seulement en salle 2 (85D7 : 08 08 01 08 02 02). */
+    for (room = 0; room < 6; room++) {
+        if (room == 2) continue;
+        v.room = (EnemyU8)room;
+        Enemies_setRoom(&s);
+        Enemies_spawnTimerInit(&t);
+        for (call = 1; call <= 400; call++) (void)Enemies_spawnTimerTick(&t, &v, &s);
+        CHECK(!s.enemy[0].active, "stage 2 salle %d : pas de type 1", room);
+    }
+
+    /* Garde 9E16 : Simon a droite (X >= C0) refuse le cote droit. */
+    vars_stage2_room2(&v);
+    v.simonX = 0xD0;
+    Enemies_setRoom(&s);
+    Enemies_spawnTimerInit(&t);
+    for (call = 1; call <= 16; call++) (void)Enemies_spawnTimerTick(&t, &v, &s);
+    CHECK(!s.enemy[0].active, "stage 2 : garde 9E16, Simon en D0, tir droit refuse");
+}
+
+static void test_stage2_type1_trajectory(void)
+{
+    typedef struct { int age; int x; uint8_t bottom; } Expect;
+    /* SAT lue dans la trace O1 (premier tir droit, image 6238 ; premier tir gauche, 6342). */
+    static const Expect right[] = {
+        { 1, 229, 0x48 }, { 3, 227, 0x48 }, { 15, 215, 0x50 }, { 17, 212, 0x50 },
+        { 23, 206, 0x48 }, { 31, 198, 0x50 }, { 33, 195, 0x50 }, { 217, 0, 0x48 }, { 218, 0, 0x48 },
+    };
+    static const Expect left[] = {
+        { 1, 10, 0x60 }, { 3, 12, 0x60 }, { 15, 25, 0x68 }, { 23, 33, 0x60 }, { 31, 42, 0x68 },
+        { 205, 226, 0x60 }, { 207, 229, 0x68 }, { 209, 231, 0x68 }, { 210, 231, 0x68 },
+    };
+    EnemySpawnTimer t;
+    EnemyRoomVars v;
+    EnemyState s;
+    EnemySprite sp[ENEMY_SPRITES];
+    int call, age;
+    size_t i;
+
+    vars_stage2_room2(&v);
+    Enemies_init(&s);
+    Enemies_spawnTimerInit(&t);
+    for (call = 1; call <= 16; call++) (void)Enemies_spawnTimerTick(&t, &v, &s);
+    CHECK(s.enemy[0].active && s.enemy[0].dx < 0, "trajectoire : premier tir a droite");
+    for (age = 0, i = 0; i < sizeof right / sizeof right[0]; i++) {
+        while (age < right[i].age) { Enemies_update(&s); age++; }
+        CHECK(Enemies_sprites(&s, 0, sp) == ENEMY_SPRITES, "droite : inactif a l'age %d", age);
+        CHECK(sp[0].x == right[i].x, "droite age %d : X %d attendu, obtenu %d", age, right[i].x, sp[0].x);
+        CHECK(sp[2].pattern == right[i].bottom, "droite age %d : motif bas %02X attendu, obtenu %02X",
+              age, right[i].bottom, sp[2].pattern);
+    }
+    Enemies_update(&s);
+    CHECK(!s.enemy[0].active, "droite : disparu a l'age 219");
+
+    /* Deuxieme tir (gauche) : 52 appels plus tard. */
+    Enemies_setRoom(&s);
+    for (call = 1; call <= 52; call++) (void)Enemies_spawnTimerTick(&t, &v, &s);
+    CHECK(s.enemy[0].active && s.enemy[0].dx > 0, "trajectoire : deuxieme tir a gauche");
+    for (age = 0, i = 0; i < sizeof left / sizeof left[0]; i++) {
+        while (age < left[i].age) { Enemies_update(&s); age++; }
+        CHECK(Enemies_sprites(&s, 0, sp) == ENEMY_SPRITES, "gauche : inactif a l'age %d", age);
+        CHECK(sp[0].x == left[i].x, "gauche age %d : X %d attendu, obtenu %d", age, left[i].x, sp[0].x);
+        CHECK(sp[2].pattern == left[i].bottom, "gauche age %d : motif bas %02X attendu, obtenu %02X",
+              age, left[i].bottom, sp[2].pattern);
+    }
+    Enemies_update(&s);
+    CHECK(!s.enemy[0].active, "gauche : disparu a l'age 211 (objet a X F1)");
+}
+
+/* Un ennemi romBox pose (Y affiche 81 : pieds en A0) a l'objet X donne. */
+static void put_stage2_type1(EnemyState *s, int objX, int objY, int side)
+{
+    const int k = Enemies_spawn(s, (EnemyU8)side, side == ENEMY_SIDE_RIGHT ? ENEMY_TYPE_A : ENEMY_TYPE_B,
+                                0x80, side == ENEMY_SIDE_RIGHT ? 1 : 15);
+    s->enemy[k].romBox = 1;
+    s->enemy[k].x = (EnemyS16)(objX - 8);
+    s->enemy[k].y = (EnemyU8)(objY - 31);
+}
+
+static int stage2_contact(int objX, int objY)
+{
+    EnemySpawnTimer t;
+    EnemyRoomVars v;
+    EnemyState s;
+    int push;
+    vars_stage2_room2(&v);
+    Enemies_init(&s);
+    Enemies_spawnTimerInit(&t);
+    put_stage2_type1(&s, objX, objY, ENEMY_SIDE_RIGHT);
+    return Enemies_frame(&s, &t, &v, &push) && s.energy == ENEMY_ENERGY_MAX - 2;
+}
+
+static void test_stage2_type1_contact_whip(void)
+{
+    static uint8_t map[768];
+    EnemySpawnTimer t;
+    EnemyRoomVars v;
+    EnemyState s;
+    int i;
+
+    /* Contact 8290 classe 1 : |C427 - X| < 10, Y de C425 - 27 a C425 + 22 ; degat 2. */
+    CHECK(stage2_contact(145 + 9, 160), "contact a X + 9");
+    CHECK(stage2_contact(145 - 9, 160), "contact a X - 9");
+    CHECK(!stage2_contact(145 + 10, 160), "pas de contact a X + 10");
+    CHECK(!stage2_contact(145 - 10, 160), "pas de contact a X - 10");
+    CHECK(stage2_contact(145, 160 + 22) && !stage2_contact(145, 160 + 23), "contact : borne basse C425 + 22");
+    CHECK(stage2_contact(145, 160 - 27) && !stage2_contact(145, 160 - 28), "contact : borne haute C425 - 27");
+
+    /* Fouet 7DAD classe 1 : X du fouet = 145 + 20 = 165, |165 - X| < 17. */
+    Enemies_init(&s);
+    put_stage2_type1(&s, 165 + 16, 160, ENEMY_SIDE_RIGHT);
+    put_stage2_type1(&s, 165 - 16, 160, ENEMY_SIDE_LEFT);
+    put_stage2_type1(&s, 165 + 17, 160, ENEMY_SIDE_RIGHT);
+    put_stage2_type1(&s, 165 - 17, 160, ENEMY_SIDE_LEFT);
+    CHECK(Enemies_whipHit(&s, 0, 0, 255, 255) == 0, "Enemies_whipHit ignore les ennemis romBox");
+    CHECK(Enemies_whipHitType1Rom(&s, 145, 160, 0, 0) == 2, "fouet : |d| <= 16 touche, 17 non");
+    CHECK(!s.enemy[0].active && !s.enemy[1].active && s.enemy[2].active && s.enemy[3].active,
+          "fouet : les deux ennemis a 17 px restent");
+    /* Cas de la trace W1 : Simon 145 a droite, objet en X 156 ; Simon 189 a gauche, X 157. */
+    Enemies_init(&s);
+    put_stage2_type1(&s, 156, 160, ENEMY_SIDE_LEFT);
+    CHECK(Enemies_whipHitType1Rom(&s, 145, 160, 0, 0) == 1, "fouet : mort W1 6473");
+    Enemies_init(&s);
+    put_stage2_type1(&s, 157, 160, ENEMY_SIDE_RIGHT);
+    CHECK(Enemies_whipHitType1Rom(&s, 189, 160, 1, 0) == 1, "fouet : mort W1 6677");
+    /* Hauteur : debout Y de C425 - 21 a C425 + 6, accroupi C425 - 13 a C425 + 14. */
+    Enemies_init(&s);
+    put_stage2_type1(&s, 165, 160 + 6, ENEMY_SIDE_RIGHT);
+    put_stage2_type1(&s, 165, 160 + 7, ENEMY_SIDE_RIGHT);
+    CHECK(Enemies_whipHitType1Rom(&s, 145, 160, 0, 0) == 1 && s.enemy[1].active, "fouet debout : Y + 6 oui, Y + 7 non");
+    CHECK(Enemies_whipHitType1Rom(&s, 145, 160, 0, 1) == 1, "fouet accroupi : Y + 7 touche");
+    /* Bord d'ecran : X du fouet hors 0..255, pas de test (84B6). */
+    Enemies_init(&s);
+    put_stage2_type1(&s, 250, 160, ENEMY_SIDE_LEFT);
+    CHECK(Enemies_whipHitType1Rom(&s, 240, 160, 0, 0) == 0, "fouet : retenue a droite, pas de coup");
+
+    /* Chute : pose sur le sol de la salle 2 (rang Y A0), Y affiche 81 comme au hall (A1). */
+    memset(map, 0, sizeof map);
+    for (i = 0; i < 32; i++) map[18 * 32 + i] = 1;
+    vars_stage2_room2(&v);
+    v.map = map;
+    Enemies_init(&s);
+    Enemies_spawnTimerInit(&t);
+    for (i = 0; i < 40; i++) { int push; (void)Enemies_frame(&s, &t, &v, &push); }
+    CHECK(s.enemy[0].active && s.enemy[0].y == 0x81, "stage 2 : pose au sol, Y 81 (obtenu %02X)", s.enemy[0].y);
+}
+
 int main(void)
 {
     test_rom_tables();
@@ -631,6 +825,9 @@ int main(void)
     test_fall_to_floor();
     test_whip_kills_type1();
     test_type5();
+    test_stage2_type1_spawn();
+    test_stage2_type1_trajectory();
+    test_stage2_type1_contact_whip();
     if (failures == 0) {
         printf("Enemies tests: PASS\n");
         return 0;

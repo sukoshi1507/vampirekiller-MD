@@ -23,6 +23,7 @@ Outil : `tools/md_harness.py`. Il charge `sgdk/out/rom.bin` dans le core libretr
 | `g_room2_panther` | salle 2 : panthère créée en 80,80, assise tournée vers Simon (x 194, y 128) ; réveil sous 64 px, course vers Simon ; tuée au premier coup de fouet accroupi, sans contact | 6/6 |
 | `h_castle_entrance` | cour 2 : porte à x 216, marche seule 1 px / 4 images (x 226 après 40 images sans touche), sprite de Simon sans priorité derrière le montant, écran noir à t 67, hall à t 103 (x 16, y 192) | 7/7 |
 | `c_enemy_contact` | même chemin sans attaquer ; contact image 1192 : énergie 32 → 30, invulnérabilité et recul ; après 30 images, recul fini, pas de second dégât | 7/7 |
+| `k_stage2_room2_zombie` (2026-10-28) | stage 2 forcé (`vk_game+20`), salle 2 par le changement de salle debug, Simon en (145, 160) ; zombie à droite en X `E5`, Y SAT `80` puis posé en `81`, `romBox` ; tué par un fouet debout pendant la phase 2 (`whip.timer` 3 à 7), sans contact ; deuxième tir à gauche (X `0A`) ; contact à moins de 10 px : énergie 32 → 30, recul et invulnérabilité | 11/11 |
 
 Le chemin vers le hall n'utilise aucun mode debug : il suffit de tenir DROITE depuis la cour (cour 0 → 1 → 2, porte du château à x 216, puis entrée automatique de 103 images, `research/castle-entrance.md`). Les scénarios attendent `front_mode == MODES['INTERIOR']` : `game.area` passe à 1 dès l'écran noir. Le changement de salle debug du hall (A + gauche/droite) reste disponible avec `hold A+RIGHT 1`.
 

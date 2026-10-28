@@ -330,7 +330,74 @@ Lecture du code (`tools/disasm_rom_window.py`) et trace openMSX `scratchpad/stag
 | Type 4 : dessin | les 12 couches `48`-`74` en VRAM sont identiques à celles du hall (5 instantanés des salles 0, 4, 2) | trace |
 | Type 4 : Y du spawn | `9D97` : `E = C425 - 8` ; Y SAT au spawn = **C425 - 22** (Simon 96 → 74, Simon 128 → 106 ; hall : 192 → `AA`) | code + trace (20 tirs) |
 | Type 4 : cadence | table `9DBB` = `14 14 14 28 14 14 14 28` : 168, 168, 168 puis 328 images (tirs 6068, 6236, 6404, 6572, 6900, …) ; le premier tir vient 168 images après l'entrée | code + trace |
-| Type 1 (salle 2) | `9CFC` branche stage 2 : `E = A0`, côté `D = F0`, ou `10` si le bit 1 de `CF01` est mis | code seul |
+| Type 1 (salle 2) | `9CFC` branche stage 2 : `E = A0`, côté `D = F0`, ou `10` si le bit 1 de `CF01` est mis. C’est le zombie du hall (section « Type 1 au stage 2 ») | code + trace (2026-10-28) |
 | Type 2 (salles 4, 5) | `9D4B` : minuterie `CF02`, périodes `9D8F` (`01 18 18 …`), Y `C8`, X = table `9D87` (`60 D0 30 90 A0 40 60 B0`) selon `CF03 & 7`, décalé de 32 px vers le centre si Simon est à moins de 24 px. Routine `A310` : chute sous gravité `0x80`, posé au sol puis marche vers Simon à ±`0x180` ; sous Y `C0` sans sol, disparaît en créant deux objets `20` (éclaboussures). Homme-poisson probable | code seul |
 
-**Porté** : type 4 au stage 2 (salles 0, 1, 3), Y du spawn relative à Simon et cadence 168/328 pour tous les stages. **Non porté** : type 1 de la salle 2 (dessin au stage 2 non relevé), type 2 (dessin, sauts et tir de l'état 2 `A45A` non relevés). La trace n'a pas atteint les salles 2 et 4 : le lien forcé (`C41E`) n'a pas servi, Simon était sur un escalier.
+**Porté** : type 4 au stage 2 (salles 0, 1, 3), Y du spawn relative à Simon et cadence 168/328 pour tous les stages. **Porté depuis** : type 1 de la salle 2 (section suivante). **Non porté** : type 2 (dessin, sauts et tir de l'état 2 `A45A` non relevés). La trace `stage2e` n’a pas atteint les salles 2 et 4 : le lien forcé (`C41E`) n'a pas servi, Simon était sur un escalier.
+
+## Type 1 au stage 2 : le zombie de la salle 2 (relevé du 2026-10-28)
+
+**Identification** : l'ennemi de type 1 de la salle 2 du stage 2 (`D000 = 2`, `D001 = 2`) est **le zombie du hall** (types A et B du port). Même routine (`A964`), mêmes couches de motifs, mêmes couleurs ; seuls le Y du spawn et la règle de côté changent.
+
+**Porté** dans `sgdk/src/enemies.c` (`stage2Type1Tick`, champ `romBox` de `Enemy`, `Enemies_whipHitType1Rom`) et `sgdk/src/actors.c` (fouet en phase 2). Aucune tuile nouvelle : les couches du hall (`vk_enemy_tiles`, VRAM `ENEMY_TILE_INDEX`) sont déjà chargées dans toutes les salles du château. Tests : `test_stage2_type1_spawn`, `test_stage2_type1_trajectory`, `test_stage2_type1_contact_whip` (`tests/test_enemies.c`) et le scénario MD `k_stage2_room2_zombie`.
+
+### Méthode
+
+- Trace openMSX (outils copiés du type 5 dans `scratchpad/s2t1/tool/`, extra `s2t1_extra.tcl` : SAT et couleur par image, objets `C800`-`CB00`, instantanés VRAM à chaque nouvel ensemble de motifs, filtre `D000 = 2` et `D001 = 2`). Plan `base.txt` = plan `S2` jusqu'à l'arrivée au stage 2 (salle 0, x 16, y 96), puis chemin naturel : `gotox 44`, HAUT sur l'escalier de la salle 0, arrivée en salle 2 à l'image 6190, Simon en haut de l'escalier (x 145, y 160).
+- Runs : `out/O1` (observation, 6 × 300 images, énergie remise à 32), `out/W1` (coups de fouet debout à droite, puis à gauche, puis accroupi). Analyses : `ana.py` (créations, suivi d'un bloc), `satx.py` (X SAT image par image), `hits.py` (contacts et morts), `cmp_vram.py` (couches contre la ROM), `colors.py`, `pal.py`.
+- Lecture de code : `9CE6`, `9CFC`, `9E16`, table d'initialisation `5FCC`, `A934`, `A964`, `99E5`, `7DAD`, `827C`/`8290` (classes `82CB`), `8378`/`8380`, `847A`, `84A7`, `84D9`.
+
+### Code (déduit de la lecture, confirmé par la trace pour les points marqués)
+
+| Point | Valeur |
+|---|---|
+| Spawn | `9CE6` : minuterie `9CC3` (`CF00`/`CF01`, périodes `9D43`, comme au hall), puis `9CFC` : branche `D000 = 2` (`9D1B`) : `E = A0`, `D = F0` ; `D = 10` si le bit 1 de `CF01` (déjà incrémenté par `9CD1`) est mis (`9D1F`). Garde `9E16`, puis `C = 1`, `JP 5F1D`. Le drapeau `C42C` n'est pas lu au stage 2 |
+| Initialisation | table `5FCC` (type 1 `A934`, types 2-3 `A2E0`, type 4 `B0CA`, type 5 `A85C`). `A934` : `+6 = 1` ; si `X < 80`, `vx = +0x0220`, pose `3D`, `+10 = 0` ; sinon `vx = -0x0220`, pose `3B`, `+10 = 1` ; `vx` recopiée en `+11/+12` ; `+C = 8` ; `vy = 0`. Points de vie `+D = 01`, `+E = 07` (lus dans l'objet) |
+| Mise à jour `A964` (une image sur deux) | `+C - 1` ; à 0 : la pose alterne `3B`/`3C` (vers la gauche) ou `3D`/`3E` (vers la droite), `+C = 4`. Sol testé en `(X, Y)` et `(X - 10, Y)` (`7B98`) : posé, `vy = 0`, `vx` reprise de `+11/+12`, `Y &= F8` ; sans sol, `vx = 0` et `vy += 0x60` (`A549`) : chute verticale |
+| Bornes `99E5` | suppression si `X < 07`, `X >= F1` ou `Y >= E4` |
+| Contact `8290` | classe 1 (`82CB` : types 1, 2, 3 → 1 ; 4 → 2 ; 5 → 3), `HL = 1805` (`8378`) puis `847A` : `|C427 - X| < 10` et `0 <= C425' - 2 - Y + 24 < H`, avec `H = 50` debout, `42` si `C420` vaut 1 ou 2, et `C425' = C425 - 8` si `C420 = 1`. Debout : Y de `C425 - 27` à `C425 + 22` |
+| Fouet `7DAD` | phase `C422 = 3`, objets au bit 0 de `+E` ; classe 1, `HL = 1805` (`8380`) puis `84A7` : demi-largeur `L = 5 + 12 = 17` (`5 + 16` si `C416 = 1`) ; X du fouet = `C427 + 20` (`C42C = 0`) ou `C427 - 20` (`± 24` si `C416 = 1`), une retenue annule le coup (`84B6`) ; touche si `|X fouet - X| < 17` et `0 <= C425 - B - Y + 24 < 28`, `B = 18` debout, `10` accroupi (`C420 = 2`), soit Y de `C425 - B - 3` à `C425 - B + 24` |
+
+### Trace (prouvé)
+
+| Point | Valeur | Preuve |
+|---|---|---|
+| Créations | images 6238 (droite), 6342 (gauche), 6494 (gauche), 6598 (droite), 6702 (droite), 6806 (gauche), 6958 (gauche) : écarts 104, 152, 104, 104, 104, 152 ; côtés D, G, G, D, D, G, G = bit 1 de `CF01` = 1 à 7 | `O1`, `ana.py` |
+| Premier tir | 48 images après l'écriture de `D001` (6190 → 6238) | `O1` |
+| Objet à la création | `01 00 00A0 E0ED 01 0000 E0FD 3B 07 01 07 00 01 E0FD` (droite : Y `A0`, X `ED.E0` après une mise à jour depuis `F0`) ; à gauche X `12.20` depuis `10`, `vx = 0x0220`, pose `3D`, `+10 = 0` | `O1` |
+| Y | Y de l'objet `A0` à chaque tir (Simon en `C425 = A0`, même sol) ; SAT : rang haut Y 128 (`80`), rang bas 144 (`90`) | `O1`, `W1` |
+| X SAT | X de l'objet - 8 ; premier X visible `E5` (droite) ou `0A` (gauche), 2 images après l'écriture de `C800` | `satx.py` |
+| Mouvement | `-2,125` px par mise à jour : 2 px toutes les 2 images et 1 px de plus toutes les 16 images ; séquence identique à celle du hall, décalée d'une image (âge = image - création - 1 dans les tests) | `satx.py`, `test_stage2_type1_trajectory` |
+| Animation | rang bas `48/4C` ↔ `50/54` (vers la gauche) ou `60/64` ↔ `68/6C` (vers la droite) toutes les 8 images, premier changement 16 images après la création ; rang haut fixe `40/44` ou `58/5C` | `satx.py` |
+| Sortie | vers la gauche : X SAT `00` pendant 2 images, suppression à X objet `06.40` ; vers la droite : X SAT `E7` pendant 2 images, suppression à X objet `F1.40`. Durées : 220 et 212 images après la création | `O1` |
+| Contact | 10 contacts distincts (`O1`, `W1`, dont un sur l’escalier, `C420 = 3`) : `C415 - 2`, à `|C427 - X|` de 8 à 10 à l’image précédente, soit moins de 10 après le déplacement de l’image du test ; aucun au-delà. Recul et invulnérabilité comme au hall | `hits.py` |
+| Fouet | 6 morts (`W1`), toutes en phase `C422 = 3`, debout, à `|X fouet - X|` de 0 à 15 (9, 12-14, 12, 0, 0-2, 13-15). L'objet devient `1E` en (X, Y - 16), puis `00`, ou `24` (objet tombé) 3 fois sur 6 | `hits.py`, `ana.py` |
+| Dessin | les 12 couches `40`-`6C` en VRAM (`F800 + 8 × N`) sont identiques octet pour octet au flux du type A du hall (ROM fichier `0x153E8`, trois paires, et leurs miroirs pour `58`-`6C`) dans les 118 instantanés de la salle 2 pris après le chargement (57 de `O1`, 61 de `W1`). L'instantané de l'image du changement de salle (6190) montre encore les chauves-souris | `cmp_vram.py` |
+| Couleurs | table de couleur `02` (couche N) et `44` (couche N+4, CC) sur les 16 lignes, pour les 12 motifs (684 entrées de `O1`) | `colors.py` |
+| Palette | palette VDP de la salle 2 = `vk_palettes[10]` (`vk_stages[1].first + 2`) à l'identique : 2 = `0222` (corps), 4 = `0C2E` (contour magenta), 6 = `0ACE` (recouvrement), comme les salles 0 et 1 du hall | `pal.py` |
+
+### Port
+
+| Point | Port | Statut |
+|---|---|---|
+| Spawn | `stage2Type1Tick` : minuterie du hall, Y SAT `80`, côté selon `CF01 & 2` après l'incrément, garde `9E16` ; tir marqué `romBox` | prouvé |
+| Mouvement, motifs | ceux des types A et B (même routine `A964`) | prouvé |
+| Sol | chute du port (`fall`) : le rang haut se pose en Y 81 (pieds en `A0`), comme au hall (A1) | convention du port |
+| Sortie | `romBox` : dernière position tenue 2 images (âges 217-218 à gauche, 209-210 à droite), puis disparition | prouvé |
+| Contact | boîte `8290` de la classe 1, Simon debout ; dégât 2 | prouvé debout ; **PROVISOIRE** accroupi et en saut (`C420` non transmis à `enemies.c`) |
+| Fouet | `Enemies_whipHitType1Rom` (boîte `84A7`, `C416 = 0`), appelé en phase 2 du fouet du port comme pour le type 5 ; `Enemies_whipHit` ignore les ennemis `romBox` | prouvé pour la boîte ; correspondance phase 2 du port / `C422 = 3` **PROVISOIRE** (comme le type 5) |
+
+### Reste ouvert
+
+- Le délai du premier tir : 48 images mesurées après l'entrée, 32 dans le port (valeur initiale de `CF10` et durée du chargement de salle non modélisées) : **PROVISOIRE**, comme au hall.
+- L'entrée SAT provisoire (Y `E1`, 2 images) et le retard d'affichage ne sont pas reproduits : le port montre l'ennemi dès l'âge 0.
+- Objet `1E`, objet tombé `24` (tirage commun `9A3E`), score : non portés.
+- Chute sans sol (`vy += 0x60` par mise à jour, `vx = 0`) : le port garde la chute provisoire du hall (2 px par image). Sans effet dans la salle 2, dont le sol bas est continu pour la sonde à deux points.
+- **Hall** : le type 1 du hall utilise la même routine, mais le port garde son ancien modèle (sortie droite à X 216, masquage une image après la limite, boîtes de sprites). Les bornes `99E5` et la trace de la salle 2 donnent X `E7` et deux images ; le relevé du hall citait déjà `E7` parmi les sorties. Passer les tirs du hall en `romBox` alignerait les deux stages (à faire avec la mise à jour des tests `test_e2_trajectory` et du scénario `c_enemy_contact`).
+- Fouet de niveau `C416 = 1` (portée 24, demi-largeur 21) : non porté.
+
+### Fichiers (hors dépôt, `scratchpad/s2t1/` du worktree)
+
+- Outils : `tool/` (`harness.tcl`, `run.py` à plans concaténés par `+`, `s2t1_extra.tcl`, `render_snap.py`), analyses `ana.py`, `satx.py`, `hits.py`, `cmp_vram.py`, `colors.py`, `pal.py`.
+- Plans : `plans/base.txt`, `plans/obs.txt`, `plans/whip.txt`.
+- Traces : `out/O1/`, `out/W1/` (`sat_r2.csv`, `objwrites.csv`, `snaps/`, `events.txt`).

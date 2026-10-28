@@ -53,8 +53,10 @@ static const u32 target_tiles[32] = {
 static int whip_level_choice = 0;
 
 /* One gameplay frame of the castle enemies. The state follows the castle room: a
- * room change or a leave of the castle rebuilds it (key 0 outside). In stage 2 only
- * the type 4 is ported (enemies.c, kEnemyStage2RoomFlags). Simon's
+ * room change or a leave of the castle rebuilds it (key 0 outside). In stage 2 the
+ * type 4 (rooms 0, 1, 3) and the type 1 of room 2 are ported (enemies.c,
+ * kEnemyStage2RoomFlags); the type 1 reuses the hall layers of vk_enemy_tiles
+ * (same VRAM patterns 40..6C, checked in the room 2 trace). Simon's
  * recoil moves him here through vk_game_push (walls and walk limits). */
 /* Castle room the enemy state belongs to: stage 1 rooms 1..8, stage 2 rooms 9..14. */
 static u16 room_key(void)
@@ -97,8 +99,13 @@ void vk_step_enemies(void)
         /* Type 5: only in the MSX whip phase 3 (C422 = 3), taken as the full lash
          * (vk_whip_phase 2, PROVISIONAL match), from the latched whip origin. */
         if (vk_whip_phase(&vk_whip) == 2)
+        {
             (void)Enemies_whipHitType5(&vk_enemies, vk_whip.x, vk_whip.y,
                                        vk_whip.facing, vk_whip.crouched);
+            /* Stage 2 type 1: same phase, ROM box of class 1 (enemies.h). */
+            (void)Enemies_whipHitType1Rom(&vk_enemies, vk_whip.x, vk_whip.y,
+                                          vk_whip.facing, vk_whip.crouched);
+        }
     }
     if (push)
     {

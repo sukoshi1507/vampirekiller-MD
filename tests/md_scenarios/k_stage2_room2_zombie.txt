@@ -1,0 +1,45 @@
+# (k) Type 1 de la salle 2 du stage 2 : le zombie du hall, Y E = A0 (research/enemy-behavior.md,
+# section « Type 1 au stage 2 »). enemies.enemy[i] : type 0 = A (part a droite), 1 = B (a gauche) ;
+# x, y = SAT du rang haut ; romBox = sortie, contact et fouet de la ROM.
+include boot_to_courtyard.inc
+until front_mode == MODES['INTERIOR'] max 3000 RIGHT
+# Stage 2 force (VKGame.stage), puis changement de salle debug : salle 0 -> 2
+# (A tenu, puis A+DROITE ; le premier front est perdu).
+poke vk_game+20 2
+hold A 3
+hold A+RIGHT 3
+wait 10
+hold A 3
+hold A+RIGHT 3
+wait 2
+hold A 3
+hold A+RIGHT 3
+# Simon en haut de l'escalier, sur le sol bas (x 145, y 160), comme dans la trace O1.
+poke vk_game+0 145
+poke vk_game+1 160
+wait 2
+expect game.stage == 2 and game.room == 2 # salle 2 du stage 2
+expect game.player.x == 145 and game.player.y == 160 # pose sur le sol bas
+until enemies.alive > 0 max 80
+expect enemies.enemy[0].type == 0 and enemies.enemy[0].x == 0xE5 and enemies.enemy[0].y == 0x80 # premier tir a droite, Y SAT 80
+expect enemies.enemy[0].romBox == 1 # type 1 du stage 2
+wait 2
+expect enemies.enemy[0].y == 0x81 # pose sur le sol (pieds en A0), comme au hall (A1)
+wait 20
+shot j-zombie-droite
+# Fouet debout a droite : X du fouet 165, touche si |165 - X| < 17 (X = x SAT + 8).
+until enemies.enemy[0].x <= 180 max 200
+tap B 1
+until not enemies.enemy[0].active max 30
+expect 3 <= whip.timer <= 7 # tue pendant la phase 2 du port (phase 3 du MSX)
+expect enemies.energy == 32 # tue avant le contact
+# Deuxieme tir (104 images apres le premier) : a gauche, il avance vers la droite.
+until enemies.alive > 0 max 200
+expect enemies.enemy[0].type == 1 and enemies.enemy[0].x == 0x0A and enemies.enemy[0].dx == 1 # cote gauche (bit 1 de CF01)
+wait 30
+shot j-zombie-gauche
+# Contact 8290 : |C427 - X| < 10, degat 2, puis recul et invulnerabilite.
+until enemies.energy < 32 max 300
+expect enemies.energy == 30 # -2
+expect abs(game.player.x - enemies.enemy[0].x - 8) < 10 # contact a moins de 10 px
+expect enemies.invuln > 0 and enemies.recoil > 0

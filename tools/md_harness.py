@@ -33,7 +33,7 @@ Script (une commande par ligne, `#` = commentaire ; "image" = un appel a retro_r
 Les EXPR sont du Python evalue sur l'etat : frame, front_mode, game.area, game.room,
 game.player.x/.y/.facing/.mode/.crouched/.on_stairs..., player (copie affichee),
 whip.timer/.facing/.x/.y, enemies.energy/.invuln/.recoil/.alive (nb actifs),
-enemies.enemy[i].active/.type/.x/.y/.dx/.age, target (test_target), flames[0..1],
+enemies.enemy[i].active/.type/.x/.y/.dx/.age/.romBox, target (test_target), flames[0..1],
 health.lives/.phase/.timer/.fell (C410 ; phase 0 vivant, 1 mort, 2 reapparition, 3 fin de partie),
 ram8/ram16/ram32(addr|'symbole'), et les noms memorises par `set`.
 Boutons : A B C START UP DOWN LEFT RIGHT (manette 3 boutons, port 1).
@@ -298,7 +298,7 @@ class Game_View:
                                 'extraPhase': m.rd8(e + 3), 'x': s16(m.rd16(e + 4)), 'y': m.rd8(e + 6),
                                 'dx': s8(m.rd8(e + 7)), 'sub': m.rd8(e + 8), 'age': m.rd16(e + 10),
                                 'vy': s16(m.rd16(e + 12)), 'state': m.rd8(e + 14),
-                                'anim': m.rd8(e + 15), 'pose': m.rd8(e + 16)})
+                                'anim': m.rd8(e + 15), 'pose': m.rd8(e + 16), 'romBox': m.rd8(e + 17)})
             b = a + 72
             state['enemies'] = {'enemy': enemies, 'alive': sum(1 for e in enemies if e['active']),
                                 'energy': m.rd8(b), 'invuln': m.rd8(b + 1), 'invulnPhase': m.rd8(b + 2),

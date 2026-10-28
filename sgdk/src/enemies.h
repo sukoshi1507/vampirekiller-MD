@@ -74,6 +74,7 @@ typedef struct {
     EnemyU8 state;           /* type 5 : 0 assise, 1 course, 2 saut ou chute */
     EnemyU8 anim;            /* type 5 : compteur d'animation +C, 1 a 12 */
     EnemyU8 pose;            /* type 5 : pose +B, 3F a 46 */
+    EnemyU8 romBox;          /* type 1 du stage 2 : sortie, contact et fouet de la ROM (99E5, 8290, 7DAD) */
 } Enemy;
 
 /* Une entree SAT produite pour l'affichage. */
@@ -101,7 +102,9 @@ typedef struct {
 
 /* Drapeaux de salle du stage 2 (D000 = 2) : ROM 85D7-85DC (pointeur 85AA), salles 0 a 5.
  * Bit 3 (type 4) en salles 0, 1, 3 ; bit 0 (type 1) en salle 2 ; bit 1 (type 2, 9D4B) en 4, 5.
- * Seul le type 4 est porte au stage 2 (memes motifs que le hall, verifie en VRAM). */
+ * Types portes au stage 2 : le type 4 (memes motifs que le hall, verifie en VRAM) et le
+ * type 1 de la salle 2 (zombie du hall : memes couches 40-6C et couleurs, verifie en VRAM ;
+ * Y E = A0, cote selon le bit 1 de CF01, code 9CFC et trace). */
 extern const EnemyU8 kEnemyStage2RoomFlags[6];
 
 /* Tables ROM, salle de stage 1 (D000 = 1).
@@ -143,7 +146,8 @@ void Enemies_spawnTimerInit(EnemySpawnTimer *t);
 
 /* Un appel de 9CC3/9CE6 (une fois toutes les 2 images).
  * Retourne 1 si un ennemi a ete cree, 0 sinon (minuterie, drapeau, garde, plein).
- * Le cote est v->sideFlag ; le type est celui du cote (A a droite, B a gauche). */
+ * Le cote est v->sideFlag ; le type est celui du cote (A a droite, B a gauche).
+ * Stage 2 (salle 2) : cote selon le bit 1 de CF01 (9D1F), v->sideFlag ignore. */
 int Enemies_spawnTimerTick(EnemySpawnTimer *t, const EnemyRoomVars *v, EnemyState *s);
 
 /* Une image de jeu complete : recul de Simon, mouvement, spawns (type 1 une image sur deux,
@@ -165,6 +169,13 @@ int Enemies_whipHit(EnemyState *s, int left, int top, int right, int bottom);
  * simonY - B - 3 <= Y <= simonY - B + 10, B = 18 debout, 10 accroupi. Fouet de depart
  * (C416 = 0). Un coup tue (points de vie 1). Retourne le nombre de pantheres tuees. */
 int Enemies_whipHitType5(EnemyState *s, int simonX, int simonY, int facingLeft, int crouched);
+
+/* Fouet contre le type 1 du stage 2 (romBox), a appeler pendant la phase 3 du fouet :
+ * 7DAD, classe 1 (82CB), boite 84A7 avec HL = 1805 (8380). X du fouet = simonX +- 20,
+ * touche si |X fouet - X| < 17 et simonY - B - 3 <= Y <= simonY - B + 24 (X, Y : objet
+ * MSX, Y = pieds), B = 18 debout, 10 accroupi. Fouet de depart (C416 = 0). Points de vie 1.
+ * Ces ennemis sont ignores par Enemies_whipHit. Retourne le nombre d'ennemis tues. */
+int Enemies_whipHitType1Rom(EnemyState *s, int simonX, int simonY, int facingLeft, int crouched);
 
 /* Avance d'une image les ennemis actifs (mouvement, animation, sortie). */
 void Enemies_update(EnemyState *s);

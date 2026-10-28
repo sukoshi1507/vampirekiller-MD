@@ -17,6 +17,9 @@
  *   - Mouvement, animation, sortie du type 1               observe (trace frames.txt)
  *   - Type 4 : cadence 168 images, 1,5 px/image, sortie    observe (4 creations)
  *   - Contact -2, recul 22 images a 2 px, invulnerabilite 180 images   observe (run 3, run 6)
+ *   - Type 1 du stage 2 (salle 2) : spawn 9CFC (E = A0, cote = bit 1 de CF01), sortie 99E5,
+ *     contact 8290 et fouet 7DAD de la classe 1 : code lu et trace (enemy-behavior.md,
+ *     section « Type 1 au stage 2 »). Mouvement et motifs : ceux du hall (meme routine A964).
  *
  * PROVISOIRE (non verifie, a confirmer en emulation) :
  *   - Cote du type 1 : alternance par tir (index CF01 & 1). La vraie regle (C42C) n'est pas relevee.
@@ -27,6 +30,8 @@
  *   - Type 5 (salles 2, 3, 7) : non porte (graphisme et declencheur inconnus).
  *   - extraPhase (1 pour A, 15 pour B) : observe, cause inconnue.
  *   - Salle 1 avec Simon haut (E = 60) : condition C425 < 0x88 (module), pas une regle verifiee.
+ *   - Type 1 du stage 2 : contact calcule pour Simon debout (C420 = 0) ; accroupi ou en saut,
+ *     la ROM reduit la hauteur a 42 (et C425 - 8 en saut), non transmis par EnemyRoomVars.
  */
 #include "enemies.h"
 #include "player.h"
@@ -44,6 +49,12 @@
 #define ENEMY_SIMON_H       31     /* boite de Simon : Y-31 a Y (pieds en Y, provisoire) */
 #define ENEMY_TYPE4_ROW_H   16
 #define ENEMY_TYPE1_ROW_H   32
+/* Type 1 du stage 2 (salle 2), research/enemy-behavior.md section « Type 1 au stage 2 ». */
+#define ENEMY_S2_TYPE1_E      0xA0 /* 9D1B : E = A0 (Y de l'objet = pieds, comme C425) */
+#define ENEMY_S2_TYPE1_Y      (ENEMY_S2_TYPE1_E - 0x20) /* Y SAT du rang haut : 80 (trace : 128 a chaque tir) */
+#define ENEMY_S2_EXIT_X_RIGHT 0xE7 /* 99E5 : objet supprime a X >= F1 ; dernier X SAT E7 (trace) */
+#define ENEMY_OBJ_X 8              /* X de l'objet = X SAT + 8 (enregistrements +21 de l'objet) */
+#define ENEMY_OBJ_Y 31             /* Y de l'objet = Y affiche du rang haut + 31 (une fois pose) */
 
 /* Tables ROM salle de stage 1 (D000 = 1).
  * kEnemyStage1RoomFlags : ROM 0x85CF-0x85D6 (pointeur 85A8 = 85CF pour D000 = 1).
@@ -116,6 +127,7 @@ static void clearEnemy(Enemy *e)
     e->state = 0;
     e->anim = 0;
     e->pose = 0;
+    e->romBox = 0;
 }
 
 void Enemies_setRoom(EnemyState *s)
@@ -168,6 +180,7 @@ int Enemies_spawn(EnemyState *s, EnemyU8 side, EnemyU8 type, EnemyU8 y, EnemyU8 
             e->y = y;
             e->age = 0;
             e->sub = 0;
+            e->romBox = 0;
             if (side == ENEMY_SIDE_RIGHT) {
                 e->x = ENEMY_SPAWN_X_RIGHT;
                 e->dx = -1;
@@ -181,12 +194,48 @@ int Enemies_spawn(EnemyState *s, EnemyU8 side, EnemyU8 type, EnemyU8 y, EnemyU8 
     return -1; /* plein : spawn perdu (comportement MSX si plein non verifie) */
 }
 
+/* Stage 2 : un appel de 9CC3 puis 9CE6, comme au hall, avec la branche D000 = 2 de 9CFC
+ * (9D1B) : E = A0, D = F0, ou 10 si le bit 1 de CF01 (deja incremente par 9CD1) est mis.
+ * Trace (scratchpad/s2t1, salle 2) : cotes D, G, G, D, D, G, G, cadence 104/152 images. */
+static int stage2Type1Tick(EnemySpawnTimer *t, const EnemyRoomVars *v, EnemyState *s)
+{
+    EnemyU8 period, c, dCoord;
+    EnemyU8 side;
+    int k;
+
+    if (v->room >= 6 || (kEnemyStage2RoomFlags[v->room] & ENEMY_FLAG_TYPE1) == 0) return 0;
+    /* 9CC3 : CF10, puis CF00 tous les 4 appels ; reload = max(periode - 2*D012, 0) + 1. */
+    t->phase--;
+    if ((t->phase & 0x03) != 0) return 0;
+    t->counter--;
+    if (t->counter != 0) return 0;
+    period = kEnemySpawnPeriod[t->index & 7];
+    t->index++;
+    c = (EnemyU8)(v->difficulty << 1);
+    t->counter = (EnemyU8)(((period >= c) ? (EnemyU8)(period - c) : 0) + 1);
+
+    /* 9D1D-9D27 : cote selon CF01 apres l'increment. */
+    dCoord = (t->index & 0x02) ? 0x10 : 0xF0;
+    /* 9E16 : garde selon X de Simon (C427) et D. */
+    if (v->simonX >= 0xC0 && dCoord >= 0xC0) return 0;
+    if (v->simonX < 0x40 && dCoord < 0x40) return 0;
+
+    side = (dCoord == 0xF0) ? ENEMY_SIDE_RIGHT : ENEMY_SIDE_LEFT;
+    k = Enemies_spawn(s, side, side == ENEMY_SIDE_RIGHT ? ENEMY_TYPE_A : ENEMY_TYPE_B,
+                      ENEMY_S2_TYPE1_Y, side == ENEMY_SIDE_RIGHT ? 1 : 15);
+    if (k < 0) return 0;
+    s->enemy[k].romBox = 1;
+    return 1;
+}
+
 /* Un appel de 9CC3 (minuterie) puis, si le compte a rebours expire, 9CE6 (spawn). */
 int Enemies_spawnTimerTick(EnemySpawnTimer *t, const EnemyRoomVars *v, EnemyState *s)
 {
     EnemyU8 idx, period, reload, c, dCoord, yCoord, slot, i;
     EnemyU8 side;
     EnemyU8 type;
+
+    if (v->stage == 2) return stage2Type1Tick(t, v, s);
 
     /* Tables des autres stages non extraites : pas de tir. */
     if (v->stage != 1 || v->room > 7) return 0;
@@ -368,6 +417,13 @@ static void advance(Enemy *e)
     if (e->age >= 3 && ((e->age - e->extraPhase) % 16) == 0) {
         e->x += e->dx;
     }
+    if (e->romBox) {
+        /* 99E5 (X < 07 ou X >= F1) : la derniere position, X SAT 00 ou E7, reste deux
+         * images (ages 217-218 et 209-210 en salle 2 du stage 2), puis l'objet disparait. */
+        if ((e->age & 1) == 0 && ((e->dx < 0 && e->x <= ENEMY_EXIT_X_LEFT) ||
+                                  (e->dx > 0 && e->x >= ENEMY_S2_EXIT_X_RIGHT))) e->exiting = 1;
+        return;
+    }
     if (e->dx < 0 && e->x <= ENEMY_EXIT_X_LEFT) e->exiting = 1;
     if (e->dx > 0 && e->x >= ENEMY_EXIT_X_RIGHT) e->exiting = 1;
 }
@@ -390,6 +446,14 @@ static int touches(const Enemy *e, int simonX, int simonY)
         const int h = simonY + 8 - e->y;
         return d > -17 && d < 17 && h >= 0 && h < 36;
     }
+    if (e->romBox) {
+        /* Type 1 du stage 2 : 8290, classe 1 (82CB), HL = 1805 (8378 -> 847A), Simon debout
+         * (C420 = 0) : |C427 - X| < 10 et 0 <= C425 - 2 - Y + 24 < 50. Trace : contacts a
+         * |C427 - X| = 8 apres le deplacement de l'image. */
+        const int d = simonX - (e->x + ENEMY_OBJ_X);
+        const int h = simonY - 2 - (e->y + ENEMY_OBJ_Y) + 24;
+        return d > -10 && d < 10 && h >= 0 && h < 50;
+    }
     const int h = (e->type == ENEMY_TYPE_4) ? ENEMY_TYPE4_ROW_H : ENEMY_TYPE1_ROW_H;
     return e->x < simonX + ENEMY_SIMON_RIGHT &&
            e->x + 16 > simonX - ENEMY_SIMON_HALF_W &&
@@ -406,7 +470,7 @@ int Enemies_whipHit(EnemyState *s, int left, int top, int right, int bottom)
     for (i = 0; i < ENEMY_MAX; i++) {
         Enemy *e = &s->enemy[i];
         int ex, ey, eh;
-        if (!e->active || e->exiting || e->type == ENEMY_TYPE_5) continue;
+        if (!e->active || e->exiting || e->type == ENEMY_TYPE_5 || e->romBox) continue;
         ex = e->x + ENEMY_SCREEN_TO_GAME_X;
         ey = e->y;
         eh = (e->type == ENEMY_TYPE_4) ? ENEMY_TYPE4_ROW_H : ENEMY_TYPE1_ROW_H;
@@ -432,6 +496,29 @@ int Enemies_whipHitType5(EnemyState *s, int simonX, int simonY, int facingLeft, 
         if (!e->active || e->type != ENEMY_TYPE_5) continue;
         if (d <= -24 || d >= 24 || e->y < simonY - b - 3 || e->y > simonY - b + 10) continue;
         e->active = 0;         /* points de vie 1 : mort au premier coup (objet 1E non porte) */
+        killed++;
+    }
+    return killed;
+}
+
+int Enemies_whipHitType1Rom(EnemyState *s, int simonX, int simonY, int facingLeft, int crouched)
+{
+    /* 84D9 : X du fouet sur 8 bits ; une retenue (bord d'ecran) annule le test (84B6). */
+    const int whipX = facingLeft ? simonX - 20 : simonX + 20;
+    const int b = crouched ? 10 : 18;
+    EnemyU8 i;
+    int killed = 0;
+    if (whipX < 0 || whipX > 255) return 0;
+    for (i = 0; i < ENEMY_MAX; i++) {
+        Enemy *e = &s->enemy[i];
+        int d, h;
+        if (!e->active || e->exiting || !e->romBox) continue;
+        d = whipX - (e->x + ENEMY_OBJ_X);
+        h = simonY - b - (e->y + ENEMY_OBJ_Y) + 24;
+        if (d <= -17 || d >= 17 || h < 0 || h >= 28) continue;
+        /* Points de vie 1 (+D = 01) : mort au premier coup (trace : 6 morts en phase 3,
+         * |X fouet - X| de 0 a 15). L'objet 1E et le drop ne sont pas portes. */
+        e->active = 0;
         killed++;
     }
     return killed;
