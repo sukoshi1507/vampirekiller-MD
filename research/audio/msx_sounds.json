@@ -1,0 +1,789 @@
+{
+ "source": "Vampire Killer (MSX2) ROM, sound driver run by tools/extract_msx_sound.py",
+ "rom_sha256": "99eabaaeb2b6c02220e131043d5a6401d0d8c5f413d89204547adcc04d65e7e2",
+ "frame_rate": 60,
+ "effect_pointers": {
+  "01": "8E2B",
+  "02": "8E58",
+  "03": "8E8A",
+  "04": "8E99",
+  "05": "8EAE",
+  "06": "8ECB",
+  "07": "8EE4",
+  "08": "8EF3",
+  "09": "8F25",
+  "0A": "8F56",
+  "0B": "8F75",
+  "0C": "8FB9",
+  "0D": "8FDD",
+  "0E": "902E",
+  "0F": "9065",
+  "10": "909A",
+  "11": "90C7",
+  "12": "90E6",
+  "13": "9137",
+  "14": "9152",
+  "15": "9179",
+  "16": "9212",
+  "17": "9275",
+  "18": "92D8",
+  "19": "9470",
+  "1A": "931A",
+  "1B": "93CA",
+  "1C": "939F"
+ },
+ "music_pointers": {
+  "80": [
+   "949B",
+   "9501",
+   "9598"
+  ],
+  "81": [
+   "9669",
+   "96C7",
+   "976D"
+  ],
+  "82": [
+   "97DA",
+   "9891",
+   "993D"
+  ],
+  "83": [
+   "9A58",
+   "9AB8",
+   "9B6A"
+  ],
+  "84": [
+   "9C15",
+   "9CDB",
+   "9DF8"
+  ],
+  "85": [
+   "9EC1",
+   "9F89",
+   "A051"
+  ],
+  "86": [
+   "A157",
+   "A217",
+   "A1B9"
+  ],
+  "87": [
+   "A2C5",
+   "A303",
+   "A35B"
+  ],
+  "88": [
+   "A39E",
+   "A3E4",
+   "A43C"
+  ],
+  "89": [
+   "A49B",
+   "A4B0",
+   "A4C4"
+  ],
+  "8A": [
+   "A4D1",
+   "A506",
+   "A51D"
+  ],
+  "8B": [
+   "A54E",
+   "A573",
+   "A5A5"
+  ],
+  "8C": [
+   "A5DF",
+   "A5FD",
+   "A621"
+  ],
+  "8D": [
+   "A671",
+   "A68F",
+   "A6AA"
+  ],
+  "8E": [
+   "A6C4",
+   "A765",
+   "A800"
+  ]
+ },
+ "total_bytes": 71428,
+ "sounds": [
+  {
+   "id": "01",
+   "kind": "effect",
+   "name": "ENERGIE",
+   "frames": 22,
+   "loop_frame": null,
+   "loop_offset": null,
+   "bytes": 80,
+   "note_c_frames": 0,
+   "lock_frames": 0,
+   "ay_writes": 88,
+   "conversion": {},
+   "sha256": "fc70130570312991560b05bfe780b91e9adc36bf4ccfaf793c98c0394b33d26d"
+  },
+  {
+   "id": "02",
+   "kind": "effect",
+   "name": "OBJET 94FC",
+   "frames": 25,
+   "loop_frame": null,
+   "loop_offset": null,
+   "bytes": 41,
+   "note_c_frames": 0,
+   "lock_frames": 0,
+   "ay_writes": 45,
+   "conversion": {
+    "envelope_frames": 21
+   },
+   "sha256": "71dc23046fb248172872aa1b18dfde2ed39750f087eb5c8afb8c6f74d34091b4"
+  },
+  {
+   "id": "03",
+   "kind": "effect",
+   "name": "ESCALIER A",
+   "frames": 9,
+   "loop_frame": null,
+   "loop_offset": null,
+   "bytes": 24,
+   "note_c_frames": 0,
+   "lock_frames": 0,
+   "ay_writes": 28,
+   "conversion": {},
+   "sha256": "cc1e349da7d7f7a3fe4544f49e05c164320cd6a8e1ca13b2a3245a72425678a6"
+  },
+  {
+   "id": "04",
+   "kind": "effect",
+   "name": "ARME LANCEE",
+   "frames": 7,
+   "loop_frame": null,
+   "loop_offset": null,
+   "bytes": 29,
+   "note_c_frames": 0,
+   "lock_frames": 0,
+   "ay_writes": 34,
+   "conversion": {},
+   "sha256": "d89fc440e85e93e6a2ed7ad669b01c6b1fbf37baa955b73df15d4921ead11412"
+  },
+  {
+   "id": "05",
+   "kind": "effect",
+   "name": "FOUET",
+   "frames": 13,
+   "loop_frame": null,
+   "loop_offset": null,
+   "bytes": 41,
+   "note_c_frames": 0,
+   "lock_frames": 0,
+   "ay_writes": 50,
+   "conversion": {},
+   "sha256": "258e0aaaeece00f2a8863150f1509a8af5184f32ff82c110ceb96f769f1899fc"
+  },
+  {
+   "id": "06",
+   "kind": "effect",
+   "name": "ESCALIER B",
+   "frames": 12,
+   "loop_frame": null,
+   "loop_offset": null,
+   "bytes": 47,
+   "note_c_frames": 0,
+   "lock_frames": 0,
+   "ay_writes": 48,
+   "conversion": {
+    "tone_folded": 1
+   },
+   "sha256": "4c686aa7a0252a49169694aacaaa9f5541726f5a5525255cac093e74a1332de3"
+  },
+  {
+   "id": "07",
+   "kind": "effect",
+   "name": "ATTERRISSAGE",
+   "frames": 6,
+   "loop_frame": null,
+   "loop_offset": null,
+   "bytes": 17,
+   "note_c_frames": 0,
+   "lock_frames": 0,
+   "ay_writes": 24,
+   "conversion": {},
+   "sha256": "31671bbba9d3ff7d515902dd1abf6004450dd6ff12aea3a1e992a4f71bfd6d0a"
+  },
+  {
+   "id": "08",
+   "kind": "effect",
+   "name": "ENNEMI A2F9",
+   "frames": 48,
+   "loop_frame": null,
+   "loop_offset": null,
+   "bytes": 86,
+   "note_c_frames": 0,
+   "lock_frames": 0,
+   "ay_writes": 114,
+   "conversion": {},
+   "sha256": "e4c070b9f8cb465b9c6c4646855e0d58dfea0ceee02d8347578876e3b02bddd8"
+  },
+  {
+   "id": "09",
+   "kind": "effect",
+   "name": "EAU",
+   "frames": 45,
+   "loop_frame": null,
+   "loop_offset": null,
+   "bytes": 83,
+   "note_c_frames": 0,
+   "lock_frames": 0,
+   "ay_writes": 111,
+   "conversion": {},
+   "sha256": "a3e6bef8d6fa93c3dfc128098a4072d15f4ef2344d85cd8cc47f583bc4b215a0"
+  },
+  {
+   "id": "0A",
+   "kind": "effect",
+   "name": "ENNEMI B9A9",
+   "frames": 49,
+   "loop_frame": null,
+   "loop_offset": null,
+   "bytes": 164,
+   "note_c_frames": 0,
+   "lock_frames": 0,
+   "ay_writes": 194,
+   "conversion": {},
+   "sha256": "4754484f393b176ea1e683d1994e99ea7b006cf8e6cc08f1e1735d8074fb7f2c"
+  },
+  {
+   "id": "0B",
+   "kind": "effect",
+   "name": "ARME TOUCHE",
+   "frames": 28,
+   "loop_frame": null,
+   "loop_offset": null,
+   "bytes": 95,
+   "note_c_frames": 0,
+   "lock_frames": 0,
+   "ay_writes": 122,
+   "conversion": {
+    "envelope_buzz": 2,
+    "envelope_frames": 6,
+    "noise_fixed_rate": 21,
+    "tone_folded": 1
+   },
+   "sha256": "1d2c30bde8c2f71dfa08ad6894e07143df38dbf74c3622ad054935ec12b1940f"
+  },
+  {
+   "id": "0C",
+   "kind": "effect",
+   "name": "COUP",
+   "frames": 12,
+   "loop_frame": null,
+   "loop_offset": null,
+   "bytes": 39,
+   "note_c_frames": 0,
+   "lock_frames": 0,
+   "ay_writes": 59,
+   "conversion": {},
+   "sha256": "39822165510fc4a9048318ffdf51484af2afd091218d30a3eb40188299a64e5b"
+  },
+  {
+   "id": "0D",
+   "kind": "effect",
+   "name": "CONTACT 7EBC",
+   "frames": 45,
+   "loop_frame": null,
+   "loop_offset": null,
+   "bytes": 125,
+   "note_c_frames": 0,
+   "lock_frames": 0,
+   "ay_writes": 162,
+   "conversion": {
+    "tone_folded": 23
+   },
+   "sha256": "14e21c3f3238f6b3e56a1e6f02fe84fb3dc06f71dbf382c711f711b3c1e9653a"
+  },
+  {
+   "id": "0E",
+   "kind": "effect",
+   "name": "BLOC CACHE",
+   "frames": 25,
+   "loop_frame": null,
+   "loop_offset": null,
+   "bytes": 63,
+   "note_c_frames": 0,
+   "lock_frames": 0,
+   "ay_writes": 92,
+   "conversion": {},
+   "sha256": "c027cdbcbef093e1ad6c1024a947694cd24296e67676cf8147f4bcfa0f14a8b4"
+  },
+  {
+   "id": "0F",
+   "kind": "effect",
+   "name": "COEUR",
+   "frames": 26,
+   "loop_frame": null,
+   "loop_offset": null,
+   "bytes": 103,
+   "note_c_frames": 0,
+   "lock_frames": 0,
+   "ay_writes": 104,
+   "conversion": {},
+   "sha256": "3b80d7bf152759e92e0f5f0a217863cf139b7b807d9dfa856cb08c5018df9303"
+  },
+  {
+   "id": "10",
+   "kind": "effect",
+   "name": "POINTS",
+   "frames": 22,
+   "loop_frame": null,
+   "loop_offset": null,
+   "bytes": 80,
+   "note_c_frames": 0,
+   "lock_frames": 0,
+   "ay_writes": 88,
+   "conversion": {},
+   "sha256": "c0a60ff9e095923415b24982e72942dd99c748f6cc33054ab26c3f984d489ee5"
+  },
+  {
+   "id": "11",
+   "kind": "effect",
+   "name": "COFFRE",
+   "frames": 43,
+   "loop_frame": null,
+   "loop_offset": null,
+   "bytes": 75,
+   "note_c_frames": 0,
+   "lock_frames": 0,
+   "ay_writes": 88,
+   "conversion": {},
+   "sha256": "7da1145cffb740ffa5c68cee33d777f5bc74ab24336df53c432eec35cd4b3ded"
+  },
+  {
+   "id": "12",
+   "kind": "effect",
+   "name": "OBJET",
+   "frames": 39,
+   "loop_frame": null,
+   "loop_offset": null,
+   "bytes": 124,
+   "note_c_frames": 0,
+   "lock_frames": 0,
+   "ay_writes": 158,
+   "conversion": {},
+   "sha256": "17e94dbde9c9e0297e05002a703337f080707c49914d7a9fd9a40e7c7fb25e0f"
+  },
+  {
+   "id": "13",
+   "kind": "effect",
+   "name": "DEGATS",
+   "frames": 49,
+   "loop_frame": null,
+   "loop_offset": null,
+   "bytes": 87,
+   "note_c_frames": 0,
+   "lock_frames": 0,
+   "ay_writes": 88,
+   "conversion": {},
+   "sha256": "a4aee9f75e7ff1ce7e8febb2a82456735065984bc511ea9082b9269ebaa107b3"
+  },
+  {
+   "id": "14",
+   "kind": "effect",
+   "name": "CLE",
+   "frames": 53,
+   "loop_frame": null,
+   "loop_offset": null,
+   "bytes": 85,
+   "note_c_frames": 0,
+   "lock_frames": 0,
+   "ay_writes": 108,
+   "conversion": {},
+   "sha256": "affabbc9d673aa2ebee398ac5d31ed936e92c5078e79c897d1fd0ff122dabc7d"
+  },
+  {
+   "id": "15",
+   "kind": "effect",
+   "name": "PORTE",
+   "frames": 76,
+   "loop_frame": null,
+   "loop_offset": null,
+   "bytes": 241,
+   "note_c_frames": 0,
+   "lock_frames": 0,
+   "ay_writes": 304,
+   "conversion": {},
+   "sha256": "ca0ef76806633402b03fe0ea954359862fcda3dd2479055812760d859ef1272a"
+  },
+  {
+   "id": "16",
+   "kind": "effect",
+   "name": "OBJET 08",
+   "frames": 49,
+   "loop_frame": null,
+   "loop_offset": null,
+   "bytes": 157,
+   "note_c_frames": 0,
+   "lock_frames": 0,
+   "ay_writes": 196,
+   "conversion": {},
+   "sha256": "92d751e08be12b40216ffd3c38bae97fd88e85926546577cacad725c6df429e3"
+  },
+  {
+   "id": "17",
+   "kind": "effect",
+   "name": "FIN MINUTERIE",
+   "frames": 49,
+   "loop_frame": null,
+   "loop_offset": null,
+   "bytes": 176,
+   "note_c_frames": 0,
+   "lock_frames": 0,
+   "ay_writes": 196,
+   "conversion": {},
+   "sha256": "db3b5dff5e6dedfb0b1f091c135de21ec85abb03a9809a1a0cacd3ab08215c17"
+  },
+  {
+   "id": "18",
+   "kind": "effect",
+   "name": "ARME 7414",
+   "frames": 57,
+   "loop_frame": null,
+   "loop_offset": null,
+   "bytes": 110,
+   "note_c_frames": 0,
+   "lock_frames": 0,
+   "ay_writes": 143,
+   "conversion": {
+    "noise_fixed_rate": 24
+   },
+   "sha256": "04b52ab4be500d90e3852afe16823507924b944e13cb18c40200abacf6ccf5a1"
+  },
+  {
+   "id": "19",
+   "kind": "effect",
+   "name": "OBJET 938F",
+   "frames": 49,
+   "loop_frame": null,
+   "loop_offset": null,
+   "bytes": 77,
+   "note_c_frames": 0,
+   "lock_frames": 0,
+   "ay_writes": 88,
+   "conversion": {},
+   "sha256": "4a613a8d3968748d99944317e154a29114c54e4c3fa2bf8d28f3c9f41ac18043"
+  },
+  {
+   "id": "1A",
+   "kind": "effect",
+   "name": "PORTE 1A",
+   "frames": 78,
+   "loop_frame": null,
+   "loop_offset": null,
+   "bytes": 205,
+   "note_c_frames": 0,
+   "lock_frames": 0,
+   "ay_writes": 248,
+   "conversion": {
+    "envelope_frames": 50,
+    "tone_folded": 8
+   },
+   "sha256": "8f4f2b56d5d458ed9ea057db56af7ef665dd553772c873324b5ee505a0c0216e"
+  },
+  {
+   "id": "1B",
+   "kind": "effect",
+   "name": "OBJET 05",
+   "frames": 76,
+   "loop_frame": null,
+   "loop_offset": null,
+   "bytes": 238,
+   "note_c_frames": 0,
+   "lock_frames": 0,
+   "ay_writes": 304,
+   "conversion": {},
+   "sha256": "84ba7a8ef8efb1b85fd67d4df031a1ef4508f999d80f2ad9956136ac454f17ed"
+  },
+  {
+   "id": "1C",
+   "kind": "effect",
+   "name": "SON 7E1C",
+   "frames": 91,
+   "loop_frame": null,
+   "loop_offset": null,
+   "bytes": 284,
+   "note_c_frames": 0,
+   "lock_frames": 0,
+   "ay_writes": 376,
+   "conversion": {},
+   "sha256": "e4db9e1a70344defdbd90455211431d988b26b25736ce7de6e1578d1a43181d2"
+  },
+  {
+   "id": "80",
+   "kind": "music",
+   "name": "STAGES 0-3",
+   "frames": 2388,
+   "loop_frame": 596,
+   "loop_offset": 1757,
+   "bytes": 6644,
+   "note_c_frames": 244,
+   "lock_frames": 0,
+   "ay_writes": 8274,
+   "conversion": {
+    "noise_fixed_rate": 3,
+    "tone_folded": 3
+   },
+   "sha256": "722849a7891ddcf660387ad9c21424a1eada468695d7ddb8188e95e2d9a1c432"
+  },
+  {
+   "id": "81",
+   "kind": "music",
+   "name": "STAGES 4-6",
+   "frames": 3073,
+   "loop_frame": 1281,
+   "loop_offset": 2545,
+   "bytes": 6153,
+   "note_c_frames": 223,
+   "lock_frames": 0,
+   "ay_writes": 7603,
+   "conversion": {
+    "noise_fixed_rate": 2,
+    "tone_folded": 578
+   },
+   "sha256": "33eac1f268cb4e415577f89d58af75a617d77ae395242b7551a3dcfeb40d9bcc"
+  },
+  {
+   "id": "82",
+   "kind": "music",
+   "name": "STAGES 7-9",
+   "frames": 4062,
+   "loop_frame": 1342,
+   "loop_offset": 3715,
+   "bytes": 11311,
+   "note_c_frames": 373,
+   "lock_frames": 0,
+   "ay_writes": 14845,
+   "conversion": {},
+   "sha256": "a45c65fcd6464279ebec1a17e1ba9b5cd6925fdcff8fa3da91c7e4b8c31769b0"
+  },
+  {
+   "id": "83",
+   "kind": "music",
+   "name": "STAGES 16-17",
+   "frames": 2305,
+   "loop_frame": 385,
+   "loop_offset": 1268,
+   "bytes": 5953,
+   "note_c_frames": 187,
+   "lock_frames": 0,
+   "ay_writes": 7211,
+   "conversion": {
+    "tone_folded": 979
+   },
+   "sha256": "8857da4400e9e577a75c53313ffc7f1989d14a36f07e5184a2e21f327b64bfb6"
+  },
+  {
+   "id": "84",
+   "kind": "music",
+   "name": "STAGES 13-15",
+   "frames": 3809,
+   "loop_frame": 449,
+   "loop_offset": 1235,
+   "bytes": 10856,
+   "note_c_frames": 293,
+   "lock_frames": 0,
+   "ay_writes": 12606,
+   "conversion": {
+    "tone_folded": 1246
+   },
+   "sha256": "c49e59fd93bd83f15306f5c63b42bd1f1b17b4c8d83173146f9f53fa8d265e7f"
+  },
+  {
+   "id": "85",
+   "kind": "music",
+   "name": "STAGES 10 18",
+   "frames": 3818,
+   "loop_frame": 1706,
+   "loop_offset": 3882,
+   "bytes": 9023,
+   "note_c_frames": 250,
+   "lock_frames": 0,
+   "ay_writes": 10873,
+   "conversion": {
+    "tone_folded": 304
+   },
+   "sha256": "0695fa42a847cbeea1db1b46074e600a25ef01ab9de642ed5d68b809e80ac823"
+  },
+  {
+   "id": "86",
+   "kind": "music",
+   "name": "BOSS FINAL",
+   "frames": 3457,
+   "loop_frame": 1345,
+   "loop_offset": 3433,
+   "bytes": 8831,
+   "note_c_frames": 145,
+   "lock_frames": 0,
+   "ay_writes": 10525,
+   "conversion": {
+    "tone_folded": 553
+   },
+   "sha256": "1a3d8ff6b656ddb405779288d50eb1f3d30f2bc10acd218a1e9f3006ae96dfca"
+  },
+  {
+   "id": "87",
+   "kind": "music",
+   "name": "BOSS",
+   "frames": 450,
+   "loop_frame": 2,
+   "loop_offset": 14,
+   "bytes": 912,
+   "note_c_frames": 65,
+   "lock_frames": 0,
+   "ay_writes": 1457,
+   "conversion": {},
+   "sha256": "8aba263ab34477dc9320c6c67099e3ed00c0ecbb1a19076f58f8983992eab4e8"
+  },
+  {
+   "id": "88",
+   "kind": "music",
+   "name": "MUSIQUE 88",
+   "frames": 1057,
+   "loop_frame": 97,
+   "loop_offset": 404,
+   "bytes": 2914,
+   "note_c_frames": 73,
+   "lock_frames": 0,
+   "ay_writes": 3390,
+   "conversion": {
+    "tone_folded": 345
+   },
+   "sha256": "7698c52fecfd373a5aae1ae467e1e2ef51e8ab6881f8d834cabd5e9bb86e9781"
+  },
+  {
+   "id": "89",
+   "kind": "music",
+   "name": "MORT",
+   "frames": 97,
+   "loop_frame": null,
+   "loop_offset": null,
+   "bytes": 200,
+   "note_c_frames": 8,
+   "lock_frames": 97,
+   "ay_writes": 236,
+   "conversion": {},
+   "sha256": "5dc0e9814a379853be2cf05553a077e5cd1a99f501e5421bd5871fb4173defbe"
+  },
+  {
+   "id": "8A",
+   "kind": "music",
+   "name": "DEPART",
+   "frames": 385,
+   "loop_frame": null,
+   "loop_offset": null,
+   "bytes": 858,
+   "note_c_frames": 30,
+   "lock_frames": 0,
+   "ay_writes": 966,
+   "conversion": {
+    "tone_folded": 132
+   },
+   "sha256": "25564cc951f6cf20c9d2b253305cedfef775c3dc17b9e3845c3bc60e2a3fcd9a"
+  },
+  {
+   "id": "8B",
+   "kind": "music",
+   "name": "GAME OVER",
+   "frames": 257,
+   "loop_frame": null,
+   "loop_offset": null,
+   "bytes": 658,
+   "note_c_frames": 22,
+   "lock_frames": 256,
+   "ay_writes": 790,
+   "conversion": {
+    "noise_fixed_rate": 8,
+    "tone_folded": 8
+   },
+   "sha256": "19d843b12f16d07b78357244f56592f86e0850263cdbd2e944ecb2e2bfa7c4f6"
+  },
+  {
+   "id": "8C",
+   "kind": "music",
+   "name": "MUSIQUE 8C",
+   "frames": 241,
+   "loop_frame": null,
+   "loop_offset": null,
+   "bytes": 603,
+   "note_c_frames": 25,
+   "lock_frames": 236,
+   "ay_writes": 682,
+   "conversion": {
+    "tone_folded": 16
+   },
+   "sha256": "29385950f67d4945dcf9f411de7a8941c4c3839292a57179dfd5464bc1628687"
+  },
+  {
+   "id": "8D",
+   "kind": "music",
+   "name": "MUSIQUE 8D",
+   "frames": 247,
+   "loop_frame": null,
+   "loop_offset": null,
+   "bytes": 680,
+   "note_c_frames": 30,
+   "lock_frames": 247,
+   "ay_writes": 744,
+   "conversion": {
+    "tone_folded": 24
+   },
+   "sha256": "73f6ba63ca9d4f33fe6356a685cb273c0c21f5f5af902bfc72cebd8f0b131532"
+  },
+  {
+   "id": "8E",
+   "kind": "music",
+   "name": "MUSIQUE 8E",
+   "frames": 1118,
+   "loop_frame": 350,
+   "loop_offset": 836,
+   "bytes": 2675,
+   "note_c_frames": 88,
+   "lock_frames": 1118,
+   "ay_writes": 3283,
+   "conversion": {
+    "noise_fixed_rate": 14,
+    "tone_folded": 632
+   },
+   "sha256": "5cc3f77ac7724ba4100e60e23f5b65fbd730e788c1893ba5f99ea859c4683c44"
+  },
+  {
+   "id": "FB",
+   "kind": "special",
+   "name": "MINUTERIE FB",
+   "frames": 97,
+   "loop_frame": 49,
+   "loop_offset": 57,
+   "bytes": 113,
+   "note_c_frames": 0,
+   "lock_frames": 0,
+   "ay_writes": 134,
+   "conversion": {},
+   "sha256": "61989ed2b77155c23a9b5d1fbc3180d7dd06c60ac82ad42054baa41b04760b7d"
+  },
+  {
+   "id": "FD",
+   "kind": "pause",
+   "name": "PAUSE FD",
+   "frames": 31,
+   "loop_frame": null,
+   "loop_offset": null,
+   "bytes": 68,
+   "note_c_frames": 0,
+   "lock_frames": 0,
+   "ay_writes": 71,
+   "conversion": {},
+   "sha256": "c150007719c9ecb14d3c31b14d5b5bafece58ef3ec7c43855cd2abb8c0b11d16"
+  }
+ ]
+}

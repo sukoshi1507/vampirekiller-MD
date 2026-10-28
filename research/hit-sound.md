@@ -49,6 +49,8 @@ Regle de priorite (lue dans le code, coherente avec la trace) : une requete n'es
 
 Table des effets : `CPU 8DC9 + 6 x numero` (bank 14, 3 pointeurs de 16 bits, une par voie ; calcul `50E7`-`50FE`).
 
+**Correction (2026-10-28, `research/audio-driver.md`)** : `8DC9 + 6 x (A & 7F)` est la table des **musiques** (A >= 80). Un effet (A < 80) prend un seul pointeur dans `8D8D + 2 x A` (`518B`-`5197`) et joue sur la voie C. Le flux de `0C` est `8FB9`, celui de `05` est `8EAE`, celui de `0F` est `9065`. Les lignes ci-dessous lisent donc les musiques 85, 8C et 8F, pas les effets. Le son du coup est maintenant le vrai `0C` de la ROM.
+
 | Effet | Entree (CPU) | Pointeurs (voies 1, 2, 3) | Statut |
 |---|---|---|---|
 | `05` (fouet) | `8DE7` | `9EC1`, `9F89`, `A051` | prouve (lecture) |

@@ -7,8 +7,8 @@
  * Call once per frame with the edge-triggered button mask. */
 bool vk_konami_step(u16 pressed);
 
-/* Debug sound test. Entering loads the XGM2 driver on first use and draws the
- * menu. Returns TRUE from vk_sound_test_tick when the player leaves with B. */
+/* Debug sound test: every MSX2 effect and music (psg_player.h). Returns TRUE from
+ * vk_sound_test_tick when the player leaves with B. */
 void vk_sound_test_enter(void);
 bool vk_sound_test_tick(u16 pressed);
 
