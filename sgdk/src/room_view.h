@@ -24,15 +24,15 @@ void vk_enter_play(VKPlayer *player);
 void vk_reset_training_target(void);
 void vk_hide_targets(void);
 bool vk_targets_visible(void);
-/* Whip test against the courtyard flames: a hit flame is put out and its torch
- * background cleared. Returns its index, or -1 (also when not in the courtyard). */
-int vk_courtyard_flames_hit(const VKWhip *whip);
+/* Courtyard torch 'flame' put out by the whip (candles.c): its flame goes and
+ * its torch background is cleared. */
+void vk_courtyard_flame_out(int flame);
 /* Whip test against the training target; TRUE on a new hit. */
 bool vk_training_target_hit(const VKWhip *whip);
 /* Advances the flame animation by one frame. */
 void vk_flames_tick(void);
 /* Flames or target as sprites 7.. ; the last one links to enemy_link. Returns
- * TRUE when the courtyard flames were drawn (sprites 7..8, no enemy link). */
+ * TRUE when the courtyard flames were drawn (sprites 7..8). */
 bool vk_draw_targets(u16 enemy_link);
 
 /* Redraws the test note of the play room on row 26 (after a diagnostic). */

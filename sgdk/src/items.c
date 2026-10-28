@@ -1,15 +1,14 @@
 #include "items.h"
 
-/* Hall room 2: white key on the floor, x 128..143, y 160..175 (object C520, X 80,
- * Y A0, type 18). Picked up by contact: in K1 it went at Simon x 148, y 192 while
- * he walked left, so Simon's side is taken as x-5..x+5 (the floor probe width),
- * height y-31..y. PROVISIONAL for the other approach directions. */
+/* Hall room 2: white key at x 128..143, y 160..175, inside the hidden block of
+ * candle slot C490 (01 A0 80 00 03 18): it shows once the whip hits that block
+ * (candles.c, 883E). Pickup rule of 847A: |X - (128 + 8)| < 13 and
+ * Y - 2 - 160 in [0, 42) (K1: taken at Simon x 148, y 192, walking left). */
 #define KEY_ROOM 2
 #define KEY_LEFT 128
 #define KEY_TOP 160
-#define KEY_SIZE 16
-#define SIMON_HALF_W 5
-#define SIMON_H 31
+#define PICK_HALF_W 13
+#define PICK_HEIGHT 42
 
 /* Hall room 7: the routine at 8580 opens the door when Simon faces right with
  * X in [228, 236) and Y in [42, 98) (C5AD = 48, C5AE = 236). The closed bar is a
@@ -30,6 +29,7 @@ void vk_items_begin(VKItems *items)
 {
     items->keys = 0;
     items->white_key_taken = 0;
+    items->white_key_revealed = 0;
     items->door = VK_DOOR_CLOSED;
     items->timer = 0;
 }
@@ -41,7 +41,7 @@ static int in_hall_room(const VKGame *game, VKByte room)
 
 int vk_items_key_shown(const VKItems *items, const VKGame *game)
 {
-    return !items->white_key_taken && in_hall_room(game, KEY_ROOM);
+    return items->white_key_revealed && !items->white_key_taken && in_hall_room(game, KEY_ROOM);
 }
 
 int vk_items_door_lift(const VKItems *items)
@@ -59,8 +59,9 @@ int vk_items_controls_locked(const VKItems *items)
 
 static int touches_key(const VKPlayer *p)
 {
-    return p->x + SIMON_HALF_W >= KEY_LEFT && p->x - SIMON_HALF_W < KEY_LEFT + KEY_SIZE &&
-           p->y >= KEY_TOP && p->y - SIMON_H < KEY_TOP + KEY_SIZE;
+    const int dx = p->x - (KEY_LEFT + 8);
+    const int dy = p->y - 2 - KEY_TOP;
+    return dx > -PICK_HALF_W && dx < PICK_HALF_W && dy >= 0 && dy < PICK_HEIGHT;
 }
 
 static int on_door_ledge(const VKPlayer *p)

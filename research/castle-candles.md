@@ -294,3 +294,30 @@ Hors fouet (`C422 = 0`), pour les objets `C500` de type >= `80` : centre `D = X 
 | 1E | `8D8D` | `C701` bit 3 |
 
 Les noms des objets (croix, sablier, etc.) et leurs dessins ne sont pas releves : seuls les effets en RAM sont lus. Repartition des objets dans les 457 bougies : 01 (129), 02 (100), 15 (52), 1F (39), 00 (35), 09 (14), 18 (12), 1A (12), 10 (11), 17 (10), 08 (10), 07 (7), 06 (6), 14 (6), 05 (5), 0C (4), 0D (3), 11 (1), 1C (1).
+
+### 9.6 Vie d'un objet lache (`8A4A`, etats `8A8D`), coffre et cles (lecture du code)
+
+**Prouve (code)** :
+- **Arme deja tenue** (`8A29`) : un objet 1A a 1D egal a `C416 + 0x19` sort comme petit coeur (01).
+- **Etat 1** (`8A99`) : 16 images (`+6 & 15`), puis type 82 ; objet 00 : retire ; 0x15 : cree un ennemi (`5F1D`, type pris dans `8AF0[D002]`) et se retire.
+- **Etat 2, chute** (`8AF8`) : pose si la tuile sous (X + 8, Y + 16) vaut 1 a 9, ou si Y + 16 > DB. Sinon Y += 8 par image ; le petit coeur (`8B22`) descend d'un pixel une image sur deux, X en 8.8 avance de `+9/+10` (depart +2,0), vitesse diminuee de `+11/+12` (0,125) a chaque image, signe inverse toutes les 32 images.
+- **Etat 3** (`8B70`) : X et Y arrondis a 8 pres, dessin dans le decor (`8CC1`) ; `+6` = 8, ou FF pour 17, 18, 19.
+- **Etat 4** (`8BA2`) : au sol ; `+6` diminue toutes les 16 images, l'objet disparait a 0 (128 images), jamais pour les cles et le coffre.
+- **Sprites pendant la chute** (`8C60`) : `+5` = 1, motif E8 (petit coeur) ; `+5` = 2, motif EC anime (orbe).
+- **Coffre** (`8F68`, `8C14`) : ramasse seulement si `C700` (cles dorees) > 0 ; `C700` -= 1, son 0x11, puis le coffre devient l'objet de son octet `+13`, 8 px plus haut, et retombe (etat 5). Si `C700` = 0 apres : `C701 &= F9` et HUD (`8EC9`). Contenus : hall salle 2 = 02 (gros coeur), hall salle 3 = 0D.
+- **Cles** (`8F68`) : 17 et 18 ne sont pas reprises si le bit de `C701` est deja mis. Apres ramassage, `+14/+15` pointe un drapeau du flux de stage remis a 0 : l'objet fixe ne revient pas.
+- **Decor sous les bougies** (`873A`) : a la creation, les tuiles de la carte sous la bougie sont sauvees en `E480 + 4 * slot` (2x2) ou `E4A0 + 16 * slot` (4x4, mode 3). Au coup, `884A` / `885E` les redessinent ; pour un bloc (mode 2 ou 3), `887D` / `8899` les recopient aussi dans la carte de collision.
+- **Planche de la page 1** : 0x21 et 0x22 sont les deux images de la bougie murale ; les chiffres du HUD sont en y 320, x 0 a 79.
+
+**Port** (`sgdk/src/candles.c`, `candle_view.c`, `tools/build_candles_md.py`) :
+- touche, chute, pose, delai, ramassage et effets 01, 02, 17, 18 (bloc cache de la salle 2), 19, 1A ;
+- les bougies et objets sont des sprites PAL0 aux coordonnees MSX ; compteur de coeurs en colonnes 24-25 de la ligne 0.
+
+**PROVISOIRE** :
+- la flamme `C800` est remplacee par les etincelles de l'effet de flamme, et l'orbe EC par l'objet 07 de la planche ;
+- la cadence de la bougie murale (8 images) n'est pas mesuree ;
+- le dessin des blocs caches (mode 3) n'est pas porte : le mur n'est pas dessine et la carte de collision ne change pas ;
+- les contenus 0x1F (`+7`-`+9`) et les objets 03-16 (minuteries, points, bits `C701`/`C702`) n'ont pas d'effet ;
+- 1B a 1D (dague, hache, croix) ne changent pas l'arme ;
+- les bougies restent eteintes jusqu'au changement de stage (le rechargement du flux de stage n'est pas trace) ;
+- pas d'icone de cle doree dans le HUD.

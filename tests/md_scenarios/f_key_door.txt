@@ -1,6 +1,6 @@
 # (f) Cle blanche de la salle 2, porte de la salle 7, entree dans le stage 2 jouable
 # (research/door-room7.md, section 16 ; sgdk/src/items.c). items : keys, white_key_taken,
-# door (0 fermee, 1 levee, 2 sortie a pied, 3 faite), timer.
+# door (0 fermee, 1 levee, 2 sortie a pied, 3 faite), timer, white_key_revealed.
 include boot_to_courtyard.inc
 until front_mode == MODES['INTERIOR'] max 3000 RIGHT
 # Changement de salle debug du hall : A tenu, puis A+DROITE (le premier front est perdu).
@@ -17,6 +17,12 @@ expect game.room == 2 # salle 2 du hall
 poke vk_game+0 166
 poke vk_game+1 192
 wait 4
+expect ram8('items+4') == 0 # cle cachee dans le bloc (bougie C490, mode 3)
+# Regard a gauche puis fouet : X fouet 164 - 20 = 144, |144 - 136| < 20 (8450).
+hold LEFT 2
+hold B 2
+until ram8('items+4') == 1 max 30
+wait 10
 shot f-cle-au-sol
 until ram8('items') & 1 max 200 LEFT
 expect ram8('items') == 1 and ram8('items+1') == 1 # cle blanche prise (C701 bit 0)

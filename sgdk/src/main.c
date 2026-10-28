@@ -18,6 +18,7 @@
 #include "hud.h"
 #include "items.h"
 #include "item_view.h"
+#include "candle_view.h"
 #include "generated/intro_assets.h"
 
 /* Front-end state machine and game loop. Display lives in scene.c (logo, title,
@@ -41,21 +42,54 @@ static void show_message(const char *text)
     VDP_drawText(text, 1, 26);
 }
 
+static void show_courtyard(u16 room);
+
 static void new_game(void)
 {
     vk_game_begin(&vk_game);
     vk_reset_enemies();
     vk_health_begin(&health);
     vk_items_begin(&items);
-    vk_show_courtyard(0);
+    vk_candles_begin(&vk_candles);
+    vk_set_whip_level(0);
+    show_courtyard(0);
+}
+
+/* A courtyard screen, then its torches' objects and the heart count. */
+static void show_courtyard(u16 room)
+{
+    vk_show_courtyard(room);
+    vk_candle_view_room();
 }
 
 /* A castle room of the current stage, then the key, door and HUD key box of
- * items.c over it. */
+ * items.c and the candles of candle_view.c over it. */
 static void show_hall_room(u16 room)
 {
     vk_show_castle_room(vk_game.stage, room);
     vk_item_view_room(&items, &vk_game);
+    vk_candle_view_room();
+}
+
+/* One frame of candles.c: whip hits, drops and pickups, and what they change on
+ * screen and in items.c (white key) and the whip (C416). */
+static void step_candles(void)
+{
+    int hit;
+    const int events = vk_candles_tick(&vk_candles, &vk_game, &vk_whip, &hit);
+    if (events & VK_CANDLE_EVENT_HIT)
+    {
+        vk_courtyard_flame_out(hit);
+        /* The castlevania-md hit effect stands in for MSX 0x0C (0x0E for a block). */
+        vk_psg_play(vk_sfx_hit);
+    }
+    if (events & VK_CANDLE_EVENT_WHITE_KEY)
+    {
+        items.white_key_revealed = 1;
+        vk_item_view_room(&items, &vk_game);
+    }
+    if (events & VK_CANDLE_EVENT_HEARTS) vk_candle_view_hearts();
+    if (events & VK_CANDLE_EVENT_WEAPON) vk_set_whip_level(vk_candles.weapon);
 }
 
 /* Castle door of courtyard room 2 (research/castle-entrance.md). The MSX copies the
@@ -110,7 +144,7 @@ static void respawn(void)
     vk_game_respawn(&vk_game);
     vk_reset_enemies();
     if (vk_game.area == VK_AREA_INTERIOR) show_hall_room(vk_game.room);
-    else vk_show_courtyard(vk_game.room);
+    else show_courtyard(vk_game.room);
 }
 
 /* One frame of health.c after the enemy contact; redraws the HUD bar. */
@@ -189,12 +223,13 @@ int main(bool hardReset)
                     SYS_doVBlankProcess();
                     continue;
                 }
+                /* Debug: A+B lights the candles of the room again. */
                 if ((vk_front_mode == FRONT_INTERIOR || vk_front_mode == FRONT_COURTYARD) &&
                     (held & BUTTON_A) && (pressed & BUTTON_B))
                 {
-                    vk_reset_training_target();
-                    show_message(vk_front_mode == FRONT_COURTYARD ?
-                        "FLAMME RALLUMEE!" : "CIBLE REINITIALISEE");
+                    vk_candles_relight(&vk_candles);
+                    if (vk_front_mode == FRONT_COURTYARD) vk_reset_training_target();
+                    show_message("BOUGIES RALLUMEES!");
                 }
                 const VKEvent event = vk_game_tick_controls(&vk_game, direction,
                     jump, !!(held & BUTTON_UP),
@@ -209,17 +244,6 @@ int main(bool hardReset)
                  * is reprinted every frame: refresh on input or at timeout. */
                 if (pressed & BUTTON_B)
                     show_message("B: ATTAQUE DETECTEE");
-                if (vk_front_mode == FRONT_COURTYARD)
-                {
-                    if (vk_courtyard_flames_hit(&vk_whip) >= 0)
-                    {
-                        show_message("FLAMME ETEINTE!");
-                        /* Torch hit: the castlevania-md hit effect stands in for MSX 0x0C. */
-                        vk_psg_play(vk_sfx_hit);
-                    }
-                }
-                else if (vk_training_target_hit(&vk_whip))
-                    show_message("CIBLE TOUCHEE!");
                 vk_draw_attack_frame_label();
                 if (diagnostic_timer && --diagnostic_timer == 0)
                     vk_draw_play_note();
@@ -229,7 +253,7 @@ int main(bool hardReset)
                     vk_whip_reset(&vk_whip);
                 }
                 if (event == VK_EVENT_ENTER) show_hall_room(0);
-                else if (event == VK_EVENT_ROOM) vk_show_courtyard(vk_game.room);
+                else if (event == VK_EVENT_ROOM) show_courtyard(vk_game.room);
                 else if (event == VK_EVENT_VERTICAL) show_hall_room(vk_game.room);
                 else if (vk_front_mode == FRONT_INTERIOR && direction &&
                          !(held & BUTTON_A) &&
@@ -246,15 +270,17 @@ int main(bool hardReset)
                     vk_player = vk_game.player;
                     if (item == VK_ITEM_STAGE_EXIT)
                     {
-                        /* Stage 2 room 0 (PROVISIONAL: no enemies nor items yet). */
+                        /* Stage 2 room 0. */
                         vk_game_enter_stage(&vk_game, 2);
                         vk_reset_enemies();
+                        vk_candles_reset_stage(&vk_candles, 2);
                         show_hall_room(0);
                         SYS_doVBlankProcess();
                         continue;
                     }
                     vk_item_view_event(item, &items, &vk_game);
                     vk_step_enemies();
+                    step_candles();
                     vk_flames_tick();
                     vk_show_player(&vk_player);
                     step_health();

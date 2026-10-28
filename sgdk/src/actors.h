@@ -46,6 +46,8 @@ extern EnemyState vk_enemies;
 /* New game or new life: Enemies_init (full energy, no invulnerability or
  * recoil) and a rebuild of the room's enemies on the next step. */
 void vk_reset_enemies(void);
+/* Whip level picked up (C416); levels without an asset are ignored. */
+void vk_set_whip_level(int level);
 /* Loads the whip, attack, crouch, target and flame tiles and resets the whip. */
 void vk_load_whip_graphics(void);
 /* Simon, the whip, the hall enemies and the targets of room_view.c, as hardware

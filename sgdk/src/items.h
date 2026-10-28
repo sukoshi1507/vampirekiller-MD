@@ -29,10 +29,11 @@ typedef struct {
     VKByte white_key_taken;          /* the room 2 key does not come back */
     VKByte door;                     /* VKDoorState */
     VKByte timer;                    /* frames since the door opened */
+    VKByte white_key_revealed;       /* the whip opened its hidden block (candles.c) */
 } VKItems;
 
 void vk_items_begin(VKItems *items);
-/* The white key lies on the floor of the current room. */
+/* The white key lies on the floor of the current room (revealed, not taken). */
 int vk_items_key_shown(const VKItems *items, const VKGame *game);
 /* Bar offset in pixels, 0 (closed) to VK_DOOR_LIFT_MAX. */
 int vk_items_door_lift(const VKItems *items);

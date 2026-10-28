@@ -4,6 +4,7 @@
 #include "generated/whip_level2_md.h"
 #include "generated/enemy_sprites_md.h"
 #include "hud.h"
+#include "candle_view.h"
 
 _Static_assert(ENEMY4_TILE_INDEX + VK_ENEMY4_TILE_COUNT <= HUD_TILE_INDEX,
                "sprite tiles 400.. must end before the HUD tiles");
@@ -113,8 +114,9 @@ void vk_reset_enemies(void)
 }
 
 /* Enemy layers as hardware sprites from ENEMY_SPRITE_BASE, one 16x16 sprite each,
- * chained in order. Returns the count, 0 outside the hall room the state belongs to. */
-static u16 show_enemy_sprites(void)
+ * chained in order, the last one linking to tail. Returns the count, 0 outside the
+ * hall room the state belongs to. */
+static u16 show_enemy_sprites(u16 tail)
 {
     EnemySprite list[ENEMY_MAX * ENEMY_SPRITES];
     u16 count = 0;
@@ -137,7 +139,7 @@ static u16 show_enemy_sprites(void)
             : (u16)(ENEMY_TILE_INDEX + pattern - VK_ENEMY_FIRST_PATTERN);
         VDP_setSpriteFull((u16)(ENEMY_SPRITE_BASE + i), list[i].x, list[i].y, SPRITE_SIZE(2, 2),
             TILE_ATTR_FULL(PAL2, TRUE, FALSE, FALSE, tile),
-            (u16)(i + 1 < count ? ENEMY_SPRITE_BASE + i + 1 : 0));
+            (u16)(i + 1 < count ? ENEMY_SPRITE_BASE + i + 1 : tail));
     }
     return count;
 }
@@ -145,9 +147,12 @@ static u16 show_enemy_sprites(void)
 void vk_show_player(const VKPlayer *player)
 {
     /* Enemy sprites come after the player chain: sprite 6 (or 7 when the target is
-     * shown) links to ENEMY_SPRITE_BASE when there are enemies. */
-    const u16 enemy_count = show_enemy_sprites();
-    const u16 enemy_link = enemy_count ? ENEMY_SPRITE_BASE : 0;
+     * shown) links to ENEMY_SPRITE_BASE when there are enemies, then the candles and
+     * objects of candle_view.c close the chain. */
+    const u16 candle_count = vk_candle_view_sprites();
+    const u16 candle_link = candle_count ? CANDLE_SPRITE_BASE : 0;
+    const u16 enemy_count = show_enemy_sprites(candle_link);
+    const u16 enemy_link = enemy_count ? ENEMY_SPRITE_BASE : candle_link;
     const bool target_visible = vk_targets_visible();
     const int attack_frame = vk_whip_arm_frame(&vk_whip);
     const int crouch_mode = !player->on_stairs && (player->crouched || (attack_frame && vk_whip.crouched));
@@ -239,10 +244,25 @@ void vk_show_player(const VKPlayer *player)
     /* Courtyard flames or training target on sprites 7.. (room_view.c). */
     if (vk_draw_targets(enemy_link))
     {
-        VDP_updateSprites(7 + COURTYARD_MAX_FLAMES, DMA_QUEUE);
+        VDP_updateSprites(candle_count ? CANDLE_SPRITE_BASE + candle_count : 7 + COURTYARD_MAX_FLAMES,
+                          DMA_QUEUE);
         return;
     }
-    VDP_updateSprites(enemy_count ? ENEMY_SPRITE_BASE + enemy_count : (target_visible ? 8 : 7), DMA_QUEUE);
+    VDP_updateSprites(candle_count ? CANDLE_SPRITE_BASE + candle_count
+                      : enemy_count ? ENEMY_SPRITE_BASE + enemy_count : (target_visible ? 8 : 7), DMA_QUEUE);
+}
+
+/* Whip level given by an object (C416, candles.c): loads its standing frames.
+ * PROVISIONAL: C416 2..4 are the dagger, axe and cross; only the levels with an
+ * asset (whip.h) are taken, the others keep the current whip. */
+void vk_set_whip_level(int level)
+{
+    if (vk_whip_set_level(&vk_whip, level) < 0) return;
+    whip_level_choice = level;
+    if (level == 1)
+        VDP_loadTileData((const u32 *)vk_whip_level1_tiles, WHIP_LEVEL_TILE_INDEX, WHIP_LEVEL_TILE_COUNT, CPU);
+    else if (level == 2)
+        VDP_loadTileData((const u32 *)vk_whip_level2_tiles, WHIP_LEVEL_TILE_INDEX, WHIP_LEVEL_TILE_COUNT, CPU);
 }
 
 void vk_load_whip_graphics(void)

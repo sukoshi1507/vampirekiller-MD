@@ -27,6 +27,8 @@ int main(void)
     /* K1: the key lies in room 2 and goes when Simon walks onto it (x 148, y 192). */
     vk_items_begin(&it);
     hall(&g, 2, 166, 192);
+    assert(!vk_items_key_shown(&it, &g));                 /* hidden until the whip hits */
+    it.white_key_revealed = 1;
     assert(vk_items_key_shown(&it, &g));
     assert(vk_items_tick(&it, &g) == VK_ITEM_NONE);
     g.player.x = 149;

@@ -2,6 +2,7 @@
 #include "frontend.h"
 #include "actors.h"
 #include "targets.h"
+#include "candle_view.h"
 #include "hud.h"
 #include "generated/rooms.h"
 #include "generated/intro_assets.h"
@@ -120,18 +121,21 @@ static void set_courtyard_flame_background(u16 flame, int lit)
     }
 }
 
-/* Every real flame of the current courtyard screen is lit again, with its
- * baked cells restored. Unused slots stay inactive and off the hit test. */
+/* Every flame of the current courtyard screen that candles.c still counts as lit
+ * is shown, with its baked cells restored; a torch already put out keeps its
+ * cleared cells. Unused slots stay inactive. */
 static void reset_courtyard_flames(void)
 {
     u16 k;
+    vk_candles_enter(&vk_candles, &vk_game);
     for (k = 0; k < COURTYARD_MAX_FLAMES; k++)
     {
         const int present = k < courtyard_flame_count[courtyard_room];
+        const int lit = present && vk_candles_lit(&vk_candles, k);
         vk_target_init(&courtyard_flame[k], courtyard_flame_x[courtyard_room][k],
                        courtyard_flame_y[courtyard_room][k], 16, 16);
-        courtyard_flame[k].active = (VKByte)present;
-        if (present) set_courtyard_flame_background(k, TRUE);
+        courtyard_flame[k].active = (VKByte)lit;
+        if (present) set_courtyard_flame_background(k, lit);
     }
 }
 
@@ -141,7 +145,8 @@ void vk_reset_training_target(void)
         reset_courtyard_flames();
     else
         vk_target_init(&test_target, (int)vk_player.x + 24, (int)vk_player.y - 24, 16, 16);
-    target_visible = TRUE;
+    /* The castle rooms have their real candles (candle_view.c): no training target. */
+    target_visible = vk_front_mode != FRONT_INTERIOR;
     flame_clock = 0;
 }
 
@@ -149,13 +154,12 @@ void vk_hide_targets(void) { target_visible = FALSE; }
 bool vk_targets_visible(void) { return target_visible; }
 void vk_flames_tick(void) { ++flame_clock; }
 
-int vk_courtyard_flames_hit(const VKWhip *whip)
+void vk_courtyard_flame_out(int flame)
 {
-    int flame;
-    if (!target_visible || vk_front_mode != FRONT_COURTYARD) return -1;
-    flame = vk_targets_tick(courtyard_flame, courtyard_flame_count[courtyard_room], whip);
-    if (flame >= 0) set_courtyard_flame_background((u16)flame, FALSE);
-    return flame;
+    if (vk_front_mode != FRONT_COURTYARD || flame < 0 || flame >= courtyard_flame_count[courtyard_room])
+        return;
+    courtyard_flame[flame].active = 0;
+    set_courtyard_flame_background((u16)flame, FALSE);
 }
 
 bool vk_training_target_hit(const VKWhip *whip)
@@ -179,7 +183,7 @@ bool vk_draw_targets(u16 enemy_link)
                 flame->active ? (s16)flame->y : -32, SPRITE_SIZE(2, 2),
                 TILE_ATTR_FULL(PAL3, TRUE, FALSE, FALSE,
                     FLAME_TILE_INDEX + cycle * VK_FLAME_TILES_PER_FRAME),
-                k == COURTYARD_MAX_FLAMES - 1 ? 0 : (u16)(8 + k));
+                k == COURTYARD_MAX_FLAMES - 1 ? enemy_link : (u16)(8 + k));
         }
         return TRUE;
     }
@@ -272,7 +276,7 @@ void vk_show_courtyard(u16 room)
     vk_player = vk_game.player;
     load_actor(3 + room);
     VDP_loadTileData(flame_a_cleared_tiles, FLAME_A_CLEAR_TILE_INDEX, 4, CPU);
-    VDP_drawText(room == 2 ? "B FOUET C SAUT UP PORTE" : "B FOUET  A+B FLAMME  C SAUT", 2, 27);
+    VDP_drawText(room == 2 ? "B FOUET C SAUT DROITE PORTE" : "B FOUET  A+B FLAMME  C SAUT", 2, 27);
     show_play_overlay("", FALSE);
 }
 
@@ -313,7 +317,7 @@ void vk_show_interior(void)
     /* Set the mode first: the hall target must not be placed as a courtyard flame. */
     vk_front_mode = FRONT_INTERIOR;
     load_actor(6);
-    VDP_drawText("B FOUET A+B CIBLE C SAUT", 1, 27);
+    VDP_drawText("B FOUET A+B BOUGIES C SAUT", 1, 27);
     show_play_overlay("HALL: ORIGINAL MSX2 COLLISIONS", FALSE);
     vk_front_mode = FRONT_INTERIOR;
 }
