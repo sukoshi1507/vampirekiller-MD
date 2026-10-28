@@ -33,6 +33,10 @@ typedef struct {
 } VKItems;
 
 void vk_items_begin(VKItems *items);
+/* New life (state 4): 70DC keeps only bit 7 of C701, so a white key not used
+ * yet is lost, and 62E6 decodes the stage stream again (5A49): the key is back
+ * in its hidden block. */
+void vk_items_new_life(VKItems *items);
 /* The white key lies on the floor of the current room (revealed, not taken). */
 int vk_items_key_shown(const VKItems *items, const VKGame *game);
 /* Bar offset in pixels, 0 (closed) to VK_DOOR_LIFT_MAX. */

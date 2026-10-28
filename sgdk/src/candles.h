@@ -70,6 +70,10 @@ void vk_candles_begin(VKCandles *c);
  * that stage is back. PROVISIONAL: the MSX keeps them in the decoded stage stream
  * (flag pointers +6/+7, +14/+15), whose reload is not traced. */
 void vk_candles_reset_stage(VKCandles *c, VKByte stage);
+/* New life (state 4): 62E6 decodes the stage stream again (5A49), so every
+ * candle and fixed object of the stage is back, and 70DC clears the weapon
+ * (C416) and the gold keys (C700). The hearts stay. */
+void vk_candles_new_life(VKCandles *c, VKByte stage);
 /* Debug (A+B): every candle of the current room is lit again. */
 void vk_candles_relight(VKCandles *c);
 /* Stage index of vk_candle_first: 0 courtyard, then the castle stage. */

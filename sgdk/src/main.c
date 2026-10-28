@@ -144,6 +144,9 @@ static void respawn(void)
 {
     vk_game_respawn(&vk_game);
     vk_reset_enemies();
+    vk_items_new_life(&items);
+    vk_candles_new_life(&vk_candles, vk_candles_stage_of(&vk_game));
+    vk_set_whip_level(0);
     if (vk_game.area == VK_AREA_INTERIOR) show_hall_room(vk_game.room);
     else show_courtyard(vk_game.room);
 }

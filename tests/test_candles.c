@@ -153,6 +153,16 @@ int main(void)
     vk_candles_enter(&c, &g);
     for (i = 0; i < VK_DROP_MAX; i++) assert(c.drop[i].state == VK_DROP_NONE);
 
+    /* New life (state 4, 62E6/70DC): the stage comes back, weapon and gold keys go,
+     * the hearts stay. */
+    c.weapon = 1;
+    c.gold_keys = 1;
+    vk_candles_new_life(&c, 1);
+    assert(c.weapon == 0 && c.gold_keys == 0 && c.hearts == 5);
+    vk_candles_enter(&c, &g);
+    assert(c.drop[0].kind == VK_OBJ_GOLD_KEY && c.drop[1].kind == VK_OBJ_CHEST);
+    assert(c.lit == (1u << c.count) - 1);
+
     puts("test_candles: OK");
     return 0;
 }

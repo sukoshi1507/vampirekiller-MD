@@ -53,6 +53,13 @@ void vk_candles_reset_stage(VKCandles *c, VKByte stage)
     c->stage = c->room = 0xFF;
 }
 
+void vk_candles_new_life(VKCandles *c, VKByte stage)
+{
+    vk_candles_reset_stage(c, stage);
+    c->weapon = 0;
+    c->gold_keys = 0;
+}
+
 void vk_candles_relight(VKCandles *c)
 {
     c->lit = (VKByte)((1u << c->count) - 1);

@@ -154,4 +154,14 @@ Méthode : la recherche statique des références aux octets candidats (`scratch
 
 **PROVISOIRE** :
 - ni le son 9 ni le jingle 89 ne sont joués ;
-- la remise à zéro de l'arme, des clés et de la salle par `70BF` n'est pas portée.
+- la remise à zéro du reste de `70BF` (minuteries `C431`/`C432`/`C441`/`C442`, `C702`) n'a pas d'équivalent porté.
+
+## Nouvelle vie (état 4, lecture du code)
+
+**Prouvé (code)** :
+- `422C` (état 4) appelle `62E6`, qui recharge le flux du stage (`5A49`).
+- Toutes les bougies et tous les objets fixes du stage reviennent donc, y compris la clé blanche dans son bloc caché.
+- La mort (`70BF`, `70DC`) a déjà remis `C416` (arme) et `C700` (clés dorées) à 0, et gardé seulement le bit 7 de `C701`.
+- Les cœurs `C417` ne sont pas touchés, sauf le plafond de 5 après une chute.
+
+**Port** : `vk_items_new_life` et `vk_candles_new_life`, appelés par `respawn()` dans `main.c`, avec le retour du fouet au niveau 0.

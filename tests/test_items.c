@@ -81,5 +81,12 @@ int main(void)
     assert(!vk_items_key_shown(&it, &g) && vk_items_tick(&it, &g) == VK_ITEM_NONE && !it.keys);
 
     printf("test_items: OK\n");
+    /* New life: a white key not used is lost and back in its hidden block. */
+    vk_items_begin(&it);
+    it.white_key_revealed = 1;
+    it.white_key_taken = 1;
+    it.keys = VK_KEY_WHITE;
+    vk_items_new_life(&it);
+    assert(it.keys == 0 && !it.white_key_taken && !it.white_key_revealed);
     return 0;
 }

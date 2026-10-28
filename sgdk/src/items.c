@@ -34,6 +34,16 @@ void vk_items_begin(VKItems *items)
     items->timer = 0;
 }
 
+void vk_items_new_life(VKItems *items)
+{
+    items->keys &= 0x80;
+    if (items->door == VK_DOOR_CLOSED)
+    {
+        items->white_key_taken = 0;
+        items->white_key_revealed = 0;
+    }
+}
+
 static int in_hall_room(const VKGame *game, VKByte room)
 {
     return game->area == VK_AREA_INTERIOR && game->stage == 1 && game->room == room;
