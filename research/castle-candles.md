@@ -313,11 +313,12 @@ Les noms des objets (croix, sablier, etc.) et leurs dessins ne sont pas releves 
 - touche, chute, pose, delai, ramassage et effets 01, 02, 17, 18 (bloc cache de la salle 2), 19, 1A ;
 - les bougies et objets sont des sprites PAL0 aux coordonnees MSX ; compteur de coeurs en colonnes 24-25 de la ligne 0 ;
 - blocs caches (mode 3, `86CA` / `873A` / `885E` / `8899`) : le bloc de briques 4x4 (table `8792` + 4, D002 = 0) est ecrit dans une copie RAM de la carte de collision de la salle (`vk_game_room_block`) et dessine sur BG_A ; au coup de fouet, les tuiles d'origine reviennent dans la carte et a l'ecran. L'homme-poisson de la salle 4 du stage 2 se pose dessus en (48, 80) comme en ROM (scenario `l`).
+- **Moment de la pose** (prouve, code et trace) : un changement de salle passe par l'etat 9 (`4377`). Tant que `5A2E` (`B963`) ne rend pas la retenue, l'etat 9 se repete ; ensuite `62F5` charge la salle et appelle `8671` (en `6310`), qui cree les bougies (type 01 → 02, `868C`) et ecrit les blocs (`873A`, `86CA`) ; puis `C000 := 5`. Le bloc est donc present des la premiere image de jeu dans la salle. Trace `scratchpad/fish/out/P2` : `D100` sans bloc en 6123 (etat 9, de 6115 a 6135), bloc present en 6139 (etat 5 depuis 6136). Les « 16 images » notees plus tot n'etaient que l'ecart entre deux instantanes. Le port pose le bloc a l'entree, ce qui est juste par rapport au jeu.
+- **Ecart restant, hors bougies** : le port n'a pas l'etat 9. Sur MSX, Simon et les objets restent figes de 18 a 23 images a chaque changement de salle. La duree est la meme d'une trace a l'autre pour une meme salle d'arrivee (stage 0 : salles 1 et 2 → 18 ; stage 1 : 0 → 19, 1 → 20, 2 et 3 → 22, 6 → 19, 7 → 23 ; stage 2 : 4 et 5 → 21 ; traces `fish`, `type5`, `stage2e`, `drops`).
 
 **PROVISOIRE** :
 - la flamme `C800` est remplacee par les etincelles de l'effet de flamme, et l'orbe EC par l'objet 07 de la planche ;
 - la cadence de la bougie murale (8 images) n'est pas mesuree ;
-- le bloc cache est pose des l'entree dans la salle ; la trace de l'homme-poisson le montre dans `D100` 16 images apres l'arrivee (delai non lu dans le code) ;
 - les contenus 0x1F (`+7`-`+9`) et les objets 03-16 (minuteries, points, bits `C701`/`C702`) n'ont pas d'effet ;
 - 1B a 1D (dague, hache, croix) ne changent pas l'arme ;
 - les bougies restent eteintes jusqu'au changement de stage (le rechargement du flux de stage n'est pas trace) ;
