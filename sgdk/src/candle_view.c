@@ -14,7 +14,8 @@
 /* Background under the candles baked in scene 6 (hall room 0), 4 tiles each. */
 #define BAKED_TILE_INDEX (DROP_TILE_INDEX + VK_DROP_MAX * 4)
 #define BAKED_CANDLES 2
-/* HUD gold key (8EC9): sheet object 0x17 copied at (148, 12) while C700 > 0. */
+/* HUD gold key (8EC9): sheet object 0x17 copied at (148, 12) while C700 > 0; it
+ * stays until 8EC9 runs again (pickup, last key used, HUD redraw 4513). */
 #define GOLD_KEY_TILE_INDEX (BAKED_TILE_INDEX + BAKED_CANDLES * 4)
 #define HUD_GOLD_KEY_X 148
 #define HUD_GOLD_KEY_Y 12
@@ -127,7 +128,7 @@ u16 vk_candle_view_sprites(void)
     u16 n = 0;
     u16 i;
     if (vk_front_mode != FRONT_INTERIOR && vk_front_mode != FRONT_COURTYARD) return 0;
-    if (c->gold_keys)
+    if (c->hud_key)
         set_sprite(n++, HUD_GOLD_KEY_X, HUD_GOLD_KEY_Y,
                    TILE_ATTR_FULL(PAL0, TRUE, FALSE, FALSE, GOLD_KEY_TILE_INDEX));
     /* Wall candles (mode 0) of the castle; courtyard torches are room_view.c flames

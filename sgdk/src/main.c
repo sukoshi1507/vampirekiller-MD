@@ -260,6 +260,7 @@ static void respawn(void)
     vk_reset_enemies();
     vk_items_new_life(&items);
     vk_candles_new_life(&vk_candles, vk_candles_stage_of(&vk_game));
+    vk_candles_hud(&vk_candles);   /* 4237: 4513 draws the HUD again, gold key gone */
     vk_set_whip_level(0);
     if (vk_game.area == VK_AREA_INTERIOR) show_hall_room(vk_game.room);
     else show_courtyard(vk_game.room);
@@ -271,9 +272,11 @@ static void respawn(void)
  * (text 4D3A) and the HUD drawn again (4513). The HUD rows 0..3 are kept here, as
  * 4513 redraws them as they were. "F5 _ CONTINUE" (4300) needs E600, set by 5C92
  * only with a second Konami cartridge in another slot: not on the Mega Drive.
- * PROVISIONAL: the HUD gold key (a sprite here, 8EE6) is not shown. */
+ * The HUD gold key (8EB4 -> 8EC9 in 4513) is not drawn: the death (70F7) has
+ * already set C700 to 0. */
 static void show_game_over(void)
 {
+    vk_candles_hud(&vk_candles);
     hide_sprites();
     VDP_clearTileMapRect(BG_A, 0, 4, 32, 24);
     VDP_clearTileMapRect(BG_B, 0, 0, 32, 28);
@@ -295,6 +298,8 @@ static void step_health(void)
         vk_candles.hearts = VK_HEALTH_HEARTS_AFTER_FALL;
         vk_candle_view_hearts();
     }
+    /* 70BF: the death clears the gold keys (C700) before state 6. */
+    if (life == VK_HEALTH_REFILL || life == VK_HEALTH_GAME_OVER) vk_candles_death(&vk_candles);
     if (life == VK_HEALTH_REFILL) vk_enemies.energy = ENEMY_ENERGY_MAX;
     else if (life == VK_HEALTH_RESPAWN) respawn();
     /* PROVISIONAL: the MSX game over screen (state 7) is not captured. */
@@ -474,6 +479,7 @@ int main(bool hardReset)
                         vk_game_enter_stage(&vk_game, 2);
                         vk_reset_enemies();
                         vk_candles_reset_stage(&vk_candles, 2);
+                        vk_candles_hud(&vk_candles);   /* state 4 (4237): HUD drawn again */
                         show_hall_room(0);
                         SYS_doVBlankProcess();
                         continue;

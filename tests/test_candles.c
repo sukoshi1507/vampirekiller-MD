@@ -6,9 +6,12 @@
 #include "candles.h"
 #include "generated/stage1_collision.h"
 
-/* Offsets read by tests/md_scenarios/i_courtyard_torch_drop.txt (same layout on m68k). */
+/* Offsets read by tests/md_scenarios/i_courtyard_torch_drop.txt and
+ * p_gold_key_chest.txt (same layout on m68k). */
 _Static_assert(offsetof(VKCandles, lit) == 4 && offsetof(VKCandles, drop) == 6 &&
-               sizeof(VKDrop) == 14 && offsetof(VKCandles, hearts) == 118, "VKCandles layout");
+               sizeof(VKDrop) == 14 && offsetof(VKCandles, hearts) == 118 &&
+               offsetof(VKCandles, gold_keys) == 119 && offsetof(VKCandles, hud_key) == 169,
+               "VKCandles layout");
 
 /* Courtyard tables of the intro generator, not linked in native tests. */
 const VKByte vk_courtyard_maps[3][768] = {{0}};
@@ -142,16 +145,29 @@ int main(void)
     g.player.x = 184;                              /* chest without the key: stays */
     assert(vk_candles_tick(&c, &g, &w, &hit) == VK_CANDLE_EVENT_NONE);
     assert(c.drop[1].state == VK_DROP_REST);
+    /* 8F83: no second gold key while one is held (C701 bit 1). */
+    c.gold_keys = 1;
     g.player.x = 72;
+    assert(vk_candles_tick(&c, &g, &w, &hit) == VK_CANDLE_EVENT_NONE);
+    assert(c.drop[0].state == VK_DROP_REST && c.hud_key == 0);
+    c.gold_keys = 0;
     assert(vk_candles_tick(&c, &g, &w, &hit) & VK_CANDLE_EVENT_GOLD_KEY);
     assert(c.gold_keys == 1 && c.drop[0].state == VK_DROP_NONE);
+    assert(c.hud_key == VK_OBJ_GOLD_KEY);          /* 8E50 -> 8EC9: HUD key at (148, 12) */
     run(&c, &g, &w, 200);                          /* the key does not time out */
     g.player.x = 184;
     assert(vk_candles_tick(&c, &g, &w, &hit) & VK_CANDLE_EVENT_GOLD_KEY);
     assert(c.gold_keys == 0 && c.drop[1].kind == VK_OBJ_BIG_HEART);
+    assert(c.hud_key == 0);                        /* 8C23: last key used, HUD key cleared */
+    /* 8C2F/8BCC: the content waits 32 frames 8 px above the chest, then falls. */
+    assert(c.drop[1].state == VK_DROP_WAIT && c.drop[1].y == 168);
     g.player.x = 100;
+    run(&c, &g, &w, 31);
+    assert(c.drop[1].state == VK_DROP_WAIT);
+    run(&c, &g, &w, 1);
+    assert(c.drop[1].state == VK_DROP_FALL);
     run(&c, &g, &w, 20);
-    assert(c.drop[1].state == VK_DROP_REST);
+    assert(c.drop[1].state == VK_DROP_REST && c.drop[1].y == 176);
     g.player.x = 184;
     assert(vk_candles_tick(&c, &g, &w, &hit) & VK_CANDLE_EVENT_HEARTS);
     assert(c.hearts == 5);
@@ -171,6 +187,62 @@ int main(void)
     vk_candles_enter(&c, &g);
     assert(c.drop[0].kind == VK_OBJ_GOLD_KEY && c.drop[1].kind == VK_OBJ_CHEST);
     assert(c.lit == (1u << c.count) - 1);
+
+    /* Death (70BF) then HUD redraw (4513): the HUD key stays drawn until the redraw. */
+    c.gold_keys = 1;
+    vk_candles_hud(&c);
+    vk_candles_death(&c);
+    assert(c.gold_keys == 0 && c.hud_key == VK_OBJ_GOLD_KEY);
+    vk_candles_hud(&c);
+    assert(c.hud_key == 0);
+
+    /* Stage 2 room 1: hidden blocks. A gold key block (32,96) puts the key at
+     * Y + 16 at once (89E3, type 83: no flame, no fall), for good (+6 FF). */
+    vk_candles_begin(&c);
+    place(&g, VK_AREA_INTERIOR, 2, 1, 200, 64);
+    vk_whip_reset(&w);
+    vk_candles_enter(&c, &g);
+    assert(c.count == 7 && vk_candles_def(&c, 0)->kind == VK_OBJ_GOLD_KEY);
+    assert(c.drop[0].state == VK_DROP_REST && c.drop[0].kind == VK_OBJ_CHEST);   /* (16,48) */
+    assert(vk_candles_hit(&c, 0) == VK_CANDLE_EVENT_HIT);
+    assert(c.drop[1].state == VK_DROP_REST && c.drop[1].kind == VK_OBJ_GOLD_KEY);
+    assert(c.drop[1].x == 32 && c.drop[1].y == 112 && c.drop[1].timer == 0xFF);
+    /* Block 0x1F (32,160), +9 = 8A: a chest holding 0x0A at Y + 16 (8A13). */
+    assert(vk_candles_def(&c, 3)->kind == VK_OBJ_BLOCK_CONTENT && vk_candles_def(&c, 3)->content == 0x8A);
+    assert(vk_candles_hit(&c, 3) == VK_CANDLE_EVENT_HIT);
+    assert(c.drop[2].state == VK_DROP_REST && c.drop[2].kind == VK_OBJ_CHEST);
+    assert(c.drop[2].x == 32 && c.drop[2].y == 176 && c.drop[2].content == 0x0A);
+    /* Left unopened: the stream flag stays, the block is back (8814 skips 8874). */
+    g.room = 0;
+    vk_candles_enter(&c, &g);
+    g.room = 1;
+    vk_candles_enter(&c, &g);
+    assert(vk_candles_lit(&c, 3) && !vk_candles_lit(&c, 0));
+    /* Opened with a key: the block does not come back (8C0B). */
+    vk_candles_hit(&c, 3);
+    c.gold_keys = 1;
+    g.player.x = 40;
+    g.player.y = 192;
+    assert(vk_candles_tick(&c, &g, &w, &hit) & VK_CANDLE_EVENT_GOLD_KEY);
+    assert(c.gold_keys == 0);
+    g.room = 0;
+    vk_candles_enter(&c, &g);
+    g.room = 1;
+    vk_candles_enter(&c, &g);
+    assert(!vk_candles_lit(&c, 3));
+
+    /* Stage 2 room 0: a heart block (160,96) gives a big heart at Y + 16 that goes
+     * after 8 x 16 frames; the 0x1F block (192,160) with +9 = CE (9179) gives
+     * nothing here. */
+    vk_candles_begin(&c);
+    place(&g, VK_AREA_INTERIOR, 2, 0, 16, 96);
+    vk_candles_enter(&c, &g);
+    vk_candles_hit(&c, 2);
+    assert(c.drop[0].state == VK_DROP_REST && c.drop[0].kind == VK_OBJ_BIG_HEART);
+    assert(c.drop[0].y == 112 && c.drop[0].timer == 8);
+    assert(vk_candles_def(&c, 6)->content == 0xCE);
+    vk_candles_hit(&c, 6);
+    assert(c.drop[1].state == VK_DROP_NONE);
 
     puts("test_candles: OK");
     return 0;

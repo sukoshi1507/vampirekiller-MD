@@ -1,0 +1,72 @@
+# (p) Cle doree et coffre de la salle 2 du hall (objets fixes C500 type 83 :
+# cle 0x17 en (64,176), coffre 0x19 en (176,176) contenant 0x02, gros coeur).
+# research/castle-candles.md section 9.6. vk_candles (candles.h, m68k) : objets en +6
+# (14 octets : etat, x, y, objet, minuterie, ...), coeurs +118, cles dorees +119 (C700),
+# icone du HUD +169 (objet dessine par 8EC9 en (148, 12), 0 sans).
+include boot_to_courtyard.inc
+until front_mode == MODES['INTERIOR'] max 3000 RIGHT
+# Changement de salle debug du hall : A tenu, puis A+DROITE (le premier front est perdu).
+hold A 3
+hold A+RIGHT 3
+wait 10
+hold A 3
+hold A+RIGHT 3
+wait 10
+hold A 3
+hold A+RIGHT 3
+wait 10
+expect game.room == 2 # salle 2 du hall
+expect ram8('vk_candles+6') == 3 and ram8('vk_candles+9') == 0x17 # cle posee (objet fixe)
+expect ram8('vk_candles+20') == 3 and ram8('vk_candles+23') == 0x19 # coffre pose
+expect ram8('vk_candles+119') == 0 and ram8('vk_candles+169') == 0
+# Cle : ramassage au contact (847A), |X - 72| < 13. Simon pose a gauche de la cle.
+poke vk_game+0 40
+poke vk_game+1 192
+wait 4
+until ram8('vk_candles+119') == 1 max 120 RIGHT
+expect 59 < game.player.x < 85 # contact avec la cle
+expect ram8('vk_candles+6') == 0 # cle prise (8E50 : C700 = 1)
+expect ram8('vk_candles+169') == 0x17 # icone de la cle dans le HUD (8EC9)
+wait 4
+shot p-cle-prise
+# Mort avec une cle en main (70BF met C700 a 0) : l'icone reste jusqu'au HUD redessine
+# par 4513 a l'etat 4 (4237), puis disparait.
+poke enemy_state+126 0
+until health.phase == 2 max 400
+expect ram8('vk_candles+119') == 0 and ram8('vk_candles+169') == 0x17
+until health.phase == 0 max 100
+expect ram8('vk_candles+169') == 0 # icone effacee a la nouvelle vie
+expect game.room == 0
+wait 10
+# Le flux du stage est recharge (62E6) : cle et coffre sont revenus en salle 2.
+# (Ici le premier front de A+DROITE n'est pas perdu : deux changements suffisent.)
+hold A 3
+hold A+RIGHT 3
+wait 10
+hold A 3
+hold A+RIGHT 3
+wait 10
+expect game.room == 2
+expect ram8('vk_candles+6') == 3 and ram8('vk_candles+9') == 0x17
+poke vk_game+0 40
+poke vk_game+1 192
+wait 4
+until ram8('vk_candles+119') == 1 max 120 RIGHT
+# Coffre : ouvert au contact avec une cle (8F68), |X - 184| < 13 ; Simon a droite.
+poke vk_game+0 210
+poke vk_game+1 192
+wait 4
+expect ram8('vk_candles+20') == 3 # coffre ferme
+until ram8('vk_candles+119') == 0 max 120 LEFT
+set f_open frame
+expect 171 < game.player.x < 197 # contact avec le coffre
+expect ram8('vk_candles+169') == 0 # derniere cle utilisee : icone effacee (8C23, 8EC9)
+expect ram8('vk_candles+20') == 4 and ram8('vk_candles+23') == 2 # contenu en attente (type 05)
+expect ram8('vk_candles+22') == 168 # 8 px au-dessus du coffre (8C2F)
+wait 2
+shot p-coffre-ouvert
+until ram8('vk_candles+118') == 5 max 100
+expect 32 <= frame - f_open <= 36 # 32 images d'attente (8BCC), chute, ramassage : coeurs + 5
+expect ram8('vk_candles+20') == 0
+wait 4
+shot p-coeur-pris

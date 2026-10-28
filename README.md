@@ -55,7 +55,11 @@ Ce qui n'est pas porté ou reste provisoire :
   salle 2 et les hommes-poissons des salles 4 et 5 ne le sont pas. Pas d'objets. Après une mort, Simon reprend en salle 0
   (x 16, y 96), lieu provisoire. Les liens haut/bas viennent de la table de la ROM,
   sans trace en jeu.
-- **Clé dorée** et coffre : non portés.
+- **Clé dorée et coffre** : portés pour la cour, le hall et le stage 2 (objets fixes,
+  clés et coffres des blocs cachés, une seule clé à la fois, attente de 32 images du
+  contenu, icône du HUD gardée jusqu'au retour en jeu après une mort) d'après la lecture du code, sans
+  trace openMSX dédiée. Les contenus autres que les cœurs n'ont pas d'effet
+  (`research/castle-candles.md` 9.7).
 - **Stages 3 et suivants, châteaux, attaques autres que le fouet** : non portés.
 - **Énergie (provisoire)** : échelle de la barre (2 px par point), lieu de reprise
   (entrée du hall), commandes bloquées pendant la mort : non relevés sur le MSX2. Les vies (`P-02`), les cœurs et le score du HUD restent figés.

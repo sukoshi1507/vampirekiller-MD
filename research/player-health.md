@@ -170,6 +170,7 @@ Méthode : la recherche statique des références aux octets candidats (`scratch
 - `422C` (état 4) appelle `62E6`, qui recharge le flux du stage (`5A49`).
 - Toutes les bougies et tous les objets fixes du stage reviennent donc, y compris la clé blanche dans son bloc caché.
 - La mort (`70BF`, `70DC`) a déjà remis `C416` (arme) et `C700` (clés dorées) à 0, et gardé seulement le bit 7 de `C701`.
+- L'icône de la clé dorée reste affichée jusqu'au HUD redessiné par `4513` en `4237` (état 4) ; à la fin de partie, `4513` (`42F8`) ne la redessine pas puisque `C700 = 0` (lecture du code, `castle-candles.md` 9.7). Porté : `vk_candles_death` à l'état 6, `vk_candles_hud` à la nouvelle vie et au GAME OVER.
 - Les cœurs `C417` ne sont pas touchés, sauf le plafond de 5 après une chute.
 
 **Port** : `vk_items_new_life` et `vk_candles_new_life`, appelés par `respawn()` dans `main.c`, avec le retour du fouet au niveau 0.
