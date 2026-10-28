@@ -211,7 +211,7 @@ static void begin_room_freeze(void)
  * end, and the room comes up, without sprites, near the end as on the MSX (47C7
  * in the last C000 = 9 frame). The freeze counts VBlanks (vtimer), not loop
  * turns, so that it keeps the MSX frame count across the draw. */
-#define ROOM_DRAW_FRAMES 6
+#define ROOM_DRAW_FRAMES 8
 static void room_freeze_step(void)
 {
     static const u16 black[64] = {0};
