@@ -11,7 +11,7 @@
 __attribute__((externally_visible))
 const ROMHeader rom_header = {
     "SEGA MEGA DRIVE ",
-    "(C)SKSH 2026.OCT",
+    "(C)5Customs 2026",
     "VAMPIRE KILLER                                  ",
     "VAMPIRE KILLER                                  ",
     "GM 00000000-00",
