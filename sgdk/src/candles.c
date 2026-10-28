@@ -17,6 +17,9 @@
  * small heart 1 px every other frame and its sway). On the floor the object stays
  * 8 x 16 frames (8BC0), keys and chest for good. */
 #define BURST_FRAMES 16
+#define CHEST_WAIT_MASK 0x1F         /* 8BCC: the content of a chest falls after 32 frames */
+#define BLOCK_OBJECT_DY 16           /* 89E3, 8A13: a block's object stands at Y + 16 */
+#define BLOCK_SPECIAL 0xC0           /* 8814: +9 & C0 = C0 goes to 9179, not a chest */
 #define REST_TICKS 8
 #define FLOOR_LIMIT 0xDB
 #define HEART_VX0 0x0200
@@ -45,6 +48,7 @@ void vk_candles_begin(VKCandles *c)
     c->hearts = 0;
     c->gold_keys = 0;
     c->weapon = 0;
+    c->hud_key = 0;
     for (s = 0; s < VK_CANDLE_STAGES; s++)
         for (r = 0; r < VK_CANDLE_ROOMS; r++)
             c->out[s][r] = c->taken[s][r] = 0;
@@ -63,6 +67,19 @@ void vk_candles_new_life(VKCandles *c, VKByte stage)
     vk_candles_reset_stage(c, stage);
     c->weapon = 0;
     c->gold_keys = 0;
+}
+
+void vk_candles_death(VKCandles *c)
+{
+    c->gold_keys = 0;                /* 70F7 */
+}
+
+void vk_candles_hud(VKCandles *c)
+{
+    /* 8EC9: object 0x17 at (148, 12) while C701 & 6 and C700 > 0. In stages 0-2
+     * no object 0x12 (C700 = 3, C701 bit 2) exists, so C701 bit 1 is set exactly
+     * while C700 > 0 (8E50 sets both, 8C23 clears the bit when C700 reaches 0). */
+    c->hud_key = c->gold_keys ? VK_OBJ_GOLD_KEY : 0;
 }
 
 void vk_candles_relight(VKCandles *c)
@@ -121,8 +138,8 @@ void vk_candles_enter(VKCandles *c, const VKGame *game)
         d->state = VK_DROP_REST;
         d->x = def->x;
         d->y = def->y;
-        d->kind = def->mode;
-        d->content = def->kind;
+        d->kind = def->kind;
+        d->content = def->content;
         d->timer = 0xFF;
         d->fixed = (VKByte)(bit + 1);
     }
@@ -148,6 +165,28 @@ int vk_candle_whip_touch(const VKCandleDef *def, const VKWhip *whip, int weapon)
     return dx > -reach && dx < reach && dy >= 0 && dy < WHIP_HEIGHT;
 }
 
+/* 8B70: on the floor, 8 x 16 frames, or for good for the keys and the chest. */
+static VKByte rest_timer(VKByte kind)
+{
+    return (VKByte)(kind - VK_OBJ_GOLD_KEY) < 3 ? 0xFF : REST_TICKS;
+}
+
+/* 89F0: an object put straight on the floor at Y + 16 of a hidden block (type 83,
+ * no flame, no fall). */
+static VKDrop *block_object(VKCandles *c, const VKCandleDef *def, VKByte kind)
+{
+    VKDrop *d = free_drop(c);
+    if (!d) return 0;
+    d->state = VK_DROP_REST;
+    d->x = def->x;
+    d->y = (VKByte)(def->y + BLOCK_OBJECT_DY);
+    d->kind = kind;
+    d->timer = rest_timer(kind);
+    d->fixed = 0;
+    d->content = 0;
+    return d;
+}
+
 /* 8A29: a weapon Simon already holds comes out as a small heart. */
 static VKByte drop_kind(const VKCandles *c, VKByte kind)
 {
@@ -163,15 +202,39 @@ int vk_candles_hit(VKCandles *c, int i)
     if (!vk_candles_lit(c, i)) return VK_CANDLE_EVENT_NONE;
     def = vk_candles_def(c, i);
     c->lit &= (VKByte)~(1u << i);
+    /* 8814 -> 8A13: a block of object 0x1F holds a chest (type 83, +6 FF) with the
+     * content +9 & 1F at Y + 16. 8874 is skipped: the stage stream flag goes to
+     * the chest (+14/+15) and is cleared when it is opened (8C0B), so the block
+     * is back if Simon leaves the room first. */
+    if (def->mode == VK_CANDLE_HIDDEN_BLOCK && def->kind == VK_OBJ_BLOCK_CONTENT &&
+        (def->content & BLOCK_SPECIAL) != BLOCK_SPECIAL)
+    {
+        d = block_object(c, def, VK_OBJ_CHEST);
+        if (d)
+        {
+            d->content = (VKByte)(def->content & 0x1F);
+            d->fixed = (VKByte)(0x80 | (i + 1));
+        }
+        return VK_CANDLE_EVENT_HIT;
+    }
     if (c->stage < VK_CANDLE_STAGES && c->room < VK_CANDLE_ROOMS)
         c->out[c->stage][c->room] |= (VKByte)(1u << i);
     /* Hidden block with the white key (883E): the key of items.c appears. */
     if (def->mode == 3 && def->kind == VK_OBJ_WHITE_KEY)
         return VK_CANDLE_EVENT_HIT | VK_CANDLE_EVENT_WHITE_KEY;
     kind = drop_kind(c, def->kind);
-    /* 0, 0x15 and the block contents (0x1F, +7..+9) give nothing here. */
-    if (kind == 0 || kind == VK_OBJ_NOTHING || kind > VK_OBJECT_SHEET_COUNT - 2)
+    /* 0 and 0x15 give nothing here (0x15 is a hidden enemy on the MSX).
+     * PROVISIONAL: a 0x1F block with +9 & C0 = C0 (9179, object C5B5/C5C5) is not
+     * ported and gives nothing. */
+    if (kind == 0 || kind == VK_OBJ_NOTHING || def->kind == VK_OBJ_BLOCK_CONTENT ||
+        kind > VK_OBJECT_SHEET_COUNT - 2)
         return VK_CANDLE_EVENT_HIT;
+    /* 87FA -> 89E3: any other object of a hidden block is put on the floor at once. */
+    if (def->mode == VK_CANDLE_HIDDEN_BLOCK)
+    {
+        block_object(c, def, kind);
+        return VK_CANDLE_EVENT_HIT;
+    }
     d = free_drop(c);
     if (!d) return VK_CANDLE_EVENT_HIT;
     d->state = VK_DROP_BURST;
@@ -198,6 +261,16 @@ static int drop_landed(const VKByte *map, const VKDrop *d)
 
 static void step_drop(VKCandles *c, VKDrop *d, const VKByte *map)
 {
+    if (d->state == VK_DROP_WAIT)
+    {
+        /* 8BCC: after 32 frames the content falls (type 02); nothing (0) goes (8B1B). */
+        if ((++d->timer & CHEST_WAIT_MASK) == 0)
+        {
+            d->state = d->kind ? VK_DROP_FALL : VK_DROP_NONE;
+            d->timer = 0;
+        }
+        return;
+    }
     if (d->state == VK_DROP_BURST)
     {
         if (++d->timer >= BURST_FRAMES) { d->state = VK_DROP_FALL; d->timer = 0; }
@@ -211,7 +284,7 @@ static void step_drop(VKCandles *c, VKDrop *d, const VKByte *map)
             d->x = (VKByte)((d->x + 4) & 0xF8);
             d->y = (VKByte)((d->y + 4) & 0xF8);
             d->state = VK_DROP_REST;
-            d->timer = (VKByte)((VKByte)(d->kind - VK_OBJ_GOLD_KEY) < 3 ? 0xFF : REST_TICKS);
+            d->timer = rest_timer(d->kind);
             return;
         }
         if (d->kind != VK_OBJ_SMALL_HEART) { d->y = (VKByte)(d->y + 8); return; }
@@ -240,10 +313,13 @@ static int touches_drop(const VKPlayer *p, const VKDrop *d)
     return dx > -PICK_HALF_W && dx < PICK_HALF_W && dy >= 0 && dy < height;
 }
 
+/* 8C0B: the stage stream flag of a fixed object, or of the hidden block that
+ * held the chest, is cleared: it does not come back. */
 static void mark_taken(VKCandles *c, const VKDrop *d)
 {
-    if (d->fixed && c->stage < VK_CANDLE_STAGES && c->room < VK_CANDLE_ROOMS)
-        c->taken[c->stage][c->room] |= (VKByte)(1u << (d->fixed - 1));
+    if (!d->fixed || c->stage >= VK_CANDLE_STAGES || c->room >= VK_CANDLE_ROOMS) return;
+    if (d->fixed & 0x80) c->out[c->stage][c->room] |= (VKByte)(1u << ((d->fixed & 0x7F) - 1));
+    else c->taken[c->stage][c->room] |= (VKByte)(1u << (d->fixed - 1));
 }
 
 /* 8D30 and its table 8D3E. Returns the events of the effect. */
@@ -252,21 +328,25 @@ static int pick(VKCandles *c, VKDrop *d)
     const VKByte kind = d->kind;
     if (kind == VK_OBJ_CHEST)
     {
-        /* 8F68: needs a gold key, which it uses up (C700 - 1), then 8C14: the
-         * chest becomes its content, 8 px higher, and falls again. */
+        /* 8F68: needs a gold key, which it uses up (C700 - 1), then 8C14/8C2F:
+         * the chest becomes its content, 8 px higher, waits 32 frames (type 05)
+         * and falls. Its +9..+12 are 0: a small heart would not sway. */
         if (!c->gold_keys) return VK_CANDLE_EVENT_NONE;
         c->gold_keys--;
         mark_taken(c, d);
         d->kind = d->content;
         d->y = (VKByte)(d->y - 8);
         d->fixed = 0;
-        d->state = VK_DROP_FALL;
+        d->state = VK_DROP_WAIT;
         d->timer = 0;
         d->xfrac = (unsigned short)(d->x << 8);
-        d->vx = HEART_VX0;
-        d->ax = HEART_AX0;
+        d->vx = d->ax = 0;
+        /* 8C1D: the last key used, C701 &= F9 and 8EC9 clears the HUD key. */
+        if (!c->gold_keys) vk_candles_hud(c);
         return VK_CANDLE_EVENT_GOLD_KEY;
     }
+    /* 8F83: a gold key is not taken while C701 bit 1 or 2 is set (a key held). */
+    if (kind == VK_OBJ_GOLD_KEY && c->gold_keys) return VK_CANDLE_EVENT_NONE;
     mark_taken(c, d);
     d->state = VK_DROP_NONE;
     if (kind == VK_OBJ_SMALL_HEART || kind == VK_OBJ_BIG_HEART)
@@ -275,7 +355,12 @@ static int pick(VKCandles *c, VKDrop *d)
         c->hearts = (VKByte)(hearts > HEARTS_MAX ? HEARTS_MAX : hearts);
         return VK_CANDLE_EVENT_HEARTS;
     }
-    if (kind == VK_OBJ_GOLD_KEY) { c->gold_keys = 1; return VK_CANDLE_EVENT_GOLD_KEY; }
+    if (kind == VK_OBJ_GOLD_KEY)
+    {
+        c->gold_keys = 1;            /* 8E50: C701 bit 1, C700 = 1, 8EC9 */
+        vk_candles_hud(c);
+        return VK_CANDLE_EVENT_GOLD_KEY;
+    }
     if (kind >= VK_OBJ_CHAIN_WHIP && kind <= VK_OBJ_CHAIN_WHIP + 3)
     {
         c->weapon = (VKByte)(kind - 0x19);
@@ -318,6 +403,7 @@ VKByte vk_candles_drop_sprite(const VKDrop *d, VKByte clock)
 {
     (void)clock;
     if (d->state == VK_DROP_REST) return d->kind;
+    if (d->state == VK_DROP_WAIT) return 0x07;
     if (d->state == VK_DROP_FALL) return d->kind == VK_OBJ_SMALL_HEART ? VK_OBJ_SMALL_HEART : 0x07;
     return 0;
 }

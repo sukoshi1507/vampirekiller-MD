@@ -23,6 +23,7 @@
 #define VK_OBJ_WHITE_KEY 0x18
 #define VK_OBJ_CHEST 0x19
 #define VK_OBJ_CHAIN_WHIP 0x1A       /* 1A..1D: C416 = object - 0x19 */
+#define VK_OBJ_BLOCK_CONTENT 0x1F    /* hidden block whose content is its byte +9 (8814) */
 #define VK_OBJ_CANDLE_FRAME 0x21     /* wall candle, frames 0x21 and 0x22 of the sheet */
 #define VK_CANDLE_HIDDEN_BLOCK 3     /* mode +4: a 4x4 brick block written in the map */
 
@@ -33,7 +34,8 @@ typedef enum {
     VK_DROP_NONE = 0,
     VK_DROP_BURST = 1,               /* type 01: 16 frames at the candle (8A99) */
     VK_DROP_FALL = 2,                /* type 82: falls to a floor (8AF8) */
-    VK_DROP_REST = 3                 /* type 84: on the floor, can be picked up (8BA2) */
+    VK_DROP_REST = 3,                /* type 84: on the floor, can be picked up (8BA2) */
+    VK_DROP_WAIT = 4                 /* type 05: content of an opened chest, 32 frames (8BCC) */
 } VKDropState;
 
 typedef struct {
@@ -41,7 +43,8 @@ typedef struct {
     VKByte x, y;                     /* C500 +2, +1 */
     VKByte kind;                     /* +4 */
     VKByte timer;                    /* +6 */
-    VKByte fixed;                    /* fixed object index + 1, 0 for a drop */
+    VKByte fixed;                    /* fixed object index + 1, or 0x80 | (candle index + 1)
+                                      * for the chest of a hidden block, 0 for a drop */
     VKByte content;                  /* chest: object inside (+13) */
     unsigned short xfrac;            /* small heart: X in 8.8 (+2, +8) */
     short vx, ax;                    /* small heart: speed (+9, +10) and its change (+11, +12) */
@@ -53,7 +56,7 @@ typedef enum {
     VK_CANDLE_EVENT_HEARTS = 2,      /* heart count changed */
     VK_CANDLE_EVENT_WHITE_KEY = 4,   /* the hidden white key block was hit (items.c) */
     VK_CANDLE_EVENT_WEAPON = 8,      /* C416 changed */
-    VK_CANDLE_EVENT_GOLD_KEY = 16    /* gold key count changed */
+    VK_CANDLE_EVENT_GOLD_KEY = 16    /* gold key count changed (key taken or chest opened) */
 } VKCandleEvent;
 
 typedef struct {
@@ -67,6 +70,7 @@ typedef struct {
     VKByte weapon;                   /* C416 */
     VKByte out[VK_CANDLE_STAGES][VK_CANDLE_ROOMS];    /* candles hit, per room */
     VKByte taken[VK_CANDLE_STAGES][VK_CANDLE_ROOMS];  /* fixed objects picked up */
+    VKByte hud_key;                  /* object 8EC9 last drew at (148, 12) in the HUD, 0 none */
 } VKCandles;
 
 void vk_candles_begin(VKCandles *c);
@@ -78,6 +82,12 @@ void vk_candles_reset_stage(VKCandles *c, VKByte stage);
  * candle and fixed object of the stage is back, and 70DC clears the weapon
  * (C416) and the gold keys (C700). The hearts stay. */
 void vk_candles_new_life(VKCandles *c, VKByte stage);
+/* End of a death (70BF, state 6): C700 = 0. The HUD key stays drawn until the
+ * HUD is drawn again (vk_candles_hud). */
+void vk_candles_death(VKCandles *c);
+/* HUD drawn again (4513 -> 8EB4 -> 8EC9: state 4 at 4237, game over at 42F8):
+ * the gold key icon while C700 > 0 (and C701 bit 1 or 2), else nothing. */
+void vk_candles_hud(VKCandles *c);
 /* Debug (A+B): every candle of the current room is lit again. */
 void vk_candles_relight(VKCandles *c);
 /* Stage index of vk_candle_first: 0 courtyard, then the castle stage. */

@@ -322,4 +322,53 @@ Les noms des objets (croix, sablier, etc.) et leurs dessins ne sont pas releves 
 - les contenus 0x1F (`+7`-`+9`) et les objets 03-16 (minuteries, points, bits `C701`/`C702`) n'ont pas d'effet ;
 - 1B a 1D (dague, hache, croix) ne changent pas l'arme ;
 - les bougies restent eteintes jusqu'au changement de stage (le rechargement du flux de stage n'est pas trace) ;
-- (fait) icone de la cle doree : `8EC9` copie l'objet 0x17 (0x12 si le bit 2 de `C701` est mis) dans le HUD en (148, 12) tant que `C700` > 0 ; port : sprite PAL0 a cette place (`candle_view.c`).
+- (fait) icone de la cle doree : voir 9.7.
+
+### 9.7 Cle doree et coffre : inventaire et port (lecture du code, 2026-10-29)
+
+**Deduit (code)**, banque 2 en 8000 (`tools/disasm_rom_window.py ROM 4000 ... 8000`), banque 0 en 4000, banque 1 en 6000. Aucune trace openMSX dediee : les comportements MSX ci-dessous viennent de la lecture du code ; seul le port est verifie (tests natifs et scenario MD `p`).
+
+**Ou** (decodage `5A49`/`5B1B`, `tools/castle_room_objects.py`) :
+
+| Stage | Salle | Objet | Origine |
+|---|---|---|---|
+| hall (1) | 2 | cle (64,176), coffre (176,176) contenu 02 | objets fixes (type 83) |
+| hall | 3 | coffre (48,112) contenu 0D | fixe |
+| hall | 4 | coffres (32,48) 0C et (32,112) 03, cle (32,176) | fixes |
+| hall | 7 | cle (128,112) | fixe |
+| stage 2 | 0 | cle dans le bloc (128,160) | bloc cache, objet 17 |
+| stage 2 | 1 | coffre (16,48) 11 ; cles dans les blocs (32,96), (64,96), (96,160) ; coffres dans les blocs 0x1F (32,160) contenu 0A et (64,160) contenu 0C | fixe et blocs |
+| stage 2 | 2 | coffre (96,80) 0F | fixe |
+| stage 2 | 3 | cle (128,176) | fixe |
+
+La cour n'en a pas. Les blocs 0x1F de la salle 7 du hall (+9 = E1), de la salle 0 (CE) et de la salle 2 (DB) du stage 2 ont `+9 & C0 = C0` : ce ne sont pas des coffres (`9179`, objet `C5B5`/`C5C5`, non porte).
+
+**Comment on les obtient** :
+- objet fixe : pose au chargement de la salle, ne disparait jamais (`+6 = FF`) ;
+- bloc cache (mode 3) d'objet 17 ou autre (`87FA` -> `89E3`) : au coup de fouet, `8874` efface le drapeau du flux, puis l'objet est cree directement de type 83 en (X, Y + 16), sans flamme ni chute ; `8B70` le fixe au sol (`+6` = 8, FF pour 17 a 19). 0 : rien ; 0x15 : chemin normal (`8992`) ;
+- bloc d'objet 0x1F (`8814` -> `8A13`) : si `+9 & C0` != C0, un coffre (type 83, objet 19, `+6 = FF`) de contenu `+9 & 1F` en (X, Y + 16). `8874` n'est pas appele : le pointeur du drapeau (`+7/+8`) passe au coffre (`+14/+15`) et n'est efface qu'a l'ouverture (`8C0B`). Si Simon sort de la salle sans l'ouvrir, le bloc revient.
+
+**Ramassage de la cle** (`8BDF` -> `8F68`) : au contact, hors fouet (meme test `847A` que les autres objets). Refuse si `C701 & 6` (une cle deja tenue, ou l'objet 0x12) : la cle reste au sol, sans son. Sinon `8E50` : `C701` bit 1, `C700 = 1`, `8EC9` (icone), son 14 ; `8C0B` : la cle ne revient pas.
+
+**Ouverture du coffre** (`8F68`, `8C14`) : au contact, hors fouet (pas au fouet). Sans cle (`C700 = 0`) : rien, on reessaie a chaque image. Sinon `C700 -= 1`, son 11, le coffre est efface du decor (`8CE6`), devient son contenu (`+4 = +13`), 8 px plus haut, type 05, `+5 = 2` (orbe `EC`), `+6 = 0` (`8C2F`). Etat 5 (`8BCC`) : 32 images d'attente, puis type 02 (chute, non ramassable) ; contenu 0 : retire (`8B1B`). A la pose : type 83 -> 84, ramassable. Si `C700` tombe a 0 : `C701 &= F9` et `8EC9` efface l'icone. Les octets `+9..+12` d'un coffre valent 0 : un petit coeur n'y oscillerait pas.
+
+**Icone du HUD** (`8EC9`, `DE = 940C`) : objet 0x17 (0x12 si `C701` bit 2) copie en (148, 12) si `C701 & 6` et `C700 > 0`, sinon la case est effacee (`8979`). `8EC9` tourne a la prise (`8E5A`), a l'objet 0x12 (`8E8D`), quand la derniere cle sert (`8C2A`), et a chaque HUD redessine par `4513` (via `8EB4`) : etat 4 (`4237` : debut, nouvelle vie, sortie de stage), fin de partie (`42F8`), entree de partie (`4E1D`), `63F6`. `8EE6`, appele au chargement de chaque salle, ne dessine que la case d'objets de droite (`C701` bits 7 a 3, x B8 a E8) : l'icone de la cle reste telle quelle d'une salle a l'autre.
+
+**Mort, nouvelle vie, fin de partie** : `70BF` (fin de la mort, avant l'etat 6, contact ou chute) met `C700 = 0` (`70F7`) et `C701 &= 80` (`70DC`) ; `62D0` refait `70DC` (etat 6 avec vies `4294`, etat 3 `4211`, entree de partie `4E17`). L'icone reste a l'ecran jusqu'au `4513` suivant : etat 4 apres une vie perdue, ou etat 7 (`42F8`) en fin de partie, ou `C700` = 0 : pas d'icone sur l'ecran GAME OVER. La sortie de stage (etat 10 -> 4, `door-room7.md`) ne passe pas par `62D0` : la cle se garde d'un stage a l'autre.
+
+**Port** (`candles.c`, `candle_view.c`, `main.c`, `tools/build_candles_md.py`) :
+- objets fixes et contenus des blocs 0x1F (champ `content` de `VKCandleDef`, genere) ;
+- cle : refus si une cle est tenue (`C700 > 0` tient lieu de `C701 & 6`, aucun objet 0x12 dans les stages 0-2) ;
+- objets des blocs caches poses en (X, Y + 16) sans flamme ; coffre d'un bloc 0x1F avec retour du bloc tant qu'il n'est pas ouvert (`fixed = 0x80 | (bougie + 1)`) ;
+- coffre : etat `VK_DROP_WAIT` de 32 images (orbe : l'objet 07 de la planche, comme pour la chute), chute, pose ;
+- icone : `VKCandles.hud_key` = objet que `8EC9` a dessine en dernier, sprite PAL0 en (148, 12) ; mis a jour a la prise, a la derniere cle utilisee, a la nouvelle vie (`respawn`), a la sortie de stage et a la fin de partie (`vk_candles_hud`) ; `vk_candles_death` met `C700` a 0 a l'etat 6 (evenements `REFILL` et `GAME_OVER` de `health.c`).
+- Tests : `tests/test_candles.c` (cle refusee, icone, attente du coffre, blocs du stage 2, mort) ; scenario `tests/md_scenarios/p_gold_key_chest.txt` (hall salle 2 : prise de la cle, mort avec la cle, icone gardee jusqu'a l'etat 4, retour de la cle et du coffre, ouverture, gros coeur apres 32 images, coeurs 0 -> 5).
+
+**PROVISOIRE / non porte** :
+- effets des contenus 03, 0A, 0C, 0D, 0F, 11 (minuteries, bits `C701`/`C702`) : objets ramassables sans effet, comme pour les bougies ;
+- objet 0x12 (3 cles, icone 0x12) : absent des stages 0-2 ;
+- blocs 0x1F a `+9 & C0 = C0` (`9179`) : le bloc se casse sans rien donner et ne revient pas ;
+- les eclats de briques du bloc (`88C7`, `C5A6`) ne sont pas dessines ;
+- l'orbe `EC` est remplace par l'objet 07 ; coffre et objets poses sont des sprites (le MSX les dessine dans le decor, `8CC1`/`8CE6`) ;
+- le MSX rend ramassables les objets de type 82 (chute depuis une bougie), le port seulement les objets poses ;
+- pas de trace openMSX de la prise de cle ni de l'ouverture du coffre.

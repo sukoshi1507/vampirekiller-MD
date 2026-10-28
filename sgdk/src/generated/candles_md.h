@@ -2,7 +2,7 @@
 #ifndef VK_CANDLES_MD_H
 #define VK_CANDLES_MD_H
 #include "../player.h"
-typedef struct { VKByte x, y, mode, kind; } VKCandleDef;
+typedef struct { VKByte x, y, mode, kind, content; } VKCandleDef;
 #define VK_OBJECT_SHEET_COUNT 0x22
 #define VK_CANDLE_DEF_COUNT 60
 #define VK_FIXED_OBJECT_COUNT 10
