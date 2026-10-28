@@ -1,33 +1,33 @@
 #include "genesis.h"
 
+/* Mega Drive header at 0x100. The fixed-size fields hold no NUL terminator.
+ * "SEGA MEGA DRIVE " is what the TMSS boot ROM looks for (SGDK's sega.s
+ * writes "SEGA" to A14000 on consoles that have it). tools/md_rom_header.py
+ * sets rom_end and the standard checksum after SGDK pads the ROM. */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpragmas"
+#pragma GCC diagnostic ignored "-Wunterminated-string-initialization"
+
 __attribute__((externally_visible))
 const ROMHeader rom_header = {
-#if (ENABLE_BANK_SWITCH != 0)
-    "SEGA SSF        ",
-#elif (MODULE_MEGAWIFI != 0)
-    "SEGA MEGAWIFI   ",
-#else
     "SEGA MEGA DRIVE ",
-#endif
-    "(C)2026 HOMEBREW",
-    "VK MSX2 ROOM EXPLORER                           ",
-    "VK MSX2 ROOM EXPLORER                           ",
+    "(C)SKSH 2026.OCT",
+    "VAMPIRE KILLER                                  ",
+    "VAMPIRE KILLER                                  ",
     "GM 00000000-00",
-    0x000,
-    "JD              ",
+    0x0000,                         /* checksum: tools/md_rom_header.py */
+    "J               ",             /* 3-button joypad */
     0x00000000,
-#if (ENABLE_BANK_SWITCH != 0)
-    0x003FFFFF,
-#else
-    0x0007FFFF,
-#endif
-    0xE0FF0000,
-    0xE0FFFFFF,
-    "  ",
-    0x0000,
-    0x00000000,
-    0x00000000,
+    0x00000000,                     /* rom_end: tools/md_rom_header.py */
+    0x00FF0000,
+    0x00FFFFFF,
+    "  ",                           /* no backup RAM */
+    0x2020,
+    0x20202020,
+    0x20202020,
     "            ",
-    "STATIC BACKGROUNDS - NO GAMEPLAY        ",
+    "MSX2 PORT, SGDK                         ",
     "JUE             "
 };
+
+#pragma GCC diagnostic pop

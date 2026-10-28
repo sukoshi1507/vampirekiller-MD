@@ -73,6 +73,11 @@ make GDK=/chemin/vers/SGDK
 ```
 
 La ROM est `sgdk/out/rom.bin`. La compilation doit sortir sans avertissement.
+Après le remplissage de SGDK (`sizebnd`, multiple de 128 Ko), `tools/md_rom_header.py`
+écrit dans l'en-tête l'adresse de fin de ROM et la somme de contrôle standard (somme
+des mots à partir de 0x200), à la place du XOR de SGDK. L'en-tête (`sgdk/src/rom_header.c`)
+commence par « SEGA MEGA DRIVE », et le démarrage de SGDK écrit « SEGA » en `A14000`
+sur les consoles à TMSS.
 `sgdk/out/` est ignoré par Git.
 
 ## Tests
