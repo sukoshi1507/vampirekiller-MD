@@ -1,0 +1,11 @@
+# Raccourci debug : C au titre lance une partie au stage 2, salle 0 (x 16, y 96), musique 80.
+until front_mode == MODES['TITLE'] max 2000
+wait 10
+tap C
+wait 30
+expect game.area == 1 and game.stage == 2 and game.room == 0 and front_mode == MODES['INTERIOR']
+expect game.player.x == 16 and game.player.y == 96
+expect ram8('vk_psg+20') == 0x80
+hold RIGHT 40
+expect game.player.x > 16
+shot stage2

@@ -334,6 +334,17 @@ int main(bool hardReset)
                 vk_begin_castle();
                 vk_psg_music(VK_MUSIC_START);   /* 4222: state 3, before the stage */
             }
+            else if (pressed & BUTTON_C)
+            {
+                /* Debug: C starts a game in stage 2 room 0, as through the room 7 door. */
+                new_game();
+                vk_game_enter_stage(&vk_game, 2);
+                vk_player = vk_game.player;
+                vk_reset_enemies();
+                vk_candles_reset_stage(&vk_candles, 2);
+                show_hall_room(0);
+                play_stage_music();
+            }
             else if (vk_konami_step(pressed)) { vk_sound_test_enter(); vk_front_mode = FRONT_SOUND; }
             else if (pressed & BUTTON_A)
             {

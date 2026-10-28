@@ -36,6 +36,8 @@ Ce qui fonctionne dans la ROM Mega Drive :
   (écran effacé, « GAME  OVER » à la police MSX).
 - **Pause** : START met le jeu en pause avec le son du MSX2 (silence, jingle, puis
   reprise de la musique où elle était) ; A+START retourne au titre (raccourci de debug).
+- **Raccourcis de debug** : C au titre lance une partie au stage 2 ; en jeu, A+GAUCHE ou
+  A+DROITE change de salle dans le stage courant.
 - **Son** : musiques et effets MSX2 émulés depuis le pilote de la ROM sur le PSG
   (`research/audio-driver.md`). Ajout du port : le cri de Wilhelm (CC0) quand Simon
   tombe dans un trou ou dans l'eau.
