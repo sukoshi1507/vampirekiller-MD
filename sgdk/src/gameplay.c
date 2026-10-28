@@ -169,6 +169,9 @@ VKEvent vk_game_tick_controls(VKGame *game, int direction, int jump, int up, int
     /* Courtyard room 2 -> hall room 0 through the castle door (see above). UP at
      * x=192..216 does not change room. */
     if (game->entrance) return vk_entrance_tick(game);
+    /* After a fall Simon stays below the screen until the respawn (C420 = 6:
+     * 767B and the player routines return at once). */
+    if (p->y == VK_FALL_Y) return VK_EVENT_NONE;
     if (vk_entrance_zone(game))
     {
         game->entrance = VK_ENTRANCE_WALK;
@@ -197,7 +200,8 @@ VKEvent vk_game_tick_controls(VKGame *game, int direction, int jump, int up, int
         }
     }
     /* Bottom edge (Y 225, measured in openMSX): a hall room with a down link sends
-     * Simon to the room below, at its top. Otherwise he is restarted as before. */
+     * Simon to the room below, at its top. Otherwise he falls out of play (76BC):
+     * C420 := 6, Y := FA, and health.c counts down to the lost life. */
     if (p->y >= 225)
     {
         const VKByte target = links ? links[game->room].down : VK_ROOM_NONE;
@@ -220,9 +224,11 @@ VKEvent vk_game_tick_controls(VKGame *game, int direction, int jump, int up, int
             }
             return VK_EVENT_VERTICAL;
         }
-        vk_player_reset(p);
-        if (game->area == VK_AREA_COURTYARD) p->y = 176;
-        return VK_EVENT_NONE;
+        p->y = VK_FALL_Y;
+        p->mode = 0;
+        p->on_stairs = 0;
+        p->crouched = 0;
+        return VK_EVENT_FALL;
     }
     /* MSX up exit: on a flight with HAUT at Y < 48 (research/vertical-links.md).
      * Simon lands at X +16 (-16 on a right-up flight), Y 224, and glides back up

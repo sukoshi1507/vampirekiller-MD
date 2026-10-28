@@ -135,6 +135,22 @@ int main(void)
     }
     assert(vk_stage1_links[1].up == 5 && vk_stage1_links[5].down == 1);
     assert(vk_stage1_links[3].up == 7 && vk_stage1_links[7].down == 3);
+    /* Stage 2 room 4 has no room below: falling into the water at x 172 is a
+     * fall out of play (76BC), Simon parked at Y FA and frozen there. */
+    {
+        VKGame w;
+        int frames;
+        VKEvent ev = VK_EVENT_NONE;
+        vk_game_begin(&w);
+        vk_game_enter_stage(&w, 2);
+        w.room = 4;
+        w.player.x = 172; w.player.y = 200; w.player.mode = 4; w.player.phase = 0;
+        for (frames = 0; frames < 60 && ev != VK_EVENT_FALL; frames++)
+            ev = vk_game_tick_controls(&w, 0, 0, 0, 0);
+        assert(ev == VK_EVENT_FALL && w.player.y == VK_FALL_Y && w.room == 4);
+        assert(vk_game_tick_controls(&w, 1, 1, 0, 0) == VK_EVENT_NONE);
+        assert(w.player.y == VK_FALL_Y && w.player.x == 172);
+    }
     /* Bottom edge Y 225 in room 5 sends Simon down to room 1 at its top. */
     g.player.x = 192;
     g.player.y = 225;

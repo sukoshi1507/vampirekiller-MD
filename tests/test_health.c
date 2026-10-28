@@ -148,6 +148,24 @@ static void test_respawn_place(void)
           "cour : debut de partie");
 }
 
+/* Fall into the water of stage 2 (7093): 30 + 90 frames, then state 6. */
+static void test_fall(void)
+{
+    VKHealth h;
+    int frames = 0;
+    VKHealthEvent ev = VK_HEALTH_NONE;
+    vk_health_begin(&h);
+    vk_health_fall(&h, 2);
+    CHECK(h.fell && vk_health_controls_locked(&h), "chute : commandes bloquees");
+    while (ev == VK_HEALTH_NONE && frames < 1000) { ev = vk_health_tick(&h, VK_HEALTH_ENERGY_MAX); frames++; }
+    CHECK(ev == VK_HEALTH_REFILL && frames == 120 && !h.fell, "chute dans l'eau : etat 6 apres 120 images");
+    vk_health_begin(&h);
+    vk_health_fall(&h, 1);
+    frames = 0; ev = VK_HEALTH_NONE;
+    while (ev == VK_HEALTH_NONE && frames < 1000) { ev = vk_health_tick(&h, VK_HEALTH_ENERGY_MAX); frames++; }
+    CHECK(ev == VK_HEALTH_REFILL && frames == 91, "chute hors de l'eau : 1 + 90 images");
+}
+
 int main(void)
 {
     test_begin();
@@ -156,6 +174,7 @@ int main(void)
     test_bar();
     test_contact_to_death();
     test_respawn_place();
+    test_fall();
     if (failures) {
         printf("test_health: %d echec(s)\n", failures);
         return 1;

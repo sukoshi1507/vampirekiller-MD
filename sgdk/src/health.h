@@ -46,10 +46,19 @@ typedef struct {
     VKByte lives;            /* C410 */
     VKByte phase;            /* VKLifePhase */
     VKWord timer;            /* frames left in the current phase */
+    VKByte fell;             /* the death comes from a fall (C420 = 6) */
 } VKHealth;
 
 /* Start of play: VK_HEALTH_LIVES_START lives, alive. */
 void vk_health_begin(VKHealth *h);
+/* Fall out of the room (7093, C420 = 6): C428 = 30 frames in the water stages
+ * (D000 2 or 10, splash sound 9) or 1 elsewhere, then 90 frames (jingle 89),
+ * then the life is lost as after a fatal contact; the hearts are capped to 5
+ * (70B4). */
+#define VK_HEALTH_FALL_WATER_FRAMES 30
+#define VK_HEALTH_FALL_FRAMES 90
+#define VK_HEALTH_HEARTS_AFTER_FALL 5
+void vk_health_fall(VKHealth *h, int stage);
 /* One gameplay frame, after the enemy contact of the frame; energy is C415. */
 VKHealthEvent vk_health_tick(VKHealth *h, int energy);
 /* 1 while Simon cannot be controlled (from the fatal contact to the respawn). */

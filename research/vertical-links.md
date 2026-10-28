@@ -167,7 +167,7 @@ Fichiers versionnés : `tools/vertical_links_trace.tcl`, `tools/run_vertical_lin
 1. **Chaîne d'appel complète** de `6B24` (boucle par image de l'état 5) et de `767B` : non remontée jusqu'à la réinitialisation de `C000`.
 2. **HAUT hors escalier** (`C420 ≠ 3`) : le code n'a pas de sortie HAUT. Non tracé en marchant vers le haut du hall, seulement déduit du code et du balayage de `research/room-links.md` (aucun HAUT trouvé).
 3. **Cas `C41C = FF`** (HAUT sans lien) : `767B` n'a pas de test ; `B963` retourne sans `SCF` ; `4377` met alors `C000 = 6` (`LD A,6 ; JP NC,41B6`). L'effet de l'état 6 vient de `research/mechanics-remaining.md` (non tracé ici).
-4. **Cas `C41D = FF`** (BAS sans lien) : chute (`C420 := 6`, `Y := FAh`). Non tracé.
+4. **Cas `C41D = FF`** (BAS sans lien) : chute (`C420 := 6`, `Y := FAh`). Code lu, porté (voir `player-health.md`, chute) ; non tracé.
 5. **BAS hors escalier** (`C420 ≠ 3`) : `Y := 48` sans décalage de X (déduit du code `76E8`-`76FE`). Non tracé.
 6. **Cause du blocage signalé par l'utilisateur** : inconnue. Les mesures montrent une sortie de salle 5 ou un retour en salle 1 selon la touche, pas de blocage dur.
 7. **Trou du sol** `x = 184..191` en salle 5 : la table statique le déclare non solide, Simon le traverse à pied. Non expliqué.

@@ -80,6 +80,7 @@ static void step_candles(void)
     if (events & VK_CANDLE_EVENT_HIT)
     {
         vk_courtyard_flame_out(hit);
+        vk_candle_view_out(hit);
         /* The castlevania-md hit effect stands in for MSX 0x0C (0x0E for a block). */
         vk_psg_play(vk_sfx_hit);
     }
@@ -150,8 +151,16 @@ static void respawn(void)
 /* One frame of health.c after the enemy contact; redraws the HUD bar. */
 static void step_health(void)
 {
+    const bool fell = health.fell;
     const VKHealthEvent life = vk_health_tick(&health, vk_enemies.energy);
     if (life == VK_HEALTH_TITLE) { vk_show_title(); return; }
+    /* End of a fall (70B4): no more than 5 hearts. */
+    if (fell && (life == VK_HEALTH_REFILL || life == VK_HEALTH_GAME_OVER) &&
+        vk_candles.hearts > VK_HEALTH_HEARTS_AFTER_FALL)
+    {
+        vk_candles.hearts = VK_HEALTH_HEARTS_AFTER_FALL;
+        vk_candle_view_hearts();
+    }
     if (life == VK_HEALTH_REFILL) vk_enemies.energy = ENEMY_ENERGY_MAX;
     else if (life == VK_HEALTH_RESPAWN) respawn();
     /* PROVISIONAL: the MSX game over screen (state 7) is not captured. */
@@ -228,7 +237,9 @@ int main(bool hardReset)
                     (held & BUTTON_A) && (pressed & BUTTON_B))
                 {
                     vk_candles_relight(&vk_candles);
+                    /* Hall room 0 redraws its scene, which holds the baked candles. */
                     if (vk_front_mode == FRONT_COURTYARD) vk_reset_training_target();
+                    else show_hall_room(vk_game.room);
                     show_message("BOUGIES RALLUMEES!");
                 }
                 const VKEvent event = vk_game_tick_controls(&vk_game, direction,
@@ -255,6 +266,12 @@ int main(bool hardReset)
                 if (event == VK_EVENT_ENTER) show_hall_room(0);
                 else if (event == VK_EVENT_ROOM) show_courtyard(vk_game.room);
                 else if (event == VK_EVENT_VERTICAL) show_hall_room(vk_game.room);
+                else if (event == VK_EVENT_FALL)
+                {
+                    vk_whip_reset(&vk_whip);
+                    vk_health_fall(&health, vk_game.area == VK_AREA_INTERIOR ? vk_game.stage : 0);
+                    show_message("CHUTE!");
+                }
                 else if (vk_front_mode == FRONT_INTERIOR && direction &&
                          !(held & BUTTON_A) &&
                          vk_room_try_edge(vk_game.stage, &vk_game.room, &vk_game.player, direction))

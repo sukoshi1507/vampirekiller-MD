@@ -34,7 +34,7 @@ Les EXPR sont du Python evalue sur l'etat : frame, front_mode, game.area, game.r
 game.player.x/.y/.facing/.mode/.crouched/.on_stairs..., player (copie affichee),
 whip.timer/.facing/.x/.y, enemies.energy/.invuln/.recoil/.alive (nb actifs),
 enemies.enemy[i].active/.type/.x/.y/.dx/.age, target (test_target), flames[0..1],
-health.lives/.phase/.timer (C410 ; phase 0 vivant, 1 mort, 2 reapparition, 3 fin de partie),
+health.lives/.phase/.timer/.fell (C410 ; phase 0 vivant, 1 mort, 2 reapparition, 3 fin de partie),
 ram8/ram16/ram32(addr|'symbole'), et les noms memorises par `set`.
 Boutons : A B C START UP DOWN LEFT RIGHT (manette 3 boutons, port 1).
 Correspondance libretro (Genesis Plus GX) : B=0 (MD B), Y=1 (MD A), START=3,
@@ -64,7 +64,7 @@ FRONT_MODES = ['LOGO', 'TITLE', 'CASTLE', 'COURTYARD', 'INTERIOR', 'VIEWER', 'TE
 
 # Tailles attendues (octets) des globales decodees : garde-fou contre une derive des structures.
 EXPECTED_SIZES = {'player': 14, 'game': 24, 'whip': 6, 'enemy_state': 84,
-                  'test_target': 18, 'courtyard_flame': 36, 'front_mode': 2, 'health': 4}
+                  'test_target': 18, 'courtyard_flame': 36, 'front_mode': 2, 'health': 6}
 # Noms C actuels des globales partagees (sgdk/src/frontend.h, actors.h) ; les scenarios
 # gardent les noms courts. test_target et courtyard_flame sont statiques (room_view.c).
 SYMBOL_ALIASES = {'game': 'vk_game', 'player': 'vk_player', 'whip': 'vk_whip',
@@ -308,7 +308,8 @@ class Game_View:
                                 'type4Shots': m.rd8(b + 10)}
         if 'health' in A:
             a = A['health']   # VKHealth (health.h), statique de main.c
-            state['health'] = {'lives': m.rd8(a), 'phase': m.rd8(a + 1), 'timer': m.rd16(a + 2)}
+            state['health'] = {'lives': m.rd8(a), 'phase': m.rd8(a + 1), 'timer': m.rd16(a + 2),
+                               'fell': m.rd8(a + 4)}
         if 'test_target' in A:
             state['target'] = self.target_at(A['test_target'])
         if 'courtyard_flame' in A:

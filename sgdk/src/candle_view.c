@@ -2,17 +2,21 @@
 #include "actors.h"
 #include "frontend.h"
 #include "generated/object_tiles_md.h"
+#include "generated/rooms.h"
 
 /* Free VRAM between the sprite tiles of actors.h and the plane tables (1536). */
 #define DIGIT_TILE_INDEX 1400
 #define CANDLE_TILE_INDEX (DIGIT_TILE_INDEX + 10)
 #define DROP_TILE_INDEX (CANDLE_TILE_INDEX + 8)
+/* Background under the candles baked in scene 6 (hall room 0), 4 tiles each. */
+#define BAKED_TILE_INDEX (DROP_TILE_INDEX + VK_DROP_MAX * 4)
+#define BAKED_CANDLES 2
 #define HUD_DIGIT_COL 24
 #define CANDLE_FRAME_TICKS 8          /* PROVISIONAL: the MSX candle cadence is not measured */
 
 _Static_assert(CROUCH_TILE_INDEX + VK_CROUCH_TILE_COUNT <= DIGIT_TILE_INDEX,
                "candle tiles must follow the sprite tiles");
-_Static_assert(DROP_TILE_INDEX + VK_DROP_MAX * 4 <= 1536,
+_Static_assert(BAKED_TILE_INDEX + BAKED_CANDLES * 4 <= 1536,
                "candle tiles must end before the plane tables");
 
 VKCandles vk_candles;
@@ -34,6 +38,30 @@ void vk_candle_view_hearts(void)
                      HUD_DIGIT_COL + 1, 0);
 }
 
+/* Hall room 0 is shown from the ROM scene 6, whose bitmap already holds its two
+ * candles. A candle put out gets back the room map tiles under it, as the MSX
+ * restores the tiles saved in E480 (873A, 884A). Map row = (Y - 16) / 8, and
+ * vk_maps starts at map row 2. */
+void vk_candle_view_out(int i)
+{
+    const VKStage *group = &vk_stages[0];
+    const VKCandleDef *def;
+    u16 k;
+    if (vk_front_mode != FRONT_INTERIOR || vk_game.stage != 1 || vk_game.room != 0 ||
+        i < 0 || i >= BAKED_CANDLES)
+        return;
+    def = vk_candles_def(&vk_candles, i);
+    for (k = 0; k < 4; k++)
+    {
+        const u16 col = (u16)(def->x / 8 + (k & 1));
+        const u16 row = (u16)(def->y / 8 + (k >> 1));
+        const u16 tile = vk_maps[group->first][(row - 4) * 32 + col];
+        const u16 index = (u16)(BAKED_TILE_INDEX + i * 4 + k);
+        VDP_loadTileData(&vk_tiles[group->tileset][tile * 8], index, 1, CPU);
+        VDP_setTileMapXY(BG_A, TILE_ATTR_FULL(PAL0, FALSE, FALSE, FALSE, index), col, row);
+    }
+}
+
 void vk_candle_view_room(void)
 {
     u16 i;
@@ -42,6 +70,8 @@ void vk_candle_view_room(void)
     load_object(VK_OBJ_CANDLE_FRAME + 1, CANDLE_TILE_INDEX + 4);
     for (i = 0; i < VK_DROP_MAX; i++) drop_loaded[i] = 0;
     vk_candles_enter(&vk_candles, &vk_game);
+    for (i = 0; i < vk_candles.count; i++)
+        if (!vk_candles_lit(&vk_candles, i)) vk_candle_view_out(i);
     vk_candle_view_hearts();
 }
 

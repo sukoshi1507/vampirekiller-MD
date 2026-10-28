@@ -8,7 +8,8 @@ typedef enum { VK_AREA_COURTYARD = 0, VK_AREA_INTERIOR = 1 } VKArea;
 typedef enum { VK_EVENT_NONE = 0, VK_EVENT_ROOM = 1, VK_EVENT_ENTER = 2,
                VK_EVENT_VERTICAL = 3,
                VK_EVENT_ENTRANCE = 4,       /* castle door reached: Simon walks in alone */
-               VK_EVENT_ENTRANCE_DARK = 5   /* courtyard left: the screen goes black */
+               VK_EVENT_ENTRANCE_DARK = 5,  /* courtyard left: the screen goes black */
+               VK_EVENT_FALL = 6            /* bottom edge without a room below: life lost */
              } VKEvent;
 /* Castle entrance of courtyard room 2 (research/castle-entrance.md). */
 typedef enum { VK_ENTRANCE_NONE = 0,
@@ -28,6 +29,8 @@ typedef struct {
 } VKGame;
 
 void vk_game_begin(VKGame *game);
+/* Y where Simon is parked after a fall out of the room (76CB: Y := FA). */
+#define VK_FALL_Y 0xFA
 /* The castle entrance owns Simon: the player's controls are ignored. */
 int vk_game_entrance_locked(const VKGame *game);
 VKEvent vk_game_tick_controls(VKGame *game, int direction, int jump,

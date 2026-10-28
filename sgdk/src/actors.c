@@ -144,8 +144,13 @@ static u16 show_enemy_sprites(u16 tail)
     return count;
 }
 
-void vk_show_player(const VKPlayer *player)
+void vk_show_player(const VKPlayer *shown)
 {
+    /* After a fall Simon is parked at Y FA, whose top rows would still reach the
+     * 224-line screen: he is drawn lower, out of sight. */
+    VKPlayer parked = *shown;
+    const VKPlayer *player = &parked;
+    if (parked.y == VK_FALL_Y) parked.y = 255;
     /* Enemy sprites come after the player chain: sprite 6 (or 7 when the target is
      * shown) links to ENEMY_SPRITE_BASE when there are enemies, then the candles and
      * objects of candle_view.c close the chain. */

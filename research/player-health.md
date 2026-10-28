@@ -138,3 +138,20 @@ Méthode : la recherche statique des références aux octets candidats (`scratch
 - Analyse : `tools/player_health_analyze.py <dossier>`.
 - Sorties et outils de travail (non commités) : `scratchpad/health/` (`refs.py`, `dis.py`, `xref.py`, `dumpdiff.py`, `ev.py`, runs 1 à 6).
 - Ce document : `research/player-health.md`.
+
+## Chute hors de la salle (lecture du code, 2026-10-28)
+
+**Prouvé (code)**, non tracé :
+- `76BC` : BAS (`Y >= 225`) sans salle en dessous (`C41D = FF`) : `C421 := 0`, `C420 := 6`, `Y := FA` (hors écran), `C428 := 1E` (30 images) aux stages 2 et 10 (l'eau), avec le son 9 (`509F`) ; sinon `C428 := 1`.
+- `767B` et les routines de Simon rendent la main tant que `C420 = 6`.
+- `7093` (`C420 = 6`) :
+  - phase 0 : `C428` décompte jusqu'à 0, puis `C428 := 5A` (90 images), `C421 := 1`, arrêt de la musique (son 0) et jingle 89 ;
+  - phase 1 : à la fin des 90 images, les cœurs `C417` sont ramenés à 5 au plus (`70B4`), puis la remise à zéro de `70BF` met `C413` à 0 (mort, état 6). Cette remise à zéro efface aussi `C416` (arme), `C700` (clés dorées), les bits de `C701` sauf le bit 7, et met `D001` à 0.
+
+**Port** (`gameplay.c` `VK_EVENT_FALL`, `health.c` `vk_health_fall`) :
+- Simon est garé en Y FA et ne bouge plus ; l'état 6 arrive 30 + 90 images après la chute dans l'eau (1 + 90 ailleurs) ;
+- les cœurs sont ramenés à 5 au plus.
+
+**PROVISOIRE** :
+- ni le son 9 ni le jingle 89 ne sont joués ;
+- la remise à zéro de l'arme, des clés et de la salle par `70BF` n'est pas portée.

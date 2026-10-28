@@ -7,6 +7,16 @@ void vk_health_begin(VKHealth *h)
     h->lives = VK_HEALTH_LIVES_START;
     h->phase = VK_LIFE_ALIVE;
     h->timer = 0;
+    h->fell = 0;
+}
+
+void vk_health_fall(VKHealth *h, int stage)
+{
+    if (h->phase != VK_LIFE_ALIVE) return;
+    h->phase = VK_LIFE_DYING;
+    h->fell = 1;
+    h->timer = (VKWord)((stage == 2 || stage == 10 ? VK_HEALTH_FALL_WATER_FRAMES : 1) +
+                        VK_HEALTH_FALL_FRAMES);
 }
 
 VKHealthEvent vk_health_tick(VKHealth *h, int energy)
@@ -20,6 +30,7 @@ VKHealthEvent vk_health_tick(VKHealth *h, int energy)
         return VK_HEALTH_DIED;
     case VK_LIFE_DYING:
         if (--h->timer) return VK_HEALTH_NONE;
+        h->fell = 0;
         /* State 6 (4294): lives left -> refill and state 4, else jingle and state 7. */
         if (h->lives)
         {

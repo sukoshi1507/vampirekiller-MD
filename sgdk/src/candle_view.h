@@ -16,6 +16,9 @@ extern VKCandles vk_candles;
 
 /* After a room or scene is shown: loads the tiles and draws the heart count. */
 void vk_candle_view_room(void);
+/* Candle i of the current room was put out: in hall room 0 (scene 6, candles
+ * baked in the picture) its background cells are restored. */
+void vk_candle_view_out(int i);
 /* Redraws the two heart digits (row 0, columns 24-25, as on the MSX HUD). */
 void vk_candle_view_hearts(void);
 /* Candles and drops as sprites from CANDLE_SPRITE_BASE, chained in order, the
