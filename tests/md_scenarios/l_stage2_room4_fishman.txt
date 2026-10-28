@@ -1,7 +1,8 @@
 # (l) Type 2 des salles 4 et 5 du stage 2 : l'homme-poisson (research/enemy-behavior.md,
 # section « Type 2 »). enemies.enemy[i] : type 4 = homme-poisson, 5 = goutte ; x, y = objet
 # MSX (pieds) ; state 0 = saut ou chute, 1 = marche. Trace openMSX P1 : Simon en (72, 112),
-# tirs 51 et 67 images apres l'entree, X D0 puis 30.
+# tirs 51 et 67 images apres l'ecriture de D001, X D0 puis 30, soit 31 et 47 images apres la
+# fin de l'etat 9 (21 images) ; le changement de salle debug n'a pas d'etat 9 : 31 et 47 ici.
 include boot_to_courtyard.inc
 until front_mode == MODES['INTERIOR'] max 3000 RIGHT
 wait 20                                   # fin du chargement de la scene 6

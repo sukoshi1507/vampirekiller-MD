@@ -389,7 +389,7 @@ Lecture du code (`tools/disasm_rom_window.py`) et trace openMSX `scratchpad/stag
 
 ### Reste ouvert
 
-- Le délai du premier tir : 48 images mesurées après l'entrée, 32 dans le port (valeur initiale de `CF10` et durée du chargement de salle non modélisées) : **PROVISOIRE**, comme au hall.
+- Le délai du premier tir : 48 images mesurées après l'entrée, 52 dans le port depuis le gel de l'état 9 (20 + 32, `research/room-links.md` section 9.4 ; 32 avant) (valeur initiale de `CF10` et durée du chargement de salle non modélisées) : **PROVISOIRE**, comme au hall.
 - L'entrée SAT provisoire (Y `E1`, 2 images) et le retard d'affichage ne sont pas reproduits : le port montre l'ennemi dès l'âge 0.
 - Objet `1E`, objet tombé `24` (tirage commun `9A3E`), score : non portés.
 - Chute sans sol (`vy += 0x60` par mise à jour, `vx = 0`) : le port garde la chute provisoire du hall (2 px par image). Sans effet dans la salle 2, dont le sol bas est continu pour la sonde à deux points.
@@ -447,7 +447,7 @@ Lecture du code (`tools/disasm_rom_window.py`) et trace openMSX `scratchpad/stag
 | Point | Port | Statut |
 |---|---|---|
 | Cadence, X, garde, perte faute de SAT | `type2Channel` (compteur d'images `type2Frames`, prochain tir `type2Next`), `newObject` (7 blocs, 14 entrées SAT) | prouvé |
-| Premier tir | `ENEMY_TYPE2_FIRST` = 51 images après `Enemies_setRoom` | mesuré 2 fois ; **PROVISOIRE** (dépend de la phase de `CF10` à l'entrée) |
+| Premier tir | `ENEMY_TYPE2_FIRST` = 31 images de jeu après la fin de l'état 9 (51 après `D001`, `research/room-links.md` section 9.4) | mesuré 2 fois ; **PROVISOIRE** (dépend de la phase de `CF10` à l'entrée) |
 | Saut, sol, marche, chute, plongeon | `fishStep`, tests de sol `7B98` sur la carte de collision du port | prouvé (test natif : atterrissage 121, chute 145, plongeon 183 images après l'entrée, comme en 6236, 6260 et 6298) |
 | Gouttes | `splashSpawn`, mise à jour dans `type2Frame` ; ni contact ni fouet | prouvé ; la goutte sans gravité de la mort au fouet n'est pas reproduite |
 | Contact | `touches` : boîte `8378` de la classe 1, Simon debout ; dégât 4 | prouvé debout ; **PROVISOIRE** accroupi et en saut (`C420` non transmis) |

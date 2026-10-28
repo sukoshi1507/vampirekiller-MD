@@ -1,0 +1,30 @@
+# (n) Etat 9 (changement de salle, research/room-links.md section 9) : apres le passage
+# d'un bord, le jeu reste fige N images (C000 = 9 sur MSX) : aucune entree, Simon immobile,
+# sprites caches, ecran noir, puis la nouvelle salle. room_freeze (main.c) : +0 images restantes,
+# +1 duree, +2 image du noir. Cour : 18 images (salles 0 a 2) ; hall salle 1 : 20.
+include boot_to_courtyard.inc
+until game.room == 1 max 400 RIGHT
+set t0 frame
+expect game.area == 0 and game.player.x == 10 # cour 1 par la droite (lien R0)
+expect ram8('room_freeze+1') == 18 and ram8('room_freeze+2') == 1 # duree et noir de la cour (trace T2)
+hold RIGHT 2
+shot n-cour-noir
+expect game.player.x == 10 # DROITE tenue : Simon ne bouge pas
+until ram8('room_freeze') == 0 max 40 RIGHT
+expect frame - t0 == 18 # 18 images figees (C000 = 9 de 971 a 988, trace P2)
+expect game.player.x == 10 and game.player.mode == 0 # toujours immobile
+wait 2
+shot n-cour-salle1
+hold RIGHT 6
+expect game.player.x > 10 # la marche reprend apres le gel
+# Hall : salle 0 -> salle 1 par la droite, 20 images.
+until front_mode == MODES['INTERIOR'] max 3000 RIGHT
+until game.room == 1 max 600 RIGHT
+set t1 frame
+set x1 game.player.x
+expect ram8('room_freeze+1') == 20 and ram8('room_freeze+2') == 2 # hall salle 1
+until ram8('room_freeze') == 0 max 40 RIGHT
+expect frame - t1 == 20
+expect game.player.x == x1 # immobile pendant le gel
+wait 2
+shot n-hall-salle1

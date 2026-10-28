@@ -42,9 +42,12 @@ typedef short EnemyS16;
 #define ENEMY_PATTERN_TYPE4 0x80    /* bit des motifs du type 4 (tuiles vk_enemy4_tiles) */
 #define ENEMY_FALL_SPEED 2          /* px par image quand le sol manque (PROVISOIRE, vitesse non mesuree) */
 #define ENEMY_TYPE5_DAMAGE 6        /* table 81CE : base 3, doublee (bit 4 de C701 nul) ; mesure 4 fois */
-#define ENEMY_TYPE5_DELAY 21        /* images entre le chargement de la salle et la creation (21 ou 22 mesures) */
+#define ENEMY_TYPE5_DELAY 1         /* creee par 61BB a la fin de 62F5 (etat 9) : premiere image de jeu de la salle
+                                       (21 ou 22 images apres D001 = duree de l'etat 9 des salles 2, 3, 7) */
 #define ENEMY_TYPE2_DAMAGE 4        /* table 81CE : base 2, doublee (bit 4 de C701 nul) ; mesure 8 fois */
-#define ENEMY_TYPE2_FIRST 51        /* images entre l'ecriture de D001 et le premier homme-poisson (2 mesures) */
+#define ENEMY_TYPE2_FIRST 31        /* 51 images apres l'ecriture de D001 (2 mesures) : D001 en f0, etat 9
+                                       de f0 a f0 + 20 (salles 4, 5), premiere image de jeu f0 + 21 = 1,
+                                       donc tir a l'image de jeu 31 (minuterie 9CA9/9CC3 de l'etat 5) */
 #define ENEMY_SAT_SLOTS 14          /* entrees SAT des objets (D638.., 5F5C) : une creation sans place est perdue */
 
 /* Cote d'apparition, en repere d'ecran (observe). */

@@ -18,6 +18,7 @@
 #include "item_view.h"
 #include "candle_view.h"
 #include "generated/intro_assets.h"
+#include "room_freeze.h"
 
 /* Front-end state machine and game loop. Display lives in scene.c (logo, title,
  * castle), room_view.c (rooms, flames, target) and actors.c (Simon, whip, enemies). */
@@ -30,6 +31,8 @@ static u16 diagnostic_timer;
 static VKHealth health;
 /* White key and room 7 door (items.c). */
 static VKItems items;
+/* State 9 after a room change (room_freeze.c). */
+static VKRoomFreeze room_freeze;
 
 /* Short play message on row 26 (rows 0..3 hold the HUD bars); the play note
  * comes back when diagnostic_timer runs out. */
@@ -76,6 +79,7 @@ static void new_game(void)
     vk_items_begin(&items);
     vk_candles_begin(&vk_candles);
     vk_set_whip_level(0);
+    vk_room_freeze_clear(&room_freeze);
     show_courtyard(0);
     death_jingle_timer = 0;
     play_stage_music();
@@ -173,6 +177,60 @@ static void castle_entrance_step(void)
     }
 }
 
+/* Sprite 0 parked and alone in the list: no sprite on screen (63C5 writes Y E0 to
+ * the whole SAT). The next vk_show_player rebuilds the full list. */
+static void hide_sprites(void)
+{
+    VDP_setSpriteFull(0, -32, -32, SPRITE_SIZE(1, 1), 0, 0);
+    VDP_updateSprites(1, DMA_QUEUE);
+}
+
+/* VBlank count of the last freeze step, and whether the new room is drawn. */
+static u32 freeze_vtimer;
+static bool freeze_drawn;
+
+/* Room change by an edge or a vertical link (state 9, research/room-links.md
+ * section 9): the game state is already in the new room; the screen keeps the old
+ * one without sprites until the freeze shows it. */
+static void begin_room_freeze(void)
+{
+    vk_room_freeze_begin(&room_freeze,
+        vk_game.area == VK_AREA_INTERIOR ? vk_game.stage : 0, vk_game.room);
+    hide_sprites();
+    freeze_vtimer = vtimer;
+    freeze_drawn = FALSE;
+}
+
+/* One frozen frame: no input, Simon, whip, enemies, candles, drops or flames;
+ * only the music goes on (4028 with the C005 guard). The display goes off as the
+ * castle entrance does (black palettes). The port draws the new room in about
+ * ROOM_DRAW_FRAMES frames of 68000 time (display off during vk_show_room, then
+ * tile loads with the room on screen), so it starts that many frames before the
+ * end, and the room comes up, without sprites, near the end as on the MSX (47C7
+ * in the last C000 = 9 frame). The freeze counts VBlanks (vtimer), not loop
+ * turns, so that it keeps the MSX frame count across the draw. */
+#define ROOM_DRAW_FRAMES 6
+static void room_freeze_step(void)
+{
+    static const u16 black[64] = {0};
+    const u32 now = vtimer;
+    u32 frames = now - freeze_vtimer;
+    freeze_vtimer = now;
+    if (!frames) frames = 1;
+    while (frames-- && vk_room_freeze_active(&room_freeze))
+    {
+        if (vk_room_freeze_tick(&room_freeze) == VK_FREEZE_DARK)
+            PAL_setColors(0, black, 64, DMA_QUEUE);
+    }
+    if (!freeze_drawn && room_freeze.left <= ROOM_DRAW_FRAMES)
+    {
+        freeze_drawn = TRUE;
+        if (vk_game.area == VK_AREA_INTERIOR) show_hall_room(vk_game.room);
+        else show_courtyard(vk_game.room);
+        hide_sprites();
+    }
+}
+
 /* State 4 after a lost life: full energy, empty room, provisional restart place. */
 static void respawn(void)
 {
@@ -258,7 +316,9 @@ int main(bool hardReset)
             const int direction = locked ? 0 : input.direction;
             const u16 held = locked ? 0 : input.keys;
             const bool jump = locked ? FALSE : input.jump_pressed;
-            if (pressed & BUTTON_START)
+            /* State 9: every key, START included, waits for the end of the freeze. */
+            if (vk_room_freeze_active(&room_freeze)) room_freeze_step();
+            else if (pressed & BUTTON_START)
             {
                 if (vk_game_entrance_locked(&vk_game)) castle_door_front(FALSE);
                 vk_show_title();
@@ -316,8 +376,7 @@ int main(bool hardReset)
                     vk_psg_effect(VK_SFX_DOOR);   /* 7774: C5AC = 5 */
                 }
                 if (event == VK_EVENT_ENTER) show_hall_room(0);
-                else if (event == VK_EVENT_ROOM) show_courtyard(vk_game.room);
-                else if (event == VK_EVENT_VERTICAL) show_hall_room(vk_game.room);
+                else if (event == VK_EVENT_ROOM || event == VK_EVENT_VERTICAL) begin_room_freeze();
                 else if (event == VK_EVENT_FALL)
                 {
                     vk_whip_reset(&vk_whip);
@@ -338,7 +397,7 @@ int main(bool hardReset)
                     /* Keep player state across edge; collision map changes on
                      * next gameplay tick. No fabricated vertical connections. */
                     vk_player = vk_game.player;
-                    show_hall_room(vk_game.room);
+                    begin_room_freeze();
                 }
                 else
                 {

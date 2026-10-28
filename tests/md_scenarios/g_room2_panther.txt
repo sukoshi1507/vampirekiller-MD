@@ -18,7 +18,9 @@ poke vk_game+0 194
 poke vk_game+1 128
 until enemies.enemy[0].active max 40
 expect enemies.enemy[0].type == 3 and enemies.enemy[0].x == 128 and enemies.enemy[0].y == 128 # creee en 80,80
-expect enemies.enemy[0].pose == 0x43 # assise, tournee vers Simon (a droite)
+# 61BB la cree a la fin de l'etat 9, donc a la premiere image de jeu de la salle : Simon est
+# encore a x 16 (changement debug), le poke arrive apres ; elle regarde a gauche, vers lui.
+expect enemies.enemy[0].pose == 0x3F # assise, tournee vers Simon a la creation (a gauche)
 wait 4
 shot g-panthere-assise
 expect enemies.enemy[0].state == 0 # Simon a 66 px : elle attend
