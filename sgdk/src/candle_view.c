@@ -11,12 +11,16 @@
 /* Background under the candles baked in scene 6 (hall room 0), 4 tiles each. */
 #define BAKED_TILE_INDEX (DROP_TILE_INDEX + VK_DROP_MAX * 4)
 #define BAKED_CANDLES 2
+/* HUD gold key (8EC9): sheet object 0x17 copied at (148, 12) while C700 > 0. */
+#define GOLD_KEY_TILE_INDEX (BAKED_TILE_INDEX + BAKED_CANDLES * 4)
+#define HUD_GOLD_KEY_X 148
+#define HUD_GOLD_KEY_Y 12
 #define HUD_DIGIT_COL 24
 #define CANDLE_FRAME_TICKS 8          /* PROVISIONAL: the MSX candle cadence is not measured */
 
 _Static_assert(CROUCH_TILE_INDEX + VK_CROUCH_TILE_COUNT <= DIGIT_TILE_INDEX,
                "candle tiles must follow the sprite tiles");
-_Static_assert(BAKED_TILE_INDEX + BAKED_CANDLES * 4 <= 1536,
+_Static_assert(GOLD_KEY_TILE_INDEX + 4 <= 1536,
                "candle tiles must end before the plane tables");
 
 VKCandles vk_candles;
@@ -68,6 +72,7 @@ void vk_candle_view_room(void)
     VDP_loadTileData(vk_hud_digit_tiles, DIGIT_TILE_INDEX, 10, CPU);
     load_object(VK_OBJ_CANDLE_FRAME, CANDLE_TILE_INDEX);
     load_object(VK_OBJ_CANDLE_FRAME + 1, CANDLE_TILE_INDEX + 4);
+    load_object(VK_OBJ_GOLD_KEY, GOLD_KEY_TILE_INDEX);
     for (i = 0; i < VK_DROP_MAX; i++) drop_loaded[i] = 0;
     vk_candles_enter(&vk_candles, &vk_game);
     for (i = 0; i < vk_candles.count; i++)
@@ -87,6 +92,9 @@ u16 vk_candle_view_sprites(void)
     u16 n = 0;
     u16 i;
     if (vk_front_mode != FRONT_INTERIOR && vk_front_mode != FRONT_COURTYARD) return 0;
+    if (c->gold_keys)
+        set_sprite(n++, HUD_GOLD_KEY_X, HUD_GOLD_KEY_Y,
+                   TILE_ATTR_FULL(PAL0, TRUE, FALSE, FALSE, GOLD_KEY_TILE_INDEX));
     /* Wall candles (mode 0) of the castle; courtyard torches are room_view.c flames
      * and hidden blocks (mode 3) are part of the wall. */
     if (vk_front_mode == FRONT_INTERIOR)

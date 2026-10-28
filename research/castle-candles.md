@@ -320,4 +320,4 @@ Les noms des objets (croix, sablier, etc.) et leurs dessins ne sont pas releves 
 - les contenus 0x1F (`+7`-`+9`) et les objets 03-16 (minuteries, points, bits `C701`/`C702`) n'ont pas d'effet ;
 - 1B a 1D (dague, hache, croix) ne changent pas l'arme ;
 - les bougies restent eteintes jusqu'au changement de stage (le rechargement du flux de stage n'est pas trace) ;
-- pas d'icone de cle doree dans le HUD.
+- (fait) icone de la cle doree : `8EC9` copie l'objet 0x17 (0x12 si le bit 2 de `C701` est mis) dans le HUD en (148, 12) tant que `C700` > 0 ; port : sprite PAL0 a cette place (`candle_view.c`).
