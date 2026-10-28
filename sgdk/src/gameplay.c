@@ -15,6 +15,44 @@ static const VKByte *vk_castle_map(VKByte stage, VKByte room)
     return 0;
 }
 
+/* Castle room map in RAM, for the hidden blocks that candles.c writes in it
+ * (86CA) and takes out again (8899). Used only while it belongs to the current
+ * room; otherwise the ROM map is read directly. */
+static VKByte room_map[768];
+static VKByte room_map_stage = 0xFF, room_map_room = 0xFF;
+
+static int room_map_current(const VKGame *game)
+{
+    return game->area == VK_AREA_INTERIOR && room_map_stage == game->stage &&
+           room_map_room == game->room;
+}
+
+VKByte *vk_game_room_map(const VKGame *game)
+{
+    const VKByte *map = game->area == VK_AREA_INTERIOR ? vk_castle_map(game->stage, game->room) : 0;
+    int i;
+    if (!map) return 0;
+    for (i = 0; i < 768; i++) room_map[i] = map[i];
+    room_map_stage = game->stage;
+    room_map_room = game->room;
+    return room_map;
+}
+
+void vk_game_room_block(const VKGame *game, VKByte x, VKByte y, const VKByte *tiles)
+{
+    const VKByte *rom = vk_castle_map(game->stage, game->room);
+    int row, col;
+    if (!rom || !room_map_current(game)) return;
+    for (row = 0; row < 4; row++)
+        for (col = 0; col < 4; col++)
+        {
+            /* 7D2F: map row (Y - 16) / 8, column X / 8. */
+            const int index = (((y - 16) >> 3) + row) * 32 + (x >> 3) + col;
+            if (index < 0 || index >= 768) continue;
+            room_map[index] = tiles ? tiles[row * 4 + col] : rom[index];
+        }
+}
+
 /* Interior scene 6 is stage 1 / room 0 (extract_intro.py).
  * extract_player.py decodes the same original 768-byte tilemap as
  * vk_player_room. This is the actual hall geometry, not a fallback. */
@@ -25,7 +63,7 @@ const VKByte *vk_game_collision(const VKGame *game)
     if (game->area == VK_AREA_INTERIOR)
     {
         const VKByte *map = vk_castle_map(game->stage, game->room);
-        if (map) return map;
+        if (map) return room_map_current(game) ? room_map : map;
     }
     return vk_player_room; /* Fallback for invalid game state. */
 }

@@ -31,13 +31,13 @@ shot l-saut
 # Premier homme-poisson : atterrit sur le sol droit en Y 112 (fraction 80 gardee).
 until enemies.enemy[0].state == 1 max 80
 expect enemies.enemy[0].type == 4 and enemies.enemy[0].y == 112 and enemies.enemy[0].sub == 0x80 and enemies.enemy[0].x == 208
-# Le second se pose en (48, 112) (la ROM le pose en Y 80 sur un bloc absent de la carte du
-# port, voir enemy-behavior.md) ; fouet a gauche : X du fouet 72 - 20 = 52, |52 - X| < 17.
+# Le second se pose en (48, 80), sur le bloc cache 4x4 de la salle 4 (bougie (32, 80),
+# mode 3, ecrit dans la carte par 86CA), comme dans la ROM. Debout au sol (Y 112), le fouet
+# ne l'atteint pas (84A7 : 112 - 18 - 80 + 24 = 38, hors de [0, 28)) : on le retire pour
+# isoler le premier.
 until enemies.enemy[3].state == 1 max 60
-expect enemies.enemy[3].x == 48 and enemies.enemy[3].y == 112
-tap B 1
-until not (enemies.enemy[3].active and enemies.enemy[3].type == 4) max 30
-expect enemies.energy == 32 # tue avant le contact
+expect enemies.enemy[3].x == 48 and enemies.enemy[3].y == 80 # pose sur le bloc
+poke vk_enemies+54 0
 wait 6
 shot l-marche
 # Le premier marche vers Simon (pose 08/09), tombe au bord du sol droit et replonge.

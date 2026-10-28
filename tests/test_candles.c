@@ -4,6 +4,7 @@
 #include <stddef.h>
 #include <stdio.h>
 #include "candles.h"
+#include "generated/stage1_collision.h"
 
 /* Offsets read by tests/md_scenarios/i_courtyard_torch_drop.txt (same layout on m68k). */
 _Static_assert(offsetof(VKCandles, lit) == 4 && offsetof(VKCandles, drop) == 6 &&
@@ -119,8 +120,16 @@ int main(void)
      * floor (y 192) at x 166 facing left: whip X 146, |146 - 136| < 20. */
     vk_candles_begin(&c);
     place(&g, VK_AREA_INTERIOR, 1, 2, 166, 192);
+    vk_whip_reset(&w);
+    vk_candles_enter(&c, &g);
+    /* 86CA: the block is in the room map, solid (brick tiles 01/02/09/0A/0B). */
+    assert(vk_sample_tile(vk_game_collision(&g), 128, 160) == 0x01);
+    assert(vk_sample_tile(vk_game_collision(&g), 152, 184) == 0x09);
+    assert(vk_tile_solid(vk_sample_tile(vk_game_collision(&g), 136, 176), 1, 0));
     lash(&w, &g, 1);
     assert(vk_candles_tick(&c, &g, &w, &hit) & VK_CANDLE_EVENT_WHITE_KEY);
+    /* 8899: broken, the ROM tiles are back. */
+    assert(vk_sample_tile(vk_game_collision(&g), 128, 160) == vk_stage1_collision[2][(160 - 16) / 8 * 32 + 16]);
     assert(c.drop[2].state == VK_DROP_NONE);
 
     /* Hall room 2: gold key (64,176) then chest (176,176) with a big heart. */

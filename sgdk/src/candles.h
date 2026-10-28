@@ -24,6 +24,10 @@
 #define VK_OBJ_CHEST 0x19
 #define VK_OBJ_CHAIN_WHIP 0x1A       /* 1A..1D: C416 = object - 0x19 */
 #define VK_OBJ_CANDLE_FRAME 0x21     /* wall candle, frames 0x21 and 0x22 of the sheet */
+#define VK_CANDLE_HIDDEN_BLOCK 3     /* mode +4: a 4x4 brick block written in the map */
+
+/* Tiles of the hidden block (86CA, table 8792 + 4 for D002 = 0, stages 0-3), row by row. */
+extern const VKByte vk_hidden_block_tiles[16];
 
 typedef enum {
     VK_DROP_NONE = 0,

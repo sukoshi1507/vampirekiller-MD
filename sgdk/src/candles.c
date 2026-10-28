@@ -24,6 +24,11 @@
 #define HEART_SWAY 0x20
 #define HEARTS_MAX 99
 
+const VKByte vk_hidden_block_tiles[16] = {
+    0x01, 0x02, 0x01, 0x02, 0x09, 0x0B, 0x0A, 0x09,
+    0x01, 0x02, 0x01, 0x02, 0x09, 0x0B, 0x0A, 0x09
+};
+
 static const VKByte *room_map(const VKGame *game)
 {
     return vk_game_collision(game);
@@ -64,6 +69,7 @@ void vk_candles_relight(VKCandles *c)
 {
     c->lit = (VKByte)((1u << c->count) - 1);
     if (c->stage < VK_CANDLE_STAGES && c->room < VK_CANDLE_ROOMS) c->out[c->stage][c->room] = 0;
+    c->stage = c->room = 0xFF;   /* the next vk_candles_enter writes the blocks again */
 }
 
 VKByte vk_candles_stage_of(const VKGame *game)
@@ -95,6 +101,14 @@ void vk_candles_enter(VKCandles *c, const VKGame *game)
     c->first = vk_candle_first[stage][game->room];
     c->count = (VKByte)(vk_candle_first[stage][game->room + 1] - c->first);
     c->lit = (VKByte)(((1u << c->count) - 1) & ~c->out[stage][game->room]);
+    /* 873A then 86CA: each hidden block still there is written into the room map
+     * (display and collision). PROVISIONAL: the MSX does it 16 frames after the
+     * room is entered (fishman runs), here at once. */
+    if (vk_game_room_map(game))
+        for (i = 0; i < c->count; i++)
+            if (vk_candles_lit(c, i) && vk_candles_def(c, i)->mode == VK_CANDLE_HIDDEN_BLOCK)
+                vk_game_room_block(game, vk_candles_def(c, i)->x, vk_candles_def(c, i)->y,
+                                   vk_hidden_block_tiles);
     for (i = vk_fixed_object_first[stage][game->room];
          i < vk_fixed_object_first[stage][game->room + 1]; i++)
     {
@@ -282,8 +296,11 @@ int vk_candles_tick(VKCandles *c, VKGame *game, const VKWhip *whip, int *hit_ind
     for (i = 0; i < c->count; i++)
         if (vk_candles_lit(c, i) && vk_candle_whip_touch(vk_candles_def(c, i), whip, c->weapon))
         {
+            const VKCandleDef *def = vk_candles_def(c, i);
             events |= vk_candles_hit(c, i);
             *hit_index = i;
+            /* 8899: the tiles saved under the block (E4A0) go back into the map. */
+            if (def->mode == VK_CANDLE_HIDDEN_BLOCK) vk_game_room_block(game, def->x, def->y, 0);
         }
     for (i = 0; i < VK_DROP_MAX; i++)
     {

@@ -311,12 +311,13 @@ Les noms des objets (croix, sablier, etc.) et leurs dessins ne sont pas releves 
 
 **Port** (`sgdk/src/candles.c`, `candle_view.c`, `tools/build_candles_md.py`) :
 - touche, chute, pose, delai, ramassage et effets 01, 02, 17, 18 (bloc cache de la salle 2), 19, 1A ;
-- les bougies et objets sont des sprites PAL0 aux coordonnees MSX ; compteur de coeurs en colonnes 24-25 de la ligne 0.
+- les bougies et objets sont des sprites PAL0 aux coordonnees MSX ; compteur de coeurs en colonnes 24-25 de la ligne 0 ;
+- blocs caches (mode 3, `86CA` / `873A` / `885E` / `8899`) : le bloc de briques 4x4 (table `8792` + 4, D002 = 0) est ecrit dans une copie RAM de la carte de collision de la salle (`vk_game_room_block`) et dessine sur BG_A ; au coup de fouet, les tuiles d'origine reviennent dans la carte et a l'ecran. L'homme-poisson de la salle 4 du stage 2 se pose dessus en (48, 80) comme en ROM (scenario `l`).
 
 **PROVISOIRE** :
 - la flamme `C800` est remplacee par les etincelles de l'effet de flamme, et l'orbe EC par l'objet 07 de la planche ;
 - la cadence de la bougie murale (8 images) n'est pas mesuree ;
-- le dessin des blocs caches (mode 3) n'est pas porte : le mur n'est pas dessine et la carte de collision ne change pas ;
+- le bloc cache est pose des l'entree dans la salle ; la trace de l'homme-poisson le montre dans `D100` 16 images apres l'arrivee (delai non lu dans le code) ;
 - les contenus 0x1F (`+7`-`+9`) et les objets 03-16 (minuteries, points, bits `C701`/`C702`) n'ont pas d'effet ;
 - 1B a 1D (dague, hache, croix) ne changent pas l'arme ;
 - les bougies restent eteintes jusqu'au changement de stage (le rechargement du flux de stage n'est pas trace) ;
