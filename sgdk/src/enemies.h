@@ -13,6 +13,9 @@
  *   - Type 4 : cadence 168 images et mouvement 1,5 px/image mesures (enemy-behavior 3.3).
  *   - Type 5 (panthere) : liste ROM 0x1C674, routines A85C/A87D/99B9/99E5, contact 8290
  *     et fouet 7DAD lus dans le code et suivis en trace (enemy-behavior, section Type 5).
+ *   - Type 2 (homme-poisson, stage 2 salles 4 et 5) : 9D4B/9CC3, A2E0/A310, gouttes
+ *     9C66/9CA3, contact et fouet de classe 1 (8378/8380) lus dans le code et suivis en
+ *     trace (enemy-behavior, section Type 2).
  *   - Contact, degat -2, recul, invulnerabilite : mesures (player-health 3.1, 3.2).
  *   - Boite de contact de Simon, cote du spawn type 1 (C42C) : PROVISOIRES (voir enemies.c).
  */
@@ -25,7 +28,7 @@ typedef signed char EnemyS8;
 typedef unsigned short EnemyU16;
 typedef short EnemyS16;
 
-#define ENEMY_MAX 4          /* ennemis simultanes (les blocs C800/C880 de la ROM : ordre au-dela de 2 inconnu) */
+#define ENEMY_MAX 7          /* ennemis simultanes : les 7 blocs C800..CB00 de la ROM (5F35, premier bloc libre) */
 #define ENEMY_SPRITES 4      /* entrees SAT d'un ennemi de type A ou B (2 cellules 16x16, 2 couches chacune) */
 #define ENEMY_TYPE4_SPRITES 2 /* entrees SAT d'un ennemi de type 4 (une cellule 16x16, 2 couches) */
 
@@ -42,6 +45,9 @@ typedef short EnemyS16;
 #define ENEMY_FALL_SPEED 2          /* px par image quand le sol manque (PROVISOIRE, vitesse non mesuree) */
 #define ENEMY_TYPE5_DAMAGE 6        /* table 81CE : base 3, doublee (bit 4 de C701 nul) ; mesure 4 fois */
 #define ENEMY_TYPE5_DELAY 21        /* images entre le chargement de la salle et la creation (21 ou 22 mesures) */
+#define ENEMY_TYPE2_DAMAGE 4        /* table 81CE : base 2, doublee (bit 4 de C701 nul) ; mesure 8 fois */
+#define ENEMY_TYPE2_FIRST 51        /* images entre l'ecriture de D001 et le premier homme-poisson (2 mesures) */
+#define ENEMY_SAT_SLOTS 14          /* entrees SAT des objets (D638.., 5F5C) : une creation sans place est perdue */
 
 /* Cote d'apparition, en repere d'ecran (observe). */
 typedef enum {
@@ -54,12 +60,17 @@ typedef enum {
     ENEMY_TYPE_A = 0,        /* type 1, sens droite : motifs 40/44 (haut), 48/4C <-> 50/54 (bas) */
     ENEMY_TYPE_B = 1,        /* type 1, sens gauche : motifs 58/5C (haut), 60/64 <-> 68/6C (bas) */
     ENEMY_TYPE_4 = 2,        /* type 4 (salle 4, volant) : une cellule 16x16, 4 poses */
-    ENEMY_TYPE_5 = 3         /* type 5 (salles 2, 3, 7, panthere) : deux cellules 16x16, 8 poses */
+    ENEMY_TYPE_5 = 3,        /* type 5 (salles 2, 3, 7, panthere) : deux cellules 16x16, 8 poses */
+    ENEMY_TYPE_2 = 4,        /* type 2 (stage 2 salles 4, 5, homme-poisson) : une colonne de deux cellules 16x16 */
+    ENEMY_TYPE_SPLASH = 5    /* objet 0x20 : goutte d'eclaboussure (une cellule, motif 90), ni contact ni fouet */
 } EnemyType;
 
 /* Un ennemi actif. x est la coordonnee SAT (pixels, signee pour le hors-ecran).
  * Type 5 : x et y sont l'objet MSX (X comme C427, Y = bas du corps comme C425), sub la
- * fraction de Y (8.8), dx le sens de la vitesse X (+-0x0400 par mise a jour, 0 assise). */
+ * fraction de Y (8.8), dx le sens de la vitesse X (+-0x0400 par mise a jour, 0 assise).
+ * Type 2 et goutte : meme repere ; dx le sens de la vitesse X (+-0x0180 pour le type 2,
+ * +-0x0100 pour la goutte, 0 a l'arret), extraPhase les drapeaux ENEMY_FISH_* (+18, +12,
+ * +14 de l'objet, demi-pixel de X), anim le compteur +13, timer le compteur +15, age +1D. */
 typedef struct {
     EnemyU8 active;
     EnemyU8 exiting;         /* limite atteinte : masque a l'image suivante (observe) */
@@ -68,7 +79,8 @@ typedef struct {
     EnemyS16 x;
     EnemyU8 y;
     EnemyS8 dx;               /* -1 ou +1 */
-    EnemyU8 sub;             /* type 5 : fraction de Y ; type 4 : Y SAT du spawn - ENEMY_TYPE4_Y */
+    EnemyU8 sub;             /* types 5, 2 : fraction de Y ; type 4 : Y SAT du spawn - ENEMY_TYPE4_Y */
+    EnemyU8 timer;           /* type 2 : +15, mises a jour avant le prochain choix de sens */
     EnemyU16 age;            /* images depuis le spawn ; 0 = image de spawn */
     EnemyS16 vy;             /* type 5 : vitesse Y 8.8 (+7/+8 de l'objet) */
     EnemyU8 state;           /* type 5 : 0 assise, 1 course, 2 saut ou chute */
@@ -82,7 +94,7 @@ typedef struct {
     EnemyU8 y;
     EnemyS16 x;
     EnemyU8 pattern;
-    EnemyU8 bank;            /* 1 : motif du type 5 (tuiles vk_enemy5_tiles), 0 sinon */
+    EnemyU8 bank;            /* 1 : motif du bloc ENEMY5 (vk_enemy5_tiles, vk_enemy2_tiles en salles 4-5 du stage 2), 0 sinon */
 } EnemySprite;
 
 /* Etat des ennemis et de Simon vis-a-vis d'eux (energie et invulnerabilite persistent d'une salle a l'autre). */
@@ -98,13 +110,18 @@ typedef struct {
     EnemyU8 type4Side;       /* prochain cote de type 4 : 0 droite, 1 gauche */
     EnemyU8 type5Timer;      /* images depuis l'entree dans la salle, jusqu'a la creation du type 5 */
     EnemyU8 type4Shots;      /* tirs de type 4 depuis l'entree (CF06 : periode longue un tir sur quatre) */
+    EnemyU8 type2Shots;      /* CF03 : tirs de type 2 depuis l'entree (index des tables 9D87 et 9D8F) */
+    EnemyU16 type2Frames;    /* images depuis l'entree dans la salle (canal du type 2) */
+    EnemyU16 type2Next;      /* valeur de type2Frames du prochain tir de type 2 */
+    EnemyU8 splashCount;     /* CF30 : gouttes creees (parite = sens et vitesse), garde d'une salle a l'autre */
 } EnemyState;
 
 /* Drapeaux de salle du stage 2 (D000 = 2) : ROM 85D7-85DC (pointeur 85AA), salles 0 a 5.
  * Bit 3 (type 4) en salles 0, 1, 3 ; bit 0 (type 1) en salle 2 ; bit 1 (type 2, 9D4B) en 4, 5.
  * Types portes au stage 2 : le type 4 (memes motifs que le hall, verifie en VRAM) et le
  * type 1 de la salle 2 (zombie du hall : memes couches 40-6C et couleurs, verifie en VRAM ;
- * Y E = A0, cote selon le bit 1 de CF01, code 9CFC et trace). */
+ * Y E = A0, cote selon le bit 1 de CF01, code 9CFC et trace) et le type 2 des salles 4 et 5
+ * (homme-poisson, ENEMY_TYPE_2, couches du flux ROM 0x1597D, verifiees en VRAM). */
 extern const EnemyU8 kEnemyStage2RoomFlags[6];
 
 /* Tables ROM, salle de stage 1 (D000 = 1).
@@ -177,6 +194,13 @@ int Enemies_whipHitType5(EnemyState *s, int simonX, int simonY, int facingLeft, 
  * Ces ennemis sont ignores par Enemies_whipHit. Retourne le nombre d'ennemis tues. */
 int Enemies_whipHitType1Rom(EnemyState *s, int simonX, int simonY, int facingLeft, int crouched);
 
+/* Fouet contre le type 2 (7DAD, classe 1, boite 84A7 avec HL = 1805), a appeler pendant la
+ * phase 3 du fouet : X du fouet = simonX +- 20 selon le regard, touche si |X fouet - X| < 17
+ * et simonY - B - 3 <= Y <= simonY - B + 24 (X, Y : objet MSX), B = 18 debout, 10 accroupi.
+ * Fouet de depart (C416 = 0). Un coup tue (points de vie 1, table 60E1). Les gouttes ne sont
+ * pas touchables (+E = 0). Retourne le nombre d'hommes-poissons tues. */
+int Enemies_whipHitType2(EnemyState *s, int simonX, int simonY, int facingLeft, int crouched);
+
 /* Avance d'une image les ennemis actifs (mouvement, animation, sortie). */
 void Enemies_update(EnemyState *s);
 
@@ -184,7 +208,8 @@ void Enemies_update(EnemyState *s);
  * Le type 4 part a x=E5 (droite) ou 0B (gauche) ; les types A/B a E5 ou 0A. */
 int Enemies_spawn(EnemyState *s, EnemyU8 side, EnemyU8 type, EnemyU8 y, EnemyU8 extraPhase);
 
-/* Ecrit les entrees SAT d'un ennemi actif dans out[] (4 pour A/B et 5, 2 pour le type 4).
+/* Ecrit les entrees SAT d'un ennemi actif dans out[] (4 pour A/B, 5 et 2, 2 pour le type 4,
+ * 1 pour la goutte).
  * Retourne le nombre d'entrees ecrites, 0 si l'ennemi est inactif. */
 int Enemies_sprites(const EnemyState *s, EnemyU8 index, EnemySprite out[ENEMY_SPRITES]);
 

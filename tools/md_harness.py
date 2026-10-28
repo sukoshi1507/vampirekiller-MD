@@ -33,7 +33,7 @@ Script (une commande par ligne, `#` = commentaire ; "image" = un appel a retro_r
 Les EXPR sont du Python evalue sur l'etat : frame, front_mode, game.area, game.room,
 game.player.x/.y/.facing/.mode/.crouched/.on_stairs..., player (copie affichee),
 whip.timer/.facing/.x/.y, enemies.energy/.invuln/.recoil/.alive (nb actifs),
-enemies.enemy[i].active/.type/.x/.y/.dx/.age/.romBox, target (test_target), flames[0..1],
+enemies.enemy[i].active/.type/.x/.y/.dx/.age/.romBox/.timer (i < 7), target (test_target), flames[0..1],
 health.lives/.phase/.timer/.fell (C410 ; phase 0 vivant, 1 mort, 2 reapparition, 3 fin de partie),
 ram8/ram16/ram32(addr|'symbole'), et les noms memorises par `set`.
 Boutons : A B C START UP DOWN LEFT RIGHT (manette 3 boutons, port 1).
@@ -62,8 +62,10 @@ SYSTEM_RAM = 2
 BUTTONS = {'B': 0, 'A': 1, 'START': 3, 'UP': 4, 'DOWN': 5, 'LEFT': 6, 'RIGHT': 7, 'C': 8}
 FRONT_MODES = ['LOGO', 'TITLE', 'CASTLE', 'COURTYARD', 'INTERIOR', 'VIEWER', 'TEST', 'SOUND']
 
+# Blocs d'ennemis (ENEMY_MAX de enemies.h : les 7 blocs C800..CB00 de la ROM).
+ENEMY_SLOTS = 7
 # Tailles attendues (octets) des globales decodees : garde-fou contre une derive des structures.
-EXPECTED_SIZES = {'player': 14, 'game': 24, 'whip': 6, 'enemy_state': 84,
+EXPECTED_SIZES = {'player': 14, 'game': 24, 'whip': 6, 'enemy_state': 144,
                   'test_target': 18, 'courtyard_flame': 36, 'front_mode': 2, 'health': 6}
 # Noms C actuels des globales partagees (sgdk/src/frontend.h, actors.h) ; les scenarios
 # gardent les noms courts. test_target et courtyard_flame sont statiques (room_view.c).
@@ -292,20 +294,23 @@ class Game_View:
         if 'enemy_state' in A:
             a = A['enemy_state']
             enemies = []
-            for i in range(4):
+            for i in range(ENEMY_SLOTS):
                 e = a + 18 * i
                 enemies.append({'active': m.rd8(e), 'exiting': m.rd8(e + 1), 'type': m.rd8(e + 2),
                                 'extraPhase': m.rd8(e + 3), 'x': s16(m.rd16(e + 4)), 'y': m.rd8(e + 6),
                                 'dx': s8(m.rd8(e + 7)), 'sub': m.rd8(e + 8), 'age': m.rd16(e + 10),
                                 'vy': s16(m.rd16(e + 12)), 'state': m.rd8(e + 14),
-                                'anim': m.rd8(e + 15), 'pose': m.rd8(e + 16), 'romBox': m.rd8(e + 17)})
-            b = a + 72
+                                'anim': m.rd8(e + 15), 'pose': m.rd8(e + 16), 'romBox': m.rd8(e + 17),
+                                'timer': m.rd8(e + 9)})
+            b = a + 18 * ENEMY_SLOTS
             state['enemies'] = {'enemy': enemies, 'alive': sum(1 for e in enemies if e['active']),
                                 'energy': m.rd8(b), 'invuln': m.rd8(b + 1), 'invulnPhase': m.rd8(b + 2),
                                 'recoil': m.rd8(b + 3), 'recoilDir': s8(m.rd8(b + 4)),
                                 'parity': m.rd8(b + 5), 'type4Frames': m.rd16(b + 6),
                                 'type4Side': m.rd8(b + 8), 'type5Timer': m.rd8(b + 9),
-                                'type4Shots': m.rd8(b + 10)}
+                                'type4Shots': m.rd8(b + 10), 'type2Shots': m.rd8(b + 11),
+                                'type2Frames': m.rd16(b + 12), 'type2Next': m.rd16(b + 14),
+                                'splashCount': m.rd8(b + 16)}
         if 'health' in A:
             a = A['health']   # VKHealth (health.h), statique de main.c
             state['health'] = {'lives': m.rd8(a), 'phase': m.rd8(a + 1), 'timer': m.rd16(a + 2),

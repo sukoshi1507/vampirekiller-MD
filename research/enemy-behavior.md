@@ -331,9 +331,9 @@ Lecture du code (`tools/disasm_rom_window.py`) et trace openMSX `scratchpad/stag
 | Type 4 : Y du spawn | `9D97` : `E = C425 - 8` ; Y SAT au spawn = **C425 - 22** (Simon 96 → 74, Simon 128 → 106 ; hall : 192 → `AA`) | code + trace (20 tirs) |
 | Type 4 : cadence | table `9DBB` = `14 14 14 28 14 14 14 28` : 168, 168, 168 puis 328 images (tirs 6068, 6236, 6404, 6572, 6900, …) ; le premier tir vient 168 images après l'entrée | code + trace |
 | Type 1 (salle 2) | `9CFC` branche stage 2 : `E = A0`, côté `D = F0`, ou `10` si le bit 1 de `CF01` est mis. C’est le zombie du hall (section « Type 1 au stage 2 ») | code + trace (2026-10-28) |
-| Type 2 (salles 4, 5) | `9D4B` : minuterie `CF02`, périodes `9D8F` (`01 18 18 …`), Y `C8`, X = table `9D87` (`60 D0 30 90 A0 40 60 B0`) selon `CF03 & 7`, décalé de 32 px vers le centre si Simon est à moins de 24 px. Routine `A310` : chute sous gravité `0x80`, posé au sol puis marche vers Simon à ±`0x180` ; sous Y `C0` sans sol, disparaît en créant deux objets `20` (éclaboussures). Homme-poisson probable | code seul |
+| Type 2 (salles 4, 5) | `9D4B` : minuterie `CF02`, périodes `9D8F` (`01 18 18 …`), Y `C8`, X = table `9D87` (`60 D0 30 90 A0 40 60 B0`) selon `CF03 & 7`, décalé de 32 px vers le centre si Simon est à moins de 24 px. Routine `A310` : chute sous gravité `0x80`, posé au sol puis marche vers Simon à ±`0x180` ; sous Y `C0` sans sol, disparaît en créant deux objets `20` (éclaboussures). C'est l'homme-poisson (section « Type 2 au stage 2 ») | code + trace (2026-10-28) |
 
-**Porté** : type 4 au stage 2 (salles 0, 1, 3), Y du spawn relative à Simon et cadence 168/328 pour tous les stages. **Porté depuis** : type 1 de la salle 2 (section suivante). **Non porté** : type 2 (dessin, sauts et tir de l'état 2 `A45A` non relevés). La trace `stage2e` n’a pas atteint les salles 2 et 4 : le lien forcé (`C41E`) n'a pas servi, Simon était sur un escalier.
+**Porté** : type 4 au stage 2 (salles 0, 1, 3), Y du spawn relative à Simon et cadence 168/328 pour tous les stages. **Porté depuis** : type 1 de la salle 2 (section suivante). **Porté depuis** : type 2 des salles 4 et 5 (section « Type 2 au stage 2 » ; le tir de l'état 2 `A45A` est réservé au type 3). La trace `stage2e` n’a pas atteint les salles 2 et 4 : le lien forcé (`C41E`) n'a pas servi, Simon était sur un escalier.
 
 ## Type 1 au stage 2 : le zombie de la salle 2 (relevé du 2026-10-28)
 
@@ -401,3 +401,63 @@ Lecture du code (`tools/disasm_rom_window.py`) et trace openMSX `scratchpad/stag
 - Outils : `tool/` (`harness.tcl`, `run.py` à plans concaténés par `+`, `s2t1_extra.tcl`, `render_snap.py`), analyses `ana.py`, `satx.py`, `hits.py`, `cmp_vram.py`, `colors.py`, `pal.py`.
 - Plans : `plans/base.txt`, `plans/obs.txt`, `plans/whip.txt`.
 - Traces : `out/O1/`, `out/W1/` (`sat_r2.csv`, `objwrites.csv`, `snaps/`, `events.txt`).
+
+## Type 2 au stage 2 : l'homme-poisson des salles 4 et 5 (relevé du 2026-10-28)
+
+**Identification** : l'ennemi de type 2 (`D000 = 2`, `D001 = 4` ou `5`, bit 1 du drapeau de salle, canal `9D4B`) est l'homme-poisson : il saute hors de l'eau depuis Y `C8`, se pose sur un sol, marche vers Simon et replonge quand il tombe sous Y `C0`. Il ne tire jamais : le tir de l'état 2 (`A45A`, `9F6D`) est réservé au type 3 (dans `A3A0`, `+10` n'est décrémenté que pour le type 3). Chaque saut et chaque plongeon crée deux gouttes (objet `20`).
+
+**Porté** dans `sgdk/src/enemies.c` (`type2Channel`, `fishSpawn`, `fishStep`, `splashSpawn`, `type2Frame`, `Enemies_whipHitType2`, dessin dans `Enemies_sprites`), `sgdk/src/enemies.h` (`ENEMY_TYPE_2`, `ENEMY_TYPE_SPLASH`, `ENEMY_MAX` 7, champ `timer`, compteurs `type2Shots`, `type2Frames`, `type2Next`, `splashCount`), `sgdk/src/actors.c` (tuiles `vk_enemy2_tiles` chargées dans le bloc `ENEMY5` en salles 4 et 5 du stage 2, fouet en phase 2) et `tools/build_enemy_sprites_md.py` (tuiles extraites de la ROM). Tests : `test_type2_spawn`, `test_type2_trajectory`, `test_type2_contact_whip`, `test_type2_sat_budget` (`tests/test_enemies.c`) et le scénario MD `l_stage2_room4_fishman`.
+
+### Méthode
+
+- Trace openMSX (outils dans `scratchpad/fish/tool/`, extra `fish_extra.tcl` : SAT, couleurs et les 7 blocs `C800`-`CB00` par image quand `D000 = 2` et `D001` vaut 4 ou 5, écritures d'objets avec PC, instantanés VRAM avec `D100` et `C400`). Plans `mkplan.py` : `P1` = route `S2` jusqu'à la salle 0 du stage 2, `gotox 72`, `C41B = 2` forcé, arrivée en salle 4 (écriture de `D001` à l'image 6115), Simon immobile en (72, 112) ; `P2` = Simon en (236, 112) tourné à gauche (`C42C = 1`), coups de fouet, puis salle 5 par `gotox 250` (écriture de `D001` à 7904), Simon en x 40.
+- Analyses : `an.py` (objets par image), `an2.py`, `spawns.py` (créations), `events.py` (contacts, morts), `offsets.py` (SAT contre objet), `layers.py` (couches VRAM contre la ROM), `findrle.py`, `cmpmaps.py` (carte `D100` contre celle du port).
+- Lecture de code : `5EC0`, `9CA9`, `9CC3`, `9D4B`, `5F1D`, tables `5FCC`, `6057`, `60E1`, `9942`, `A2E0`, `A310`, `A3A0`, `A4B3`, `A4CF`, `A549`, `9C66`, `9CA3`, `99B9`, `99E5`, `98E5`, `992F`, `8378`/`8380`, `847A`, `84A7`, table `81CE`.
+
+### Code (prouvé par la lecture, confirmé par la trace pour les points marqués dans la table suivante)
+
+| Point | Valeur |
+|---|---|
+| Canal `9D4B` | `HL = CF02`, périodes `9D8F` = `01 18 18 18 18 18 18 18`, minuterie `9CC3` (compteur décrémenté tous les 4 appels, soit 8 images ; recharge `max(p - 2 × D012, 0) + 1`, `p` lu à `CF03 & 7` avant l'incrément). `E = C8` ; `D` = table `9D87` = `60 D0 30 90 A0 40 60 B0` à `CF03 & 7` après l'incrément ; si `(C427 - D + 18) & FF < 30`, `D += 20` si `D < 80`, sinon `D -= 20` ; `JP 5F1D`. `9CA9`, appelé au chargement de salle (`6324`), remet `CF02 = 04`, `CF03 = 00` |
+| Création `5F1D` | premier des 7 blocs `C800`-`CB00` libre, puis N entrées SAT libres parmi 14 (`D638`…), N = table `6057` + type (type 2 : 4, objet `20` : 2) ; sinon la création est perdue (compteur et index ont déjà avancé) |
+| Initialisation `A2E0` | pose `A4B3` : `0B` si `C427 >= X`, sinon `08` ; `+18 = 0`, `+1B = 0`, `+6 = 1`, `+19 = 1`, `vy = F480` (-0x0B80) ; points de vie 1 (`60E1`) ; deux objets `20` en (X, Y) |
+| État 0 (`A310`) | `+1D += 1` ; pose vers Simon sauf si `+18` ; `vx = 0` ; `vy += 0x80` (plafond `07FF`, `A549`) ; en montée, rien d'autre ; sinon sol (`7B98`) en `(X + 8, Y)` si `+12`, sinon `(X, Y)`, et 10 px à gauche : posé → `Y &= F8` (fraction gardée), `+10 = 30 - 4 × D012`, `+11 = 10`, `+14 = 0`, `+15 = 1`, `+13 = 8`, `vy = 0`, état 1 ; sans sol et `Y >= C0` → suppression (`99F6`) et deux gouttes |
+| État 1 (`A3A0`) | `+15 -= 1` ; à 0 : `+15` = table `A4F3` = `10 20 18 30` à `+1D & 3`, `+12 = (C427 >= X)`, `vx = ±0x0180`, `+13 = 1`. `+13 -= 1` ; à 0 : `+13 = 8`, `+14 += 1`, pose `08`/`09` (`A452`) ou `0B`/`0C` (`A456`) selon `+14 & 1`. Sol absent en `(X + (vx >= 0 ? 8 : 0), Y)` et 10 px à gauche → `vy = 0`, état 0, `+18 = 1` (garde sa pose en tombant) |
+| Gouttes (`9C66`, `9CA3`) | `+E = 0` (ni contact ni fouet), pose `0E`, `+7E = 0` ; `CF30 += 1` : impair → `vx = +0x0100`, `vy = -0x0500` ; pair → `vx = -0x0100`, `vy = -0x0600`. Mise à jour : gravité `0x80` seule, bornes `99E5` (Y `>= E4`, X `>= F1` ou `< 07`) |
+| Contact | classe 1 (`82CB`), `HL = 1805` (`8378`, `847A`) : `|C427 - X| < 10` et `0 <= C425 - 2 - Y + 24 < 50` debout ; dégât table `81CE` = `02`, doublé : **4** |
+| Fouet | classe 1 (`8380`, `84A7`) : X du fouet `C427 ± 20` ; `|X fouet - X| < 17` et `0 <= C425 - B - Y + 24 < 28` (`B = 18` debout, `10` accroupi) ; un coup tue (1 point de vie) |
+
+### Trace (prouvé)
+
+| Point | Valeur | Preuve |
+|---|---|---|
+| Cadence | premier tir 51 images après l'écriture de `D001` (salle 4 : 6115 → 6166 ; salle 5 : 7904 → 7955), puis 16 images, puis 200 images, et de nouveau 16 au 9e tir (index revenu à 0) | `P1`, `P2`, `spawns.py` |
+| X | 21 tirs conformes à la table `9D87` et à la garde (salle 5, Simon en 40 : `30` → `50`) ; un tir perdu en 7598 (un homme-poisson et 4 gouttes occupent 12 des 14 entrées SAT) ; au 2e tir de `P1`, une seule goutte (14 entrées prises) | `spawns.py`, `an.py` |
+| Trajectoire | Y 200 → 189 dès l'image de création (une mise à jour, `vy` -0x0B00) ; sommet Y 73 ; atterrissage à Y 112.80 (fraction gardée) en 6236 ; marche à 1,5 px par mise à jour, première pose `09`/`0C`, changement toutes les 8 mises à jour ; durée avant le choix de sens suivant = `A4F3[+1D & 3]` ; chute au bord du sol (X 191.80 → 190) en 6260 ; plongeon à Y `>= C0` en 6298 avec deux gouttes. Une mise à jour toutes les 2 images | `an.py` |
+| Contact | 8 contacts : `C415` 32 → 28 (-4), dont un sur un homme-poisson en chute | `events.py` |
+| Fouet | mort au premier coup debout (Simon 236 tourné à gauche, objet en (208, 106-112), phase `C422 = 3` à 6235 ; objet `1E` en (208, 96)) ; aucun effet en phase 3 sur un homme-poisson à Y 74 | `P2`, `events.py` |
+| SAT | rang haut N/N+4 en (X - 8, Y - 32), rang bas M/M+4 en (X - 8, Y - 16), affiché avec une mise à jour de retard (5339 images conformes sur 5395) ; poses `08` : `40`+`48`, `09` : `40`+`50`, `0B` : `68`+`70`, `0C` : `68`+`78` ; couleurs `02` (N) et `44` (N+4) ; goutte : motif `90`, couleur `06`, en (X - 8, Y - 15), retard de 2 images (4004 images sur 4094) | `offsets.py` |
+| Gouttes | première mise à jour à la mise à jour suivant la création ; à la mort par le fouet, une goutte bouge sans gravité pendant une image (registre `IX` laissé par `5F1D`) | `an.py` |
+| Couches | 81 instantanés VRAM de la salle 4 (table `F800`) identiques ; `68`-`8C` = miroirs de `40`-`64` ; flux RLE de la ROM au fichier `0x1597D` (316 octets, 320 décodés, SHA-256 `0c3312755315d46c000b1173a433dcf2edc37f08a44ecec1ddfa183f65c0a67f`) ; goutte au fichier `0x1423B` (19 octets, 32 décodés, SHA-256 `dca6312ea94fcba589164ca908de05e6badd3b727ef1409f92de1aa0f6725290`) | `layers.py`, `findrle.py` |
+| Palette | salles 4 et 5 = `vk_palettes[12]` et `[13]` du port (2 = `0222`, 4 = `0CC8`, 6 = `0CEA`) | instantanés |
+| Champs non remis à zéro | `+1D`, `+12`, `+15` gardent la valeur de l'occupant précédent du bloc | `an.py` |
+
+### Port
+
+| Point | Port | Statut |
+|---|---|---|
+| Cadence, X, garde, perte faute de SAT | `type2Channel` (compteur d'images `type2Frames`, prochain tir `type2Next`), `newObject` (7 blocs, 14 entrées SAT) | prouvé |
+| Premier tir | `ENEMY_TYPE2_FIRST` = 51 images après `Enemies_setRoom` | mesuré 2 fois ; **PROVISOIRE** (dépend de la phase de `CF10` à l'entrée) |
+| Saut, sol, marche, chute, plongeon | `fishStep`, tests de sol `7B98` sur la carte de collision du port | prouvé (test natif : atterrissage 121, chute 145, plongeon 183 images après l'entrée, comme en 6236, 6260 et 6298) |
+| Gouttes | `splashSpawn`, mise à jour dans `type2Frame` ; ni contact ni fouet | prouvé ; la goutte sans gravité de la mort au fouet n'est pas reproduite |
+| Contact | `touches` : boîte `8378` de la classe 1, Simon debout ; dégât 4 | prouvé debout ; **PROVISOIRE** accroupi et en saut (`C420` non transmis) |
+| Fouet | `Enemies_whipHitType2` (boîte `84A7`, `C416 = 0`), appelé en phase 2 du fouet du port | prouvé pour la boîte ; correspondance de phase **PROVISOIRE** (comme les types 1 et 5) |
+| Dessin | 4 sprites (bloc `ENEMY5`, 21 couches `40`-`90`, 84 tuiles) en (X - 8, Y - 31) et (X - 8, Y - 15), goutte en (X - 8, Y - 14) | couches et positions prouvées ; retard d'affichage non reproduit |
+| Mémoire | `ENEMY_MAX` passe de 4 à 7 (les 7 blocs de la ROM) ; `EnemyState` passe à 144 octets (énergie à l'offset 126 : scénario `d` mis à jour) | — |
+
+### Écarts et reste ouvert
+
+- **Carte du port** : `D100` est égale à la carte du port à l'arrivée, mais 16 images plus tard un bloc solide de 32 × 32 apparaît (salle 4 : x 32-63, y 80-111 ; salle 5 : x 192-223, y 112-143), absent de `vk_stage2_collision`. En ROM, l'homme-poisson s'y pose (salle 4, X 48 → Y 80 ; salle 5, X 208 → Y 112) ; dans le port, l'homme-poisson de X 48 passe au travers et se pose en Y 112. Les lignes 16 et 24 cachées sont aussi remplies de zéros dans le port. À corriger dans la génération des cartes du stage 2 (hors de ce travail).
+- `+1D`, `+12`, `+15` repris à 0 dans le port (la ROM garde ceux de l'occupant précédent) : le premier choix de sens peut différer pour un bloc réutilisé. **PROVISOIRE**.
+- Objet `1E` (flamme de mort), score, sons 7, 8, 9 : non portés.
+- Type 3 (même routine, deux points de vie, tir `A45A`) : absent des salles relevées, non porté.

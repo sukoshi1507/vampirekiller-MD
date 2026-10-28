@@ -8,6 +8,8 @@
  *   - 9E16 (banque 2) : garde de spawn selon Simon (C427) et D.
  *   - 9D97 (banque 2) : canal type 4 (salle 4). Garde non verifiee, cadence mesuree.
  *   - 5F1D (banque 0) : creation de l'entite dans le premier bloc libre.
+ *   - 9D4B, A2E0, A310 : type 2, l'homme-poisson des salles 4 et 5 du stage 2 ; 9C66/9CA3 :
+ *     ses gouttes (objet 0x20). Voir la section « Type 2 » de enemy-behavior.md.
  *
  * Niveau de confiance :
  *   - Tables kEnemy*                                       verifie (ROM)
@@ -29,6 +31,10 @@
  *   - Type 4 : phase du premier tir (168 images apres l'entree) et absence de garde 9E16 non verifiees.
  *   - Type 5 (salles 2, 3, 7) : non porte (graphisme et declencheur inconnus).
  *   - extraPhase (1 pour A, 15 pour B) : observe, cause inconnue.
+ *   - Type 2 : premier tir 51 images apres l'entree (2 mesures, depend de la phase de CF10) ;
+ *     +1D, +12 et +15 de l'objet repris a 0 (la ROM garde ceux de l'occupant precedent du
+ *     bloc) ; premiere mise a jour des gouttes (la ROM en fait une de plus, voir 9CA3) ;
+ *     contact calcule pour Simon debout ; objet 1E, score et sons 7/8/9 non portes.
  *   - Salle 1 avec Simon haut (E = 60) : condition C425 < 0x88 (module), pas une regle verifiee.
  *   - Type 1 du stage 2 : contact calcule pour Simon debout (C420 = 0) ; accroupi ou en saut,
  *     la ROM reduit la hauteur a 42 (et C425 - 8 en saut), non transmis par EnemyRoomVars.
@@ -65,6 +71,7 @@ const EnemyU8 kEnemyStage2RoomFlags[6] = { 0x08, 0x08, 0x01, 0x08, 0x02, 0x02 };
 const EnemyU8 kEnemySpawnPeriod[8] = { 0x0C, 0x12, 0x0C, 0x0C, 0x0C, 0x12, 0x0C, 0x0C };
 
 #define ENEMY_FLAG_TYPE1 0x01
+#define ENEMY_FLAG_TYPE2 0x02
 #define ENEMY_FLAG_TYPE4 0x08
 
 /* Motifs : [type][pose][entree] ; entrees 0,1 = rang haut ; 2,3 = rang bas. */
@@ -105,6 +112,30 @@ static const EnemyU8 kType5Spawn[8][2] = {
 #define ENEMY_TYPE5_GRAVITY 0x00A0
 #define ENEMY_TYPE5_VY_MAX 0x07FF
 
+/* Type 2 (homme-poisson). 9D4B : X du tir = kType2X[CF03 & 7] (CF03 deja incremente), Y C8 ;
+ * 9D8F : compte a rebours suivant = kType2Period[CF03 & 7] (avant l'increment) - 2 x D012 + 1,
+ * decremente toutes les 8 images (9CC3). A4F3 : mises a jour avant le choix de sens suivant,
+ * index +1D & 3 (+19 = 1 a la creation). */
+static const EnemyU8 kType2X[8] = { 0x60, 0xD0, 0x30, 0x90, 0xA0, 0x40, 0x60, 0xB0 };
+static const EnemyU8 kType2Period[8] = { 0x01, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18 };
+static const EnemyU8 kType2Turn[4] = { 0x10, 0x20, 0x18, 0x30 };
+#define ENEMY_TYPE2_Y 0xC8          /* 9D60 : sous l'eau */
+#define ENEMY_TYPE2_NEAR 0x18       /* 9D6E : X decale de 32 px vers le centre si |C427 - X| < 24 */
+#define ENEMY_TYPE2_JUMP_VY (-0x0B80) /* A2F1 : +7/+8 = F480 */
+#define ENEMY_TYPE2_GRAVITY 0x0080  /* A32D, 9CA3 */
+#define ENEMY_TYPE2_VX 0x0180       /* A3EA/A3F9 */
+#define ENEMY_TYPE2_WATER 0xC0      /* A383 : sans sol sous Y C0, il replonge */
+#define ENEMY_TYPE2_STEP 8          /* A414 : une pose de marche par 8 mises a jour */
+#define ENEMY_FISH_KEEP_POSE 0x01   /* +18 : tombe d'un bord, garde sa pose */
+#define ENEMY_FISH_RIGHT 0x02       /* +12 : tourne vers la droite */
+#define ENEMY_FISH_STEP 0x04        /* +14 & 1 : seconde pose de marche */
+#define ENEMY_FISH_XHALF 0x08       /* +4 = 80 : demi-pixel de X (vx = 1,5 px) */
+#define ENEMY_SPLASH_VX 0x0100      /* 9C90 : goutte impaire (CF30) +1, paire -1 */
+#define ENEMY_SPLASH_VY_ODD (-0x0500)
+#define ENEMY_SPLASH_VY_EVEN (-0x0600)
+#define ENEMY_VY_MAX 0x07FF         /* A549 */
+#define ENEMY_SPLASH_PATTERN 0x90
+
 /* Pose B : a partir de l'age 15, par blocs de 8 images (observe). */
 static EnemyU8 poseOf(EnemyU16 age)
 {
@@ -128,6 +159,7 @@ static void clearEnemy(Enemy *e)
     e->anim = 0;
     e->pose = 0;
     e->romBox = 0;
+    e->timer = 0;
 }
 
 void Enemies_setRoom(EnemyState *s)
@@ -139,11 +171,15 @@ void Enemies_setRoom(EnemyState *s)
     s->type4Side = ENEMY_SIDE_RIGHT;
     s->type5Timer = 0;
     s->type4Shots = 0;
+    s->type2Shots = 0;               /* 9CA9 au chargement de la salle : CF02 = 04, CF03 = 00 */
+    s->type2Frames = 0;
+    s->type2Next = ENEMY_TYPE2_FIRST;
 }
 
 void Enemies_init(EnemyState *s)
 {
     Enemies_setRoom(s);
+    s->splashCount = 0;              /* CF30 : 0 au depart (premiere goutte du stage 2 a droite, trace) */
     s->energy = ENEMY_ENERGY_MAX;
     s->invuln = 0;
     s->invulnPhase = 0;
@@ -392,7 +428,8 @@ static EnemyU8 roomFlags(const EnemyRoomVars *v)
 /* Une image pour un ennemi deja actif. */
 static void advance(Enemy *e)
 {
-    if (e->type == ENEMY_TYPE_5) return;   /* mis a jour par Enemies_frame (carte, Simon) */
+    if (e->type == ENEMY_TYPE_5 || e->type == ENEMY_TYPE_2 || e->type == ENEMY_TYPE_SPLASH)
+        return;                            /* mis a jour par Enemies_frame (carte, Simon) */
     if (e->exiting) {          /* masque a l'image suivant la limite (observe 1126, 1208) */
         e->active = 0;
         return;
@@ -446,6 +483,11 @@ static int touches(const Enemy *e, int simonX, int simonY)
         const int h = simonY + 8 - e->y;
         return d > -17 && d < 17 && h >= 0 && h < 36;
     }
+    if (e->type == ENEMY_TYPE_2) {   /* 8378 : classe 1, HL = 1805, Simon debout (C420 = 0) */
+        const int d = simonX - e->x;
+        const int h = simonY - 2 - e->y + 24;
+        return d > -10 && d < 10 && h >= 0 && h < 50;
+    }
     if (e->romBox) {
         /* Type 1 du stage 2 : 8290, classe 1 (82CB), HL = 1805 (8378 -> 847A), Simon debout
          * (C420 = 0) : |C427 - X| < 10 et 0 <= C425 - 2 - Y + 24 < 50. Trace : contacts a
@@ -470,7 +512,8 @@ int Enemies_whipHit(EnemyState *s, int left, int top, int right, int bottom)
     for (i = 0; i < ENEMY_MAX; i++) {
         Enemy *e = &s->enemy[i];
         int ex, ey, eh;
-        if (!e->active || e->exiting || e->type == ENEMY_TYPE_5 || e->romBox) continue;
+        if (!e->active || e->exiting || e->type == ENEMY_TYPE_5 || e->romBox ||
+            e->type == ENEMY_TYPE_2 || e->type == ENEMY_TYPE_SPLASH) continue;
         ex = e->x + ENEMY_SCREEN_TO_GAME_X;
         ey = e->y;
         eh = (e->type == ENEMY_TYPE_4) ? ENEMY_TYPE4_ROW_H : ENEMY_TYPE1_ROW_H;
@@ -524,6 +567,200 @@ int Enemies_whipHitType1Rom(EnemyState *s, int simonX, int simonY, int facingLef
     return killed;
 }
 
+int Enemies_whipHitType2(EnemyState *s, int simonX, int simonY, int facingLeft, int crouched)
+{
+    /* 84D9 : X du fouet sur 8 bits ; une retenue (bord d'ecran) annule le test (84B6). */
+    const int whipX = facingLeft ? simonX - 20 : simonX + 20;
+    const int b = crouched ? 10 : 18;
+    EnemyU8 i;
+    int killed = 0;
+    if (whipX < 0 || whipX > 255) return 0;
+    for (i = 0; i < ENEMY_MAX; i++) {
+        Enemy *e = &s->enemy[i];
+        const int d = whipX - e->x;
+        const int h = simonY - b - e->y + 24;
+        if (!e->active || e->type != ENEMY_TYPE_2) continue;
+        if (d <= -17 || d >= 17 || h < 0 || h >= 28) continue;
+        e->active = 0;         /* points de vie 1 : mort au premier coup (objet 1E non porte) */
+        killed++;
+    }
+    return killed;
+}
+
+/* Entrees SAT d'un objet (table 6057 + type) : 4 pour les types 1, 2 et 5, 2 pour le type 4 et la goutte. */
+static EnemyU8 satCount(EnemyU8 type)
+{
+    return (EnemyU8)((type == ENEMY_TYPE_4 || type == ENEMY_TYPE_SPLASH) ? 2 : 4);
+}
+
+/* 5F1D : premier bloc libre, puis assez d'entrees SAT libres parmi les 14 ; sinon rien. */
+static Enemy *newObject(EnemyState *s, EnemyU8 type)
+{
+    EnemyU8 i, used = 0;
+    Enemy *slot = 0;
+    for (i = 0; i < ENEMY_MAX; i++) {
+        if (s->enemy[i].active) used = (EnemyU8)(used + satCount(s->enemy[i].type));
+        else if (!slot) slot = &s->enemy[i];
+    }
+    if (!slot || used + satCount(type) > ENEMY_SAT_SLOTS) return 0;
+    clearEnemy(slot);
+    slot->active = 1;
+    slot->type = type;
+    return slot;
+}
+
+/* Goutte (9C66) : CF30 + 1 ; impaire, vers la droite a -5 px, paire, vers la gauche a -6 px.
+ * age 0 : pas de mise a jour dans l'image de sa creation. */
+static void splashSpawn(EnemyState *s, EnemyU8 x, EnemyU8 y)
+{
+    Enemy *e = newObject(s, ENEMY_TYPE_SPLASH);
+    if (!e) return;
+    e->x = x;
+    e->y = y;
+    s->splashCount++;
+    e->dx = (EnemyS8)((s->splashCount & 1) ? 1 : -1);
+    e->vy = (s->splashCount & 1) ? ENEMY_SPLASH_VY_ODD : ENEMY_SPLASH_VY_EVEN;
+}
+
+/* 99B9 puis 99E5 : Y += vy, X += vx en 8.8 (X n'a que des demi-pixels), suppression si
+ * Y >= E4, X >= F1 ou X < 07. */
+static void moveObject(Enemy *e, int vx)
+{
+    const int y = (int)((e->y << 8) | e->sub) + e->vy;
+    const int x = (int)e->x * 256 + ((e->extraPhase & ENEMY_FISH_XHALF) ? 0x80 : 0) + vx;
+    e->y = (EnemyU8)(y >> 8);
+    e->sub = (EnemyU8)y;
+    e->x = (EnemyS16)(x >> 8);
+    if (x & 0x80) e->extraPhase |= ENEMY_FISH_XHALF;
+    else e->extraPhase &= (EnemyU8)~ENEMY_FISH_XHALF;
+    if (e->y >= 0xE4 || e->x >= 0xF1 || e->x < 0x07) e->active = 0;
+}
+
+/* A549 : vy += 0x80, plafonnee a 0x07FF quand l'octet fort atteint 8. */
+static void fallSpeed(Enemy *e)
+{
+    e->vy = (EnemyS16)(e->vy + ENEMY_TYPE2_GRAVITY);
+    if (e->vy > ENEMY_VY_MAX) e->vy = ENEMY_VY_MAX;
+}
+
+/* Type 2 : sol au point (X + dx, Y) ou (X + dx - 10, Y) (7B98). Sans carte, sol partout. */
+static int fishGround(const Enemy *e, const EnemyRoomVars *v, int dx)
+{
+    if (!v->map) return 1;
+    return vk_tile_solid(vk_sample_tile(v->map, (VKByte)(e->x + dx), e->y), v->stage, 0) ||
+           vk_tile_solid(vk_sample_tile(v->map, (VKByte)(e->x + dx - 10), e->y), v->stage, 0);
+}
+
+/* A4B3 : pose tournee vers Simon, 0B (droite) si C427 >= X, sinon 08. */
+static void fishFace(Enemy *e, EnemyU8 simonX)
+{
+    e->pose = (EnemyU8)(simonX >= e->x ? 0x0B : 0x08);
+}
+
+/* Type 2 : une mise a jour (une image sur deux), routine A310 puis 99B9 et 99E5. */
+static void fishStep(EnemyState *s, Enemy *e, const EnemyRoomVars *v)
+{
+    e->age++;                                  /* +1D */
+    if (e->state == 0) {                       /* A31E : saut hors de l'eau ou chute */
+        if (!(e->extraPhase & ENEMY_FISH_KEEP_POSE)) fishFace(e, v->simonX);
+        e->dx = 0;
+        fallSpeed(e);
+        if (e->vy >= 0) {                      /* A333 : pas de test pendant la montee */
+            if (fishGround(e, v, (e->extraPhase & ENEMY_FISH_RIGHT) ? 8 : 0)) {
+                e->y &= 0xF8;                  /* A352 : la fraction de Y est gardee */
+                e->timer = 1;
+                e->anim = ENEMY_TYPE2_STEP;
+                e->extraPhase &= (EnemyU8)~ENEMY_FISH_STEP;
+                e->state = 1;
+                e->vy = 0;
+            } else if (e->y >= ENEMY_TYPE2_WATER) {
+                const EnemyU8 x = (EnemyU8)e->x, y = e->y;
+                e->active = 0;                 /* A386 : replonge, deux gouttes */
+                splashSpawn(s, x, y);
+                splashSpawn(s, x, y);
+                return;
+            }
+        }
+    } else {                                   /* A3DE : marche */
+        if (--e->timer == 0) {                 /* A4CF : sens vers Simon */
+            e->timer = kType2Turn[e->age & 3];
+            if (v->simonX >= e->x) {
+                e->extraPhase |= ENEMY_FISH_RIGHT;
+                e->dx = 1;
+            } else {
+                e->extraPhase &= (EnemyU8)~ENEMY_FISH_RIGHT;
+                e->dx = -1;
+            }
+            e->anim = 1;
+        }
+        if (--e->anim == 0) {                  /* A414 : pose suivante (tables A452/A456) */
+            e->anim = ENEMY_TYPE2_STEP;
+            e->extraPhase ^= ENEMY_FISH_STEP;
+            e->pose = (EnemyU8)(((e->extraPhase & ENEMY_FISH_RIGHT) ? 0x0B : 0x08) +
+                                ((e->extraPhase & ENEMY_FISH_STEP) ? 1 : 0));
+        }
+        if (!fishGround(e, v, e->dx > 0 ? 8 : 0)) {   /* A43E : bord du sol, chute */
+            e->vy = 0;
+            e->state = 0;
+            e->extraPhase |= ENEMY_FISH_KEEP_POSE;
+        }
+    }
+    moveObject(e, ENEMY_TYPE2_VX * e->dx);
+}
+
+/* Type 2 : creation (5F1D, A2E0) en Y C8, pose vers Simon, vy -0x0B80, deux gouttes. */
+static void fishSpawn(EnemyState *s, EnemyU8 x, const EnemyRoomVars *v)
+{
+    Enemy *e = newObject(s, ENEMY_TYPE_2);
+    if (!e) return;
+    e->x = x;
+    e->y = ENEMY_TYPE2_Y;
+    fishFace(e, v->simonX);
+    e->vy = ENEMY_TYPE2_JUMP_VY;
+    splashSpawn(s, x, ENEMY_TYPE2_Y);
+    splashSpawn(s, x, ENEMY_TYPE2_Y);
+}
+
+/* Canal 9D4B (bit 1 du drapeau) : tir a type2Next, X de la table 9D87 avec la garde 9D6E.
+ * Le compte a rebours suit 9CC3 (CF02, CF03) ; un tir sans place est perdu, l'index avance. */
+static void type2Channel(EnemyState *s, const EnemyRoomVars *v)
+{
+    EnemyU8 period, c, reload, x;
+    if (++s->type2Frames != s->type2Next) return;
+    period = kType2Period[s->type2Shots & 7];
+    s->type2Shots++;
+    c = (EnemyU8)(v->difficulty << 1);
+    reload = (EnemyU8)((period >= c ? period - c : 0) + 1);
+    s->type2Next = (EnemyU16)(s->type2Next + 8 * reload);
+    x = kType2X[s->type2Shots & 7];
+    if ((EnemyU8)(v->simonX - x + ENEMY_TYPE2_NEAR) < 2 * ENEMY_TYPE2_NEAR)
+        x = (EnemyU8)(x < 0x80 ? x + 0x20 : x - 0x20);
+    fishSpawn(s, x, v);
+}
+
+/* Types 2 et gouttes : tir puis mises a jour, une image sur deux (valeurs impaires de
+ * type2Frames, celles des tirs : le type 2 bouge des l'image de sa creation, la goutte a
+ * partir de la mise a jour suivante). */
+static void type2Frame(EnemyState *s, const EnemyRoomVars *v)
+{
+    EnemyU8 i;
+    if (!(roomFlags(v) & ENEMY_FLAG_TYPE2)) return;
+    type2Channel(s, v);
+    if (s->type2Frames & 1) {
+        for (i = 0; i < ENEMY_MAX; i++) {
+            Enemy *e = &s->enemy[i];
+            if (!e->active) continue;
+            if (e->type == ENEMY_TYPE_2) fishStep(s, e, v);
+            else if (e->type == ENEMY_TYPE_SPLASH && e->age) {   /* 9CA3 : gravite seule */
+                fallSpeed(e);
+                moveObject(e, ENEMY_SPLASH_VX * e->dx);
+            }
+        }
+    }
+    for (i = 0; i < ENEMY_MAX; i++)
+        if (s->enemy[i].active && s->enemy[i].type == ENEMY_TYPE_SPLASH) s->enemy[i].age = 1;
+}
+
 int Enemies_frame(EnemyState *s, EnemySpawnTimer *t, const EnemyRoomVars *v, int *pushX)
 {
     EnemyRoomVars w = *v;
@@ -542,7 +779,8 @@ int Enemies_frame(EnemyState *s, EnemySpawnTimer *t, const EnemyRoomVars *v, int
         for (i = 0; i < ENEMY_MAX; i++) {
             Enemy *e = &s->enemy[i];
             /* Le type 4 vole : sa hauteur suit kType4Y, sans chute. */
-            if (e->active && !e->exiting && e->type != ENEMY_TYPE_4 && e->type != ENEMY_TYPE_5)
+            if (e->active && !e->exiting && e->type != ENEMY_TYPE_4 && e->type != ENEMY_TYPE_5 &&
+                e->type != ENEMY_TYPE_2 && e->type != ENEMY_TYPE_SPLASH)
                 fall(e, v->map, v->stage);
         }
     }
@@ -583,12 +821,17 @@ int Enemies_frame(EnemyState *s, EnemySpawnTimer *t, const EnemyRoomVars *v, int
             pantherSpawn(s, kType5Spawn[v->room][0], kType5Spawn[v->room][1], v->simonX);
     }
 
+    /* Type 2 (stage 2, salles 4 et 5) et ses gouttes. */
+    type2Frame(s, v);
+
     /* Contact : desactive pendant le recul et l'invulnerabilite (C420, C42D). */
     if (s->recoil == 0 && s->invuln == 0) {
         for (i = 0; i < ENEMY_MAX; i++) {
             const Enemy *e = &s->enemy[i];
             if (!e->active || e->exiting) continue;
-            const EnemyU8 damage = e->type == ENEMY_TYPE_5 ? ENEMY_TYPE5_DAMAGE : ENEMY_CONTACT_DAMAGE;
+            if (e->type == ENEMY_TYPE_SPLASH) continue;   /* goutte : +E = 0, ni contact ni fouet */
+            const EnemyU8 damage = e->type == ENEMY_TYPE_5 ? ENEMY_TYPE5_DAMAGE :
+                                   e->type == ENEMY_TYPE_2 ? ENEMY_TYPE2_DAMAGE : ENEMY_CONTACT_DAMAGE;
             if (!touches(e, v->simonX, v->simonY)) continue;
             s->energy = (s->energy > damage) ? (EnemyU8)(s->energy - damage) : 0;
             s->invuln = ENEMY_INVULN_START;
@@ -636,6 +879,32 @@ int Enemies_sprites(const EnemyState *s, EnemyU8 index, EnemySprite out[ENEMY_SP
             out[k].bank = 1;
         }
         return ENEMY_SPRITES;
+    }
+
+    if (e->type == ENEMY_TYPE_2) {
+        /* Une colonne de deux cellules 16x16 a deux couches (N, N+4), lignes Y-31 a Y, X-8 :
+         * haut 40 (gauche) ou 68 (droite, miroir) ; bas 48/50 (poses 08/09) ou 70/78 (0B/0C).
+         * Mesure sur 5395 images ; la SAT MSX montre l'objet d'une mise a jour plus tot
+         * (retard non reproduit, comme pour le type 5). */
+        const int right = e->pose >= 0x0B;
+        const EnemyU8 top = (EnemyU8)(right ? 0x68 : 0x40);
+        const EnemyU8 bottom = (EnemyU8)((right ? 0x70 : 0x48) + ((e->pose == 0x09 || e->pose == 0x0C) ? 8 : 0));
+        for (k = 0; k < ENEMY_SPRITES; k++) {
+            out[k].y = (EnemyU8)(e->y - (k < 2 ? 31 : 15));
+            out[k].x = (EnemyS16)(e->x - 8);
+            out[k].pattern = (EnemyU8)((k < 2 ? top : bottom) + (k & 1 ? 4 : 0));
+            out[k].bank = 1;
+        }
+        return ENEMY_SPRITES;
+    }
+
+    if (e->type == ENEMY_TYPE_SPLASH) {
+        /* Goutte : motif 90 seul (couleur 6), SAT (X-8, Y-15), lignes Y-14 a Y+1 (4004 images). */
+        out[0].y = (EnemyU8)(e->y - 14);
+        out[0].x = (EnemyS16)(e->x - 8);
+        out[0].pattern = ENEMY_SPLASH_PATTERN;
+        out[0].bank = 1;
+        return 1;
     }
 
     if (e->type == ENEMY_TYPE_4) {

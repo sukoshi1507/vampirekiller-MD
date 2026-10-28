@@ -19,7 +19,7 @@ ${CC:-cc} -std=c99 -Wall -Wextra -Werror -Isgdk/src \
     tests/test_room_manager.c sgdk/src/room_manager.c sgdk/src/generated/stage2_maps.c -o "$BIN"
 "$BIN"
 ${CC:-cc} -std=c99 -Wall -Wextra -Werror -Isgdk/src tests/test_enemies.c sgdk/src/enemies.c sgdk/src/player.c \
-    sgdk/src/generated/player_assets.c sgdk/src/generated/stage1_collision.c -o "$BIN"
+    sgdk/src/generated/player_assets.c sgdk/src/generated/stage1_collision.c sgdk/src/generated/stage2_maps.c -o "$BIN"
 "$BIN"
 ${CC:-cc} -std=c99 -Wall -Wextra -Werror -Isgdk/src tests/test_health.c sgdk/src/health.c sgdk/src/enemies.c \
     sgdk/src/gameplay.c sgdk/src/player.c sgdk/src/room_manager.c sgdk/src/generated/stage2_maps.c \

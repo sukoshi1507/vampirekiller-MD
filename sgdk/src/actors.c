@@ -10,6 +10,8 @@ _Static_assert(ENEMY4_TILE_INDEX + VK_ENEMY4_TILE_COUNT <= HUD_TILE_INDEX,
                "sprite tiles 400.. must end before the HUD tiles");
 _Static_assert(ENEMY5_TILE_INDEX + VK_ENEMY5_TILE_COUNT <= HUD_TILE_INDEX,
                "type 5 tiles must end before the HUD tiles");
+_Static_assert(ENEMY5_TILE_INDEX + VK_ENEMY2_TILE_COUNT <= HUD_TILE_INDEX,
+               "type 2 tiles (loaded in the type 5 block) must end before the HUD tiles");
 
 /* Simon, whip and hall enemies on screen. Their gameplay lives in player.c,
  * whip.c and enemies.c; this module only feeds them and draws the result. */
@@ -79,7 +81,11 @@ void vk_step_enemies(void)
         {
             VDP_loadTileData((const u32 *)vk_enemy_tiles, ENEMY_TILE_INDEX, VK_ENEMY_TILE_COUNT, CPU);
             VDP_loadTileData((const u32 *)vk_enemy4_tiles, ENEMY4_TILE_INDEX, VK_ENEMY4_TILE_COUNT, CPU);
-            VDP_loadTileData((const u32 *)vk_enemy5_tiles, ENEMY5_TILE_INDEX, VK_ENEMY5_TILE_COUNT, CPU);
+            /* Stage 2 rooms 4 and 5: the fishman and its splash take the type 5 block. */
+            if (vk_game.stage == 2 && (vk_game.room == 4 || vk_game.room == 5))
+                VDP_loadTileData((const u32 *)vk_enemy2_tiles, ENEMY5_TILE_INDEX, VK_ENEMY2_TILE_COUNT, CPU);
+            else
+                VDP_loadTileData((const u32 *)vk_enemy5_tiles, ENEMY5_TILE_INDEX, VK_ENEMY5_TILE_COUNT, CPU);
         }
     }
     if (!key) return;
@@ -105,6 +111,9 @@ void vk_step_enemies(void)
             /* Stage 2 type 1: same phase, ROM box of class 1 (enemies.h). */
             (void)Enemies_whipHitType1Rom(&vk_enemies, vk_whip.x, vk_whip.y,
                                           vk_whip.facing, vk_whip.crouched);
+            /* Stage 2 type 2 (fishman): same phase, ROM box of class 1. */
+            (void)Enemies_whipHitType2(&vk_enemies, vk_whip.x, vk_whip.y,
+                                       vk_whip.facing, vk_whip.crouched);
         }
     }
     if (push)

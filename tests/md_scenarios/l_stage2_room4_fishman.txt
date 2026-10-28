@@ -1,0 +1,47 @@
+# (l) Type 2 des salles 4 et 5 du stage 2 : l'homme-poisson (research/enemy-behavior.md,
+# section « Type 2 »). enemies.enemy[i] : type 4 = homme-poisson, 5 = goutte ; x, y = objet
+# MSX (pieds) ; state 0 = saut ou chute, 1 = marche. Trace openMSX P1 : Simon en (72, 112),
+# tirs 51 et 67 images apres l'entree, X D0 puis 30.
+include boot_to_courtyard.inc
+until front_mode == MODES['INTERIOR'] max 3000 RIGHT
+wait 20                                   # fin du chargement de la scene 6
+# Stage 2, salle 3 par la memoire, puis A+DROITE (debug) vers la salle 4.
+poke vk_game+20 2
+poke vk_game+18 3
+hold A 3
+hold A+RIGHT 3
+expect game.stage == 2 and game.room == 4 # stage 2, salle 4
+# Simon sur le sol gauche (72, 112), tourne a gauche, comme dans la trace P1.
+poke vk_game+0 72
+poke vk_game+1 112
+poke vk_game+2 1
+wait 2
+expect game.player.x == 72 and game.player.y == 112 # pose sur le sol gauche (pas de chute dans l'eau)
+until enemies.alive > 0 max 80
+expect enemies.enemy[0].type == 4 and enemies.enemy[0].x == 0xD0 and enemies.enemy[0].y == 189 # premier tir en X D0, deja une mise a jour
+expect enemies.enemy[1].type == 5 and enemies.enemy[2].type == 5 # deux gouttes
+expect enemies.type2Shots == 1
+set t0 frame
+until enemies.enemy[3].type == 4 and enemies.enemy[3].active max 20
+expect frame - t0 == 16 # second tir 16 images plus tard
+expect enemies.enemy[3].x == 0x30 # X 30
+expect enemies.splashCount == 3 # une seule goutte : 14 entrees SAT (4 + 2 + 2 + 4 + 2), comme en ROM (bloc 4 seul)
+wait 10
+shot l-saut
+# Premier homme-poisson : atterrit sur le sol droit en Y 112 (fraction 80 gardee).
+until enemies.enemy[0].state == 1 max 80
+expect enemies.enemy[0].type == 4 and enemies.enemy[0].y == 112 and enemies.enemy[0].sub == 0x80 and enemies.enemy[0].x == 208
+# Le second se pose en (48, 112) (la ROM le pose en Y 80 sur un bloc absent de la carte du
+# port, voir enemy-behavior.md) ; fouet a gauche : X du fouet 72 - 20 = 52, |52 - X| < 17.
+until enemies.enemy[3].state == 1 max 60
+expect enemies.enemy[3].x == 48 and enemies.enemy[3].y == 112
+tap B 1
+until not (enemies.enemy[3].active and enemies.enemy[3].type == 4) max 30
+expect enemies.energy == 32 # tue avant le contact
+wait 6
+shot l-marche
+# Le premier marche vers Simon (pose 08/09), tombe au bord du sol droit et replonge.
+until enemies.enemy[0].state == 0 max 80
+expect enemies.enemy[0].x == 190 # bord du sol droit (X 191.80 -> 190)
+until not (enemies.enemy[0].active and enemies.enemy[0].type == 4) max 60
+expect enemies.splashCount == 5 # deux gouttes au plongeon

@@ -3,7 +3,7 @@
 Outil : `tools/md_harness.py`. Il charge `sgdk/out/rom.bin` dans le core libretro Genesis Plus GX (`/usr/lib/libretro/genesis_plus_gx_libretro.so`, via ctypes, sans fenêtre ni son), rejoue un script d'entrées, lit la RAM 68000 par les symboles et écrit des captures PNG. Le mode d'emploi complet est dans la docstring du script.
 
 - Symboles : `m68k-elf-nm -S` sur `sgdk/out/release/rom.out` (adresse et taille), avec repli sur `sgdk/out/release/symbol.txt`. `--symbols-only` les liste.
-- Structures décodées : `game` (VKGame, avec `stage`, `entrance`, `entrance_step`, `entrance_timer`), `player`, `whip`, `enemy_state` (4 ennemis, énergie, invulnérabilité, recul), `test_target`, `courtyard_flame[2]` et `front_mode`. La taille de chaque symbole est vérifiée : si une structure change dans `sgdk/src`, l'outil s'arrête avec un message explicite au lieu de lire de mauvaises valeurs.
+- Structures décodées : `game` (VKGame, avec `stage`, `entrance`, `entrance_step`, `entrance_timer`), `player`, `whip`, `enemy_state` (7 ennemis de 18 octets, énergie à l'offset 126, invulnérabilité, recul, compteurs du type 2 ; 144 octets), `test_target`, `courtyard_flame[2]` et `front_mode`. La taille de chaque symbole est vérifiée : si une structure change dans `sgdk/src`, l'outil s'arrête avec un message explicite au lieu de lire de mauvaises valeurs.
 - RAM GPGX : les octets sont permutés dans chaque mot (l'octet à l'adresse `a` se lit à l'index `a ^ 1`).
 - Boutons (libretro → MD) : B=0 → B, Y=1 → A, START=3, haut, bas, gauche et droite = 4 à 7, A=8 → C.
 - Sorties dans `--out` : `dumps.json` et `dumps.csv` (une ligne par `dump`), `trace.csv` (avec `--trace N`), les PNG et `result.json` (les assertions).

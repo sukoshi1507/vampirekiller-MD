@@ -15,6 +15,7 @@
 #include <string.h>
 #include <stdint.h>
 #include "enemies.h"
+#include "generated/stage2_maps.h"
 
 static int failures = 0;
 
@@ -806,6 +807,179 @@ static void test_stage2_type1_contact_whip(void)
     CHECK(s.enemy[0].active && s.enemy[0].y == 0x81, "stage 2 : pose au sol, Y 81 (obtenu %02X)", s.enemy[0].y);
 }
 
+/* Type 2 (homme-poisson), stage 2 salle 4, carte du port (vk_stage2_collision[4]).
+ * Image n du port = image n apres l'ecriture de D001 (trace scratchpad/fish/out/P1, D001
+ * en 6115) ; Simon en (72, 112) sur le sol gauche, comme dans la trace. */
+static void vars_stage2_room4(EnemyRoomVars *v)
+{
+    memset(v, 0, sizeof *v);
+    v->stage = 2;
+    v->room = 4;
+    v->simonX = 72;
+    v->simonY = 112;
+    v->map = vk_stage2_collision[4];
+}
+
+static int count_type(const EnemyState *s, EnemyU8 type)
+{
+    int i, n = 0;
+    for (i = 0; i < ENEMY_MAX; i++) n += s->enemy[i].active && s->enemy[i].type == type;
+    return n;
+}
+
+static int find_type2(const EnemyState *s, int x)
+{
+    int i;
+    for (i = 0; i < ENEMY_MAX; i++)
+        if (s->enemy[i].active && s->enemy[i].type == ENEMY_TYPE_2 && (x < 0 || s->enemy[i].x == x)) return i;
+    return -1;
+}
+
+static void test_type2_spawn(void)
+{
+    EnemyState s;
+    EnemySpawnTimer t;
+    EnemyRoomVars v;
+    int n, push, k, created[4], c = 0;
+    vars_stage2_room4(&v);
+    Enemies_init(&s);
+    Enemies_spawnTimerInit(&t);
+    CHECK(kEnemyStage2RoomFlags[4] == 0x02 && kEnemyStage2RoomFlags[5] == 0x02, "drapeaux 85DB-85DC : bit 1");
+    /* Tirs mesures : +51 (X D0), +67 (X 30), +267 (X 90), +467 (X A0) ; deux gouttes chacun. */
+    for (n = 1; n <= 467; n++) {
+        int before = count_type(&s, ENEMY_TYPE_2);
+        (void)Enemies_frame(&s, &t, &v, &push);
+        if (count_type(&s, ENEMY_TYPE_2) > before && c < 4) created[c++] = n;
+        if (n == 51) {
+            k = find_type2(&s, 0xD0);
+            CHECK(k == 0, "premier tir en X D0, bloc 0");
+            CHECK(k >= 0 && s.enemy[k].y == 189 && s.enemy[k].vy == -0x0B00,
+                  "premiere mise a jour dans l'image du tir : Y 189, vy -0B00");
+            CHECK(k >= 0 && s.enemy[k].pose == 0x08, "pose 08 : Simon a gauche");
+            CHECK(count_type(&s, ENEMY_TYPE_SPLASH) == 2, "deux gouttes a la creation");
+            CHECK(s.enemy[1].type == ENEMY_TYPE_SPLASH && s.enemy[1].dx == 1 && s.enemy[1].vy == -0x0500 &&
+                  s.enemy[2].dx == -1 && s.enemy[2].vy == -0x0600, "gouttes : +1/-5 puis -1/-6 (CF30)");
+            CHECK(s.enemy[1].y == 0xC8 && s.enemy[1].x == 0xD0, "gouttes en (D0, C8), immobiles dans l'image du tir");
+        }
+        if (n == 67) CHECK(find_type2(&s, 0x30) >= 0, "second tir 16 images plus tard en X 30");
+    }
+    CHECK(c == 4 && created[0] == 51 && created[1] == 67 && created[2] == 267 && created[3] == 467,
+          "tirs aux images 51, 67, 267, 467 (obtenu %d %d %d %d)", created[0], created[1], created[2], created[3]);
+    CHECK(s.type2Shots == 4, "CF03 = 4");
+    /* Garde 9D6E : Simon a moins de 24 px du X de la table, X decale de 32 px vers le centre
+     * (trace salle 5, Simon en 40 : X 30 -> 50, X 40 -> 60). */
+    vars_stage2_room4(&v);
+    v.room = 5;
+    v.simonX = 40;
+    Enemies_init(&s);
+    for (n = 1; n <= 67; n++) (void)Enemies_frame(&s, &t, &v, &push);
+    CHECK(find_type2(&s, 0x50) >= 0, "garde : X 30 decale en 50");
+}
+
+static void test_type2_trajectory(void)
+{
+    EnemyState s;
+    EnemySpawnTimer t;
+    EnemyRoomVars v;
+    Enemy *e = &s.enemy[0];
+    int n, push, minY = 255, landed = 0, fell = 0, gone = 0;
+    vars_stage2_room4(&v);
+    Enemies_init(&s);
+    Enemies_spawnTimerInit(&t);
+    for (n = 1; n <= 200; n++) {
+        (void)Enemies_frame(&s, &t, &v, &push);
+        if (n < 51 || n > 183) continue;
+        if (e->active && e->type == ENEMY_TYPE_2 && e->y < minY) minY = e->y;
+        if (!landed && e->type == ENEMY_TYPE_2 && e->state == 1) landed = n;
+        if (landed && !fell && e->type == ENEMY_TYPE_2 && e->state == 0) fell = n;
+        if (!gone && !(e->active && e->type == ENEMY_TYPE_2)) gone = n;
+        if (n == 121) CHECK(e->state == 1 && e->y == 112 && e->sub == 0x80 && e->x == 208,
+                            "pose sur le sol droit en 6236 : (208, 112.80) (obtenu %d, %d.%02X)", e->x, e->y, e->sub);
+        if (n == 123) CHECK(e->dx == -1 && e->pose == 0x09 && e->timer == 0x20 && e->x == 206,
+                            "premiere marche : vers Simon, pose 09, +15 = 20 (+1D = 25)");
+        if (n == 139) CHECK(e->pose == 0x08, "pose 08 apres 8 mises a jour");
+    }
+    CHECK(minY == 73, "sommet du saut Y 73 (obtenu %d)", minY);
+    CHECK(landed == 121, "atterrissage a l'image 121 (obtenu %d)", landed);
+    CHECK(fell == 145, "chute au bord du sol (X 191 -> 190) a l'image 145 (obtenu %d)", fell);
+    CHECK(gone == 183, "replonge sous Y C0 a l'image 183 (obtenu %d)", gone);
+    CHECK(count_type(&s, ENEMY_TYPE_SPLASH) >= 2, "deux gouttes au plongeon");
+}
+
+static void test_type2_contact_whip(void)
+{
+    EnemyState s;
+    EnemySpawnTimer t;
+    EnemyRoomVars v;
+    EnemySprite sp[ENEMY_SPRITES];
+    int push, k;
+    /* Contact (6273) : homme-poisson en chute en (67, 85), Simon (72, 112) : -4. */
+    vars_stage2_room4(&v);
+    v.room = 0;                       /* pas de tir dans ce test */
+    Enemies_init(&s);
+    Enemies_spawnTimerInit(&t);
+    k = 0;
+    s.enemy[k].active = 1; s.enemy[k].type = ENEMY_TYPE_2; s.enemy[k].x = 67; s.enemy[k].y = 85;
+    s.enemy[k].pose = 0x0B;
+    (void)Enemies_frame(&s, &t, &v, &push);
+    CHECK(s.energy == ENEMY_ENERGY_MAX - 4, "contact : -4 (obtenu %d)", s.energy);
+    /* Boite 8378 : |C427 - X| < 10 et Y de C425 - 27 a C425 + 22. */
+    Enemies_init(&s);
+    s.enemy[0].active = 1; s.enemy[0].type = ENEMY_TYPE_2; s.enemy[0].x = 82; s.enemy[0].y = 112 + 22;
+    (void)Enemies_frame(&s, &t, &v, &push);
+    CHECK(s.energy == ENEMY_ENERGY_MAX, "pas de contact a |d| = 10");
+    s.enemy[0].x = 81;
+    (void)Enemies_frame(&s, &t, &v, &push);
+    CHECK(s.energy == ENEMY_ENERGY_MAX - 4, "contact a |d| = 9, Y = C425 + 22");
+    /* Fouet (P2, 6235) : Simon (236, 112) tourne a gauche, X du fouet 216 ; homme-poisson en
+     * (208, 112) tue, en (208, 74) (phase 3 de 6207) epargne. */
+    Enemies_init(&s);
+    s.enemy[0].active = 1; s.enemy[0].type = ENEMY_TYPE_2; s.enemy[0].x = 208; s.enemy[0].y = 74;
+    s.enemy[1].active = 1; s.enemy[1].type = ENEMY_TYPE_SPLASH; s.enemy[1].x = 216; s.enemy[1].y = 100;
+    CHECK(Enemies_whipHitType2(&s, 236, 112, 1, 0) == 0, "fouet : Y 74 hors de la boite");
+    s.enemy[0].y = 112;
+    CHECK(Enemies_whipHitType2(&s, 236, 112, 1, 0) == 1 && !s.enemy[0].active, "fouet : mort au premier coup");
+    CHECK(s.enemy[1].active, "goutte non touchable");
+    CHECK(Enemies_whipHit(&s, 0, 0, 255, 255) == 0, "Enemies_whipHit ignore la goutte");
+    /* Bornes : |X fouet - X| < 17 ; debout Y de C425 - 21 a C425 + 6. */
+    Enemies_init(&s);
+    s.enemy[0].active = 1; s.enemy[0].type = ENEMY_TYPE_2; s.enemy[0].x = 216 - 17; s.enemy[0].y = 112;
+    s.enemy[1].active = 1; s.enemy[1].type = ENEMY_TYPE_2; s.enemy[1].x = 216 + 16; s.enemy[1].y = 112 + 6;
+    s.enemy[2].active = 1; s.enemy[2].type = ENEMY_TYPE_2; s.enemy[2].x = 216; s.enemy[2].y = 112 + 7;
+    CHECK(Enemies_whipHitType2(&s, 236, 112, 1, 0) == 1 && s.enemy[0].active && !s.enemy[1].active && s.enemy[2].active,
+          "fouet : bornes X 17 et Y + 6");
+    /* Dessin : pose 09 = 40/44 en Y-31, 50/54 en Y-15, X-8 ; pose 0C = 68/6C, 78/7C. */
+    Enemies_init(&s);
+    s.enemy[0].active = 1; s.enemy[0].type = ENEMY_TYPE_2; s.enemy[0].x = 100; s.enemy[0].y = 112; s.enemy[0].pose = 0x09;
+    CHECK(Enemies_sprites(&s, 0, sp) == 4 && sp[0].pattern == 0x40 && sp[1].pattern == 0x44 && sp[2].pattern == 0x50 &&
+          sp[3].pattern == 0x54 && sp[0].y == 81 && sp[2].y == 97 && sp[0].x == 92 && sp[0].bank == 1, "dessin pose 09");
+    s.enemy[0].pose = 0x0C;
+    CHECK(Enemies_sprites(&s, 0, sp) == 4 && sp[0].pattern == 0x68 && sp[2].pattern == 0x78, "dessin pose 0C");
+    s.enemy[1].active = 1; s.enemy[1].type = ENEMY_TYPE_SPLASH; s.enemy[1].x = 209; s.enemy[1].y = 195;
+    CHECK(Enemies_sprites(&s, 1, sp) == 1 && sp[0].pattern == 0x90 && sp[0].x == 201 && sp[0].y == 181, "dessin goutte");
+}
+
+static void test_type2_sat_budget(void)
+{
+    /* P2 7598 : un homme-poisson (4 entrees SAT) et 4 gouttes (2 chacune) : 12 sur 14, le tir
+     * a besoin de 4 entrees, il est perdu ; l'index CF03 avance quand meme. */
+    EnemyState s;
+    EnemySpawnTimer t;
+    EnemyRoomVars v;
+    int push, i;
+    vars_stage2_room4(&v);
+    Enemies_init(&s);
+    Enemies_spawnTimerInit(&t);
+    s.enemy[0].active = 1; s.enemy[0].type = ENEMY_TYPE_2; s.enemy[0].x = 208; s.enemy[0].y = 133; s.enemy[0].vy = -0x0800;
+    for (i = 1; i <= 4; i++) {
+        s.enemy[i].active = 1; s.enemy[i].type = ENEMY_TYPE_SPLASH; s.enemy[i].x = 160; s.enemy[i].y = 180;
+    }
+    s.type2Frames = 50;
+    (void)Enemies_frame(&s, &t, &v, &push);
+    CHECK(s.type2Shots == 1 && count_type(&s, ENEMY_TYPE_2) == 1, "tir perdu faute d'entrees SAT");
+    CHECK(count_type(&s, ENEMY_TYPE_SPLASH) == 4, "et sans gouttes");
+}
+
 int main(void)
 {
     test_rom_tables();
@@ -828,6 +1002,10 @@ int main(void)
     test_stage2_type1_spawn();
     test_stage2_type1_trajectory();
     test_stage2_type1_contact_whip();
+    test_type2_spawn();
+    test_type2_trajectory();
+    test_type2_contact_whip();
+    test_type2_sat_budget();
     if (failures == 0) {
         printf("Enemies tests: PASS\n");
         return 0;

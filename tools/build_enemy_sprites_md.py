@@ -20,6 +20,13 @@ stream at 0x15AB9 (417 bytes, decoded to 512), and their mirrors 80..BC (layer
 N + 0x40 is layer N mirrored), checked against 38 VRAM captures (research/
 enemy-behavior.md, section Type 5). Third table, vk_enemy5_tiles, slot (N - 0x40) / 4.
 
+Type 2 (stage 2 rooms 4 and 5, the fishman): the ten layers 40..64 of the RLE stream at
+0x1597D (316 bytes, decoded to 320) and their mirrors 68..8C (layer N + 0x28 is layer N
+mirrored), then the splash drop 90 (object 0x20, stream at 0x1423B, one layer, colour 6
+without CC). Checked against 81 VRAM captures of room 4 (research/enemy-behavior.md,
+section Type 2). Fourth table, vk_enemy2_tiles, slot (N - 0x40) / 4: it is loaded in the
+type 5 block (the two never share a room).
+
 Pixels carry palette indices: the MSX2 colour of each layer (2 for N, 4 for N+4), read
 in the sprite colour table (research/enemy-assets.md section 5). The second layer
 of each pair has CC set: where both layers have a pixel, the V9938 shows the OR of
@@ -60,6 +67,15 @@ TYPE5_STREAM = 0x15AB9
 TYPE5_SHA256 = 'c0845ef045b49981e35d7b640acc6ea6438668f075197a49573b34cbed39c4df'
 TYPE5_FIRST_PATTERN = 0x40
 TYPE5_PATTERN_COUNT = 32
+# Type 2: colour bytes 02 / 44 on every fishman layer, 06 on the splash (room 4 captures).
+TYPE2_STREAM = 0x1597D
+TYPE2_SHA256 = '0c3312755315d46c000b1173a433dcf2edc37f08a44ecec1ddfa183f65c0a67f'
+SPLASH_STREAM = 0x1423B
+SPLASH_SHA256 = 'dca6312ea94fcba589164ca908de05e6badd3b727ef1409f92de1aa0f6725290'
+SPLASH_PATTERN = 0x90
+SPLASH_COLOUR = 6
+TYPE2_FIRST_PATTERN = 0x40
+TYPE2_PATTERN_COUNT = 21
 
 
 def layers_of_types_a_and_b(rom):
@@ -113,6 +129,30 @@ def layers_of_type5(rom):
         # Facing right: the same layer mirrored, 0x40 pattern numbers further.
         layers[TYPE5_FIRST_PATTERN + 0x40 + 4 * index] = mirror_layer(layer)
     return layers
+
+
+def layers_of_type2(rom):
+    """Return {pattern: 32-byte layer} for patterns 0x40..0x8C (type 2) without the splash."""
+    data = bytes(rle_decode(rom, TYPE2_STREAM))
+    digest = hashlib.sha256(data).hexdigest()
+    if len(data) != 320 or digest != TYPE2_SHA256:
+        raise ValueError(f'type 2 layers: unexpected bytes {digest}')
+    layers = {}
+    for index in range(10):
+        layer = data[index * 32:index * 32 + 32]
+        layers[TYPE2_FIRST_PATTERN + 4 * index] = layer
+        # Facing right: the same layer mirrored, 0x28 pattern numbers further.
+        layers[TYPE2_FIRST_PATTERN + 0x28 + 4 * index] = mirror_layer(layer)
+    return layers
+
+
+def splash_longs(rom):
+    """Tiles of the splash layer 90: one layer of colour 6, no CC partner."""
+    data = bytes(rle_decode(rom, SPLASH_STREAM))
+    digest = hashlib.sha256(data).hexdigest()
+    if len(data) != 32 or digest != SPLASH_SHA256:
+        raise ValueError(f'splash layer: unexpected bytes {digest}')
+    return (SPLASH_PATTERN, tile_longs(data, SPLASH_COLOUR))
 
 
 def pair_longs(layers):
@@ -169,15 +209,19 @@ def generate(rom_path=None):
     longs = pair_longs(layers_of_types_a_and_b(data))
     longs4 = pair_longs(layers_of_type4(data))
     longs5 = pair_longs(layers_of_type5(data))
+    longs2 = pair_longs(layers_of_type2(data)) + [splash_longs(data)]
+    assert [p for p, _ in longs2] == [TYPE2_FIRST_PATTERN + 4 * k for k in range(TYPE2_PATTERN_COUNT)]
 
     OUT.mkdir(parents=True, exist_ok=True)
     tile_count = PATTERN_COUNT * TILES_PER_LAYER
     tile_count4 = TYPE4_PATTERN_COUNT * TILES_PER_LAYER
     tile_count5 = TYPE5_PATTERN_COUNT * TILES_PER_LAYER
+    tile_count2 = TYPE2_PATTERN_COUNT * TILES_PER_LAYER
     lines = [
         '/* Generated from the Vampire Killer MSX2 ROM by tools/build_enemy_sprites_md.py.',
         ' * Types A and B of the stage 1 hall (patterns 0x40..0x6C), type 4 (room 4, 0x48..0x74)',
-        ' * and type 5 (rooms 2, 3, 7, 0x40..0xBC).',
+        ' * and type 5 (rooms 2, 3, 7, 0x40..0xBC); type 2 of stage 2 (rooms 4, 5, 0x40..0x8C)',
+        ' * and its splash (0x90).',
         ' * Colour index = MSX2 colour of each layer (2 for N, 4 for N+4): see research/enemy-assets.md.',
         ' * Never hand edit. */',
         '#include "enemy_sprites_md.h"',
@@ -185,6 +229,7 @@ def generate(rom_path=None):
     lines += c_table('vk_enemy_tiles', longs)
     lines += c_table('vk_enemy4_tiles', longs4)
     lines += c_table('vk_enemy5_tiles', longs5)
+    lines += c_table('vk_enemy2_tiles', longs2)
     (OUT / 'enemy_sprites_md.c').write_text('\n'.join(lines) + '\n')
 
     header = [
@@ -202,11 +247,14 @@ def generate(rom_path=None):
         f'#define VK_ENEMY5_FIRST_PATTERN 0x{TYPE5_FIRST_PATTERN:02X}',
         f'#define VK_ENEMY5_TILE_COUNT {tile_count5}',
         f'extern const unsigned long vk_enemy5_tiles[{tile_count5 * LONGS_PER_TILE}];',
+        f'#define VK_ENEMY2_FIRST_PATTERN 0x{TYPE2_FIRST_PATTERN:02X}',
+        f'#define VK_ENEMY2_TILE_COUNT {tile_count2}',
+        f'extern const unsigned long vk_enemy2_tiles[{tile_count2 * LONGS_PER_TILE}];',
         '#endif',
     ]
     (OUT / 'enemy_sprites_md.h').write_text('\n'.join(header) + '\n')
-    print(f'{PATTERN_COUNT} + {TYPE4_PATTERN_COUNT} + {TYPE5_PATTERN_COUNT} layers, '
-          f'{tile_count} + {tile_count4} + {tile_count5} tiles -> {OUT}')
+    print(f'{PATTERN_COUNT} + {TYPE4_PATTERN_COUNT} + {TYPE5_PATTERN_COUNT} + {TYPE2_PATTERN_COUNT} layers, '
+          f'{tile_count} + {tile_count4} + {tile_count5} + {tile_count2} tiles -> {OUT}')
 
 
 if __name__ == '__main__':
