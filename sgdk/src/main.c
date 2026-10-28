@@ -317,6 +317,7 @@ int main(bool hardReset)
     JOY_init();
     /* Loaded once here: a load at the first scream would cost a frame. */
     SND_PCM_loadDriver(TRUE);
+    vk_psg_init();   /* the PSG player runs in V-Int from now on */
     vk_logo_start();
     while (TRUE)
     {
@@ -522,7 +523,6 @@ int main(bool hardReset)
                 if (dirty) vk_show_room(stage, room, atlas);
             }
         }
-        vk_psg_update();
         SYS_doVBlankProcess();
     }
     return 0;

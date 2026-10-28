@@ -140,11 +140,18 @@ Vérification contre la trace openMSX `research/audio/long1-bios-giwrte.csv.gz` 
 
 ## 6. Lecteur Mega Drive
 
-`sgdk/src/psg_core.c` (sans SGDK, testé par `tests/test_psg_core.c`) et `psg_player.c` (écriture au port PSG, cadence PAL 6 images pour 5 VBLANK) :
+`sgdk/src/psg_core.c` (sans SGDK, testé par `tests/test_psg_core.c`) et `psg_player.c` (écriture au port PSG en interruption verticale, cadence PAL 6 images pour 5 VBLANK) :
 
 - deux voix : musique et effet ; l'effet prend le ton 2 et le bruit, la musique garde les tons 0 et 1 ;
 - la musique continue d'avancer sur les voies prises (état mémorisé) ; après l'effet, le ton 2 et le bruit restent muets jusqu'à la première image marquée « note sur C », puis l'état mémorisé est réécrit (`8B00`) ;
 - priorité `5172` (effet accepté si aucun effet ou id ≥ courant), verrou `C0A8`, musique qui abandonne l'effet (`5118`), arrêt `5085`, fondu `FF` (1,5 cran SN toutes les 3A images, arrêt après 16).
+
+Cadence et interruption : comme le pilote MSX, appelé par le VBLANK `4028` (H.TIMI) et non par la boucle de jeu, le lecteur avance dans l'interruption verticale (`SYS_setVIntCallback`, installé par `vk_psg_init` au démarrage dans `main.c`), une fois par VBLANK, avec la cadence PAL ci-dessus. Le callback VBlank de SGDK (`SYS_setVBlankCallback`) ne convient pas : il est appelé depuis `SYS_doVBlankProcess`, donc par la boucle principale, et s'arrêterait comme elle pendant un long traitement. La musique continue ainsi pendant le dessin d'une salle (environ 6 images de 68000 sans tour de boucle) : **prouvé** sur le harnais (`n_room_transition_freeze`, `vk_psg.music.cursor` change à chaque image des 8 dernières du gel du hall ; avec l'ancien appel dans la boucle, il restait figé 5 images). Points de détail :
+
+- les requêtes (`vk_psg_music`, `effect`, `stop`, `fade`, `pause`, `resume`, `play_stream`) viennent de la boucle principale et modifient `vk_psg` entre `SYS_disableInts` et `SYS_enableInts` ; `vk_psg_stop` écrit aussi le silence au port dans la même section, pour qu'aucune écriture de l'interruption ne s'intercale dans une paire verrou/donnée SN ;
+- la fréquence PAL/NTSC est lue une fois à l'initialisation : l'interruption ne lit pas le port d'état du VDP, ce qui pourrait gêner une commande VDP en cours dans la boucle ;
+- le port PSG (`C00011`) est sur le bus 68000, hors du bus Z80 : aucune demande de bus Z80, et le pilote PCM (`SND_PCM_loadDriver`, cri de Wilhelm sur le DAC du YM2612) n'écrit pas au PSG (vérifié dans `drv_pcm.s80` de SGDK) ; les deux ne se gênent pas ;
+- le temps du lecteur est pris au début de chaque image : un long dessin commencé dans le même tour de boucle finit un peu plus tard (scénario `h_castle_entrance` : le mode INTERIOR, posé à la fin du dessin du hall, arrive une image après la fin logique des 36 images noires).
 
 Écart connu : sur MSX, le bruit d'une musique porté par les voies A ou B (musiques 8B et 8E) continuerait pendant l'effet ; ici le bruit SN est pris par l'effet.
 
@@ -179,5 +186,5 @@ Non branchés (événements non portés) : 01, 02, 03/06 (escaliers : à branche
 - Outils : `tools/extract_msx_sound.py`, `tools/convert_psg_vgm.py`, `tools/build_msx_sound_md.py`.
 - Généré : `sgdk/src/generated/msx_sound_md.c/.h`, `research/audio/msx_sounds.json`.
 - Lecteur : `sgdk/src/psg_core.c/.h`, `sgdk/src/psg_player.c/.h`, `sgdk/src/sound_test.c`.
-- Tests : `tests/test_psg_core.c` (dans `tests/run_native.sh`), `tests/test_convert_psg_vgm.py`, `tests/test_extract_msx_sound.py` (ROM requise, `VK_ROM_PATH`), scénario MD `tests/md_scenarios/m_sound_events.txt`.
+- Tests : `tests/test_psg_core.c` (dans `tests/run_native.sh`), `tests/test_convert_psg_vgm.py`, `tests/test_extract_msx_sound.py` (ROM requise, `VK_ROM_PATH`), scénarios MD `tests/md_scenarios/m_sound_events.txt`, `o_pause.txt` et `n_room_transition_freeze.txt` (musique pendant le dessin d'une salle).
 - Retirés : `generated/sfx_md.*`, `generated/sfx_hit_md.*` (castlevania-md), `generated/music_md.*` (capture candidate) et leurs générateurs.

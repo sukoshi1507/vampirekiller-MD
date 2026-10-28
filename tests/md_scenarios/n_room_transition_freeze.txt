@@ -23,6 +23,35 @@ until game.room == 1 max 600 RIGHT
 set t1 frame
 set x1 game.player.x
 expect ram8('room_freeze+1') == 20 and ram8('room_freeze+2') == 2 # hall salle 1
+# Le lecteur PSG tourne en V-Int (psg_player.c) : la musique avance a chaque image
+# pendant le gel, y compris pendant le dessin de la salle (ROOM_DRAW_FRAMES images
+# avant la fin, plusieurs images de 68000 sans tour de boucle). vk_psg.music.cursor
+# (+4) doit changer a chaque image (au moins l'octet d'en-tete de l'image du flux).
+until ram8('room_freeze') <= 8 max 40 RIGHT
+set c0 ram32('vk_psg+4')
+hold RIGHT 1
+expect ram32('vk_psg+4') != c0 # la musique avance (image 1/8)
+set c0 ram32('vk_psg+4')
+hold RIGHT 1
+expect ram32('vk_psg+4') != c0 # la musique avance (image 2/8)
+set c0 ram32('vk_psg+4')
+hold RIGHT 1
+expect ram32('vk_psg+4') != c0 # la musique avance (image 3/8)
+set c0 ram32('vk_psg+4')
+hold RIGHT 1
+expect ram32('vk_psg+4') != c0 # la musique avance (image 4/8)
+set c0 ram32('vk_psg+4')
+hold RIGHT 1
+expect ram32('vk_psg+4') != c0 # la musique avance (image 5/8)
+set c0 ram32('vk_psg+4')
+hold RIGHT 1
+expect ram32('vk_psg+4') != c0 # la musique avance (image 6/8)
+set c0 ram32('vk_psg+4')
+hold RIGHT 1
+expect ram32('vk_psg+4') != c0 # la musique avance (image 7/8)
+set c0 ram32('vk_psg+4')
+hold RIGHT 1
+expect ram32('vk_psg+4') != c0 # la musique avance (image 8/8)
 until ram8('room_freeze') == 0 max 40 RIGHT
 expect frame - t1 == 20
 expect game.player.x == x1 # immobile pendant le gel
