@@ -835,6 +835,10 @@ static int find_type2(const EnemyState *s, int x)
     return -1;
 }
 
+/* Images d'etat 9 a l'arrivee en salle 4 ou 5 (21) moins une : la premiere image de jeu
+ * (n = 1) est la 21e image apres D001 (research/room-links.md section 9). */
+#define FISH_STATE9 20
+
 static void test_type2_spawn(void)
 {
     EnemyState s;
@@ -845,12 +849,13 @@ static void test_type2_spawn(void)
     Enemies_init(&s);
     Enemies_spawnTimerInit(&t);
     CHECK(kEnemyStage2RoomFlags[4] == 0x02 && kEnemyStage2RoomFlags[5] == 0x02, "drapeaux 85DB-85DC : bit 1");
-    /* Tirs mesures : +51 (X D0), +67 (X 30), +267 (X 90), +467 (X A0) ; deux gouttes chacun. */
-    for (n = 1; n <= 467; n++) {
+    /* Tirs mesures : +51 (X D0), +67 (X 30), +267 (X 90), +467 (X A0) apres D001 ; deux gouttes chacun.
+     * Images de jeu comptees apres l'etat 9 (FISH_STATE9 = 20 de moins, ENEMY_TYPE2_FIRST). */
+    for (n = 1; n <= 467 - FISH_STATE9; n++) {
         int before = count_type(&s, ENEMY_TYPE_2);
         (void)Enemies_frame(&s, &t, &v, &push);
         if (count_type(&s, ENEMY_TYPE_2) > before && c < 4) created[c++] = n;
-        if (n == 51) {
+        if (n == 51 - FISH_STATE9) {
             k = find_type2(&s, 0xD0);
             CHECK(k == 0, "premier tir en X D0, bloc 0");
             CHECK(k >= 0 && s.enemy[k].y == 189 && s.enemy[k].vy == -0x0B00,
@@ -861,10 +866,11 @@ static void test_type2_spawn(void)
                   s.enemy[2].dx == -1 && s.enemy[2].vy == -0x0600, "gouttes : +1/-5 puis -1/-6 (CF30)");
             CHECK(s.enemy[1].y == 0xC8 && s.enemy[1].x == 0xD0, "gouttes en (D0, C8), immobiles dans l'image du tir");
         }
-        if (n == 67) CHECK(find_type2(&s, 0x30) >= 0, "second tir 16 images plus tard en X 30");
+        if (n == 67 - FISH_STATE9) CHECK(find_type2(&s, 0x30) >= 0, "second tir 16 images plus tard en X 30");
     }
-    CHECK(c == 4 && created[0] == 51 && created[1] == 67 && created[2] == 267 && created[3] == 467,
-          "tirs aux images 51, 67, 267, 467 (obtenu %d %d %d %d)", created[0], created[1], created[2], created[3]);
+    CHECK(c == 4 && created[0] == 51 - FISH_STATE9 && created[1] == 67 - FISH_STATE9 &&
+          created[2] == 267 - FISH_STATE9 && created[3] == 467 - FISH_STATE9,
+          "tirs aux images 51, 67, 267, 467 - 20 (obtenu %d %d %d %d)", created[0], created[1], created[2], created[3]);
     CHECK(s.type2Shots == 4, "CF03 = 4");
     /* Garde 9D6E : Simon a moins de 24 px du X de la table, X decale de 32 px vers le centre
      * (trace salle 5, Simon en 40 : X 30 -> 50, X 40 -> 60). */
@@ -872,7 +878,7 @@ static void test_type2_spawn(void)
     v.room = 5;
     v.simonX = 40;
     Enemies_init(&s);
-    for (n = 1; n <= 67; n++) (void)Enemies_frame(&s, &t, &v, &push);
+    for (n = 1; n <= 67 - FISH_STATE9; n++) (void)Enemies_frame(&s, &t, &v, &push);
     CHECK(find_type2(&s, 0x50) >= 0, "garde : X 30 decale en 50");
 }
 
@@ -886,23 +892,23 @@ static void test_type2_trajectory(void)
     vars_stage2_room4(&v);
     Enemies_init(&s);
     Enemies_spawnTimerInit(&t);
-    for (n = 1; n <= 200; n++) {
+    for (n = 1; n <= 200 - FISH_STATE9; n++) {
         (void)Enemies_frame(&s, &t, &v, &push);
-        if (n < 51 || n > 183) continue;
+        if (n < 51 - FISH_STATE9 || n > 183 - FISH_STATE9) continue;
         if (e->active && e->type == ENEMY_TYPE_2 && e->y < minY) minY = e->y;
         if (!landed && e->type == ENEMY_TYPE_2 && e->state == 1) landed = n;
         if (landed && !fell && e->type == ENEMY_TYPE_2 && e->state == 0) fell = n;
         if (!gone && !(e->active && e->type == ENEMY_TYPE_2)) gone = n;
-        if (n == 121) CHECK(e->state == 1 && e->y == 112 && e->sub == 0x80 && e->x == 208,
+        if (n == 121 - FISH_STATE9) CHECK(e->state == 1 && e->y == 112 && e->sub == 0x80 && e->x == 208,
                             "pose sur le sol droit en 6236 : (208, 112.80) (obtenu %d, %d.%02X)", e->x, e->y, e->sub);
-        if (n == 123) CHECK(e->dx == -1 && e->pose == 0x09 && e->timer == 0x20 && e->x == 206,
+        if (n == 123 - FISH_STATE9) CHECK(e->dx == -1 && e->pose == 0x09 && e->timer == 0x20 && e->x == 206,
                             "premiere marche : vers Simon, pose 09, +15 = 20 (+1D = 25)");
-        if (n == 139) CHECK(e->pose == 0x08, "pose 08 apres 8 mises a jour");
+        if (n == 139 - FISH_STATE9) CHECK(e->pose == 0x08, "pose 08 apres 8 mises a jour");
     }
     CHECK(minY == 73, "sommet du saut Y 73 (obtenu %d)", minY);
-    CHECK(landed == 121, "atterrissage a l'image 121 (obtenu %d)", landed);
-    CHECK(fell == 145, "chute au bord du sol (X 191 -> 190) a l'image 145 (obtenu %d)", fell);
-    CHECK(gone == 183, "replonge sous Y C0 a l'image 183 (obtenu %d)", gone);
+    CHECK(landed == 121 - FISH_STATE9, "atterrissage a l'image 121 (obtenu %d)", landed);
+    CHECK(fell == 145 - FISH_STATE9, "chute au bord du sol (X 191 -> 190) a l'image 145 (obtenu %d)", fell);
+    CHECK(gone == 183 - FISH_STATE9, "replonge sous Y C0 a l'image 183 (obtenu %d)", gone);
     CHECK(count_type(&s, ENEMY_TYPE_SPLASH) >= 2, "deux gouttes au plongeon");
 }
 
@@ -974,7 +980,7 @@ static void test_type2_sat_budget(void)
     for (i = 1; i <= 4; i++) {
         s.enemy[i].active = 1; s.enemy[i].type = ENEMY_TYPE_SPLASH; s.enemy[i].x = 160; s.enemy[i].y = 180;
     }
-    s.type2Frames = 50;
+    s.type2Frames = ENEMY_TYPE2_FIRST - 1;   /* le prochain appel est l'image du premier tir */
     (void)Enemies_frame(&s, &t, &v, &push);
     CHECK(s.type2Shots == 1 && count_type(&s, ENEMY_TYPE_2) == 1, "tir perdu faute d'entrees SAT");
     CHECK(count_type(&s, ENEMY_TYPE_SPLASH) == 4, "et sans gouttes");
