@@ -20,12 +20,17 @@ _Static_assert(DOOR_TILE_INDEX + DOOR_COLS * DOOR_CELLS <= ENEMY5_TILE_INDEX,
 
 static u32 door_tiles[DOOR_COLS * DOOR_CELLS * 8];
 
+/* Queued for the VBlank (p + 1 on the MSX, research/frame-timing.md), after the
+ * queued block and candle cells of candle_view.c, which the key may cover. */
 static void draw_block(u16 tile, u16 x, u16 y, u16 w, u16 h)
 {
-    u16 i;
-    for (i = 0; i < w * h; i++)
-        VDP_setTileMapXY(BG_A, TILE_ATTR_FULL(PAL0, FALSE, FALSE, FALSE, tile + i),
-                         x + i % w, y + i / w);
+    u16 r, c;
+    for (r = 0; r < h; r++)
+    {
+        u16 cells[DOOR_COLS > VK_HUD_BOX_W ? DOOR_COLS : VK_HUD_BOX_W];
+        for (c = 0; c < w; c++) cells[c] = TILE_ATTR_FULL(PAL0, FALSE, FALSE, FALSE, tile + r * w + c);
+        VDP_setTileMapDataRow(BG_A, cells, (u16)(y + r), x, w, DMA_QUEUE_COPY);
+    }
 }
 
 /* The bar rows shifted up by 'lift' pixels, black below (K3: the opening behind

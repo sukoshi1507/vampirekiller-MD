@@ -71,7 +71,8 @@ Ce qui fonctionne dans la ROM Mega Drive :
 - **Calendrier d'affichage** : comme sur le MSX2, Simon, son fouet et les ennemis
   (sprites MSX) apparaissent deux images après le calcul de la passe, le décor, le HUD,
   la couleur de fond et les sons une image après (trace openMSX et harnais MD,
-  `research/frame-timing.md`). Restent : tuiles du décor une image trop tôt, sons demandés
+  `research/frame-timing.md`) ; les tuiles du décor (torche éteinte, bloc cassé, clé) passent
+  par la file DMA et changent une image après, comme sur le MSX2. Restent : sons demandés
   en fin de passe MSX une image trop tôt, manette lue à chaque image (MSX : une sur deux).
 - **Ajout du port, saut depuis l'escalier** : sur une marche, C fait sauter Simon hors de
   la volée. Le MSX2 ne le permet pas (HAUT, sa touche de saut, y fait monter) ; ce saut

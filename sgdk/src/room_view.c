@@ -110,15 +110,20 @@ static const u32 flame_a_cleared_tiles[32] = {
 static void set_courtyard_flame_background(u16 flame, int lit)
 {
     const u16 scene = 3 + courtyard_room;
+    u16 cells[4];
     u16 i;
     for (i = 0; i < 4; i++)
     {
         const u16 col = flame_cell_col[flame] + (i & 1);
         const u16 row = FLAME_CELL_ROW + (i >> 1);
-        VDP_setTileMapXY(BG_A, lit ?
+        cells[i] = lit ?
             TILE_ATTR_FULL(PAL0, FALSE, FALSE, FALSE, TILE_USER_INDEX + vk_scenes[scene].map[row * 32 + col]) :
-            TILE_ATTR_FULL(PAL0, FALSE, FALSE, FALSE, FLAME_A_CLEAR_TILE_INDEX + i), col, row);
+            TILE_ATTR_FULL(PAL0, FALSE, FALSE, FALSE, FLAME_A_CLEAR_TILE_INDEX + i);
     }
+    /* The MSX clears the torch (HMMM) during the pass: it shows in the next frame
+     * (p + 1, research/frame-timing.md). Queued for the VBlank, as the sprites. */
+    VDP_setTileMapDataRow(BG_A, cells, FLAME_CELL_ROW, flame_cell_col[flame], 2, DMA_QUEUE_COPY);
+    VDP_setTileMapDataRow(BG_A, cells + 2, FLAME_CELL_ROW + 1, flame_cell_col[flame], 2, DMA_QUEUE_COPY);
 }
 
 /* Every flame of the current courtyard screen that candles.c still counts as lit

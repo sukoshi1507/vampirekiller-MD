@@ -1,0 +1,21 @@
+# (zf) Decor sous le HUD a l'image suivante (research/frame-timing.md) : le MSX copie le
+# decor (HMMM) pendant la passe p, visible a p + 1 ; le port passe les cellules par la
+# file DMA (V-Int suivante). Torche A de la cour eteinte au fouet, puis rallumee par A+B
+# (debug) : cellules du support et flamme (sprite) changent ensemble a l'image r + 1,
+# rien a l'image r de l'iteration qui les ecrit (avant : cellules a r, flamme a r + 1).
+include boot_to_courtyard.inc
+poke vk_game+0 44
+wait 4
+hold B 2
+until (ram8('vk_candles+4') & 1) == 0 max 20
+wait 60
+hold A 3
+set base [pixel(x, y) for x in range(64, 80) for y in range(144, 160)]
+hold A+B 1
+expect flames[0].active # rallumee a l'iteration r
+set cur [pixel(x, y) for x in range(64, 80) for y in range(144, 160)]
+expect len([1 for i in range(256) if base[i] != cur[i]]) == 0 # image r : torche inchangee
+hold A 1
+set cur [pixel(x, y) for x in range(64, 80) for y in range(144, 160)]
+expect len([1 for i in range(256) if base[i] != cur[i]]) > 50 # image r + 1 : support et flamme
+shot zf_decor_next_frame
