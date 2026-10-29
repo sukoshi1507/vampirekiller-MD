@@ -22,7 +22,9 @@ Ce qui fonctionne dans la ROM Mega Drive :
   apparition, mouvement, animation, contact (-2 d'énergie, recul, invulnérabilité),
   chute sur le sol et couleurs d'après la table de couleur du MSX2.
   **Le fouet tue les ennemis de types 1 et 4** (type 1 confirmé à l'émulateur ; type 4 :
-  boîte `84A7` de la ROM, du côté où Simon regarde, vérifiée par trace openMSX).
+  boîte `84A7` de la ROM, du côté où Simon regarde, debout et accroupi, vérifiée par trace
+  openMSX au stage 2 et dans la salle 4 du hall). Le fouet à chaîne (`C416` = 1) porte à
+  ± 24 et élargit la boîte de 4 px pour tous les ennemis, comme `84A7`/`84D9`.
 - **Clés blanches et portes** : la clé blanche (bloc caché de la salle 2 du hall, de la
   salle 5 du stage 2) se ramasse au contact et s'affiche dans le HUD ; la porte du stage
   (salle 7 du hall, salle 1 du stage 2) bloque Simon sans elle, s'ouvre avec (barreau

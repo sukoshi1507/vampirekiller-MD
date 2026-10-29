@@ -245,21 +245,23 @@ void vk_step_enemies(void)
     {
         int left = 0, top = 0, right = 0, bottom = 0;
         int hits, fish = 0;
+        /* 84A7/84D9: the chain whip (C416 = 1) reaches 24 px and widens the box by 4. */
+        const int chain = vk_candles.weapon == 1;
         vk_whip_bounds(&vk_whip, &left, &top, &right, &bottom);
         hits = Enemies_whipHit(&vk_enemies, left, top, right, bottom);
         /* 7DAD: one test per stroke, in the pass with C422 = 3 (vk_whip_active),
          * from Simon's place in that pass (C427/C425, whip.c). Type 5: */
         hits += Enemies_whipHitType5(&vk_enemies, vk_whip.x, vk_whip.y,
-                                     vk_whip.facing, vk_whip.crouched);
+                                     vk_whip.facing, vk_whip.crouched, chain);
         /* Type 4 (bats): ROM box of class 2, on the side Simon faces (84A7). */
         hits += Enemies_whipHitType4(&vk_enemies, vk_whip.x, vk_whip.y,
-                                     vk_whip.facing, vk_whip.crouched);
+                                     vk_whip.facing, vk_whip.crouched, chain);
         /* Stage 2 type 1: ROM box of class 1 (enemies.h). */
         hits += Enemies_whipHitType1Rom(&vk_enemies, vk_whip.x, vk_whip.y,
-                                        vk_whip.facing, vk_whip.crouched);
+                                        vk_whip.facing, vk_whip.crouched, chain);
         /* Stage 2 type 2 (fishman): ROM box of class 1. */
         fish = Enemies_whipHitType2(&vk_enemies, vk_whip.x, vk_whip.y,
-                                    vk_whip.facing, vk_whip.crouched);
+                                    vk_whip.facing, vk_whip.crouched, chain);
         /* 7DF9 -> 81AB: score of the killed enemy, table 81CE in hundreds: types
          * 1, 4 and 5 give 100, type 2 (fishman) 200. */
         if (hits || fish) vk_hud_add_score((u32)hits * 100 + (u32)fish * 200);

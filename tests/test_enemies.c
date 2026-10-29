@@ -908,35 +908,61 @@ static void test_whip_kills_type1(void)
      * Objet MSX (X, Y) = SAT + (8, 15). Simon x 50 a droite, objet (84, 80) : mort. */
     s.enemy[0].x = 84 - T4_OBJ_X;
     s.enemy[0].y = 80 - T4_OBJ_Y;
-    CHECK(Enemies_whipHitType4(&s, 50, 96, 0, 0) == 1 && !s.enemy[0].active, "type 4 : |70 - 84| < 20, mort");
+    CHECK(Enemies_whipHitType4(&s, 50, 96, 0, 0, 0) == 1 && !s.enemy[0].active, "type 4 : |70 - 84| < 20, mort");
     /* Meme objet, Simon tourne a gauche : le fouet part de l'autre cote (84D9). */
     s.enemy[0].active = 1;
-    CHECK(Enemies_whipHitType4(&s, 50, 96, 1, 0) == 0, "type 4 : fouet du cote du regard seulement");
+    CHECK(Enemies_whipHitType4(&s, 50, 96, 1, 0, 0) == 0, "type 4 : fouet du cote du regard seulement");
     /* Simon x 46 a gauche, objet (12, 87) : mort (trace, image 12735). */
     s.enemy[0].x = 12 - T4_OBJ_X;
     s.enemy[0].y = 87 - T4_OBJ_Y;
-    CHECK(Enemies_whipHitType4(&s, 46, 96, 1, 0) == 1, "type 4 : fouet a gauche, mort");
+    CHECK(Enemies_whipHitType4(&s, 46, 96, 1, 0, 0) == 1, "type 4 : fouet a gauche, mort");
     /* Bornes : |dX| = 20 ou Y = C425 - 18 + 17 : rien ; Y = C425 - 21 et C425 - 2 : touche. */
     s.enemy[0].active = 1;
     s.enemy[0].x = 90 - T4_OBJ_X;
     s.enemy[0].y = 80 - T4_OBJ_Y;
-    CHECK(Enemies_whipHitType4(&s, 50, 96, 0, 0) == 0, "type 4 : |dX| = 20, pas de coup");
+    CHECK(Enemies_whipHitType4(&s, 50, 96, 0, 0, 0) == 0, "type 4 : |dX| = 20, pas de coup");
     s.enemy[0].x = 89 - T4_OBJ_X;
-    CHECK(Enemies_whipHitType4(&s, 50, 96, 0, 0) == 1, "type 4 : |dX| = 19, coup");
+    CHECK(Enemies_whipHitType4(&s, 50, 96, 0, 0, 0) == 1, "type 4 : |dX| = 19, coup");
     s.enemy[0].active = 1;
     s.enemy[0].y = 96 - 18 + 17 - T4_OBJ_Y;
-    CHECK(Enemies_whipHitType4(&s, 50, 96, 0, 0) == 0, "type 4 : Y = C425 - 1, pas de coup");
+    CHECK(Enemies_whipHitType4(&s, 50, 96, 0, 0, 0) == 0, "type 4 : Y = C425 - 1, pas de coup");
     s.enemy[0].y = 96 - 18 + 16 - T4_OBJ_Y;
-    CHECK(Enemies_whipHitType4(&s, 50, 96, 0, 0) == 1, "type 4 : Y = C425 - 2, coup");
+    CHECK(Enemies_whipHitType4(&s, 50, 96, 0, 0, 0) == 1, "type 4 : Y = C425 - 2, coup");
     s.enemy[0].active = 1;
     s.enemy[0].y = 96 - 18 - 3 - T4_OBJ_Y;
-    CHECK(Enemies_whipHitType4(&s, 50, 96, 0, 0) == 1, "type 4 : Y = C425 - 21, coup");
+    CHECK(Enemies_whipHitType4(&s, 50, 96, 0, 0, 0) == 1, "type 4 : Y = C425 - 21, coup");
     s.enemy[0].active = 1;
     s.enemy[0].y = 96 - 18 - 4 - T4_OBJ_Y;
-    CHECK(Enemies_whipHitType4(&s, 50, 96, 0, 0) == 0, "type 4 : Y = C425 - 22, pas de coup");
+    CHECK(Enemies_whipHitType4(&s, 50, 96, 0, 0, 0) == 0, "type 4 : Y = C425 - 22, pas de coup");
     /* Accroupi (B = 10) : la fenetre descend de 8 px. */
     s.enemy[0].y = 96 - 10 + 16 - T4_OBJ_Y;
-    CHECK(Enemies_whipHitType4(&s, 50, 96, 0, 1) == 1, "type 4 accroupi : Y = C425 + 6, coup");
+    CHECK(Enemies_whipHitType4(&s, 50, 96, 0, 1, 0) == 1, "type 4 accroupi : Y = C425 + 6, coup");
+    /* Hall salle 4 (trace openMSX, Simon Y 192) : accroupi a droite, Simon 120, objet (156, 186). */
+    s.enemy[0].active = 1;
+    s.enemy[0].x = 156 - T4_OBJ_X;
+    s.enemy[0].y = 186 - T4_OBJ_Y;
+    CHECK(Enemies_whipHitType4(&s, 120, 192, 0, 1, 0) == 1, "type 4 hall : accroupi a droite, mort");
+    /* Debout a gauche, Simon 192, objet (184, 180) : mort (image 3309). */
+    s.enemy[0].active = 1;
+    s.enemy[0].x = 184 - T4_OBJ_X;
+    s.enemy[0].y = 180 - T4_OBJ_Y;
+    CHECK(Enemies_whipHitType4(&s, 192, 192, 1, 0, 0) == 1, "type 4 hall : debout a gauche, mort");
+    /* Fouet a chaine (C416 = 1, 84A7/84D9) : X du fouet + 24, |dX| < 24. Objet a 50 + 24 + 23 :
+     * hors de portee du fouet de cuir (|70 - 97| = 27), touche par la chaine. */
+    s.enemy[0].active = 1;
+    s.enemy[0].x = 97 - T4_OBJ_X;
+    s.enemy[0].y = 80 - T4_OBJ_Y;
+    CHECK(Enemies_whipHitType4(&s, 50, 96, 0, 0, 0) == 0, "type 4 : cuir, |dX| = 27, pas de coup");
+    CHECK(Enemies_whipHitType4(&s, 50, 96, 0, 0, 1) == 1, "type 4 : chaine, |dX| = 23, coup");
+    s.enemy[0].active = 1;
+    s.enemy[0].x = 98 - T4_OBJ_X;
+    CHECK(Enemies_whipHitType4(&s, 50, 96, 0, 0, 1) == 0, "type 4 : chaine, |dX| = 24, pas de coup");
+    /* Le bord proche ne bouge pas : X fouet - L = C427 - 0 dans les deux cas (objet 51). */
+    s.enemy[0].x = 51 - T4_OBJ_X;
+    CHECK(Enemies_whipHitType4(&s, 50, 96, 0, 0, 1) == 1, "type 4 : chaine, bord proche 51");
+    s.enemy[0].active = 1;
+    s.enemy[0].x = 50 - T4_OBJ_X;
+    CHECK(Enemies_whipHitType4(&s, 50, 96, 0, 0, 1) == 0, "type 4 : chaine, bord proche 50 exclu");
 }
 
 /* Type 5 (panthere), research/enemy-behavior.md section Type 5 : creation 21 images apres
@@ -1008,9 +1034,9 @@ static void test_type5(void)
 
     /* Fouet : debout, il passe au-dessus d'une panthere au niveau de Simon ; accroupi, il la tue. */
     e->x = 100; e->y = 0xA0;
-    CHECK(Enemies_whipHitType5(&s, 120, 0xA0, 1, 0) == 0 && e->active, "type 5 : fouet debout au-dessus");
-    CHECK(Enemies_whipHitType5(&s, 120, 0xA0, 0, 1) == 0 && e->active, "type 5 : fouet accroupi du mauvais cote");
-    CHECK(Enemies_whipHitType5(&s, 120, 0xA0, 1, 1) == 1 && !e->active, "type 5 : fouet accroupi, mort");
+    CHECK(Enemies_whipHitType5(&s, 120, 0xA0, 1, 0, 0) == 0 && e->active, "type 5 : fouet debout au-dessus");
+    CHECK(Enemies_whipHitType5(&s, 120, 0xA0, 0, 1, 0) == 0 && e->active, "type 5 : fouet accroupi du mauvais cote");
+    CHECK(Enemies_whipHitType5(&s, 120, 0xA0, 1, 1, 0) == 1 && !e->active, "type 5 : fouet accroupi, mort");
 }
 
 /* 7. Type 1 du stage 2, salle 2 (trace scratchpad/s2t1/out/O1 et W1, research/enemy-behavior.md
@@ -1177,26 +1203,26 @@ static void test_stage2_type1_contact_whip(void)
     put_stage2_type1(&s, 165 + 17, 160, ENEMY_SIDE_RIGHT);
     put_stage2_type1(&s, 165 - 17, 160, ENEMY_SIDE_LEFT);
     CHECK(Enemies_whipHit(&s, 0, 0, 255, 255) == 0, "Enemies_whipHit ignore les ennemis romBox");
-    CHECK(Enemies_whipHitType1Rom(&s, 145, 160, 0, 0) == 2, "fouet : |d| <= 16 touche, 17 non");
+    CHECK(Enemies_whipHitType1Rom(&s, 145, 160, 0, 0, 0) == 2, "fouet : |d| <= 16 touche, 17 non");
     CHECK(!s.enemy[0].active && !s.enemy[1].active && s.enemy[2].active && s.enemy[3].active,
           "fouet : les deux ennemis a 17 px restent");
     /* Cas de la trace W1 : Simon 145 a droite, objet en X 156 ; Simon 189 a gauche, X 157. */
     Enemies_init(&s);
     put_stage2_type1(&s, 156, 160, ENEMY_SIDE_LEFT);
-    CHECK(Enemies_whipHitType1Rom(&s, 145, 160, 0, 0) == 1, "fouet : mort W1 6473");
+    CHECK(Enemies_whipHitType1Rom(&s, 145, 160, 0, 0, 0) == 1, "fouet : mort W1 6473");
     Enemies_init(&s);
     put_stage2_type1(&s, 157, 160, ENEMY_SIDE_RIGHT);
-    CHECK(Enemies_whipHitType1Rom(&s, 189, 160, 1, 0) == 1, "fouet : mort W1 6677");
+    CHECK(Enemies_whipHitType1Rom(&s, 189, 160, 1, 0, 0) == 1, "fouet : mort W1 6677");
     /* Hauteur : debout Y de C425 - 21 a C425 + 6, accroupi C425 - 13 a C425 + 14. */
     Enemies_init(&s);
     put_stage2_type1(&s, 165, 160 + 6, ENEMY_SIDE_RIGHT);
     put_stage2_type1(&s, 165, 160 + 7, ENEMY_SIDE_RIGHT);
-    CHECK(Enemies_whipHitType1Rom(&s, 145, 160, 0, 0) == 1 && s.enemy[1].active, "fouet debout : Y + 6 oui, Y + 7 non");
-    CHECK(Enemies_whipHitType1Rom(&s, 145, 160, 0, 1) == 1, "fouet accroupi : Y + 7 touche");
+    CHECK(Enemies_whipHitType1Rom(&s, 145, 160, 0, 0, 0) == 1 && s.enemy[1].active, "fouet debout : Y + 6 oui, Y + 7 non");
+    CHECK(Enemies_whipHitType1Rom(&s, 145, 160, 0, 1, 0) == 1, "fouet accroupi : Y + 7 touche");
     /* Bord d'ecran : X du fouet hors 0..255, pas de test (84B6). */
     Enemies_init(&s);
     put_stage2_type1(&s, 250, 160, ENEMY_SIDE_LEFT);
-    CHECK(Enemies_whipHitType1Rom(&s, 240, 160, 0, 0) == 0, "fouet : retenue a droite, pas de coup");
+    CHECK(Enemies_whipHitType1Rom(&s, 240, 160, 0, 0, 0) == 0, "fouet : retenue a droite, pas de coup");
 
     /* Chute : pose sur le sol de la salle 2 (rang Y A0), Y affiche 81 comme au hall (A1). */
     memset(map, 0, sizeof map);
@@ -1360,9 +1386,9 @@ static void test_type2_contact_whip(void)
     Enemies_init(&s);
     s.enemy[0].active = 1; s.enemy[0].type = ENEMY_TYPE_2; s.enemy[0].x = 208; s.enemy[0].y = 74;
     s.enemy[1].active = 1; s.enemy[1].type = ENEMY_TYPE_SPLASH; s.enemy[1].x = 216; s.enemy[1].y = 100;
-    CHECK(Enemies_whipHitType2(&s, 236, 112, 1, 0) == 0, "fouet : Y 74 hors de la boite");
+    CHECK(Enemies_whipHitType2(&s, 236, 112, 1, 0, 0) == 0, "fouet : Y 74 hors de la boite");
     s.enemy[0].y = 112;
-    CHECK(Enemies_whipHitType2(&s, 236, 112, 1, 0) == 1 && !s.enemy[0].active, "fouet : mort au premier coup");
+    CHECK(Enemies_whipHitType2(&s, 236, 112, 1, 0, 0) == 1 && !s.enemy[0].active, "fouet : mort au premier coup");
     CHECK(s.enemy[1].active, "goutte non touchable");
     CHECK(Enemies_whipHit(&s, 0, 0, 255, 255) == 0, "Enemies_whipHit ignore la goutte");
     /* Bornes : |X fouet - X| < 17 ; debout Y de C425 - 21 a C425 + 6. */
@@ -1370,7 +1396,7 @@ static void test_type2_contact_whip(void)
     s.enemy[0].active = 1; s.enemy[0].type = ENEMY_TYPE_2; s.enemy[0].x = 216 - 17; s.enemy[0].y = 112;
     s.enemy[1].active = 1; s.enemy[1].type = ENEMY_TYPE_2; s.enemy[1].x = 216 + 16; s.enemy[1].y = 112 + 6;
     s.enemy[2].active = 1; s.enemy[2].type = ENEMY_TYPE_2; s.enemy[2].x = 216; s.enemy[2].y = 112 + 7;
-    CHECK(Enemies_whipHitType2(&s, 236, 112, 1, 0) == 1 && s.enemy[0].active && !s.enemy[1].active && s.enemy[2].active,
+    CHECK(Enemies_whipHitType2(&s, 236, 112, 1, 0, 0) == 1 && s.enemy[0].active && !s.enemy[1].active && s.enemy[2].active,
           "fouet : bornes X 17 et Y + 6");
     /* Dessin : pose 09 = 40/44 en Y-31, 50/54 en Y-15, X-8 ; pose 0C = 68/6C, 78/7C. */
     Enemies_init(&s);

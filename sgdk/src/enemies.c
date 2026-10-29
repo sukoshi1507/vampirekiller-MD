@@ -621,9 +621,11 @@ int Enemies_whipHit(EnemyState *s, int left, int top, int right, int bottom)
     return killed;
 }
 
-int Enemies_whipHitType5(EnemyState *s, int simonX, int simonY, int facingLeft, int crouched)
+int Enemies_whipHitType5(EnemyState *s, int simonX, int simonY, int facingLeft, int crouched, int chain)
 {
-    const int whipX = facingLeft ? simonX - 20 : simonX + 20;
+    const int reach = chain ? 24 : 20;     /* 84D9 : B = 18h si C416 = 1 */
+    const int whipX = facingLeft ? simonX - reach : simonX + reach;
+    const int l = 0x0C + (chain ? 16 : 12);   /* 84A7 : L de la classe + 0Ch, 10h si C416 = 1 */
     const int b = crouched ? 10 : 18;
     EnemyU8 i;
     int killed = 0;
@@ -631,17 +633,19 @@ int Enemies_whipHitType5(EnemyState *s, int simonX, int simonY, int facingLeft, 
         Enemy *e = &s->enemy[i];
         const int d = whipX - e->x;
         if (!e->active || e->type != ENEMY_TYPE_5) continue;
-        if (d <= -24 || d >= 24 || e->y < simonY - b - 3 || e->y > simonY - b + 10) continue;
+        if (d <= -l || d >= l || e->y < simonY - b - 3 || e->y > simonY - b + 10) continue;
         e->active = 0;         /* points de vie 1 : mort au premier coup (objet 1E non porte) */
         killed++;
     }
     return killed;
 }
 
-int Enemies_whipHitType4(EnemyState *s, int simonX, int simonY, int facingLeft, int crouched)
+int Enemies_whipHitType4(EnemyState *s, int simonX, int simonY, int facingLeft, int crouched, int chain)
 {
     /* 84D9 : X du fouet du cote du regard (C42C) ; une retenue annule le test (84B6). */
-    const int whipX = facingLeft ? simonX - 20 : simonX + 20;
+    const int reach = chain ? 24 : 20;     /* 84D9 : B = 18h si C416 = 1 */
+    const int whipX = facingLeft ? simonX - reach : simonX + reach;
+    const int l = 0x08 + (chain ? 16 : 12);   /* 84A7 : L de la classe + 0Ch, 10h si C416 = 1 */
     const int b = crouched ? 10 : 18;
     EnemyU8 i;
     int killed = 0;
@@ -652,7 +656,7 @@ int Enemies_whipHitType4(EnemyState *s, int simonX, int simonY, int facingLeft, 
         if (!e->active || e->exiting || e->type != ENEMY_TYPE_4) continue;
         d = whipX - (e->x + ENEMY_OBJ_X);
         h = (simonY - b - (e->y + ENEMY_TYPE4_OBJ_Y) + 0x10) & 0xFF;
-        if (d <= -20 || d >= 20 || h >= 0x14) continue;
+        if (d <= -l || d >= l || h >= 0x14) continue;
         /* Points de vie 1 : mort au premier coup (trace : 13 morts en phase 3, chacune
          * predite par 84A7, research/enemy-behavior.md). L'objet 1E n'est pas porte. */
         e->active = 0;
@@ -661,10 +665,12 @@ int Enemies_whipHitType4(EnemyState *s, int simonX, int simonY, int facingLeft, 
     return killed;
 }
 
-int Enemies_whipHitType1Rom(EnemyState *s, int simonX, int simonY, int facingLeft, int crouched)
+int Enemies_whipHitType1Rom(EnemyState *s, int simonX, int simonY, int facingLeft, int crouched, int chain)
 {
     /* 84D9 : X du fouet sur 8 bits ; une retenue (bord d'ecran) annule le test (84B6). */
-    const int whipX = facingLeft ? simonX - 20 : simonX + 20;
+    const int reach = chain ? 24 : 20;     /* 84D9 : B = 18h si C416 = 1 */
+    const int whipX = facingLeft ? simonX - reach : simonX + reach;
+    const int l = 0x05 + (chain ? 16 : 12);   /* 84A7 : L de la classe + 0Ch, 10h si C416 = 1 */
     const int b = crouched ? 10 : 18;
     EnemyU8 i;
     int killed = 0;
@@ -675,7 +681,7 @@ int Enemies_whipHitType1Rom(EnemyState *s, int simonX, int simonY, int facingLef
         if (!e->active || e->exiting || !e->romBox) continue;
         d = whipX - (e->x + ENEMY_OBJ_X);
         h = simonY - b - (e->y + ENEMY_OBJ_Y) + 24;
-        if (d <= -17 || d >= 17 || h < 0 || h >= 28) continue;
+        if (d <= -l || d >= l || h < 0 || h >= 28) continue;
         /* Points de vie 1 (+D = 01) : mort au premier coup (trace : 6 morts en phase 3,
          * |X fouet - X| de 0 a 15). L'objet 1E et le drop ne sont pas portes. */
         e->active = 0;
@@ -684,10 +690,12 @@ int Enemies_whipHitType1Rom(EnemyState *s, int simonX, int simonY, int facingLef
     return killed;
 }
 
-int Enemies_whipHitType2(EnemyState *s, int simonX, int simonY, int facingLeft, int crouched)
+int Enemies_whipHitType2(EnemyState *s, int simonX, int simonY, int facingLeft, int crouched, int chain)
 {
     /* 84D9 : X du fouet sur 8 bits ; une retenue (bord d'ecran) annule le test (84B6). */
-    const int whipX = facingLeft ? simonX - 20 : simonX + 20;
+    const int reach = chain ? 24 : 20;     /* 84D9 : B = 18h si C416 = 1 */
+    const int whipX = facingLeft ? simonX - reach : simonX + reach;
+    const int l = 0x05 + (chain ? 16 : 12);   /* 84A7 : L de la classe + 0Ch, 10h si C416 = 1 */
     const int b = crouched ? 10 : 18;
     EnemyU8 i;
     int killed = 0;
@@ -697,7 +705,7 @@ int Enemies_whipHitType2(EnemyState *s, int simonX, int simonY, int facingLeft, 
         const int d = whipX - e->x;
         const int h = simonY - b - e->y + 24;
         if (!e->active || e->type != ENEMY_TYPE_2) continue;
-        if (d <= -17 || d >= 17 || h < 0 || h >= 28) continue;
+        if (d <= -l || d >= l || h < 0 || h >= 28) continue;
         e->active = 0;         /* points de vie 1 : mort au premier coup (objet 1E non porte) */
         killed++;
     }

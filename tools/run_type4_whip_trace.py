@@ -7,6 +7,7 @@ Plan utilise (research/enemy-behavior.md, « Type 4 : fouet ») : chemin de
 run_armor_stage_trace.py jusqu'a la salle 0 du stage 2 (sans les poke d'armure), puis par coup :
 poke C415 32, poke C427 X, poke C425 96 (wait 1 entre deux), hold L ou R 1, hold S 6, wait 14 ;
 40 coups a X 200 regard a gauche, 40 a X 48 a droite, 25 a X 200 a droite, 25 a X 48 a gauche.
+"""
 
 import os, shutil, subprocess, sys, tempfile
 from pathlib import Path

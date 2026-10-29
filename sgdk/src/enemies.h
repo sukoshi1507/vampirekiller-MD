@@ -276,30 +276,39 @@ int Enemies_whipHit(EnemyState *s, int left, int top, int right, int bottom);
 /* Fouet contre le type 5 (7DAD, boite 84A7), a appeler pendant la phase 3 du fouet :
  * X du fouet = simonX +- 20 selon le regard, touche si |X fouet - X| < 24 et
  * simonY - B - 3 <= Y <= simonY - B + 10, B = 18 debout, 10 accroupi. Fouet de depart
- * (C416 = 0). Un coup tue (points de vie 1). Retourne le nombre de pantheres tuees. */
-int Enemies_whipHitType5(EnemyState *s, int simonX, int simonY, int facingLeft, int crouched);
+ * (C416 = 0) ; chain = 1 (fouet a chaine, C416 = 1) : X du fouet +- 24, |dX| < 28 (84A7).
+ * Un coup tue (points de vie 1). Retourne le nombre de pantheres tuees. */
+int Enemies_whipHitType5(EnemyState *s, int simonX, int simonY, int facingLeft, int crouched,
+                         int chain);
 
 /* Fouet contre le type 1 du stage 2 (romBox), a appeler pendant la phase 3 du fouet :
  * 7DAD, classe 1 (82CB), boite 84A7 avec HL = 1805 (8380). X du fouet = simonX +- 20,
  * touche si |X fouet - X| < 17 et simonY - B - 3 <= Y <= simonY - B + 24 (X, Y : objet
- * MSX, Y = pieds), B = 18 debout, 10 accroupi. Fouet de depart (C416 = 0). Points de vie 1.
+ * MSX, Y = pieds), B = 18 debout, 10 accroupi. Fouet de depart (C416 = 0) ; chain = 1
+ * (fouet a chaine, C416 = 1) : X du fouet +- 24, |dX| < 21 (84A7). Points de vie 1.
  * Ces ennemis sont ignores par Enemies_whipHit. Retourne le nombre d'ennemis tues. */
-int Enemies_whipHitType1Rom(EnemyState *s, int simonX, int simonY, int facingLeft, int crouched);
+int Enemies_whipHitType1Rom(EnemyState *s, int simonX, int simonY, int facingLeft, int crouched,
+                         int chain);
 
 /* Fouet contre le type 2 (7DAD, classe 1, boite 84A7 avec HL = 1805), a appeler pendant la
  * phase 3 du fouet : X du fouet = simonX +- 20 selon le regard, touche si |X fouet - X| < 17
  * et simonY - B - 3 <= Y <= simonY - B + 24 (X, Y : objet MSX), B = 18 debout, 10 accroupi.
- * Fouet de depart (C416 = 0). Un coup tue (points de vie 1, table 60E1). Les gouttes ne sont
- * pas touchables (+E = 0). Retourne le nombre d'hommes-poissons tues. */
-int Enemies_whipHitType2(EnemyState *s, int simonX, int simonY, int facingLeft, int crouched);
+ * Fouet de depart (C416 = 0) ; chain = 1 (fouet a chaine, C416 = 1) : X du fouet +- 24,
+ * |dX| < 21 (84A7). Un coup tue (points de vie 1, table 60E1). Les gouttes ne sont pas
+ * touchables (+E = 0). Retourne le nombre d'hommes-poissons tues. */
+int Enemies_whipHitType2(EnemyState *s, int simonX, int simonY, int facingLeft, int crouched,
+                         int chain);
 
 /* Fouet contre le type 4 (7DAD, classe 2 de 82CB, 8398 : boite 84A7 avec HL = 1008), a
  * appeler pendant la phase 3 du fouet : X du fouet = simonX + 20 (regard a droite, C42C = 0)
  * ou simonX - 20 (84D9), une retenue annule le coup (84B6) ; touche si |X fouet - X| < 20
  * (L = 08 + 12) et simonY - B - 3 <= Y <= simonY - B + 16 ((C425 - B - Y + 10h) & FF < 14h),
- * X, Y : objet MSX (SAT + 8, SAT + 15), B = 18 debout, 10 accroupi. Fouet de depart
- * (C416 = 0). Un coup tue. Trace openMSX : 76 tests, 13 morts, tous conformes. */
-int Enemies_whipHitType4(EnemyState *s, int simonX, int simonY, int facingLeft, int crouched);
+ * X, Y : objet MSX (SAT + 8, SAT + 15), B = 18 debout, 10 accroupi. Avec le fouet
+ * a chaine (chain = 1, C416 = 1) : X du fouet a +- 24 et |X fouet - X| < 24. Un coup tue.
+ * Traces openMSX : stage 2 salle 0, 76 tests, 13 morts ; hall salle 4, 138 tests (debout,
+ * accroupi, deux regards, cuir et chaine), 6 morts ; tous conformes. */
+int Enemies_whipHitType4(EnemyState *s, int simonX, int simonY, int facingLeft, int crouched,
+                         int chain);
 /* Armes lancees (801E -> 82A4 -> 84F0/8500, research/secondary-weapons.md) : pour chaque
  * ennemi actif dans l'ordre des blocs C800, puis pour l'emplacement C450 (k = 0) et C460
  * (k = 1), touch(ctx, k, X, Y, H, L) dit si le projectile k touche la boite de la classe

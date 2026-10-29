@@ -1,0 +1,56 @@
+# (zk) Salle 4 du hall : fouet a chaine (C416 = 1) contre le type 4. 84A7/84D9 : X du fouet
+# = C427 +- 24 et |X fouet - X| < 08 + 10h = 24 (fouet de cuir : +- 20 et < 20). Trace
+# openMSX du hall salle 4 (research/enemy-behavior.md, « Type 4 : fouet ») : 84BA donne
+# A = C427 + 24, L = 24 sur 39 tests a la chaine. L'objet est fige (objet 0A, D010) et place
+# a la main : X objet = Simon + 24 + 22 (cuir : 26, rien ; chaine : 22, mort).
+include boot_to_courtyard.inc
+until front_mode == MODES['INTERIOR'] max 3000 RIGHT
+hold A 3
+hold A+RIGHT 3
+wait 10
+hold A 3
+hold A+RIGHT 3
+wait 10
+hold A 3
+hold A+RIGHT 3
+wait 10
+hold A 3
+hold A+RIGHT 3
+wait 10
+hold A 3
+until game.room == 4 max 10 A+RIGHT
+expect game.room == 4 # salle 4 du hall
+until enemies.type5Timer == 0 max 40 # setRoom
+poke vk_enemies+127 255
+until len([e for e in enemies.enemy if e.active and e.type == 2]) > 0 max 200
+expect enemies.enemy[0].active and enemies.enemy[0].type == 2 # premier tir dans le bloc 0
+# Fige les objets (C43B, D010), Simon regarde a droite en X 100, Y 192.
+poke vk_enemies+153 255
+poke vk_enemies+154 1
+tap RIGHT 2
+poke vk_game+0 100
+expect game.player.facing == 0 and game.player.y == 192
+# Objet (146, 180) : X SAT 138, Y SAT 165 ; debout, fenetre Y de 171 a 190.
+poke vk_enemies+4 138 16
+poke vk_enemies+6 165
+# Fouet de cuir : X fouet 120, |120 - 146| = 26 : rien.
+poke vk_candles+120 0
+tap B 1
+until whip.timer == 0 max 30
+expect enemies.enemy[0].active # cuir : hors de portee
+# Chaine, objet a 148 : X fouet 124, |124 - 148| = 24 : rien.
+poke vk_candles+120 1
+poke vk_enemies+4 140 16
+poke vk_game+0 100
+tap B 1
+until whip.timer == 0 max 30
+expect enemies.enemy[0].active # chaine : |dX| = 24, rien
+# Chaine, objet a 146 : |124 - 146| = 22 : mort a l'image du test.
+poke vk_enemies+4 138 16
+poke vk_game+0 100
+tap B 1
+until not enemies.enemy[0].active max 30
+expect whip.timer == 11 and whip.facing == 0 # tue a l'image du test (7DAD), fouet a droite
+poke vk_candles+120 0
+wait 2
+shot zk_type4_chain_whip
