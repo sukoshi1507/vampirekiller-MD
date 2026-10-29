@@ -13,33 +13,55 @@ static const u16 bar_source[HUD_ROWS][3] = {
     { 27, 28, 29 }, { 41, 42, 43 }, { 51, 52, 53 }
 };
 static u32 bar_tiles[HUD_ROWS * HUD_COLS * 8];
+/* ROM tiles of the bar and, per line, the nibbles of its PLAYER fill pixels:
+ * made once, so that an update is a few ANDs per line. Building the tiles pixel
+ * by pixel took more than a frame of 68000 time, and the enemies lost a frame at
+ * each contact. */
+static u32 bar_full[HUD_ROWS * HUD_COLS * 8];
+static u32 bar_fill[HUD_ROWS * HUD_COLS * 8];
+static bool bar_ready = FALSE;
 static int drawn_pixels = -1;
+
+static void prepare_bar(void)
+{
+    const u32 *rom = vk_scenes[6].tiles;
+    u16 row, col, line, p;
+    for (row = 0; row < HUD_ROWS; row++)
+        for (col = 0; col < HUD_COLS; col++)
+        {
+            const u16 source = bar_source[row][col == 0 ? 0 : (col == HUD_COLS - 1 ? 2 : 1)];
+            const u16 tile = (row * HUD_COLS + col) * 8;
+            for (line = 0; line < 8; line++)
+            {
+                const u32 pixels = rom[source * 8 + line];
+                u32 fill = 0;
+                for (p = 0; p < 8; p++)
+                    if (((pixels >> (28 - 4 * p)) & 0xF) == HUD_FILL) fill |= 0xFUL << (28 - 4 * p);
+                bar_full[tile + line] = pixels;
+                bar_fill[tile + line] = fill;
+            }
+        }
+    bar_ready = TRUE;
+}
 
 /* Copies the ROM tiles and clears each PLAYER fill pixel at or past 'filled'.
  * Bar pixel 0 is pixel 4 of column 7 (pixels 0..3 hold the margin and border). */
 static void build_bar(int filled)
 {
-    const u32 *rom = vk_scenes[6].tiles;
-    u16 row, col, line;
-    for (row = 0; row < HUD_ROWS; row++)
-        for (col = 0; col < HUD_COLS; col++)
+    u16 col, i;
+    if (!bar_ready) prepare_bar();
+    for (col = 0; col < HUD_COLS; col++)
+    {
+        /* Pixels p of the column with col * 8 + p - 4 >= filled: the low nibbles. */
+        const int first = filled + 4 - col * 8;
+        const u32 cut = first <= 0 ? 0xFFFFFFFFUL : (first >= 8 ? 0 : 0xFFFFFFFFUL >> (4 * first));
+        u16 row;
+        for (row = 0; row < HUD_ROWS; row++)
         {
-            const u16 source = bar_source[row][col == 0 ? 0 : (col == HUD_COLS - 1 ? 2 : 1)];
-            u32 *out = &bar_tiles[(row * HUD_COLS + col) * 8];
-            for (line = 0; line < 8; line++)
-            {
-                u32 pixels = rom[source * 8 + line];
-                u16 p;
-                for (p = 0; p < 8; p++)
-                {
-                    const u16 shift = 28 - 4 * p;
-                    const int bar_x = col * 8 + p - 4;
-                    if (((pixels >> shift) & 0xF) == HUD_FILL && bar_x >= filled)
-                        pixels &= ~(0xFUL << shift);
-                }
-                out[line] = pixels;
-            }
+            const u16 tile = (row * HUD_COLS + col) * 8;
+            for (i = tile; i < tile + 8; i++) bar_tiles[i] = bar_full[i] & ~(bar_fill[i] & cut);
         }
+    }
 }
 
 /* Fields of the top line: tile range, x of the text, and the cached value. */

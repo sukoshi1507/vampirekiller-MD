@@ -118,6 +118,7 @@ START en partie (Simon vivant ou mourant) : son FD (`51C4`), texte « PAUSE » e
 - `44C6` (nouvelle partie) remet `C405..` à 0, puis `C410 = 3`, `C411 = 0`, `C412 = 1` : la cour affiche STAGE-00. La sortie de stage (`434F`) incrémente `C410` et `C411` (puis l'état 4 décrémente `C410`).
 - Score : seul appelant de l'addition `44EE` (E, D, C = octets BCD ajoutés à `C405`, `C406`, `C407` ; 999999 en cas de retenue ; rien si `C002` bit 7) : `81AB`, à la mort d'un ennemi (`7DF9` fouet, `7E21`, `7EB6`, `8072` arme). Points = premier octet de la table `81CE` indexée par le type − 1, en centaines (type 1 : 100, 2 : 200, 4 : 100, 5 : 100 ; types 11h et 17h : + 30 000 et + 50 000).
 - Port : `hud.c` (`vk_hud_show`, `vk_hud_status`, `vk_hud_add_score`), composition des caractères à n'importe quel X par `msx_text.c`. Le HUD entier est dessiné avec la salle ; la réapparition met les vies à jour avant de dessiner la salle (état 4, `4237`). Scénarios `b` (100 points) et `d` (P-01 à la réapparition).
+- Barre PLAYER : `hud.c` gardait une reconstruction des 27 tuiles pixel par pixel à chaque changement d'énergie, plus longue qu'une image de 68000 : à chaque contact, le jeu perdait une image (ennemis figés une image). Les tuiles ROM et les masques des pixels de remplissage sont maintenant calculés une fois (`prepare_bar`), une mise à jour ne fait que des ET par ligne. Vérifié par le scénario `c` (parité des ennemis à l'image qui suit le contact).
 
 ## 4. Scénarios et preuves
 

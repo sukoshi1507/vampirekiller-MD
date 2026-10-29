@@ -10,6 +10,9 @@ shot c-contact
 expect enemies.energy == 30 # -2 par contact (ENEMY_CONTACT_DAMAGE)
 expect enemies.invuln > 0 # invulnerabilite lancee
 expect enemies.recoil > 0 and game.recoil == 1 # recul en cours (C420 = 5, phase 0)
+set parity0 enemies.parity
+wait 1
+expect enemies.parity != parity0 # pas d'image longue au contact (barre du HUD, hud.c)
 set x_contact game.player.x
 set y_contact game.player.y
 set dir game.recoil_dir

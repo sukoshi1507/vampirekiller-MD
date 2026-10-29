@@ -25,7 +25,7 @@ expect game.room == 4 # salle 4 du hall
 # (setRoom) ; la premiere passe, et le premier appel de 9CC3, viennent a l image suivante.
 until enemies.type5Timer == 0 max 40 # setRoom (la salle 3 garde 1 apres sa panthere)
 set f0 frame
-# Simon invulnerable (C42D) : un contact coute ici une image de jeu au port (image longue), hors sujet.
+# Simon invulnerable (C42D) : pas de contact ni de recul pendant la mesure du tir.
 poke vk_enemies+127 255
 set ph ram8('enemy_timer')
 set c4 enemies.type4Count
