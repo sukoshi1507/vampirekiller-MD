@@ -946,7 +946,10 @@ int Enemies_frame(EnemyState *s, EnemySpawnTimer *t, const EnemyRoomVars *v)
     if (s->itemPhase == 0) {
         s->tick++;                   /* C003 (414D) */
         /* 7604 : tant que C43E != 0, F3EB = 0Eh si le bit 1 de C43E (avant la baisse) est
-         * mis, 0 sinon, puis CHGCLR : 24 passes, 4 images de chaque couleur, fin a 0. */
+         * mis, 0 sinon, puis CHGCLR : 24 passes, 4 images de chaque couleur, fin a 0.
+         * Second declencheur, non porte : 75D4 (6B30) met C43E = 18h quand C445 tombe a 0,
+         * 20 passes apres la defaite d'un boss (7E17 : jauge ENEMY C418 a 0) ; aucun boss
+         * dans les stages 0-2 (7777[D000] = 0). */
         if (s->flash) {
             s->border = (s->flash & 2) ? ENEMY_FLASH_COLOR : 0;
             s->flash--;
