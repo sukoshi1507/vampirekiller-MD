@@ -25,6 +25,7 @@ et les limites. « Prouvé » = mesuré en trace openMSX ou lu dans la ROM ;
 | `input-gate.md` | Déblocage du contrôle en openMSX, vitesse de marche | Prouvé (1 px par image). |
 | `input-mapping-openmsx.md` | Mapping clavier openMSX | Prouvé. |
 | `player-format.md` | Simon, collisions et saut (jalon 3) | Historique, à jour pour les collisions. |
+| `frame-timing.md` | Calendrier d'affichage : du calcul d'une passe à l'écran, par élément (sprites, décor, HUD, bordure, son, manette), MSX et MD | Prouvé (trace openMSX, harnais MD). Porté : sprites de Simon et des ennemis à 2 images comme le MSX. Restent : tuiles du décor et certains sons une image trop tôt. |
 | `jump-compare.md` | Saut MSX2 et MD : cadence et trajectoire | Prouvé : le MD allait deux fois plus vite. Corrigé (cadence à 30 Hz, commit `0e7d5a7`). Saut en mouvement non comparé. |
 | `stairs.md` | Escaliers : mécanisme et positions | Mécanisme prouvé ; positions prouvées pour 2 volées du stage 1 salle 1, prédites pour les autres. |
 | `down-stairs.md` | Descente par BAS | Entrée par la tuile 3 prouvée ; tuile 4 déduite. |

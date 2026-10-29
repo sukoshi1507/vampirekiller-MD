@@ -4,7 +4,8 @@
 # vk_enemies : energie +126, C434 +143, C43A +144, C440 +145.
 # Clignotement de Simon (790C) : palette du sprite 0 (vdpSpriteCache+4, bits 13-14 : PAL2
 # normal, PAL3 silhouette) et pixels rouges (couleur 8 = 020E) autour de Simon ; l'image
-# capturee a une image de retard sur la table de sprites (DMA a la VBlank suivante).
+# capturee a une image de retard sur la table de sprites (DMA a la VBlank suivante), qui montre
+# Simon calcule au tour precedent (2 images apres le calcul, comme le MSX : research/frame-timing.md).
 # Eclair de 05 (7604) : backdrop_color (registre 7, ecrit juste apres la VBlank) et le
 # pixel (2, 2), transparent.
 include boot_to_courtyard.inc
@@ -31,6 +32,7 @@ expect ram8('vk_candles+171') == 0x09 and 0x90 <= ram8('enemy_state+143') <= 0x9
 # 7932 : silhouette couleur 8 une passe sur deux (2 images sur 4).
 set red lambda: len([c for c in colors(game.player.x - 8, game.player.y - 31, game.player.x + 16, game.player.y + 1) if c == (238, 0, 32)]) > 40
 set pal lambda: (ram16('vdpSpriteCache+4') >> 13) & 3
+wait 2                                             # les sprites de Simon ont 2 images de retard (research/frame-timing.md)
 set a0 (pal(), red())
 wait 1
 set a1 (pal(), red())
@@ -55,6 +57,7 @@ poke vk_candles+6 3
 wait 2
 expect ram8('vk_candles+171') == 0x08 and ram8('enemy_state+144') > 0x90
 # 7924 : silhouette couleur 0Eh (blanc 0EEE), meme cadence.
+wait 1                                             # les sprites de Simon ont 2 images de retard (research/frame-timing.md)
 set b0 pal()
 wait 1
 set b1 pal()

@@ -55,7 +55,7 @@ static const u32 arm_tiles[32] = {
     0x0000FF00UL,0,0,0
 };
 /* PAL3. Entries 1..3 belong to Simon's one-colour silhouette (790C, see
- * simon_palette below): Simon's tiles only use indices 1..3 (MSX colours 1, 2 and
+ * load_simon_color below): Simon's tiles only use indices 1..3 (MSX colours 1, 2 and
  * their OR 3), so his sprites take PAL3 on the blink passes. The flame and spark
  * tiles (MSX indices 1, 2, 8, E) are loaded with 1 -> 4 and 2 -> 5 (load_flames). */
 #define SIMON_FLASH_FIRST 1
@@ -242,26 +242,67 @@ static u16 show_enemy_sprites(u16 tail)
  * passes where bit 0 of C003 is set: a one-colour silhouette, 2 frames out of 4.
  * The colour is the one of the last pass (enemies.c), so a pickup shows from the
  * next odd pass on, as on the MSX (openMSX trace). The MD sprites switch to PAL3, whose entries 1..3 then hold that colour of the
- * room palette (PAL2, the MSX palette). Returns the palette of Simon's sprites. */
-static u16 simon_palette(void)
+ * room palette (PAL2, the MSX palette). Returns the MSX colour, 0 for none. */
+static u8 simon_color(void)
 {
-    const u8 color = (u8)(room_key() ? Enemies_simonColor(&vk_enemies) : 0);
-    if (!color) return PAL2;
-    if (color != simon_flash_color)
+    return (u8)(room_key() ? Enemies_simonColor(&vk_enemies) : 0);
+}
+
+/* PAL3 entries 1..3 for the silhouette colour of the sprite table being sent. */
+static void load_simon_color(u8 color)
+{
+    if (!color || color == simon_flash_color) return;
+    /* Sent in the next VBlank with the sprite table (DMA queue). */
+    static u16 rgb[3];
+    rgb[0] = rgb[1] = rgb[2] = PAL_getColor((u16)(PAL2 * 16 + color));
+    PAL_setColors((u16)(PAL3 * 16 + SIMON_FLASH_FIRST), rgb, 3, DMA_QUEUE);
+    simon_flash_color = color;
+}
+
+/* Display delay (research/frame-timing.md). The MSX sends its sprite buffers (SAT
+ * D600, colours D400) at the start of the next pass (6560/658A, ~1 ms after the
+ * VBLANK): a sprite computed in a pass shows 2 frames after the pass starts, while
+ * the bitmap (decor, HUD, candles, drops), the border (CHGCLR) and the sounds change
+ * during the pass or at the next VBLANK. Here the sprite table of a loop turn goes
+ * out at the next VBlank (1 frame): Simon, his whip and the enemies, the MSX
+ * sprites, are therefore shown from the previous turn's entries (2 frames, as on
+ * the MSX), with the shield tiles and silhouette colour they were built with. The
+ * candles, drops, HUD objects and courtyard torches, MSX bitmap, stay at 1 frame. */
+#define SIMON_SPRITES 7
+#define ENEMY_SPRITE_MAX (ENEMY_MAX * ENEMY_SPRITES)
+static VDPSprite late_simon[SIMON_SPRITES];
+static VDPSprite late_enemies[ENEMY_SPRITE_MAX];
+static u16 late_enemy_count;
+static bool late_valid;
+static int late_shield = -1;
+static u8 late_color;
+
+void vk_actors_flush(void)
+{
+    late_valid = FALSE;
+    late_enemy_count = 0;
+    late_shield = -1;
+    late_color = 0;
+}
+
+/* Exchanges the n entries at cache[first] (this turn) with the delayed ones. */
+static void swap_entries(VDPSprite *late, u16 first, u16 n)
+{
+    u16 i;
+    for (i = 0; i < n; i++)
     {
-        /* Sent in the next VBlank with the sprite table (DMA queue). */
-        static u16 rgb[3];
-        rgb[0] = rgb[1] = rgb[2] = PAL_getColor((u16)(PAL2 * 16 + color));
-        PAL_setColors((u16)(PAL3 * 16 + SIMON_FLASH_FIRST), rgb, 3, DMA_QUEUE);
-        simon_flash_color = color;
+        const VDPSprite now = vdpSpriteCache[first + i];
+        vdpSpriteCache[first + i] = late[i];
+        late[i] = now;
     }
-    return PAL3;
 }
 
 /* 7604 (object 05, C43E): BDRCLR F3EB = 0Eh or 0 then CHGCLR. The MD backdrop
  * (register 7, PAL0 = the room palette) stands for the MSX border colour; it shows
  * wherever the planes and sprites are transparent. Called right after the VBlank,
- * so the whole picture changes at once, one frame after the pass, like the sprites. */
+ * so the whole picture changes at once, one frame after the pass. On the MSX,
+ * CHGCLR (~8 ms into the pass) changes the border from line ~80 of that frame and
+ * the whole next frame; the sprites come one frame later (research/frame-timing.md). */
 void vk_show_backdrop(void)
 {
     const u8 color = (u8)(room_key() ? vk_enemies.border : 0);
@@ -295,26 +336,23 @@ void vk_show_player(const VKPlayer *shown)
      * tick C003 is set: 4 frames hidden, 4 shown, from the pass of the hit on
      * (openMSX trace, research/castle-candles.md 9.8). */
     if (Enemies_simonHidden(&vk_enemies)) parked.y = 255;
-    const u16 simon_pal = simon_palette();
+    const u8 color = simon_color();
+    const u16 simon_pal = color ? PAL3 : PAL2;
     /* Enemy sprites come after the player chain: sprite 6 (or 7 when the target is
      * shown) links to ENEMY_SPRITE_BASE when there are enemies, then the candles and
-     * objects of candle_view.c close the chain. */
+     * objects of candle_view.c close the chain. The enemies shown are those of the
+     * previous turn (late_enemy_count), see swap_entries. */
     const u16 candle_count = vk_candle_view_sprites();
     const u16 candle_link = candle_count ? CANDLE_SPRITE_BASE : 0;
     const u16 enemy_count = show_enemy_sprites(candle_link);
-    const u16 enemy_link = enemy_count ? ENEMY_SPRITE_BASE : candle_link;
+    const u16 shown_enemies = late_valid ? late_enemy_count : 0;
+    const u16 enemy_link = shown_enemies ? ENEMY_SPRITE_BASE : candle_link;
     const bool target_visible = vk_targets_visible();
     const int attack_frame = vk_whip_arm_frame(&vk_whip);
     const int crouch_mode = !player->on_stairs && (player->crouched || (attack_frame && vk_whip.crouched));
     const u16 crouch_frame = attack_frame ? (u16)vk_whip_crouch_visual_step(&vk_whip) : 0;
     const u16 crouch_facing = attack_frame ? vk_whip.facing : player->facing;
     const int shield = shield_pose(player, crouch_mode, attack_frame);
-    if (shield >= 0 && shield != shield_loaded)
-    {
-        VDP_loadTileData((const u32 *)vk_player_shield_tiles[shield], SHIELD_TILE_INDEX,
-                         VK_PLAYER_TILES_PER_POSE, DMA_QUEUE);
-        shield_loaded = shield;
-    }
     /* Standing body on sprite 0. In crouch mode and during any attack the body
      * is the two-half composition drawn on sprites 5 and 6 (below); the lash
      * is part of those ROM-derived frames, so no separate lash is overlaid. */
@@ -416,6 +454,30 @@ void vk_show_player(const VKPlayer *shown)
                 i == 0 ? 6 : (target_visible ? 7 : enemy_link));
         }
     }
+    /* This turn's Simon and enemies go to late_*, the previous turn's to the table,
+     * with the shield tiles and the silhouette colour they need (same VBlank). */
+    {
+        const int shield_now = shield;
+        swap_entries(late_simon, 0, SIMON_SPRITES);
+        swap_entries(late_enemies, ENEMY_SPRITE_BASE,
+                     enemy_count > shown_enemies ? enemy_count : shown_enemies);
+        if (!late_valid)
+            for (u16 i = 0; i < SIMON_SPRITES; i++)
+                VDP_setSpriteFull(i, -32, -32, SPRITE_SIZE(1, 1), 0, (u8)(i + 1));
+        VDP_setSpriteLink(SIMON_SPRITES - 1, target_visible ? 7 : enemy_link);
+        if (shown_enemies) VDP_setSpriteLink((u16)(ENEMY_SPRITE_BASE + shown_enemies - 1), candle_link);
+        if (late_valid && late_shield >= 0 && late_shield != shield_loaded)
+        {
+            VDP_loadTileData((const u32 *)vk_player_shield_tiles[late_shield], SHIELD_TILE_INDEX,
+                             VK_PLAYER_TILES_PER_POSE, DMA_QUEUE);
+            shield_loaded = late_shield;
+        }
+        if (late_valid) load_simon_color(late_color);
+        late_enemy_count = enemy_count;
+        late_shield = shield_now;
+        late_color = color;
+        late_valid = TRUE;
+    }
     /* Courtyard flames or training target on sprites 7.. (room_view.c). */
     if (vk_draw_targets(enemy_link))
     {
@@ -424,7 +486,7 @@ void vk_show_player(const VKPlayer *shown)
         return;
     }
     VDP_updateSprites(candle_count ? CANDLE_SPRITE_BASE + candle_count
-                      : enemy_count ? ENEMY_SPRITE_BASE + enemy_count : (target_visible ? 8 : 7), DMA_QUEUE);
+                      : shown_enemies ? ENEMY_SPRITE_BASE + shown_enemies : (target_visible ? 8 : 7), DMA_QUEUE);
 }
 
 /* Whip level given by an object (C416, candles.c): loads its standing frames.
@@ -441,7 +503,7 @@ void vk_set_whip_level(int level)
 }
 
 /* Flame and spark tiles with MSX colours 1 and 2 moved to PAL3 entries 4 and 5,
- * so that entries 1..3 stay free for Simon's silhouette (simon_palette). */
+ * so that entries 1..3 stay free for Simon's silhouette (load_simon_color). */
 static void load_flames(void)
 {
     static u32 frame[VK_FLAME_TILES_PER_FRAME * 8];
@@ -473,6 +535,7 @@ void vk_load_whip_graphics(void)
     VDP_loadTileData(target_tiles, TARGET_TILE_INDEX, 4, CPU);
     load_flames();
     simon_flash_color = 0;
+    vk_actors_flush();
     VDP_loadTileData((const u32 *)vk_simon_crouch_tiles, CROUCH_TILE_INDEX, VK_CROUCH_TILE_COUNT, CPU);
     vk_whip_reset(&vk_whip);
     vk_whip_set_level(&vk_whip, whip_level_choice);

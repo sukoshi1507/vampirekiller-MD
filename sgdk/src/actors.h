@@ -63,6 +63,9 @@ void vk_load_whip_graphics(void);
 /* Simon, the whip, the hall enemies and the targets of room_view.c, as hardware
  * sprites, then queues the sprite table. */
 void vk_show_player(const VKPlayer *player);
+/* Forgets the delayed Simon and enemy sprites (vk_show_player shows the previous
+ * turn's): the next table has none, as after the MSX clears its SAT (47F0, 63C5). */
+void vk_actors_flush(void);
 /* Backdrop colour of object 05's flash (7604, C43E); call it right after the VBlank. */
 void vk_show_backdrop(void);
 /* One gameplay frame of the hall enemies (spawn, move, contact, whip hits, recoil). */

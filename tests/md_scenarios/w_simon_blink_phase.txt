@@ -4,8 +4,12 @@
 # passe (7FE2), la silhouette commence a la passe suivante si C003 y est impair : ramassage
 # dans une passe paire -> 75 passes (150 images), impaire -> 74 passes (148 images).
 # Port : enemies.tick = C003 (+1 a l'image de passe, itemPhase 0), couleur figee a la passe ;
-# pal() = palette du sprite 0 calculee a l'image (PAL3 = silhouette), affichee a l'image
-# suivante (red() : pixels rouges 020E de la capture). Image 0 = image du ramassage.
+# pal() = palette du sprite 0 de la table envoyee a la VBlank suivante (PAL3 = silhouette),
+# qui porte Simon calcule au tour precedent (research/frame-timing.md) ; red() : pixels
+# rouges 020E de la capture, une image plus tard. Image 0 = image du ramassage, debut de sa
+# passe. Silhouette affichee aux images +4 a +301 (paire) ou +6 a +299 (impaire) : la trace
+# MSX donne les memes images comptees depuis le debut de la passe du ramassage (2150 ->
+# 2154-2451, 2152 -> 2158-2451).
 include boot_to_courtyard.inc
 until front_mode == MODES['INTERIOR'] max 3000 RIGHT
 wait 40
@@ -27,7 +31,7 @@ expect ram8('vk_candles+171') == 0x09 and enemies.itemPhase == 0 and enemies.tic
 set acc []
 until acc.append((pal(), red())) or len(acc) == 306 max 310
 set on [i for i, a in enumerate(acc) if a[0] == 3]
-expect on[0] == 2 and on[-1] == 299 and len(on) == 150 # passes 1, 3 ... 149 apres le ramassage
+expect on[0] == 3 and on[-1] == 300 and len(on) == 150 # passes 1, 3 ... 149 apres le ramassage
 expect [i for i, a in enumerate(acc) if a[1]] == [i + 1 for i in on] # silhouette rouge a l'image suivante
 # 08 dans une passe impaire : rien a la passe suivante (paire), 74 passes.
 until enemies.killTimer == 0 max 20
@@ -39,5 +43,5 @@ expect ram8('vk_candles+171') == 0x08 and enemies.itemPhase == 0 and enemies.tic
 set acc []
 until acc.append(pal()) or len(acc) == 306 max 310
 set on [i for i, a in enumerate(acc) if a == 3]
-expect on[0] == 4 and on[-1] == 297 and len(on) == 148 # passes 2, 4 ... 148 apres le ramassage
+expect on[0] == 5 and on[-1] == 298 and len(on) == 148 # passes 2, 4 ... 148 apres le ramassage
 expect ram8('simon_flash_color') == 0x0E # 7924 : couleur 0Eh

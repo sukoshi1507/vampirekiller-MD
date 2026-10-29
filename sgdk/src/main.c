@@ -188,9 +188,11 @@ static void castle_entrance_step(void)
 }
 
 /* Sprite 0 parked and alone in the list: no sprite on screen (63C5 writes Y E0 to
- * the whole SAT). The next vk_show_player rebuilds the full list. */
+ * the whole SAT). The next vk_show_player rebuilds the full list, without the
+ * delayed Simon and enemies of the old room. */
 static void hide_sprites(void)
 {
+    vk_actors_flush();
     VDP_setSpriteFull(0, -32, -32, SPRITE_SIZE(1, 1), 0, 0);
     VDP_updateSprites(1, DMA_QUEUE);
 }

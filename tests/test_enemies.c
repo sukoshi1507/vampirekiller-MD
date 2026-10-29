@@ -1431,8 +1431,8 @@ static void test_contact_posture(void)
  *   baisse est non nul : passes 0 a 88 du coup. Mesure : coup a la passe C003 = 67,
  *   cache aux images +2/+3, montre +4 a +7, cache +8...
  * Ici une image de passe (tick + 1) et l'image suivante montrent la valeur figee a la
- * passe ; le port affiche une image apres le calcul (le MSX deux, decalage commun a tous
- * les sprites). */
+ * passe ; comme le MSX, le port affiche les sprites de Simon deux images apres le calcul
+ * (actors.c, research/frame-timing.md). */
 static void blink_vars(EnemyRoomVars *v)
 {
     vars_default(v);

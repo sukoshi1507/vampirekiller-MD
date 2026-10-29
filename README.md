@@ -64,6 +64,11 @@ Ce qui fonctionne dans la ROM Mega Drive :
   redessinée, cadence mesurée par une trace openMSX) ; avec l'armure 03 (ou 04), Simon
   prend les poses au bouclier de la ROM ; case comparée à une capture openMSX
   (`research/castle-candles.md` 9.8).
+- **Calendrier d'affichage** : comme sur le MSX2, Simon, son fouet et les ennemis
+  (sprites MSX) apparaissent deux images après le calcul de la passe, le décor, le HUD,
+  la couleur de fond et les sons une image après (trace openMSX et harnais MD,
+  `research/frame-timing.md`). Restent : tuiles du décor une image trop tôt, sons demandés
+  en fin de passe MSX une image trop tôt, manette lue à chaque image (MSX : une sur deux).
 - **Ajout du port, saut depuis l'escalier** : sur une marche, C fait sauter Simon hors de
   la volée. Le MSX2 ne le permet pas (HAUT, sa touche de saut, y fait monter) ; ce saut
   est gardé comme un plus de jouabilité (`research/stairs.md`).
@@ -73,8 +78,7 @@ Ce qui n'est pas porté ou reste provisoire :
 - **Type 4** (salle 4, volant) : dessin, battement d'ailes et vol en vague d'après le
   MSX2 ; tué par le fouet d'après la table des objets (boîte provisoire, direction
   du fouet non vérifiée, `research/enemy-behavior.md`).
-- **Type 5** : le retard d'affichage d'une mise à jour du MSX et l'objet de mort (`1E`)
-  ne sont pas reproduits ; la phase 3 du fouet
+- **Type 5** : l'objet de mort (`1E`) n'est pas reproduit ; la phase 3 du fouet
   est assimilée au fouet déployé (`vk_whip_phase` 2) et le recul face à une panthère
   assise est provisoire.
 - **Stage 2** : seules les chauves-souris (salles 0, 1, 3) sont portées ; le type 1 de la
