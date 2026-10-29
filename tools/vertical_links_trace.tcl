@@ -2,7 +2,8 @@
 # Usage : run_vertical_links_trace.py ROM.rom OUTDIR PLANFILE [TIMEOUT_S]
 # Variables attendues : vk_out (dossier de sortie), vk_plan (lignes d'actions).
 # Actions : hold KEYS MAX LABEL | wait N | poke ADDR VAL | gotox X MAX LABEL | snap LABEL (le script
-# ajoute doit definir key_snap). Journaux : frames.csv, writes.csv, events.txt.
+# ajoute doit definir key_snap) ; toute autre action est passee a vk_custom_action si le script
+# ajoute la definit. Journaux : frames.csv, writes.csv, events.txt.
 # Deux poke de suite : mettre un wait 1 entre eux (sinon l'action suivante est sautee).
 set throttle off
 set pause off
@@ -101,7 +102,11 @@ proc vk_next_action {} {
                 set vk_act_max 1; set vk_act_label poke
                 return
             }
-            default { set vk_act_max 1; set vk_act_label $kind; vk_press 0 }
+            default {
+                set vk_act_max 1; set vk_act_label $kind; vk_press 0
+                # Actions propres a un script ajoute (ex. item OBJ, simon_blink_trace_extra.tcl).
+                if {[llength [info procs vk_custom_action]]} { vk_custom_action $w }
+            }
         }
         return
     }

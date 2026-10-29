@@ -125,9 +125,13 @@ typedef struct {
     EnemyU8 itemPhase;       /* les minuteries ci-dessus ne baissent qu'une image sur deux */
     EnemyU8 contactScore;    /* image courante : points (centaines) des ennemis detruits par C434 (81AB) */
     EnemyU8 itemSound;       /* image courante : effet a jouer (0D destruction par C434, 17 C43A a 10h), 0 sinon */
-    EnemyU8 tick;            /* C003 : +1 a chaque passe de 2 images (phase PROVISOIRE, C003 court librement) */
+    EnemyU8 tick;            /* C003 : +1 a chaque passe de 2 images (414D) ; court librement */
     EnemyU8 flash;           /* C43E (objet 05) : eclair de la couleur de bordure (7604) */
     EnemyU8 border;          /* F3EB : couleur de bordure posee par 7604 (0 ou 0Eh) */
+    /* Clignotement de Simon fige a chaque passe, comme les tampons D400/D600 que la passe
+     * suivante envoie en VRAM (trace, research/castle-candles.md 9.8). */
+    EnemyU8 silhouette;      /* 790C : 0, 8 ou 0Eh, apres la baisse des minuteries de la passe */
+    EnemyU8 hidden;          /* 78CC : C42D non nul apres sa baisse et bit 1 de C003 */
 } EnemyState;
 
 /* Drapeaux de salle du stage 2 (D000 = 2) : ROM 85D7-85DC (pointeur 85AA), salles 0 a 5.
@@ -201,8 +205,12 @@ void Enemies_item(EnemyState *s, EnemyU8 kind, EnemyU8 c431);
 #define ENEMY_SIMON_KILL_COLOR 0x08  /* 7932 : Simon en couleur 8 avec C434 (objet 09) */
 /* Couleur MSX de toutes les lignes des sprites de Simon (790C) : avec C43A puis C434 non
  * nuls et le bit 0 de C003 mis, 0Eh puis 8 (sans le bit CC 40h : silhouette d'une seule
- * couleur) ; 0 = couleurs normales (1 et 42h). */
+ * couleur) ; 0 = couleurs normales (1 et 42h). Valeur figee a la derniere passe : un
+ * objet ramasse (7FE2, apres 790C) ne compte qu'a la passe suivante. */
 EnemyU8 Enemies_simonColor(const EnemyState *s);
+/* 78CC : sprites de Simon caches (Y E0) quand C42D, apres sa baisse de la passe, est non
+ * nul et le bit 1 de C003 mis ; des la passe du coup (6F9F precede 78CC). */
+EnemyU8 Enemies_simonHidden(const EnemyState *s);
 /* Fin d'une mort (70BF) : C434, C43A, C440 et C441 a 0 (C701 &= 80 retire l'armure). */
 void Enemies_death(EnemyState *s);
 
