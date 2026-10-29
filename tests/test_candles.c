@@ -28,11 +28,11 @@ static void place(VKGame *g, VKArea area, VKByte stage, VKByte room, VKByte x, V
     g->player.facing = 0;
 }
 
-/* Whip in its full lash (phase 2, C422 = 3) from Simon's place. */
+/* Whip on its test frame (C422 = 3, vk_whip_active) from Simon's place. */
 static void lash(VKWhip *w, const VKGame *g, int facing)
 {
     vk_whip_reset(w);
-    w->timer = 5;
+    w->timer = VK_WHIP_STRIKE_TIMER;
     w->facing = (VKByte)facing;
     w->x = g->player.x;
     w->y = g->player.y;
@@ -62,10 +62,35 @@ int main(void)
     lash(&w, &g, 0);
     assert(vk_candle_whip_touch(vk_candles_def(&c, 0), &w, 0));
     assert(!vk_candle_whip_touch(vk_candles_def(&c, 1), &w, 0));
-    w.timer = 9;                                  /* phase 1: no touch */
+    w.timer = VK_WHIP_STRIKE_TIMER + 1;           /* C422 = 2: no test */
+    assert(!vk_candle_whip_touch(vk_candles_def(&c, 0), &w, 0));
+    w.timer = VK_WHIP_STRIKE_TIMER - 1;           /* C422 = 4: no test */
     assert(!vk_candle_whip_touch(vk_candles_def(&c, 0), &w, 0));
     lash(&w, &g, 1);                              /* facing left: whip X 24 */
     assert(!vk_candle_whip_touch(vk_candles_def(&c, 0), &w, 0));
+    /* Stroke in a jump at x 44 (openMSX, scratchpad/whip-jump/run3): the test uses
+     * Simon's Y of the pass after the launch. Launched at Y 164 going up, tested at
+     * 159 (159 - 18 - 144 < 0): no touch; launched at 159 coming down, tested at
+     * 164: the torch goes out. Jump steps on the frames 2 and 4 after the press. */
+    {
+        static const VKByte up[4] = {164, 164, 159, 159}, down[4] = {159, 159, 164, 164};
+        const VKByte *const ys[2] = {up, down};
+        int k, f;
+        for (k = 0; k < 2; k++)
+        {
+            VKPlayer p = g.player;
+            vk_whip_reset(&w);
+            p.y = ys[k][0];
+            vk_whip_tick(&w, &p, 1);
+            for (f = 1; f < 4; f++)
+            {
+                p.y = ys[k][f];
+                vk_whip_tick(&w, &p, 0);
+                assert(vk_whip_active(&w) == (f == 3));
+            }
+            assert(vk_candle_whip_touch(vk_candles_def(&c, 0), &w, 0) == k);
+        }
+    }
 
     /* The hit puts it out, a small heart bursts 16 frames then sways down. */
     lash(&w, &g, 0);

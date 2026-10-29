@@ -29,10 +29,11 @@ expect enemies.enemy[0].y == 0x81 # pose sur le sol (pieds en A0), comme au hall
 wait 20
 shot j-zombie-droite
 # Fouet debout a droite : X du fouet 165, touche si |165 - X| < 17 (X = x SAT + 8).
-until enemies.enemy[0].x <= 180 max 200
+# Un seul test par coup (C422 = 3, whip.timer 11, 3 images apres l'appui).
+until enemies.enemy[0].x <= 174 max 200
 tap B 1
 until not enemies.enemy[0].active max 30
-expect 3 <= whip.timer <= 7 # tue pendant la phase 2 du port (phase 3 du MSX)
+expect whip.timer == 11 # tue a l'image du test du port (passe C422 = 3 du MSX)
 expect enemies.energy == 32 # tue avant le contact
 # Deuxieme tir (104 images apres le premier) : a gauche, il avance vers la droite.
 until enemies.alive > 0 max 200

@@ -173,19 +173,16 @@ void vk_step_enemies(void)
         int hits, fish = 0;
         vk_whip_bounds(&vk_whip, &left, &top, &right, &bottom);
         hits = Enemies_whipHit(&vk_enemies, left, top, right, bottom);
-        /* Type 5: only in the MSX whip phase 3 (C422 = 3), taken as the full lash
-         * (vk_whip_phase 2, PROVISIONAL match), from the latched whip origin. */
-        if (vk_whip_phase(&vk_whip) == 2)
-        {
-            hits += Enemies_whipHitType5(&vk_enemies, vk_whip.x, vk_whip.y,
-                                         vk_whip.facing, vk_whip.crouched);
-            /* Stage 2 type 1: same phase, ROM box of class 1 (enemies.h). */
-            hits += Enemies_whipHitType1Rom(&vk_enemies, vk_whip.x, vk_whip.y,
-                                            vk_whip.facing, vk_whip.crouched);
-            /* Stage 2 type 2 (fishman): same phase, ROM box of class 1. */
-            fish = Enemies_whipHitType2(&vk_enemies, vk_whip.x, vk_whip.y,
+        /* 7DAD: one test per stroke, in the pass with C422 = 3 (vk_whip_active),
+         * from Simon's place in that pass (C427/C425, whip.c). Type 5: */
+        hits += Enemies_whipHitType5(&vk_enemies, vk_whip.x, vk_whip.y,
+                                     vk_whip.facing, vk_whip.crouched);
+        /* Stage 2 type 1: ROM box of class 1 (enemies.h). */
+        hits += Enemies_whipHitType1Rom(&vk_enemies, vk_whip.x, vk_whip.y,
                                         vk_whip.facing, vk_whip.crouched);
-        }
+        /* Stage 2 type 2 (fishman): ROM box of class 1. */
+        fish = Enemies_whipHitType2(&vk_enemies, vk_whip.x, vk_whip.y,
+                                    vk_whip.facing, vk_whip.crouched);
         /* 7DF9 -> 81AB: score of the killed enemy, table 81CE in hundreds: types
          * 1, 4 and 5 give 100, type 2 (fishman) 200. */
         if (hits || fish) vk_hud_add_score((u32)hits * 100 + (u32)fish * 200);

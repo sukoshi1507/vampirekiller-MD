@@ -93,7 +93,7 @@ static const VkWhipCell vk_whip_cells_standing[] = {
 
 Changements nécessaires (historique, partiellement appliqués) :
 - `vk_whip_bounds` : la boîte de la trace (x +8 à +39, y-31..-16) n'a pas été reprise. Le portage utilise la lanière mesurée en jeu (x+8..x+32, y-22..y-15, inclusive). Accroupi : non mesuré.
-- Fenêtre de collision : la lanière est visible de la phase timer 3 à 10 dans le jeu MD (`timer ≥ 8 : 16 px` à remplacer). Au MSX : sprite visible de t07 à t14, soit 8 ticks ; pour le portage, la fenêtre utile est donc le timer 3 à 10, en gardant le décalage de deux ticks.
+- Fenêtre de collision : la lanière est visible de la phase timer 3 à 10 dans le jeu MD (`timer ≥ 8 : 16 px` à remplacer). Au MSX : sprite visible de t07 à t14, soit 8 ticks ; pour le portage, la fenêtre utile était donc le timer 3 à 10, en gardant le décalage de deux ticks. **Remplacé** (2026-10-29) : le MSX ne teste qu'une passe, celle de `C422` = 3 ; le port teste au timer 11 (section « Fouet en saut »).
 - Le décalage de deux ticks est **prouvé** dans les données, mais sa cause ne l'est pas. À confirmer avant de l'appliquer au timer MD.
 
 ## Limites
@@ -102,3 +102,47 @@ Changements nécessaires (historique, partiellement appliqués) :
 - Décodage 4 bpp non validé par image de référence.
 - Pas de mesure accroupie, ni gauche.
 - La VRAM de `anim-inventory/vram1/vram.bin` (80 trames) est au repos dans la cour, sans attaque. Elle ne sert pas à la lanière.
+
+## Fouet en saut : coordonnées et moment du test (2026-10-29)
+
+Statut : **prouvé** par le code et par trace openMSX (3 exécutions), **corrigé** dans le port.
+
+### Méthode
+
+- Trace : `python3 tools/run_whip_jump_trace.py ROM OUTDIR PLAN` (moteur `tools/vertical_links_trace.tcl` + `tools/whip_jump_trace_extra.tcl`), openMSX 21, `C-BIOS_MSX2`. Par VBLANK : `C003`, `C005`, `C420`, `C422`, `C429`, `C42C`, `C42E`, `C42F`, `C427`, `C425`, le tampon SAT `D600`, la SAT en VRAM et les bougies `C470`. Par événement (µs depuis le VBLANK, PC) : `84D1` (lecture de `C425` par la boîte `84A7`), `84E7` (lecture de `C427` par `84D9`), `7DAD`, `7F49`, `7FB7`, `6560`, écritures de `C425`, `C427`, `C422`, `C42F`. Action de plan `whipat Y up|down` : appui ESPACE au VBLANK qui ouvre une passe, en saut, quand `C425` = Y.
+- Plans : `run1` (cour 0 : coup au sol, coup en saut vertical à la montée et à la descente), `run2` (saut à droite et à gauche avec élan, coup accroupi), `run3` (Simon à x 44 sous la torche A, saut vertical, coup lancé à Y 164 en montant puis à Y 159 en descendant). Sorties hors dépôt : `scratchpad/whip-jump/run{1,2,3}/`.
+
+### Code (banque 1 en 6000, banque 2 en 8000)
+
+- Chronologie de `C422` (routine de Simon) : `7133` met 1 quand la passe lit ESPACE ; dans la même passe `721D` pose `C42F` = 6 et `723E` passe `C422` à 2. Passe suivante : `7243` `C42F` = 7, `723E` `C422` = 3. Passe d'après : `7250`/`725D` `C42F` = 8, `C429` = 4, `C422` = 4 ; puis `7262` décompte `C429` sur 4 passes et `726F` remet `C422` à 0.
+- Tests du fouet, appelés en `7D80`-`7D86` **après** la routine de Simon dans la même passe, et seulement si `C416` < 2 : `7DAD` (objets `C800`), `7F49` (objets `D700`), `7FB7` (bougies `C470`). Tous commencent par `LD A,(C422) ; CP 3 ; RET NZ`. `C422` = 3 ne dure qu'une passe (posé au milieu de la passe 2, remplacé par 4 avant les tests de la passe 3) : **un seul test par coup**, dans la 2e passe (celle de `C42F` = 7).
+- Boîte `84A7` (appelée par `8380`/`827C` pour `C800`, `8450` pour les bougies) : X du fouet = `C427` ± 20 (± 24 si `C416` = 1) selon `C42C` (`84D9`, lecture `84E7`), hauteur `C425 - B` avec `B` = 10 si `C420` = 2 (accroupi), 18 sinon (`84C1`-`84D1`). Les positions sont **lues au moment du test**, rien n'est mémorisé au lancement. Le saut (`C420` = 1) prend `B` = 18.
+- Si `C416` ≥ 2 (`7D7E`), `7DA0` remplace les trois tests : pas de test de fouet du tout.
+
+### Trace
+
+| Coup | Passe de lancement (`C422` 1 → 2) | Passe du test (`C422` = 3, `84E7`/`84D1`) | Passe suivante |
+|---|---|---|---|
+| Sol, cour (run1) | 779 : X 16, Y 176 | 781-782 : `C425` 176, `C427` 16 | 783 : `C422` = 4, aucun test |
+| Saut vertical, montée (run1) | 853 : Y 154 | 855-856 : `C425` **150** | 857 : Y 147, aucun test |
+| Saut à droite avec élan (run2) | 797 : X 34, Y 145 | 799-800 : `C427` **36**, `C425` **144** | 801 : X 38 |
+| Saut à gauche (run2) | 1039 : X 62, Y 147 | 1041-1042 : `C427` 60, `C425` 145, `C42C` 1 | — |
+| Accroupi (run2) | 1181 : `C420` 2 | 1183-1184 : `C420` 2 | — |
+| Torche A, montée (run3) | 835 : Y 164 | 837-838 : `C425` **159**, `84D1` lu : 159 - 18 - 144 < 0, torche intacte | — |
+| Torche A, descente (run3) | 863 : Y 159 | 865-866 : `C425` **164** : torche éteinte (`C470` = 0 à 867) | — |
+
+Dans chaque passe, l'écriture de `C425` par le saut (`6D5D`, ~8 ms) précède le lancement (`7133`) ou le passage à 3 (`723E`), et les tests suivent (~15 ms ou au début de l'image suivante). Le test utilise donc la position de Simon **après le pas de saut de la 2e passe** : en montée elle est plus haute que celle du lancement, en descente plus basse, et X a avancé de 2 px par passe avec l'élan.
+
+**Affichage** : dans `D600`, les sprites de la lanière (motifs 10h-1Ch) sont recalculés à chaque passe à la position de Simon de cette passe : Y = `C425` - 32 (ligne affichée - 31), X = `C427` + 8 et + 24 (run2, images 802 à 808, pose `C42F` 8 : Simon de X 38, Y 144 à X 44, Y 147, lanière toujours à +8/+24 et -31). Ils sont envoyés à la VRAM au début de la passe suivante (`6560`), donc affichés deux images après le calcul, comme le corps (`frame-timing.md`). Rien n'est figé au lancement : ni le corps, ni la lanière, ni la boîte.
+
+### Port : écart et correction
+
+- **Avant** : `vk_whip_tick` (`sgdk/src/whip.c`) figeait `whip.x`/`whip.y` à l'appui (timer 14), et les tests duraient plusieurs images : boîte de lanière (`Enemies_whipHit`, cible) aux timers 10 à 3, bougies et ennemis à boîte ROM aux timers 7 à 3 (« phase 2 », marquée PROVISOIRE). En saut, la boîte restait à la hauteur du lancement pendant que Simon montait ou descendait (mesuré au harnais : `whip.y` 159 constant, Simon de 159 à 144). Conséquence : la torche A de `run3` était éteinte par le coup de la montée et ratée par celui de la descente, l'inverse du MSX. L'affichage, lui, suivait déjà Simon (sprites 5 et 6 dessinés depuis `player`).
+- **Après** : `whip.x`/`whip.y` suivent Simon à chaque image (direction et posture restent celles du lancement, `7201`) ; `vk_whip_active` n'est vrai qu'au timer 11 (`VK_WHIP_STRIKE_TIMER`, `whip.h`), seule image de test pour les bougies (`candles.c`), les ennemis (`actors.c`) et la cible (`targets.c`). Timers 12 et 11 = la 2e passe (pose `C42F` 7) ; le 11 est la dernière image de cette passe et porte le pas de saut correspondant quelle que soit la parité de l'appui (le port lit la manette à chaque image, le MSX une sur deux : un appui à une image impaire du saut équivaut à une lecture MSX à la passe suivante).
+- Vérification : scénario `tests/md_scenarios/za_whip_jump_y.txt` (le plan `run3` au harnais : coup lancé à 164 en montant, test à 159, torche intacte ; coup lancé à 159 en descendant, test à 164, torche éteinte au timer 11 ; sprites du coup à la position de Simon de l'image précédente). Sur la ROM d'avant la correction, le scénario échoue (boîte à 164, torche éteinte à la montée). Tests natifs : `tests/test_whip.c` (origine qui suit Simon, une seule image de test), `tests/test_candles.c` (les deux coups de `run3`). Scénarios retouchés : `g_room2_panther` (appui quand la panthère est à X 144), `k_stage2_room2_zombie` (appui à X 174), car le test unique arrive 3 images après l'appui au lieu de 7 à 11.
+
+### Incertitudes
+
+- Posture : le MSX relit `C420` au test (10 si accroupi) ; le port garde la posture du lancement (`whip.crouched`). Un changement de posture pendant un coup n'a pas été tracé (accroupi : `C420` reste 2 pendant tout le coup dans `run2`).
+- `C416` ≥ 2 (objets 2 à 4 : dague, hache, croix) supprime tout test de fouet sur le MSX (`7D7E`) ; le port branche le niveau 2 de fouet sur `C416` = 2 et le fait toucher. Non corrigé ici.
+- Les boîtes elles-mêmes (lanière x+8..x+32 pour `Enemies_whipHit` et la cible, `84A7` pour les bougies et les ennemis ROM) ne sont pas modifiées.

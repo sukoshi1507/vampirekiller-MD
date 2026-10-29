@@ -18,7 +18,8 @@ expect enemies.enemy[slot].dx == (1 if enemies.enemy[slot].x < game.player.x els
 tap LEFT 2
 expect game.player.facing == 1 # face a gauche, vers l'ennemi
 # Fouet 84A7 face gauche : X du fouet = x - 20, ennemi (X objet = x ecran + 8) touche si
-# |x - 20 - ex| < 17 en phase 2 du port. On frappe quand ex atteint x-36 : le fouet frappe ~4 images plus tard.
+# |x - 20 - ex| < 17 a l'image du test (whip.timer 11, passe C422 = 3 du MSX). On frappe
+# quand ex atteint x-36 : le fouet teste 3 images plus tard.
 until enemies.enemy[slot].x + 8 >= game.player.x - 36 max 600
 set energy0 enemies.energy
 dump avant-coup
