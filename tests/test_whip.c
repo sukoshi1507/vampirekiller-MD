@@ -10,25 +10,23 @@ int main(void)
     assert(w.timer==14 && !vk_whip_active(&w));
     assert(vk_whip_arm_frame(&w)==1);
     assert(vk_whip_visual_step(&w)==0);
-    assert(vk_whip_phase(&w)==0 && vk_whip_segments(&w)==0);
-    for(i=0;i<4;i++)vk_whip_tick(&w,&p,0);
-    assert(vk_whip_active(&w));
-    assert(vk_whip_phase(&w)==1 && vk_whip_segments(&w)==2);
-    assert(vk_whip_arm_frame(&w)==1);
+    /* One test frame per stroke, timer 11 (the MSX pass with C422 = 3). */
+    for(i=0;i<2;i++){vk_whip_tick(&w,&p,0); assert(!vk_whip_active(&w));}
+    vk_whip_tick(&w,&p,0);
+    assert(w.timer==11 && vk_whip_active(&w));
+    assert(vk_whip_arm_frame(&w)==1 && vk_whip_visual_step(&w)==1);
     vk_whip_bounds(&w,&l,&t,&r,&b);
     assert(l>=p.x && r>l && t<b);
-    for(i=0;i<3;i++) vk_whip_tick(&w,&p,0);
-    assert(vk_whip_phase(&w)==2 && vk_whip_segments(&w)==3);
+    for(i=0;i<4;i++){vk_whip_tick(&w,&p,0); assert(!vk_whip_active(&w));}
     assert(vk_whip_arm_frame(&w)==1);
     assert(vk_whip_visual_step(&w)==2);
     vk_whip_bounds(&w,&l,&t,&r,&b);
     assert(r-l==24); /* Visible standing lash box: x+8..x+32. */
-    while(w.timer) vk_whip_tick(&w,&p,0);
-    assert(vk_whip_segments(&w)==0);
+    while(w.timer){vk_whip_tick(&w,&p,0); assert(!vk_whip_active(&w));}
     assert(vk_whip_arm_frame(&w)==0);
     assert(vk_whip_visual_step(&w)==0);
     p.facing=1;vk_whip_tick(&w,&p,1);
-    for(i=0;i<4;i++)vk_whip_tick(&w,&p,0);
+    for(i=0;i<3;i++)vk_whip_tick(&w,&p,0);
     vk_whip_bounds(&w,&l,&t,&r,&b);
     assert(r<=p.x && l<r);
     { int ax,ay; vk_whip_arm_position(&w,&ax,&ay); assert(ax < p.x && ay < p.y); }
@@ -40,9 +38,25 @@ int main(void)
     for(i=0;i<4;i++) vk_whip_tick(&w,&p,0);
     vk_whip_bounds(&w,&l,&t,&r,&b);
     assert(t==p.y-17 && b==p.y-10 && l==p.x+8 && r==p.x+32);
-    p.crouched=0; /* mid-attack changes must not move the hitbox */
+    p.crouched=0; p.facing=1; /* posture and direction stay those of the start (7201) */
+    vk_whip_tick(&w,&p,0);
     vk_whip_bounds(&w,&l,&t,&r,&b);
     assert(t==p.y-17 && b==p.y-10 && l==p.x+8 && r==p.x+32);
+    p.facing=0;
+    /* The origin follows Simon on every frame (84A7 reads C425/C427 in the test
+     * pass): a stroke in a jump tests from Simon's place on the test frame. */
+    vk_whip_reset(&w);
+    p.x=80; p.y=160;
+    vk_whip_tick(&w,&p,1);
+    {
+        static const int jump_y[4] = {154, 154, 150, 150};
+        for(i=0;i<3;i++){p.x=(VKByte)(p.x+1); p.y=(VKByte)jump_y[i]; vk_whip_tick(&w,&p,0);}
+        assert(vk_whip_active(&w) && w.x==83 && w.y==150);
+        vk_whip_bounds(&w,&l,&t,&r,&b);
+        assert(l==91 && r==115 && t==128 && b==135);
+        p.x=84; p.y=147; vk_whip_tick(&w,&p,0);
+        assert(w.x==84 && w.y==147 && !vk_whip_active(&w));
+    }
     /* Exhaustive attack timeline: all visual frame indices remain in their
      * generated-resource ranges, and active hitboxes have visible lash. */
     {
@@ -56,8 +70,7 @@ int main(void)
             assert(vk_whip_crouch_visual_step(&w)==expected_crouched[i]);
             assert(vk_whip_visual_step(&w)>=0 && vk_whip_visual_step(&w)<3);
             assert(vk_whip_crouch_visual_step(&w)>=0 && vk_whip_crouch_visual_step(&w)<4);
-            if (vk_whip_active(&w)) assert(vk_whip_segments(&w)>0);
-            else assert(vk_whip_segments(&w)==0);
+            assert(!vk_whip_active(&w) || (i==11 && vk_whip_visual_step(&w)==1));
         }
     }
     /* On a staircase the whip starts as on the floor (the MSX allows it). */
@@ -65,7 +78,7 @@ int main(void)
     p.on_stairs=1; p.facing=0; p.crouched=0; p.x=100; p.y=150;
     vk_whip_tick(&w,&p,1);
     assert(w.timer==14 && w.x==100 && w.y==150);
-    for(i=0;i<4;i++) vk_whip_tick(&w,&p,0);
+    for(i=0;i<3;i++) vk_whip_tick(&w,&p,0);
     assert(vk_whip_active(&w));
     while(w.timer) vk_whip_tick(&w,&p,0);
     p.on_stairs=0;
@@ -124,12 +137,12 @@ int main(void)
             vk_whip_tick(&w,&p,0);
         }
         assert(frames==12);
-        /* The hit window is the same for every level. */
+        /* The test frame is the same for every level. */
         vk_whip_reset(&w);
         assert(vk_whip_set_level(&w,2)==0);
         vk_whip_tick(&w,&p,1);
-        for(i=0;i<4;i++) vk_whip_tick(&w,&p,0);
-        assert(vk_whip_active(&w) && w.timer==10);
+        for(i=0;i<3;i++) vk_whip_tick(&w,&p,0);
+        assert(vk_whip_active(&w) && w.timer==11);
     }
     vk_whip_reset(&w);
     assert(vk_whip_level(&w)==0);

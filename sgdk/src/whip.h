@@ -11,11 +11,10 @@ void vk_whip_tick(VKWhip *w, const VKPlayer *p, int attack_pressed);
  * current level when the level has no asset. Reset returns to level 0. */
 int vk_whip_set_level(VKWhip *w, int level);
 int vk_whip_level(const VKWhip *w);
+/* Timer of the only frame where the whip touches (the MSX pass with C422 = 3). */
+#define VK_WHIP_STRIKE_TIMER 11
+/* Nonzero on the frame where the whip tests candles, enemies and targets. */
 int vk_whip_active(const VKWhip *w);
-/* 0 hidden/windup, 1 short extension, 2 full extension. */
-int vk_whip_phase(const VKWhip *w);
-/* Number of visible eight-pixel segments, matching the hitbox. */
-int vk_whip_segments(const VKWhip *w);
 /* Visual arm keyframe: 0 hidden, 1 windup, 2 short, 3 full, 4 recovery. */
 int vk_whip_arm_frame(const VKWhip *w);
 /* Experimental ROM-derived animation step (0..7); independent of hitbox timing. */

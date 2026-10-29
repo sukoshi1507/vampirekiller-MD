@@ -386,7 +386,7 @@ Lecture du code (`tools/disasm_rom_window.py`) et trace openMSX `scratchpad/stag
 | Sol | chute du port (`fall`) : le rang haut se pose en Y 81 (pieds en `A0`), comme au hall (A1) | convention du port |
 | Sortie | `romBox` : dernière position tenue 2 images (âges 217-218 à gauche, 209-210 à droite), puis disparition | prouvé |
 | Contact | boîte `8290` de la classe 1 selon `C420` (`EnemyRoomVars.simonState`) ; dégât 2 | prouvé debout, accroupi et en saut (section « Contact selon la posture de Simon ») |
-| Fouet | `Enemies_whipHitType1Rom` (boîte `84A7`, `C416 = 0`), appelé en phase 2 du fouet du port comme pour le type 5 ; `Enemies_whipHit` ignore les ennemis `romBox` | prouvé pour la boîte ; correspondance phase 2 du port / `C422 = 3` **PROVISOIRE** (comme le type 5) |
+| Fouet | `Enemies_whipHitType1Rom` (boîte `84A7`, `C416 = 0`), appelé à l'image de test du fouet du port (timer 11) comme pour le type 5 ; `Enemies_whipHit` ignore les ennemis `romBox` | prouvé pour la boîte ; image de test = passe `C422 = 3`, **prouvé** (`whip-hitbox.md`, « Fouet en saut ») |
 
 ### Reste ouvert
 
@@ -452,7 +452,7 @@ Lecture du code (`tools/disasm_rom_window.py`) et trace openMSX `scratchpad/stag
 | Saut, sol, marche, chute, plongeon | `fishStep`, tests de sol `7B98` sur la carte de collision du port | prouvé (test natif : atterrissage 121, chute 145, plongeon 183 images après l'entrée, comme en 6236, 6260 et 6298) |
 | Gouttes | `splashSpawn`, mise à jour dans `type2Frame` ; ni contact ni fouet | prouvé ; la goutte sans gravité de la mort au fouet n'est pas reproduite |
 | Contact | `Enemies_touches` : boîte `8378` de la classe 1 selon `C420` ; dégât 4 | prouvé (section « Contact selon la posture de Simon ») |
-| Fouet | `Enemies_whipHitType2` (boîte `84A7`, `C416 = 0`), appelé en phase 2 du fouet du port | prouvé pour la boîte ; correspondance de phase **PROVISOIRE** (comme les types 1 et 5) |
+| Fouet | `Enemies_whipHitType2` (boîte `84A7`, `C416 = 0`), appelé à l'image de test du fouet du port (timer 11) | prouvé pour la boîte et pour l'image de test (`whip-hitbox.md`, « Fouet en saut ») |
 | Dessin | 4 sprites (bloc `ENEMY5`, 21 couches `40`-`90`, 84 tuiles) en (X - 8, Y - 31) et (X - 8, Y - 15), goutte en (X - 8, Y - 14) | couches et positions prouvées ; retard d'affichage reproduit (`frame-timing.md`) |
 | Mémoire | `ENEMY_MAX` passe de 4 à 7 (les 7 blocs de la ROM) ; `EnemyState` passe à 144 octets (énergie à l'offset 126 : scénario `d` mis à jour) | — |
 

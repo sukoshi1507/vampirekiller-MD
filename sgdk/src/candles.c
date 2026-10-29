@@ -216,7 +216,7 @@ int vk_candle_whip_touch(const VKCandleDef *def, const VKWhip *whip, int weapon)
     const int point = whip->facing ? whip->x - reach : whip->x + reach;
     const int dx = point - (def->x + 8);
     const int dy = whip->y - (whip->crouched ? WHIP_BODY_CROUCH : WHIP_BODY_STAND) - def->y;
-    if (vk_whip_phase(whip) != 2) return 0;
+    if (!vk_whip_active(whip)) return 0;   /* 7FB7: C422 = 3 only */
     return dx > -reach && dx < reach && dy >= 0 && dy < WHIP_HEIGHT;
 }
 

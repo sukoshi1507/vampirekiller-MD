@@ -7,23 +7,24 @@ int vk_whip_set_level(VKWhip *w, int level)
     return 0;
 }
 int vk_whip_level(const VKWhip *w) { return w->level; }
-int vk_whip_active(const VKWhip *w) { return w->timer >= 3 && w->timer <= 10; }
-int vk_whip_phase(const VKWhip *w)
-{
-    if (!vk_whip_active(w)) return 0;
-    return w->timer >= 8 ? 1 : 2;
-}
-int vk_whip_segments(const VKWhip *w)
-{
-    return vk_whip_phase(w) == 1 ? 2 : (vk_whip_phase(w) == 2 ? 3 : 0);
-}
+/* The MSX tests the whip once per stroke: 7DAD (C800), 7F49 (D700) and 7FB7
+ * (candles C470) return unless C422 = 3, which only lasts the second pass of the
+ * stroke (7240 sets it with C42F 7, 7250 moves it to 4 with C42F 8 before the
+ * tests of the next pass). That pass is timers 12 and 11 here; the test is on 11,
+ * the frame that holds the jump step of that pass whatever the parity of the
+ * button press (research/whip-hitbox.md, "Fouet en saut"). */
+int vk_whip_active(const VKWhip *w) { return w->timer == VK_WHIP_STRIKE_TIMER; }
 void vk_whip_tick(VKWhip *w, const VKPlayer *p, int attack_pressed)
 {
     if (w->timer) w->timer--;
     else if (attack_pressed) w->timer = 14;
-    /* Latch attack direction and origin at startup; the whip cannot teleport
-     * across Simon when facing changes during an active swing. */
-    if (w->timer == 14) { w->facing = p->facing; w->x = p->x; w->y = p->y; w->crouched = p->crouched; }
+    /* Direction and posture are taken at startup (7201: C42E from C420), so the
+     * whip cannot turn across Simon during a stroke. The origin follows Simon on
+     * every frame: the box 84A7/84D9 reads C425 and C427 in the pass of the test,
+     * after Simon's move (6D5D), and the lash sprites are drawn at Simon's place
+     * of each pass (openMSX trace of a stroke in a jump). */
+    if (w->timer == 14) { w->facing = p->facing; w->crouched = p->crouched; }
+    if (w->timer) { w->x = p->x; w->y = p->y; }
 }
 /* Standing lash box, inclusive: x +8..+32 and y -22..-15 relative to Simon.
  * These are the visible lash measured in-game (research/whip-hitbox-ingame.md),
@@ -60,7 +61,7 @@ void vk_whip_bounds(const VKWhip *w, int *left, int *top, int *right, int *botto
  * openMSX trace: upper index 6 for 2 frames, 7 for 2 frames, 8 for 8 frames
  * (research/simon-assets/ATTACK_TRACE_OPENMSX.md). The body is shown from timer 14
  * to 3, that is 12 frames (levels 0 and 1; level 2 has its own table below). The
- * gameplay hit window (timer 3..10) is unchanged for every level.
+ * gameplay test (timer 11, vk_whip_active) is the same for every level.
  * The crouched attack follows the same 12 ticks with the lower index held at 6
  * (C42E = 6 while crouched): crouch frame 1 = upper 6 (timer 14..13), 2 = upper 7
  * (timer 12..11), 3 = upper 8 (timer 10..3). Frame 0 is the idle crouch.

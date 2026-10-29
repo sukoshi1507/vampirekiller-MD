@@ -27,8 +27,12 @@ expect enemies.enemy[0].state == 0 # Simon a 66 px : elle attend
 # Un pas a gauche : activation sous 64 px.
 until enemies.enemy[0].state == 1 max 20 LEFT
 expect enemies.enemy[0].dx == 1 # elle court vers Simon
-# Accroupi, coup de fouet a gauche : la panthere meurt au premier coup.
+# Accroupi, coup de fouet a gauche : la panthere meurt au premier coup. Le fouet ne
+# teste qu'une image (C422 = 3, whip.timer 11, 3 images apres l'appui) : appui quand
+# elle est a X 144, X 148 ou plus au test, |X fouet 171 - X| < 24.
 hold DOWN 2
+until enemies.enemy[0].x >= 144 max 30 DOWN
 hold DOWN+B 1
 until not enemies.enemy[0].active max 30 DOWN
+expect whip.timer == 11 # tuee a l'image du test (7DAD)
 expect enemies.energy == 32 # tuee avant le contact

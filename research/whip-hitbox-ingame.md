@@ -7,7 +7,7 @@ Objectif : vérifier, dans la ROM MD exécutée par Genesis Plus GX, que `vk_whi
 - Boîte debout du code, bornes inclusives : face droite x+8..x+32, face gauche x-32..x-8, y-22..y-15 (`sgdk/src/whip.c`). Elle couvre exactement la lanière mesurée en jeu (voir (b)).
 - Cible de la cour : posée au reset (A+B) en FLAME_A, (64,144), 16x16 (`sgdk/src/main.c`, `reset_training_target`). Elle est donc atteignable debout.
 - Extinction après coup : la flamme A s'éteint après un coup, jusqu'au reset (commit `35851ac`).
-- Fenêtre d'activation du fouet : timer 3..10 (inchangée, voir « Décisions à prendre »).
+- Fenêtre d'activation du fouet : timer 3..10 à la date de cette mesure. **Remplacée le 2026-10-29** : une seule image de test, le timer 11, avec la position de Simon de cette image (trace MSX, `whip-hitbox.md`, « Fouet en saut »). Les mesures de fenêtre ci-dessous décrivent l'ancien code.
 - Accroupi : boîte non mesurée (inchangée).
 
 ## Méthode reproductible
@@ -62,7 +62,7 @@ Mesure : pixels de la capture différents de l'image de référence (Simon au re
 
 ## Décisions à prendre
 
-- Fenêtre `vk_whip_active` : garder 3..10 (actuel) ou passer à 3..9 pour coller à la lanière visible.
+- Fenêtre `vk_whip_active` : tranché par la trace MSX (2026-10-29) : un seul test, timer 11 (`whip-hitbox.md`, « Fouet en saut »).
 - Accroupi : boîte non mesurée, reste à l'estimation précédente dans `vk_whip_bounds`.
 
 ## Limites

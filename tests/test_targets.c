@@ -9,7 +9,7 @@ int main(void)
     assert(!vk_target_tick(&t,&w));
     vk_whip_tick(&w,&p,1);
     assert(!vk_target_tick(&t,&w));
-    for(i=0;i<4;i++) vk_whip_tick(&w,&p,0);
+    for(i=0;i<3;i++) vk_whip_tick(&w,&p,0);
     assert(vk_target_tick(&t,&w));
     assert(!vk_target_tick(&t,&w));
     assert(!t.active);
@@ -18,7 +18,7 @@ int main(void)
     p.facing=1; vk_whip_reset(&w);
     vk_target_init(&t,120,136,16,16);
     vk_whip_tick(&w,&p,1);
-    for(i=0;i<4;i++) vk_whip_tick(&w,&p,0);
+    for(i=0;i<3;i++) vk_whip_tick(&w,&p,0);
     assert(vk_target_tick(&t,&w));
     vk_target_init(&t,124,120,16,8); /* no vertical overlap */
     assert(!vk_target_tick(&t,&w));
@@ -30,7 +30,7 @@ int main(void)
         vk_target_init(&list[1],174,136,16,16);
         vk_whip_reset(&w2);
         vk_whip_tick(&w2,&p2,1);
-        for(k=0;k<4;k++) vk_whip_tick(&w2,&p2,0);
+        for(k=0;k<3;k++) vk_whip_tick(&w2,&p2,0);
         assert(vk_targets_tick(list,2,&w2)==1);
         assert(vk_targets_tick(list,2,&w2)==-1);
         assert(!list[1].active && list[0].active);
