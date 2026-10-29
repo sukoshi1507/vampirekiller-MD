@@ -27,18 +27,18 @@
  *
  * PROVISOIRE (non verifie, a confirmer en emulation) :
  *   - Cote du type 1 : alternance par tir (index CF01 & 1). La vraie regle (C42C) n'est pas relevee.
- *   - Boite de contact de Simon : 16 px centres sur X (X-8 a X+7), 32 px au-dessus de Y.
- *     La boite de contact MSX n'est pas mesuree ; l'ennemi touche observe a X ~ 122 pour Simon en 120.
- *   - Recul : 2 px par image dans le sens de l'ennemi, sans blocage des commandes ni arc vertical (C420, C425).
- *   - Type 5 (salles 2, 3, 7) : non porte (graphisme et declencheur inconnus).
+ *   - Boite de contact du type 4 : celle de la ROM (8390) appliquee a la position affichee
+ *     (objet = SAT + 8, + 15) ; la SAT suit l'objet une image sur deux.
  *   - extraPhase (1 pour A, 15 pour B) : observe, cause inconnue.
  *   - Type 2 : premier tir 51 images apres l'entree (2 mesures, depend de la phase de CF10) ;
  *     +1D, +12 et +15 de l'objet repris a 0 (la ROM garde ceux de l'occupant precedent du
  *     bloc) ; premiere mise a jour des gouttes (la ROM en fait une de plus, voir 9CA3) ;
- *     contact calcule pour Simon debout ; objet 1E, score et sons 7/8/9 non portes.
+ *     objet 1E, score et sons 7/8/9 non portes.
  *   - Salle 1 avec Simon haut (E = 60) : condition C425 < 0x88 (module), pas une regle verifiee.
- *   - Type 1 (romBox, hall et stage 2) : contact calcule pour Simon debout (C420 = 0) ; accroupi ou en saut,
- *     la ROM reduit la hauteur a 42 (et C425 - 8 en saut), non transmis par EnemyRoomVars.
+ *
+ * Contact (8290 -> 847A, Enemies_touches) : boite de la classe du type (82CB), selon C420
+ * (EnemyRoomVars.simonState) : debout, accroupi, saut ; code lu (research/enemy-behavior.md,
+ * section « Contact selon la posture de Simon »).
  */
 #include "enemies.h"
 #include "player.h"
@@ -62,6 +62,7 @@
 #define ENEMY_S2_EXIT_X_RIGHT 0xE7 /* 99E5 : objet supprime a X >= F1 ; dernier X SAT E7 (trace) */
 #define ENEMY_OBJ_X 8              /* X de l'objet = X SAT + 8 (enregistrements +21 de l'objet) */
 #define ENEMY_OBJ_Y 31             /* Y de l'objet = Y affiche du rang haut + 31 (une fois pose) */
+#define ENEMY_TYPE4_OBJ_Y 15       /* type 4 : Y de l'objet = Y SAT + 15 (+3 de l'objet, prouve) */
 
 /* Tables ROM salle de stage 1 (D000 = 1).
  * kEnemyStage1RoomFlags : ROM 0x85CF-0x85D6 (pointeur 85A8 = 85CF pour D000 = 1).
@@ -488,34 +489,39 @@ void Enemies_update(EnemyState *s)
     }
 }
 
-/* Boite de contact : Simon est dessine sur 24 x 32 en (X-8, Y-31) ; ennemi [x, x+16) x [y, y+h).
- * Les deux boites sont celles des sprites affiches (provisoire : la boite MSX n'est pas mesuree).
- * Type 5 : boite de la ROM (8290, classe 2, HL = 0A0C), Simon debout. */
-static int touches(const Enemy *e, int simonX, int simonY)
+/* Boite de contact 847A (banque 2), appelee par 8290 avec les parametres de la classe de
+ * l'ennemi (table 82CB, puis 8378 / 8390 / 83D2 : HL = H L, D = X, E = Y de l'objet) :
+ *   |C427 - X| < L + 5 et (C425' - 2 - Y + H) & FF < H + 1A,
+ * ou H + 12 si C420 vaut 1 (saut) ou 2 (accroupi), et C425' = C425 - 8 si C420 = 1.
+ * Debout, l'ennemi touche de Y = C425 + H - 2 - (H + 19) a C425 + H - 2 ; accroupi, le haut
+ * descend de 8 px ; en saut, le bas monte de 8 px. Escalier (3) et chute (4) : boite debout. */
+static int romContact(const EnemyRoomVars *v, int objX, int objY, int l, int h)
 {
-    if (e->type == ENEMY_TYPE_5) {
-        const int d = simonX - e->x;
-        const int h = simonY + 8 - e->y;
-        return d > -17 && d < 17 && h >= 0 && h < 36;
-    }
-    if (e->type == ENEMY_TYPE_2) {   /* 8378 : classe 1, HL = 1805, Simon debout (C420 = 0) */
-        const int d = simonX - e->x;
-        const int h = simonY - 2 - e->y + 24;
-        return d > -10 && d < 10 && h >= 0 && h < 50;
-    }
-    if (e->romBox) {
-        /* Type 1 du stage 2 : 8290, classe 1 (82CB), HL = 1805 (8378 -> 847A), Simon debout
-         * (C420 = 0) : |C427 - X| < 10 et 0 <= C425 - 2 - Y + 24 < 50. Trace : contacts a
-         * |C427 - X| = 8 apres le deplacement de l'image. */
-        const int d = simonX - (e->x + ENEMY_OBJ_X);
-        const int h = simonY - 2 - (e->y + ENEMY_OBJ_Y) + 24;
-        return d > -10 && d < 10 && h >= 0 && h < 50;
-    }
-    const int h = (e->type == ENEMY_TYPE_4) ? ENEMY_TYPE4_ROW_H : ENEMY_TYPE1_ROW_H;
-    return e->x < simonX + ENEMY_SIMON_RIGHT &&
-           e->x + 16 > simonX - ENEMY_SIMON_HALF_W &&
-           e->y < simonY + 1 &&
-           e->y + h > simonY - ENEMY_SIMON_H;
+    const int d = (int)v->simonX - objX;
+    const int crouchOrJump = v->simonState == ENEMY_SIMON_JUMP || v->simonState == ENEMY_SIMON_CROUCH;
+    const int tall = h + (crouchOrJump ? 0x12 : 0x1A);
+    const int y = v->simonState == ENEMY_SIMON_JUMP ? (int)v->simonY - 8 : (int)v->simonY;
+    l += 5;
+    return d > -l && d < l && (EnemyU8)(y - 2 - objY + h) < tall;
+}
+
+/* Classes 82CB : types 1, 2, 3 -> 8378 (L = 05, H = 18) ; type 4 -> 8390 (L = 08, H = 10) ;
+ * type 5 -> 83D2 (L = 0C, H = 0A). X, Y de l'objet MSX : romBox et type 4 sont stockes en
+ * coordonnees de sprite (objet = SAT + 8 en X ; + 31 en Y pour le rang haut du type 1,
+ * + 15 pour le type 4), les types 2 et 5 en coordonnees d'objet. */
+int Enemies_touches(const Enemy *e, const EnemyRoomVars *v)
+{
+    if (e->type == ENEMY_TYPE_5) return romContact(v, e->x, e->y, 0x0C, 0x0A);
+    if (e->type == ENEMY_TYPE_2) return romContact(v, e->x, e->y, 0x05, 0x18);
+    if (e->type == ENEMY_TYPE_4)
+        return romContact(v, e->x + ENEMY_OBJ_X, e->y + ENEMY_TYPE4_OBJ_Y, 0x08, 0x10);
+    if (e->romBox) return romContact(v, e->x + ENEMY_OBJ_X, e->y + ENEMY_OBJ_Y, 0x05, 0x18);
+    /* Type 1 sans romBox (tests seulement : tous les tirs du port sont romBox) : boites
+     * des sprites, Simon 24 x 32 en (X-8, Y-31), ennemi [x, x+16) x [y, y+32). */
+    return e->x < v->simonX + ENEMY_SIMON_RIGHT &&
+           e->x + 16 > v->simonX - ENEMY_SIMON_HALF_W &&
+           e->y < v->simonY + 1 &&
+           e->y + ENEMY_TYPE1_ROW_H > v->simonY - ENEMY_SIMON_H;
 }
 
 #define ENEMY_SCREEN_TO_GAME_X 8   /* Simon et les ennemis : sprite X = x de jeu - 8 */
@@ -854,7 +860,7 @@ int Enemies_frame(EnemyState *s, EnemySpawnTimer *t, const EnemyRoomVars *v)
             if (e->type == ENEMY_TYPE_SPLASH) continue;   /* goutte : +E = 0, ni contact ni fouet */
             const EnemyU8 damage = e->type == ENEMY_TYPE_5 ? ENEMY_TYPE5_DAMAGE :
                                    e->type == ENEMY_TYPE_2 ? ENEMY_TYPE2_DAMAGE : ENEMY_CONTACT_DAMAGE;
-            if (!touches(e, v->simonX, v->simonY)) continue;
+            if (!Enemies_touches(e, v)) continue;
             s->energy = (s->energy > damage) ? (EnemyU8)(s->energy - damage) : 0;
             s->invuln = ENEMY_INVULN_START;
             s->invulnPhase = 0;

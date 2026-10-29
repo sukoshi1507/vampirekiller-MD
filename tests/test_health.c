@@ -114,6 +114,7 @@ static void test_contact_to_death(void)
     v.simonY = 192;
     v.sideFlag = 0;
     v.difficulty = 0;
+    v.simonState = ENEMY_SIMON_GROUND;
     v.map = 0;
     Enemies_init(&s);
     Enemies_spawnTimerInit(&t);

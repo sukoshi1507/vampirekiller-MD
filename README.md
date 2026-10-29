@@ -50,8 +50,8 @@ Ce qui n'est pas porté ou reste provisoire :
 - **Type 4** (salle 4, volant) : dessin, battement d'ailes et vol en vague d'après le
   MSX2 ; tué par le fouet d'après la table des objets (boîte provisoire, direction
   du fouet non vérifiée, `research/enemy-behavior.md`).
-- **Type 5** : le retard d'affichage d'une mise à jour du MSX, l'objet de mort (`1E`), le
-  et la boîte de contact accroupi ne sont pas reproduits ; la phase 3 du fouet
+- **Type 5** : le retard d'affichage d'une mise à jour du MSX et l'objet de mort (`1E`)
+  ne sont pas reproduits ; la phase 3 du fouet
   est assimilée au fouet déployé (`vk_whip_phase` 2) et le recul face à une panthère
   assise est provisoire.
 - **Stage 2** : seules les chauves-souris (salles 0, 1, 3) sont portées ; le type 1 de la
@@ -67,7 +67,9 @@ Ce qui n'est pas porté ou reste provisoire :
 - **Énergie (provisoire)** : lieu de reprise (entrée du hall), commandes bloquées
   pendant la mort : non relevés sur le MSX2. La chute dans le vide tue
   (`vk_health_fall`), avec le cri de Wilhelm ajouté au port.
-- **Provisoires** : vitesse de chute des ennemis, boîte de contact de Simon.
+- **Provisoires** : vitesse de chute des ennemis. La boîte de contact de Simon suit la
+  ROM pour les types 1, 2, 4 et 5, debout, accroupi, en saut et sur l'escalier
+  (`research/enemy-behavior.md`, « Contact selon la posture de Simon »).
 
 Le détail par sujet est dans [research/INDEX.md](research/INDEX.md).
 

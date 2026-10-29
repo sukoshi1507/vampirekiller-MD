@@ -74,6 +74,19 @@ static u16 room_key(void)
     return (u16)(8 * (vk_game.stage - 1) + vk_game.room + 1);
 }
 
+/* C420 as the contact box 847A reads it: 1 for a jump until it lands (6B9B .. 6D43,
+ * including the port's mode 4 past the jump table), 2 crouched (6C20), 3 on a staircase
+ * (6BEE), 4 for a fall begun on the ground (6BA5), 0 otherwise. */
+static u8 simon_state(void)
+{
+    const VKPlayer *p = &vk_game.player;
+    if (p->on_stairs) return ENEMY_SIMON_STAIRS;
+    if (p->mode == 1) return ENEMY_SIMON_JUMP;
+    if (p->mode == 4) return vk_game.ground_fall ? ENEMY_SIMON_FALL : ENEMY_SIMON_JUMP;
+    if (p->crouched) return ENEMY_SIMON_CROUCH;
+    return ENEMY_SIMON_GROUND;
+}
+
 void vk_step_enemies(void)
 {
     const u16 key = room_key();
@@ -102,6 +115,7 @@ void vk_step_enemies(void)
     vars.sideFlag = 0;
     vars.difficulty = 0;
     vars.map = vk_game_collision(&vk_game);   /* floor for falling enemies */
+    vars.simonState = simon_state();          /* C420 for the contact box 847A */
     /* C420 = 5 while Simon is knocked back: no enemy contact (7EF4). */
     vk_enemies.recoil = (EnemyU8)vk_game_recoiling(&vk_game);
     /* 7064: the death (C420 = 6) clears C42D: no more blinking. */

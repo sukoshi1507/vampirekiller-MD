@@ -204,7 +204,7 @@ Dessin : flux RLE de la ROM en `0x154DE`, octets 271 à 462 (paires 48/4C, 50/54
 
 ## Type 5 : la panthère (salles 2, 3 et 7)
 
-**Porté** dans `sgdk/src/enemies.c` (`pantherStep`, `pantherSpawn`, `Enemies_whipHitType5`), tuiles par `tools/build_enemy_sprites_md.py` (`vk_enemy5_tiles`, VRAM 760+), tests `test_type5` et scénario `g_room2_panther`. Non reproduits : retard d'affichage d'une mise à jour, objet `1E`, score, contact accroupi.
+**Porté** dans `sgdk/src/enemies.c` (`pantherStep`, `pantherSpawn`, `Enemies_whipHitType5`), tuiles par `tools/build_enemy_sprites_md.py` (`vk_enemy5_tiles`, VRAM 760+), tests `test_type5` et scénario `g_room2_panther`. Non reproduits : retard d'affichage d'une mise à jour, objet `1E`, score. Contact accroupi et en saut : porté (section « Contact selon la posture de Simon »).
 
 Relevé du 2026-10-27/28 (openMSX, SAT et objets lus à chaque image, plus lecture du code). Il **remplace le tableau du §3.4** et ferme les points 1, 2 et 7 du §7. Le type 5 est une panthère : elle est assise, bondit vers Simon quand il approche, saute au bord des plateformes et retombe, puis repart vers Simon.
 
@@ -385,7 +385,7 @@ Lecture du code (`tools/disasm_rom_window.py`) et trace openMSX `scratchpad/stag
 | Mouvement, motifs | ceux des types A et B (même routine `A964`) | prouvé |
 | Sol | chute du port (`fall`) : le rang haut se pose en Y 81 (pieds en `A0`), comme au hall (A1) | convention du port |
 | Sortie | `romBox` : dernière position tenue 2 images (âges 217-218 à gauche, 209-210 à droite), puis disparition | prouvé |
-| Contact | boîte `8290` de la classe 1, Simon debout ; dégât 2 | prouvé debout ; **PROVISOIRE** accroupi et en saut (`C420` non transmis à `enemies.c`) |
+| Contact | boîte `8290` de la classe 1 selon `C420` (`EnemyRoomVars.simonState`) ; dégât 2 | prouvé debout, accroupi et en saut (section « Contact selon la posture de Simon ») |
 | Fouet | `Enemies_whipHitType1Rom` (boîte `84A7`, `C416 = 0`), appelé en phase 2 du fouet du port comme pour le type 5 ; `Enemies_whipHit` ignore les ennemis `romBox` | prouvé pour la boîte ; correspondance phase 2 du port / `C422 = 3` **PROVISOIRE** (comme le type 5) |
 
 ### Reste ouvert
@@ -451,7 +451,7 @@ Lecture du code (`tools/disasm_rom_window.py`) et trace openMSX `scratchpad/stag
 | Premier tir | `9D4B` appelle `9CC3` avec `HL = CF02` (désassemblage `9D4B`-`9D5B`), comme le canal `9D97` : `CF02 = 4` à l'entrée (`ENEMY_TYPE2_COUNT`), décrémenté quand `CF10 & 3` revient à 0, donc premier tir 25, 27, 29 ou 31 images de jeu après la fin de l'état 9 selon `CF10 & 3` (3 → 29, 2 → 27, 1 → 25, 0 → 31) | lu dans le code ; 31 mesuré 2 fois (51 après `D001`, `CF10` non relevé dans les traces `P1`/`P2`) ; test natif des quatre phases (port 2026-10-29) |
 | Saut, sol, marche, chute, plongeon | `fishStep`, tests de sol `7B98` sur la carte de collision du port | prouvé (test natif : atterrissage 121, chute 145, plongeon 183 images après l'entrée, comme en 6236, 6260 et 6298) |
 | Gouttes | `splashSpawn`, mise à jour dans `type2Frame` ; ni contact ni fouet | prouvé ; la goutte sans gravité de la mort au fouet n'est pas reproduite |
-| Contact | `touches` : boîte `8378` de la classe 1, Simon debout ; dégât 4 | prouvé debout ; **PROVISOIRE** accroupi et en saut (`C420` non transmis) |
+| Contact | `Enemies_touches` : boîte `8378` de la classe 1 selon `C420` ; dégât 4 | prouvé (section « Contact selon la posture de Simon ») |
 | Fouet | `Enemies_whipHitType2` (boîte `84A7`, `C416 = 0`), appelé en phase 2 du fouet du port | prouvé pour la boîte ; correspondance de phase **PROVISOIRE** (comme les types 1 et 5) |
 | Dessin | 4 sprites (bloc `ENEMY5`, 21 couches `40`-`90`, 84 tuiles) en (X - 8, Y - 31) et (X - 8, Y - 15), goutte en (X - 8, Y - 14) | couches et positions prouvées ; retard d'affichage non reproduit |
 | Mémoire | `ENEMY_MAX` passe de 4 à 7 (les 7 blocs de la ROM) ; `EnemyState` passe à 144 octets (énergie à l'offset 126 : scénario `d` mis à jour) | — |
@@ -462,3 +462,34 @@ Lecture du code (`tools/disasm_rom_window.py`) et trace openMSX `scratchpad/stag
 - `+1D`, `+12`, `+15` repris à 0 dans le port (la ROM garde ceux de l'occupant précédent) : le premier choix de sens peut différer pour un bloc réutilisé. **PROVISOIRE**.
 - Objet `1E` (flamme de mort), score, sons 7, 8, 9 : non portés.
 - Type 3 (même routine, deux points de vie, tir `A45A`) : absent des salles relevées, non porté.
+
+## Contact selon la posture de Simon (relevé du 2026-10-29)
+
+**Code** (banque 2, lu avec `tools/disasm_rom_window.py`) : la boucle `7E7D` appelle `8290`, qui lit la classe du type dans `82CB` (types 1, 2, 3 → 1 ; 4 → 2 ; 5 → 3) et saute par la table `8296` à `8378` (`HL = 1805`), `8390` (`HL = 1008`) ou `83D2` (`HL = 0A0C`), avec `D` = X et `E` = Y de l'objet (pieds), puis `847A` :
+
+```
+847A  L += 5 ; |C427 - D| >= L -> pas de contact
+8489  B = C420 ; DEC A ; CP 2 : A = 12h si C420 vaut 1 ou 2, sinon 1Ah ; H += A
+8498  A = C425 ; si C420 = 1 : A -= 8
+84A1  A = A - 2 - E + H(initial) ; contact si A < H (comparaison sur 8 bits)
+```
+
+`C420` (écrit en banque 1, aiguillage `6B3C`) : `0` au sol ; `1` saut (`6B9B`, touche HAUT nouvellement pressée, `C006` bit 5), jusqu'à l'atterrissage (`6D43`) ; `2` accroupi (`6C20`, BAS) ; `3` escalier (`6BEE`) ; `4` chute depuis le sol (`6BA5`) ; `5` recul (pas de test, `7EF4`) ; `6` mort ; `7` (`6DB5`, HAUT pendant l'accroupi, `C42D := 40`, son 15). Seuls 1 et 2 changent la boîte.
+
+| Classe (types) | X | Debout, escalier, chute (`C420` 0, 3, 4) | Accroupi (`C420 = 2`) | Saut (`C420 = 1`) |
+|---|---|---|---|---|
+| 1 (1, 2, 3), `8378` | `|dX| < 10` | Y de `C425 - 27` à `C425 + 22` | `C425 - 19` à `C425 + 22` | `C425 - 27` à `C425 + 14` |
+| 2 (4), `8390` | `|dX| < 13` | `C425 - 27` à `C425 + 14` | `C425 - 19` à `C425 + 14` | `C425 - 27` à `C425 + 6` |
+| 3 (5), `83D2` | `|dX| < 17` | `C425 - 27` à `C425 + 8` | `C425 - 19` à `C425 + 8` | `C425 - 27` à `C425` |
+
+Accroupi, le haut de la boîte descend de 8 px ; en saut, le bas remonte de 8 px. Un ennemi posé au même sol que Simon (Y = `C425`) le touche donc accroupi (classes 1 à 3) ; en saut, il passe dessous dès que les pieds de Simon sont plus de 14 px au-dessus (classe 1), contre 22 px avec la boîte debout.
+
+**Trace** (openMSX, hall salle 0, `scratchpad/posture/` du worktree ; extra `tools/contact_posture_trace.tcl` sur le harnais `scratchpad/transition/harness.tcl`, plan : marche jusqu'au hall, `gotox 128`, attente ; HAUT pressé quand un zombie venant de droite est à 23, 30, 18, 26 et 34 px, puis BAS tenu ; point d'arrêt `84A5` : `C420`, `C425`, `D`, `E`, `A`, `H`) :
+
+- Saut, `C420 = 1`, `H = 42` à chaque appel. Image 1978 : `C425 = 170` (pieds 22 px au-dessus du zombie, Y 192), `|dX| = 9` : `A = 248` (`170 - 8 - 2 - 192 + 24`), pas de contact ; la boîte debout donnerait `A = 0 < 50`. Sauts à 23, 30 et 26 px : le zombie passe sous Simon sans contact (`C415` inchangé), `A` de 238 à 253. Sauts à 18 et 34 px : contact à `C425 = 180` (pieds 12 px au-dessus), `A = 2 < 42`, `C415` -2.
+- Accroupi (run `out1`, image 2547) : `C420 = 2`, `C425 = 192`, objet en (93, 192), `A = 22`, `H = 42` : contact, `C415` 30 → 28.
+- Debout (image 1682) : `C420 = 0`, `H = 50`, `A = 22` : contact.
+
+**Porté** : `EnemyRoomVars.simonState` (`ENEMY_SIMON_*` dans `enemies.h`) est rempli par `simon_state` (`actors.c`) : escalier → 3, saut du port (mode 1, et mode 4 qui prolonge un saut au-delà de sa table) → 1, chute depuis le sol (`ground_fall`) → 4, accroupi → 2, sinon 0. `Enemies_touches` (`enemies.c`) applique `847A` avec les paramètres de la classe à tous les types portés : types 1 (`romBox`, objet = sprite + (8, 31)), 2, 5 (objet) et 4 (objet = SAT + (8, 15), au lieu de l'ancienne boîte de sprites 24 × 32). Tests : `test_contact_posture` (`tests/test_enemies.c`, bornes des trois classes dans les cinq états, et le zombie par `Enemies_frame`) ; scénario MD `s_contact_posture` (saut sur place à 23 px d'un zombie : pas de contact ; accroupi : contact -2 ; avec `simonState` forcé à 0, le saut est touché).
+
+Reste : le type 4 du port suit la SAT, qui suit l'objet une image sur deux ; la boîte est appliquée à cette position. `C420 = 7` n'existe pas dans le port.

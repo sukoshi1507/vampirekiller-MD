@@ -153,7 +153,18 @@ typedef struct {
     EnemyU8 sideFlag;        /* C42C : 0 = spawn a droite, autre = a gauche (salle D001 != 1) */
     EnemyU8 difficulty;      /* D012 : soustrait 2*D012 a la periode (valeur 0 observee) */
     const EnemyU8 *map;      /* carte de collision de la salle (sol pour la chute) ; NULL = pas de chute */
+    EnemyU8 simonState;      /* C420, lu par la boite de contact 847A : ENEMY_SIMON_* */
 } EnemyRoomVars;
+
+/* Valeurs de C420 qui comptent pour la boite de contact 847A (banque 2). 847A ne distingue
+ * que 1 et 2 (DEC A ; CP 2) : en saut, la boite part de C425 - 8 et perd 8 px ; accroupi,
+ * elle perd 8 px en haut. Les autres valeurs (sol, escalier, chute depuis le sol) gardent
+ * la boite debout. C420 = 5 (recul) coupe le contact avant 847A (7EF4, champ recoil). */
+#define ENEMY_SIMON_GROUND 0     /* C420 = 0 : debout, marche */
+#define ENEMY_SIMON_JUMP   1     /* C420 = 1 : saut (6B9B), montee et descente jusqu'au sol (6D43) */
+#define ENEMY_SIMON_CROUCH 2     /* C420 = 2 : accroupi (6C20) */
+#define ENEMY_SIMON_STAIRS 3     /* C420 = 3 : escalier (6BEE) */
+#define ENEMY_SIMON_FALL   4     /* C420 = 4 : chute depuis le sol (6BA5) */
 
 /* Remet a zero les ennemis et les compteurs de salle. Energie, invulnerabilite et recul sont conserves. */
 void Enemies_setRoom(EnemyState *s);
@@ -181,6 +192,18 @@ int Enemies_spawnTimerTick(EnemySpawnTimer *t, const EnemyRoomVars *v, EnemyStat
  * *pushX reçoit le deplacement de Simon de cette image (px, signe) ; 0 hors recul.
  * Retourne 1 si un contact a ete compte cette image (energie -2, -6 pour le type 5), 0 sinon. */
 int Enemies_frame(EnemyState *s, EnemySpawnTimer *t, const EnemyRoomVars *v);
+
+/* Test de contact de Enemies_frame (8290 -> 847A) pour un ennemi actif, selon la classe de son
+ * type (82CB) et l'etat de Simon v->simonState (C420). Ne tient compte ni du recul ni de
+ * l'invulnerabilite. Classes, en Y de l'objet MSX (pieds) :
+ *   types 1, 2 (8378) : |dX| < 10 ; debout Y de C425 - 27 a C425 + 22, accroupi C425 - 19
+ *     a C425 + 22, saut C425 - 27 a C425 + 14 ;
+ *   type 4 (8390) : |dX| < 13 ; debout C425 - 27 a C425 + 14, accroupi C425 - 19 a
+ *     C425 + 14, saut C425 - 27 a C425 + 6 ;
+ *   type 5 (83D2) : |dX| < 17 ; debout C425 - 27 a C425 + 8, accroupi C425 - 19 a C425 + 8,
+ *     saut C425 - 27 a C425.
+ * Escalier et chute depuis le sol : boite debout. */
+int Enemies_touches(const Enemy *e, const EnemyRoomVars *v);
 
 /* Coup de fouet : tue les ennemis (types 1, A, B et 4) dont la boite touche la boite du fouet.
  * La boite du fouet est en coordonnees de jeu, inclusive (vk_whip_bounds). Les ennemis sont

@@ -1,0 +1,24 @@
+# (s) Hall, salle 0 : la boite de contact 847A suit la posture de Simon (C420,
+# research/enemy-behavior.md, « Contact selon la posture de Simon »).
+# 1. Saut (C420 = 1 : C425 - 8, hauteur 42) : un zombie arrive par la droite, Simon saute sur
+#    place quand l'objet est a 23 px ; ses pieds restent plus de 14 px au-dessus du sol tant que
+#    |dX| < 10 : pas de contact. Avec la boite debout (pieds plus de 22 px au-dessus), le zombie
+#    le toucherait (fenetre de 18 images contre 28).
+# 2. Accroupi (C420 = 2 : hauteur 42, le haut descend de 8 px) : le zombie suivant, au sol comme
+#    Simon, le touche quand meme (-2).
+include boot_to_courtyard.inc
+until front_mode == MODES['INTERIOR'] max 3000 RIGHT
+poke vk_game+0 136                                  # Simon en X 136, comme le scenario c
+until any(e.active and e.romBox and e.dx < 0 and e.x + 8 - game.player.x <= 23 for e in enemies.enemy) max 900
+expect game.player.mode == 0 and enemies.energy == 32 # au sol, energie pleine
+hold C 2                                            # saut sur place
+expect game.player.mode == 1 # saut en cours (C420 = 1)
+until all(not e.active or e.dx > 0 or e.x + 8 < game.player.x - 10 for e in enemies.enemy) max 60
+expect enemies.energy == 32 and enemies.recoil == 0 # le zombie passe sous Simon sans contact
+until game.player.mode == 0 max 60
+expect enemies.energy == 32 # pose au sol, toujours sans contact
+shot s-apres-saut
+until enemies.energy < 32 max 900 DOWN               # accroupi jusqu'au contact suivant
+dump contact-accroupi
+shot s-contact-accroupi
+expect enemies.energy == 30 and game.recoil == 1 # contact accroupi : -2 et recul

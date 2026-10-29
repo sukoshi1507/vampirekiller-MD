@@ -74,6 +74,7 @@ static void vars_default(EnemyRoomVars *v)
     v->simonY = 0xC0;
     v->sideFlag = 0;
     v->difficulty = 0;
+    v->simonState = ENEMY_SIMON_GROUND;
     v->map = 0;
 }
 
@@ -400,6 +401,7 @@ static void test_type4_timer(void)
     v.simonY = 0xC0;   /* au sol du hall : spawn en Y SAT 0xAA (C425 - 22) */
     v.sideFlag = 0;
     v.difficulty = 0;
+    v.simonState = ENEMY_SIMON_GROUND;
     Enemies_init(&s);
     Enemies_spawnTimerInit(&t);
     s.invuln = 0xFF;   /* pas de contact dans ce test (510 images) */
@@ -498,6 +500,7 @@ static void test_contact_recoil_invuln(void)
     v.simonY = 192;
     v.sideFlag = 0;
     v.difficulty = 0;
+    v.simonState = ENEMY_SIMON_GROUND;
     v.map = 0;
     Enemies_init(&s);
     Enemies_spawnTimerInit(&t);
@@ -535,6 +538,7 @@ static void test_fall_to_floor(void)
     v.simonY = 0x40;
     v.sideFlag = 0;
     v.difficulty = 0;
+    v.simonState = ENEMY_SIMON_GROUND;
     v.map = map;
     Enemies_init(&s);
     Enemies_spawnTimerInit(&t);
@@ -664,6 +668,7 @@ static void vars_stage2_room2(EnemyRoomVars *v)
     v->simonY = 160;
     v->sideFlag = 0;
     v->difficulty = 0;
+    v->simonState = ENEMY_SIMON_GROUND;
     v->map = 0;
 }
 
@@ -1044,6 +1049,85 @@ static void test_type2_sat_budget(void)
     CHECK(count_type(&s, ENEMY_TYPE_SPLASH) == 4, "et sans gouttes");
 }
 
+/* Contact selon la posture de Simon (8290 -> 847A, C420) : bornes Y de l'objet MSX (pieds)
+ * pour chaque classe de 82CB, a X egal, puis bornes X. Simon en (120, 160). Objet en (X, Y) :
+ * type 1 romBox et type 4 stockes en coordonnees de sprite (X - 8 ; Y - 31 ou Y - 15). */
+static int posture_touch(int type, int romBox, int state, int dx, int objY)
+{
+    EnemyRoomVars v;
+    Enemy e;
+    memset(&v, 0, sizeof v);
+    memset(&e, 0, sizeof e);
+    v.stage = 1;
+    v.simonX = 120;
+    v.simonY = 160;
+    v.simonState = (EnemyU8)state;
+    e.active = 1;
+    e.type = (EnemyU8)type;
+    e.romBox = (EnemyU8)romBox;
+    e.x = (EnemyS16)(120 + dx);
+    e.y = (EnemyU8)objY;
+    if (romBox) { e.x -= 8; e.y = (EnemyU8)(objY - 31); }
+    if (type == ENEMY_TYPE_4) { e.x -= 8; e.y = (EnemyU8)(objY - 15); }
+    return Enemies_touches(&e, &v);
+}
+
+/* Vrai si l'objet touche exactement de Y = 160 + top a Y = 160 + bottom. */
+static int posture_span(int type, int romBox, int state, int top, int bottom)
+{
+    return posture_touch(type, romBox, state, 0, 160 + top) &&
+           !posture_touch(type, romBox, state, 0, 160 + top - 1) &&
+           posture_touch(type, romBox, state, 0, 160 + bottom) &&
+           !posture_touch(type, romBox, state, 0, 160 + bottom + 1);
+}
+
+static void test_contact_posture(void)
+{
+    static const struct { int type, romBox, halfW, stand, crouchTop, jumpBottom; const char *name; } k[4] = {
+        { ENEMY_TYPE_A, 1, 10, 22, -19, 14, "type 1 (8378)" },
+        { ENEMY_TYPE_2, 0, 10, 22, -19, 14, "type 2 (8378)" },
+        { ENEMY_TYPE_4, 0, 13, 14, -19, 6, "type 4 (8390)" },
+        { ENEMY_TYPE_5, 0, 17, 8, -19, 0, "type 5 (83D2)" },
+    };
+    int i;
+    for (i = 0; i < 4; i++) {
+        const int t = k[i].type, r = k[i].romBox;
+        CHECK(posture_span(t, r, ENEMY_SIMON_GROUND, -27, k[i].stand), "%s debout : Y de C425 - 27 a C425 + %d", k[i].name, k[i].stand);
+        CHECK(posture_span(t, r, ENEMY_SIMON_CROUCH, k[i].crouchTop, k[i].stand), "%s accroupi (C420 = 2) : haut C425 - 19", k[i].name);
+        CHECK(posture_span(t, r, ENEMY_SIMON_JUMP, -27, k[i].jumpBottom), "%s saut (C420 = 1) : bas C425 + %d", k[i].name, k[i].jumpBottom);
+        CHECK(posture_span(t, r, ENEMY_SIMON_STAIRS, -27, k[i].stand), "%s escalier (C420 = 3) : boite debout", k[i].name);
+        CHECK(posture_span(t, r, ENEMY_SIMON_FALL, -27, k[i].stand), "%s chute (C420 = 4) : boite debout", k[i].name);
+        CHECK(posture_touch(t, r, ENEMY_SIMON_CROUCH, k[i].halfW - 1, 160) &&
+              !posture_touch(t, r, ENEMY_SIMON_CROUCH, k[i].halfW, 160) &&
+              posture_touch(t, r, ENEMY_SIMON_JUMP, 1 - k[i].halfW, 150) &&
+              !posture_touch(t, r, ENEMY_SIMON_JUMP, -k[i].halfW, 150), "%s : |dX| < %d", k[i].name, k[i].halfW);
+    }
+
+    /* Par Enemies_frame : un zombie (stage 2, salle 2, pieds en A0 comme Simon) touche Simon
+     * accroupi ; Simon en saut, pieds 15 px au-dessus du sol, passe au-dessus (debout, il
+     * serait touche jusqu'a 22 px). */
+    {
+        EnemySpawnTimer t;
+        EnemyRoomVars v;
+        EnemyState s;
+        vars_stage2_room2(&v);
+        v.simonState = ENEMY_SIMON_CROUCH;
+        Enemies_init(&s);
+        Enemies_spawnTimerInit(&t);
+        put_stage2_type1(&s, 145 + 5, 160, ENEMY_SIDE_RIGHT);
+        CHECK(Enemies_frame(&s, &t, &v) == 1 && s.energy == ENEMY_ENERGY_MAX - 2, "zombie : Simon accroupi touche");
+        v.simonState = ENEMY_SIMON_JUMP;
+        v.simonY = 160 - 15;
+        Enemies_init(&s);
+        put_stage2_type1(&s, 145 + 5, 160, ENEMY_SIDE_RIGHT);
+        CHECK(Enemies_frame(&s, &t, &v) == 0 && s.energy == ENEMY_ENERGY_MAX, "zombie : saut 15 px au-dessus, pas de contact");
+        v.simonState = ENEMY_SIMON_GROUND;
+        Enemies_init(&s);
+        put_stage2_type1(&s, 145 + 5, 160, ENEMY_SIDE_RIGHT);
+        CHECK(Enemies_frame(&s, &t, &v) == 1, "zombie : meme hauteur, boite debout, contact");
+    }
+}
+
 int main(void)
 {
     test_rom_tables();
@@ -1070,6 +1154,7 @@ int main(void)
     test_type2_trajectory();
     test_type2_contact_whip();
     test_type2_sat_budget();
+    test_contact_posture();
     if (failures == 0) {
         printf("Enemies tests: PASS\n");
         return 0;
