@@ -587,6 +587,9 @@ int main(bool hardReset)
         }
         SYS_doVBlankProcess();
         vk_show_backdrop();
+#ifdef VK_MEASURE_PSG
+        vk_psg_measure();   /* measurement build only (research/audio-driver.md) */
+#endif
     }
     return 0;
 }

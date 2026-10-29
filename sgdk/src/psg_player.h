@@ -13,6 +13,9 @@
 extern VKPsg vk_psg;
 
 void vk_psg_init(void);
+#ifdef VK_MEASURE_PSG
+void vk_psg_measure(void);      /* measurement build: cost of the next V-Int step */
+#endif
 
 bool vk_psg_music(u8 id);       /* 509F with A = 80..8E */
 bool vk_psg_effect(u8 id);      /* 509F with A = 01..1C; FALSE when refused */

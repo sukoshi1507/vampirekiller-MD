@@ -1,0 +1,27 @@
+# Cout du lecteur PSG (psg_vint), ROM de mesure seulement (research/audio-driver.md) :
+#   cd sgdk && make GDK=... clean && EXTRA_FLAGS=-DVK_MEASURE_PSG make GDK=...
+#   python3 tools/md_harness.py tools/measure_psg_cost.txt --out DIR
+#   puis make GDK=... clean && make GDK=... (ROM normale).
+# vk_psg_measure (psg_player.c, VK_MEASURE_PSG) : travail du pas suivant en pas du compteur
+# H en H32 (171 par ligne de 488,6 cycles 68000). Titre, intro du chateau, cour (musique 80h) avec fouets et coeur.
+include ../tests/md_scenarios/boot_to_courtyard.inc
+echo (ram16('vk_psg_cost_count'), ram16('vk_psg_cost_max'), ram16('vk_psg_cost_bytes_max'), ram32('vk_psg_cost_sum'))
+poke vk_game+0 44
+wait 4
+hold B 2
+wait 30
+hold B 2
+wait 30
+until ram8('vk_candles+6') == 3 max 400
+until ram8('vk_candles+118') == 1 max 200 RIGHT
+wait 20
+hold B 2
+wait 20
+hold C 2
+wait 60
+echo (ram16('vk_psg_cost_count'), ram16('vk_psg_cost_max'), ram16('vk_psg_cost_bytes_max'), ram32('vk_psg_cost_sum'), ram16('vk_psg_cost_last'), ram16('vk_psg_cost_over'))
+until front_mode == MODES['INTERIOR'] max 3000 RIGHT
+wait 200
+hold B 2
+wait 300
+echo (ram16('vk_psg_cost_count'), ram16('vk_psg_cost_max'), ram16('vk_psg_cost_bytes_max'), ram32('vk_psg_cost_sum'), ram16('vk_psg_cost_last'), ram16('vk_psg_cost_over'))
