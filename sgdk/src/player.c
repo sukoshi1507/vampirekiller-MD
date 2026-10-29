@@ -62,18 +62,20 @@ void vk_player_reset(VKPlayer *p)
 
 /* Gameplay controller: the original tile probes and delta tables above remain
  * unchanged for differential C/Z80 verification. Vertical movement is swept
- * one pixel at a time to prevent tunnelling through thin platforms/ceilings.
- * mode: 0 grounded, 1 jump, 4 falling. Other original states are not ported. */
-static int vk_ceiling(const VKByte *map, VKByte x, VKByte feet,
-                      VKByte stage)
+ * one pixel at a time to prevent tunnelling through thin platforms.
+ * mode: 0 grounded, 1 jump, 4 falling. Other original states are not ported.
+ * The MSX has no ceiling in the air: the jump step 6CE7 only adds the table
+ * value to C425 (traced under the stage 2 room 5 ledge: Simon rises from 176 to
+ * 144 with his head in the solid row y 112, run K4 of research/door-room7.md
+ * section 18). The only ceiling is the start probe 7B78: a solid tile at
+ * (X, Y - 44) and the jump does not start (6B97 RET C). */
+static int vk_jump_blocked(const VKByte *map, VKByte x, VKByte feet, VKByte stage)
 {
-    if (feet < 31) return 1; /* HUD / top-of-playfield boundary. */
-    return vk_tile_solid(vk_sample_tile(map, (VKByte)(x - 5), (VKByte)(feet - 30)), stage, 0) ||
-           vk_tile_solid(vk_sample_tile(map, (VKByte)(x + 5), (VKByte)(feet - 30)), stage, 0);
+    return vk_tile_solid(vk_sample_tile(map, x, (VKByte)(feet - 44)), stage, 0);
 }
 
 /* Apply signed pixel displacement, stopping at the first crossed surface.
- * Return -1 for a ceiling, +1 for a landing, 0 for unobstructed motion. */
+ * Return -1 at the top of the playfield, +1 for a landing, 0 for unobstructed motion. */
 static int vk_move_vertical(VKPlayer *p, const VKByte *map, VKByte stage,
                             int delta)
 {
@@ -84,7 +86,6 @@ static int vk_move_vertical(VKPlayer *p, const VKByte *map, VKByte stage,
         int next = (int)p->y + step;
         if (next < 32) return -1;
         if (next >= 225) { p->y = 225; return 0; }
-        if (step < 0 && vk_ceiling(map, p->x, (VKByte)next, stage)) return -1;
         if (step > 0 && vk_grounded(map, p->x, (VKByte)next, stage, 0))
         {
             /* Ground probe is defined at the feet coordinate. */
@@ -358,7 +359,7 @@ void vk_player_tick_jump(VKPlayer *p, const VKByte *map, VKByte stage,
     {
         if (!vk_grounded(map, p->x, p->y, stage, 0))
         { p->mode = 4; p->phase = 0; }
-        else if (jump_pressed && !p->crouched)
+        else if (jump_pressed && !p->crouched && !vk_jump_blocked(map, p->x, p->y, stage))
         { p->mode = 1; p->phase = 0; p->jump_frames = 0; }
     }
     else if (p->mode == 1)

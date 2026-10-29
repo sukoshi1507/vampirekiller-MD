@@ -22,9 +22,15 @@ Ce qui fonctionne dans la ROM Mega Drive :
   apparition, mouvement, animation, contact (-2 d'énergie, recul, invulnérabilité),
   chute sur le sol et couleurs d'après la table de couleur du MSX2.
   **Le fouet tue les ennemis de types 1 et 4** (type 1 confirmé à l'émulateur).
-- **Clé et porte** : la clé blanche de la salle 2 se ramasse au contact et s'affiche
-  dans le HUD ; la porte de la salle 7 bloque Simon sans elle, s'ouvre avec (barreau
-  qui se lève, Simon qui sort seul) et mène vers le stage 2.
+- **Clés blanches et portes** : la clé blanche (bloc caché de la salle 2 du hall, de la
+  salle 5 du stage 2) se ramasse au contact et s'affiche dans le HUD ; la porte du stage
+  (salle 7 du hall, salle 1 du stage 2) bloque Simon sans elle, s'ouvre avec (barreau
+  qui se lève, Simon qui sort seul) et mène au stage suivant (trace openMSX pour les
+  deux stages, `research/door-room7.md` 16 et 18). Au stage 2, le bloc se touche par un
+  saut depuis le bloc immergé : comme sur MSX2, le saut n'a pas de plafond en l'air.
+- **Fin du stage 2 (provisoire, ajout du port)** : le stage 3 n'est pas porté ; la porte
+  de la salle 1 mène à un écran « FIN DU STAGE 2 / SUITE NON PORTEE » (HUD en STAGE-03),
+  puis au titre après 378 images, comme après un GAME OVER.
 - **Bougies, clé dorée et coffres** (cour, hall, stage 2) : les objets lâchés et les
   objets fixes se ramassent au contact, aussi pendant leur chute ; une seule clé dorée
   à la fois (icône du HUD, gardée jusqu'au retour en jeu après une mort), qui ouvre un coffre dont le contenu attend 32 images puis
@@ -36,9 +42,12 @@ Ce qui fonctionne dans la ROM Mega Drive :
   6 fois ; 03, armure : dégâts de face divisés par deux pendant 16 coups ; 0B, 0C, 0D
   (bits de `C431`) : minuteries portées à 480 images, recul rapide de 2,5 px, saut
   haut. Minuteries, armure et bits de `C431` sont remis à 0 à la fin d'une mort.
-- **Stage 2 (jouable, chauves-souris seules)** : six salles avec les collisions et les liens
-  de la ROM (`tools/build_stage_maps_md.py`) ; arrivée en salle 0 à x 16, y 96, comme
-  sur le MSX2.
+- **Stage 2 (jouable)** : six salles avec les collisions et les liens de la ROM
+  (`tools/build_stage_maps_md.py`) ; arrivée en salle 0 à x 16, y 96, comme sur le MSX2.
+  Tous les ennemis du MSX2 y sont portés : chauves-souris (type 4, salles 0, 1, 3),
+  zombie (type 1, salle 2), hommes-poissons et leurs gouttes (type 2, salles 4, 5)
+  (inventaire : `research/enemy-behavior.md`, « Inventaire du stage 2 »). Après une
+  mort, Simon reprend en salle 0 à x 16, y 96, regard à droite (table `641F`, trace).
 - **Énergie, vies, mort, game over** : la barre PLAYER du HUD suit l'énergie (32 points).
   À 0, Simon meurt ; 252 images plus tard l'énergie revient au maximum et, 27 images
   après, il perd une vie et reprend. Sans vie, « GAME OVER » puis le titre (378 images).
@@ -81,10 +90,8 @@ Ce qui n'est pas porté ou reste provisoire :
 - **Type 5** : l'objet de mort (`1E`) n'est pas reproduit ; la phase 3 du fouet
   est assimilée au fouet déployé (`vk_whip_phase` 2) et le recul face à une panthère
   assise est provisoire.
-- **Stage 2** : seules les chauves-souris (salles 0, 1, 3) sont portées ; le type 1 de la
-  salle 2 et les hommes-poissons des salles 4 et 5 ne le sont pas. Après une mort, Simon reprend en salle 0
-  (x 16, y 96), lieu provisoire. Les liens haut/bas viennent de la table de la ROM,
-  sans trace en jeu.
+- **Stage 2** : apparition du premier zombie de la salle 2 décalée de 4 images (phase de
+  `CF10`) ; les liens haut/bas viennent de la table de la ROM, sans trace en jeu.
 - **Objets, non portés** : effet de 0F (carte du stage sur F2), 10/11 (livres à croix :
   ils changent seulement les prix du marchand et ne détruisent pas les ennemis, prouvé
   par trace openMSX ; c'est la croix 05 qui les détruit), le marchand, les armes secondaires, les fouets 1C et 1D (seule la pause
@@ -94,8 +101,9 @@ Ce qui n'est pas porté ou reste provisoire :
   après un coup) est calé image par image sur une trace openMSX, les autres minuteries
   sans trace dédiée (`research/castle-candles.md` 9.8).
 - **Stages 3 et suivants, châteaux, attaques autres que le fouet** : non portés.
-- **Énergie (provisoire)** : lieu de reprise (entrée du hall), commandes bloquées
-  pendant la mort : non relevés sur le MSX2. La chute dans le vide tue
+- **Énergie (provisoire)** : commandes bloquées pendant la mort : non relevées sur le
+  MSX2. Le lieu de reprise suit la table `641F` (salle 0 ; cour (16,176), hall (16,192),
+  stage 2 (16,96)), tracé au stage 2 (`research/player-health.md`). La chute dans le vide tue
   (`vk_health_fall`), avec le cri de Wilhelm ajouté au port.
 - **Provisoires** : vitesse de chute des ennemis. La boîte de contact de Simon suit la
   ROM pour les types 1, 2, 4 et 5, debout, accroupi, en saut et sur l'escalier

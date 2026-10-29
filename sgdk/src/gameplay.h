@@ -74,9 +74,10 @@ VKByte *vk_game_room_map(const VKGame *game);
 /* Writes a 4x4 tile block at (x, y) into the RAM map of the current room, or puts
  * back the ROM tiles there when tiles is NULL. */
 void vk_game_room_block(const VKGame *game, VKByte x, VKByte y, const VKByte *tiles);
-/* Restart after a lost life (health.c). PROVISIONAL: the MSX respawn place is
- * not traced (research/player-health.md). In the hall Simon restarts at the hall
- * entrance (room 0, x 16, as when he walks in); in the courtyard, at its start. */
+/* Restart after a lost life (health.c): the death clears D001 (70D6) and state 4
+ * places Simon from table 641F[D000] (6402), facing right: courtyard (16,176),
+ * hall (16,192), stage 2 (16,96), always in room 0 of the stage (code; traced at
+ * stage 2, research/player-health.md). */
 void vk_game_respawn(VKGame *game);
 /* Enemy contact (7EC1/7F1B): Simon is knocked back in direction dir (-1 left,
  * 1 right) and loses control until the recoil ends; dead = energy now 0. On a

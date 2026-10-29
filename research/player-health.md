@@ -184,6 +184,12 @@ Méthode : la recherche statique des références aux octets candidats (`scratch
 
 **Port** : `vk_items_new_life` et `vk_candles_new_life`, appelés par `respawn()` dans `main.c`, avec le retour du fouet au niveau 0.
 
+### Lieu de reprise (code et trace, 2026-10-29)
+
+- **Code** : la mort écrit `D001 := 0` (`70D6`, dans `70BF`-`70FA`) ; `D000` n'est pas touché. L'état 4 (`423A` → `62E6`) efface `C420`-`C46F` (`63B7`), puis `6402` lit la table `641F + 2 × D000` : octet 0 = Y (bit 0 = `C42C`, regard), octet 1 = X. Stage 0 : `B0 10` (16,176) ; stage 1 : `C0 10` (16,192) ; stage 2 : `60 10` (16,96) ; stage 3 : `60 10` ; regard à droite partout dans les stages 0 à 2.
+- **Trace D1** (stage 2, openMSX, route `S2` puis salle 1 par la droite, énergie mise à 2) : contact d'une chauve-souris en salle 1 (Simon (20,64)), `70D6` `D001 := 0` à l'image 6468, `C000` 6 à 6470, 4 à 6496, Simon en (16,96) `C42C` = 0 à 6513 avec les liens de la salle 0 (`C41C`-`C41F` = 02 04 FF 01), état 5 à 6536. Second cas dans la trace K4 (mort dans l'eau de la salle 5, `70D6` à 6564, reprise (16,96) en salle 0 à 6609).
+- **Port** : `vk_game_respawn` (`gameplay.c`) donnait déjà ces lieux (salle 0 ; cour (16,176), hall (16,192), stage 2 (16,96)) : conforme, plus provisoire. Test `test_respawn_place` (`tests/test_health.c`).
+
 ## Recul au coup reçu : machine d'états (lecture du code, 2026-10-28)
 
 **Prouvé (code, banque 1 en 6000)**, non encore porté :

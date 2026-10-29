@@ -132,7 +132,9 @@ static void test_contact_to_death(void)
     CHECK(s.energy == 0, "energie a 0");
 }
 
-/* 6. Reapparition (provisoire) : entree du hall, ou debut de la cour. */
+/* 6. Reapparition : 70D6 met D001 a 0, 6402 pose Simon selon la table 641F[D000]
+ * (cour (16,176), hall (16,192), stage 2 (16,96), regard a droite) ; trace D1 du
+ * stage 2 : mort en salle 1, reprise en salle 0 a (16,96). */
 static void test_respawn_place(void)
 {
     VKGame g;
@@ -148,6 +150,15 @@ static void test_respawn_place(void)
     vk_game_respawn(&g);
     CHECK(g.area == VK_AREA_COURTYARD && g.room == 0 && g.player.x == 16 && g.player.y == 176,
           "cour : debut de partie");
+    vk_game_begin(&g);
+    vk_game_enter_stage(&g, 2);
+    g.room = 1;
+    g.player.x = 20;
+    g.player.y = 64;
+    g.player.facing = 1;
+    vk_game_respawn(&g);
+    CHECK(g.stage == 2 && g.room == 0 && g.player.x == 16 && g.player.y == 96 && !g.player.facing,
+          "stage 2 : salle 0, x 16, y 96, regard a droite (641F)");
 }
 
 /* Fall into the water of stage 2 (7093): 30 + 90 frames, then state 6. */

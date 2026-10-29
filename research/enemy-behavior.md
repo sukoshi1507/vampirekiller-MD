@@ -336,6 +336,21 @@ Lecture du code (`tools/disasm_rom_window.py`) et trace openMSX `scratchpad/stag
 
 **Porté** : type 4 au stage 2 (salles 0, 1, 3), Y du spawn relative à Simon et cadence 168/328 pour tous les stages. **Porté depuis** : type 1 de la salle 2 (section suivante). **Porté depuis** : type 2 des salles 4 et 5 (section « Type 2 au stage 2 » ; le tir de l'état 2 `A45A` est réservé au type 3). La trace `stage2e` n’a pas atteint les salles 2 et 4 : le lien forcé (`C41E`) n'a pas servi, Simon était sur un escalier.
 
+### Inventaire du stage 2, salle par salle (2026-10-29)
+
+Sources d'ennemis du MSX au stage 2 : (1) les canaux de `5EB8` selon l'octet de salle `85D7 + D001` (bits 0 `9CE6`, 1 `9D4B`, 2 `9D52`, 3 `9D97`, 5 `9DD5`) ; (2) la liste d'objets fixes (`6181` depuis `8674`, panthères `61BB` au hall), vide (`FF`) au stage 2 ; (3) les bougies d'objet 0x15 (`8AD0`, ennemi de `8AF0[D002]`), aucune au stage 2 (`vk_candle_defs`, lignes « stage 2 ») ; (4) les projectiles `D700`, tirés seulement par le type 3 (`A45A`), absent. Aucun bit 2 ni 5 dans `85D7`-`85DC`.
+
+| Salle | Octet `85D7+n` | MSX | Port |
+|---|---|---|---|
+| 0 | `08` | type 4, chauve-souris (`9D97`) | porté (`type4Channel`, scénario `f`) |
+| 1 | `08` | type 4 | porté |
+| 2 | `01` | type 1, zombie (`9CE6`, branche `9D1B`) | porté (`stage2Type1Tick`, scénario `k`) |
+| 3 | `08` | type 4 | porté |
+| 4 | `02` | type 2, homme-poisson (`9D4B`), gouttes (objet `20`) | porté (`type2Channel`, scénario `l`) |
+| 5 | `02` | type 2, gouttes | porté |
+
+Rien ne manque côté apparitions. Restent provisoires : la phase de `CF10` du premier zombie de la salle 2 (52 images contre 48, `room-links.md` §9) et l'objet de mort `1E`.
+
 ## Type 1 au stage 2 : le zombie de la salle 2 (relevé du 2026-10-28)
 
 **Identification** : l'ennemi de type 1 de la salle 2 du stage 2 (`D000 = 2`, `D001 = 2`) est **le zombie du hall** (types A et B du port). Même routine (`A964`), mêmes couches de motifs, mêmes couleurs ; seuls le Y du spawn et la règle de côté changent.

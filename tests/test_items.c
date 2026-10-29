@@ -1,5 +1,6 @@
 /* Native tests of items.c: white key of hall room 2, door of hall room 7
- * (research/door-room7.md, section 16, runs K1, K3 and K4). */
+ * (research/door-room7.md, section 16, runs K1, K3 and K4), key of stage 2
+ * room 5 and door of stage 2 room 1 (section 18). */
 #include <assert.h>
 #include <stdio.h>
 #include "items.h"
@@ -84,6 +85,39 @@ int main(void)
     hall(&g, 2, 148, 192);
     g.stage = 2;
     assert(!vk_items_key_shown(&it, &g) && vk_items_tick(&it, &g) == VK_ITEM_NONE && !it.keys);
+
+    /* Stage 2 (run K4 of the stage 2, door-room7.md section 18): block 0x18 of
+     * room 5 gives the key at (192,112) (89FD), taken at Simon x 188, y 144. */
+    vk_items_begin(&it);
+    vk_items_enter_stage(&it);
+    hall(&g, 5, 176, 144);
+    g.stage = 2;
+    {
+        VKByte kx, ky;
+        assert(vk_items_key_place(&g, &kx, &ky) && kx == 192 && ky == 112);
+    }
+    assert(!vk_items_key_shown(&it, &g));
+    it.white_key_revealed = 1;
+    assert(vk_items_key_shown(&it, &g) && vk_items_tick(&it, &g) == VK_ITEM_NONE);
+    g.player.x = 188;
+    assert(vk_items_tick(&it, &g) == VK_ITEM_KEY_TAKEN && (it.keys & VK_KEY_WHITE));
+    /* Hall room 2 of the same stage index holds nothing; stage 2 room 2 neither. */
+    g.room = 2;
+    assert(!vk_items_door_room(&g));
+    /* Room 1: the bar is a wall at x 228 on the ledge, then opens facing right;
+     * D000 2 -> 3 at t 168 (frame 7076, opening at 6908). */
+    hall(&g, 1, 232, 96);
+    g.stage = 2;
+    assert(vk_items_door_room(&g));
+    g.player.facing = 1;
+    assert(vk_items_tick(&it, &g) == VK_ITEM_NONE && g.player.x == 228);
+    g.player.facing = 0;
+    assert(vk_items_tick(&it, &g) == VK_ITEM_DOOR_OPENED && !(it.keys & VK_KEY_WHITE));
+    for (t = 1; t < 168; t++) assert(vk_items_tick(&it, &g) != VK_ITEM_STAGE_EXIT);
+    assert(g.player.x == 248 && vk_items_tick(&it, &g) == VK_ITEM_STAGE_EXIT);
+    /* Hall room 7 door state does not carry over: a new stage closes its door. */
+    vk_items_enter_stage(&it);
+    assert(it.door == VK_DOOR_CLOSED && !it.white_key_taken);
 
     printf("test_items: OK\n");
     /* New life: a white key not used is lost and back in its hidden block. */

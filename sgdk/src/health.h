@@ -14,10 +14,11 @@
  *   - Timings (60 Hz): contact at energy 0 -> state 6 after 4.207 s (252 frames);
  *     state 6 -> state 4 (C410 decrement, play again) 0.45 s (27 frames);
  *     state 6 -> title 6.31 s (378 frames) when the game is over.
+ * Respawn place (vk_game_respawn in gameplay.c): 70D6 clears D001, 6402 reads
+ * 641F[D000] (code; traced at stage 2: room 0, x 16, y 96).
  * PROVISIONAL (not traced):
  *   - Simon's controls are locked from the fatal contact to the respawn; the MSX
  *     death animation is not documented.
- *   - Respawn place (vk_game_respawn in gameplay.c).
  *   - Bar scale: 2 px per energy point (32 points on the 64 px HUD bar). */
 #define VK_HEALTH_LIVES_START 2      /* C410 once play starts (3, minus the first state 4) */
 #define VK_HEALTH_ENERGY_MAX 0x20    /* C415, same as ENEMY_ENERGY_MAX */

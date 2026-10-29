@@ -211,3 +211,28 @@ Correction de §14-15 : l'événement de la « bougie » est un **ramassage par 
 - Graphismes : le jeu dessine la clé, l'icône du HUD et le barreau dans le bitmap SCREEN 5 ; ils ne sont pas stockés tels quels dans la ROM (recherche brute négative). `tools/build_door_key_md.py` les lit dans les instantanés VRAM de K3 (`scratchpad/door7/key/runs/K3/snaps`, non versionnés) et écrit `sgdk/src/generated/door_key_md.c`. La colonne rouge x 144 (couleur 8, lignes 11 à 28) est le bord droit de la case rouge (x 127 à 144) et non le bout de la barre ENEMY, qui s'arrête à x 123 : elle est gardée (corrigé le 2026-10-29, `verify_intro.py` compare le hall à la scène MSX).
 - Non porté : clé dorée (bit 1, coffre bleu), pose de Simon pendant la sortie à pied (il reste debout ; non relevée), cause du blocage à x 166 en salle 2 (rien ne bloque sur MD). Le stage 2 est jouable sans ennemis : `vk_game_enter_stage` (gameplay.c) pose Simon en salle 0, x 16, y 96 ; collisions et liens générés par `tools/build_stage_maps_md.py` (même méthode que les salles 1-7 du hall, vérifiée identique à `stage1_collision.c`).
 - Non-régression : `tests/md_scenarios/f_key_door.txt` (clé prise à x 140..152, ouverture à x 228, clé consommée, sortie).
+
+## 18. Stage 2 : clé du bloc de la salle 5 et porte de la salle 1 (2026-10-29)
+
+**Code** : `BB37` (banque 13, chargement de salle) lit `BB61 + 3 × D000` : `[salle | bit 7, C5AD, C5AE]`. Stage 0 : `42 90 E0` (cour salle 2, porte du château, `C5AC := 4`) ; stage 1 : `87 30 EC` (salle 7, porte à clé, `C5AC := FF`) ; **stage 2 : `81 30 EC`** (salle 1, porte à clé, mêmes `C5AD` 48 et `C5AE` 236) ; stage 3 : `84 80 EC`. `53FC` dessine le barreau à `(C5AE, C5AD)` (table `5421`, identique pour tous les stages). `7718`-`7805` (ouverture `7737`, `7743` `RES 0,(C701)`, sortie `77BA`/`7802`) ne dépend pas du stage, sauf `7777[D000]` (son FF, 0 aux stages 0 à 2). Les tuiles du décor autour de la porte (colonnes 27-31, rangées 5-12) sont les mêmes en salle 7 du hall et en salle 1 du stage 2 (`vk_maps`, même jeu de tuiles 0) : le barreau extrait de K3 (`door_key_md.c`) vaut pour les deux.
+
+**Trace K4 du stage 2** (openMSX 21.0, harnais de `scratchpad/fish/tool/` avec un extra `key2_extra.tcl` : écritures de `C701`, `C5AC`, `D000`, `D001` avec le PC, points d'arrêt `883E`, `89FD`, `8D30`, `8C0B`, objets `C500` par image ; plan = route `S2` jusqu'au stage 2, puis liens forcés par `C41B`, positions posées ; hors dépôt, captures dans `scratchpad/stage2-finish/`) :
+
+| Image | Événement |
+|---|---|
+| 6038 | salle 1 : `BB5D` `C5AC := FF`, `C5AD` 48, `C5AE` 236 ; 6060 : `53FC` `C5AC := 1` (barreau dessiné) |
+| 6064 | salle 5 (lien bas forcé) ; Simon posé sur le bloc immergé (176,176) (tuiles `1 2 1 2`, x 160-191) |
+| 6144 | saut puis fouet : `883E` puis `89FD` avec A = 18, Simon en (176,144), `C420` = 1, `C422` = 3 ; la clé est un objet `C500` en Y `70`, X `C0` (192,112), `+4` = 18 |
+| 6810 | ramassage au contact (Simon (188,144), sur le sol y 144 sous le bloc ouvert) : `8D30` A = 18, `8E77` `C701` 2 → 3, `8C0B` |
+| 6850-6871 | salle 1 (lien haut forcé), Simon posé en (200,96) sur le rebord, marche à droite |
+| 6908 | Simon en (228,96) regard à droite : `7744` `C701` 3 → 2, `7755` `C5AC` 1 → 2 |
+| 6995 | `916A` `C5AC := 3` (t = 87, comme au hall) |
+| 7076 | x 248 : `435A` `D000` 2 → 3, `435D` `D001 := 0` (t = 168, comme au hall) ; image 7095 : stage 3, salle 0, Simon (16,96) |
+
+Sans clé (run K2, même route) : le barreau arrête Simon à x 228 sur le rebord, `C5AC` reste à 1.
+
+**Accès naturel au bloc** : le bloc (192..223, 112..143) n'est touché que par un fouet en Y [130, 150) (`8450` : `C425 - 18 - Y` dans [0, 20)). Le seul appui est le bloc immergé (x 160-191, y 176) : saut puis fouet au sommet. Le saut du MSX n'a **pas de plafond en l'air** (`6CE7` ajoute seulement la table à `C425` ; seule la sonde de départ `7B78`, tuile en (X, Y - 44), empêche le saut) : Simon monte de 176 à 144, la tête dans le rebord y 112 (images 6125-6162). Le port arrêtait le saut à y 150 (plafond inventé à `Y - 30`) et le bloc était inaccessible ; corrigé dans `player.c` (`vk_jump_blocked` = `7B78`).
+
+**Porté** (2026-10-29) : `items.c` (table par stage : clé (salle, X, Y), salle de la porte ; `vk_items_enter_stage` referme la porte et remet la clé dans son bloc à chaque nouveau stage), `item_view.c` (clé du stage 2 = tuiles du décor de la salle + objet 0x18 de la feuille, transparent, comme la copie de `8C7E` ; décor rétabli à la prise ; barreau dessiné dans la salle de porte du stage courant), `main.c`. Tests : `tests/test_items.c`, scénario MD `ze_stage2_key_door` (saut + fouet depuis le bloc immergé, clé au pixel (205,113), prise, porte de la salle 1 à x 228, sortie).
+
+**Sortie du stage 2 (PROVISOIRE, port seul)** : le MSX passe au stage 3 (non porté). Le port efface la salle comme pour le GAME OVER (sprites cachés, HUD gardé avec STAGE-03 comme `434F` le compte), coupe la musique, écrit « FIN DU STAGE 2 » et « SUITE NON PORTEE » à la police MSX, puis revient au titre après 378 images (durée du GAME OVER).

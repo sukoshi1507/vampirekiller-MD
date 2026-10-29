@@ -1,0 +1,64 @@
+# (ze) Cle blanche du stage 2 (bloc 0x18 de la salle 5 en (192,112)) et porte de la salle 1
+# (research/door-room7.md section 18, trace openMSX K4 du stage 2) : Simon sur le bloc
+# immerge (176,176), saut + fouet au sommet (MSX : 883E -> 89FD a Simon (176,144), C420 = 1),
+# cle en (192,112) ; prise au contact (MSX : x 188, y 144) ; porte de la salle 1 (mur a x 228
+# sur le rebord y 96), ouverture regard a droite, sortie a pied ; stage 3 non porte : ecran
+# provisoire puis titre. items : +0 cles, +1 prise, +2 porte, +3 minuteur, +4 revelee.
+until front_mode == MODES['TITLE'] max 2000
+wait 10
+tap C
+wait 30
+expect game.stage == 2 and game.room == 0
+# Salle 5 : salle 4 par la memoire, puis A+DROITE (debug), comme le scenario l.
+poke vk_game+20 4
+hold A 3
+hold A+RIGHT 3
+wait 10
+expect game.stage == 2 and game.room == 5
+expect ram8('vk_candles+4') & 4 # bloc 0x18 (troisieme bougie de la salle) en place
+poke vk_game+0 176
+poke vk_game+1 176
+poke vk_game+2 0
+wait 4
+expect game.player.y == 176 # debout sur le bloc immerge (tuiles 1 2 1 2, x 160-191)
+shot ze-salle5-bloc
+# Sans plafond en l'air (6CE7), Simon monte jusqu'a y 144 sous le rebord (MSX : 176 -> 144).
+hold C 2
+wait 12
+hold B 3
+until ram8('items+4') == 1 max 40
+expect (ram8('vk_candles+4') & 4) == 0 # bloc casse
+until game.player.y == 176 and game.player.mode == 0 max 80
+wait 10
+expect pixel(205, 113)[0] == 238 # cle (objet 0x18 de la feuille) sur le decor de la salle 5
+shot ze-cle-au-sol
+# Saut a droite vers le sol y 144 sous le bloc ouvert : prise au contact.
+until ram8('items') & 1 max 80 C+RIGHT
+expect ram8('items+1') == 1 # cle blanche prise (C701 bit 0)
+wait 30
+expect pixel(205, 113)[0] != 238 # decor de la salle redessine
+shot ze-cle-prise
+# Salle 1 : salle 2 par la memoire, puis A+GAUCHE (debug) ; rebord de la porte.
+poke vk_game+20 2
+hold A 3
+hold A+LEFT 3
+wait 10
+expect game.stage == 2 and game.room == 1
+poke vk_game+0 200
+poke vk_game+1 96
+poke vk_game+2 0
+wait 4
+shot ze-porte-fermee
+until ram8('items+2') == 1 max 120 RIGHT
+expect game.player.x == 228 # ouverture a x 228, regard a droite (MSX : image 6908)
+expect ram8('items') == 0 # cle consommee (7743)
+wait 60
+shot ze-porte-levee
+until ram8('items+2') == 3 max 200
+set t0 frame
+expect front_mode == MODES['INTERIOR'] and game.stage == 2 # ecran provisoire de fin du port
+wait 20
+expect pixel(100, 120) == (0, 0, 0) # salle effacee (PROVISOIRE, port seul)
+shot ze-fin-stage2
+until front_mode == MODES['TITLE'] max 400
+expect 370 <= frame - t0 <= 390 # titre apres 378 images, comme apres GAME OVER

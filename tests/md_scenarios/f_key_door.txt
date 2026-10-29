@@ -61,7 +61,7 @@ expect ram8('items') == 0 # cle consommee (7743)
 wait 40
 shot f-porte-levee
 until game.stage == 2 max 200
-expect ram8('items+2') == 3 # porte franchie
+expect ram8('items+2') == 0 # porte franchie ; celle du stage 2 (salle 1) est fermee (BB37, vk_items_enter_stage)
 expect front_mode == MODES['INTERIOR'] and game.room == 0 # stage 2 jouable, salle 0
 expect game.player.x == 16 and game.player.y == 96 # arrivee (door-room7.md section 16)
 wait 10

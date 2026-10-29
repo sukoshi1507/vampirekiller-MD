@@ -305,6 +305,26 @@ static void show_game_over(void)
     vk_msx_text(BG_A, 88, 88, "GAME  OVER", MSX_TEXT_TILE_INDEX, FALSE);
 }
 
+/* Stage 2 left by its door (room 1, run K4 of research/door-room7.md section 18):
+ * the MSX goes on to stage 3 (state 10: 434F C411 + 1, D000 2 -> 3, D001 := 0,
+ * Simon at x 16, y 96). Stage 3 is not ported. PROVISIONAL, port only: the
+ * screen is cleared as for the game over (sprites hidden, HUD kept with STAGE-03,
+ * as 434F counts it), the music stops, two lines in the MSX font say so, and the
+ * title comes back after VK_HEALTH_GAMEOVER_FRAMES, as after a game over. */
+static u16 stage_end_timer;
+static void show_stage_end(void)
+{
+    u16 cells;
+    hide_sprites();
+    vk_psg_stop();
+    VDP_clearTileMapRect(BG_A, 0, 4, 32, 24);
+    VDP_clearTileMapRect(BG_B, 0, 0, 32, 28);
+    cells = vk_msx_text(BG_A, 72, 88, "FIN DU STAGE 2", MSX_TEXT_TILE_INDEX, FALSE);
+    vk_msx_text(BG_A, 64, 104, "SUITE NON PORTEE", (u16)(MSX_TEXT_TILE_INDEX + cells), FALSE);
+    vk_hud_status(vk_hud_score, (u16)(vk_game.stage + 1), vk_candles.hearts, health.lives);
+    stage_end_timer = VK_HEALTH_GAMEOVER_FRAMES;
+}
+
 /* One frame of health.c after the enemy contact; redraws the HUD bar. */
 static void step_health(void)
 {
@@ -370,6 +390,7 @@ int main(bool hardReset)
                 /* Debug: C starts a game in stage 2 room 0, as through the room 7 door. */
                 new_game();
                 vk_game_enter_stage(&vk_game, 2);
+                vk_items_enter_stage(&items);
                 vk_player = vk_game.player;
                 vk_reset_enemies();
                 vk_candles_reset_stage(&vk_candles, 2);
@@ -396,8 +417,13 @@ int main(bool hardReset)
             const int direction = locked ? 0 : input.direction;
             const u16 held = locked ? 0 : input.keys;
             const bool jump = locked ? FALSE : input.jump_pressed;
+            /* PROVISIONAL end of the port (stage 3 not ported): only the countdown. */
+            if (stage_end_timer)
+            {
+                if (--stage_end_timer == 0) vk_show_title();
+            }
             /* State 9: every key, START included, waits for the end of the freeze. */
-            if (vk_room_freeze_active(&room_freeze)) room_freeze_step();
+            else if (vk_room_freeze_active(&room_freeze)) room_freeze_step();
             /* State 11 (43DA): only the pause key is read. */
             else if (paused)
             {
@@ -500,6 +526,12 @@ int main(bool hardReset)
                 {
                     const VKItemEvent item = vk_items_tick(&items, &vk_game);
                     vk_player = vk_game.player;
+                    if (item == VK_ITEM_STAGE_EXIT && vk_game.stage != 1)
+                    {
+                        show_stage_end();
+                        SYS_doVBlankProcess();
+                        continue;
+                    }
                     if (item == VK_ITEM_STAGE_EXIT)
                     {
                         /* Stage 2 room 0. 63B7 (state 4) clears C420-C46F, C43B
@@ -510,6 +542,7 @@ int main(bool hardReset)
                          * load below draws its box again (4513 -> 8EE6). */
                         const EnemyU8 frozen = vk_enemies.frozen;
                         vk_game_enter_stage(&vk_game, 2);
+                        vk_items_enter_stage(&items);
                         vk_reset_enemies();
                         vk_enemies.frozen = frozen;
                         vk_candles_reset_stage(&vk_candles, 2);
