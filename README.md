@@ -73,7 +73,9 @@ Ce qui fonctionne dans la ROM Mega Drive :
   la couleur de fond et les sons une image après (trace openMSX et harnais MD,
   `research/frame-timing.md`) ; les tuiles du décor (torche éteinte, bloc cassé, clé) passent
   par la file DMA et changent une image après, comme sur le MSX2. Restent : sons demandés
-  en fin de passe MSX une image trop tôt, manette lue à chaque image (MSX : une sur deux).
+  en fin de passe MSX une image trop tôt. La manette est lue à chaque image (MSX : une
+  sur deux, un appui d'une image y est perdu une fois sur deux) : écart gardé, la logique du
+  port avançant à chaque image (`research/frame-timing.md`, section 4).
 - **Ajout du port, saut depuis l'escalier** : sur une marche, C fait sauter Simon hors de
   la volée. Le MSX2 ne le permet pas (HAUT, sa touche de saut, y fait monter) ; ce saut
   est gardé comme un plus de jouabilité (`research/stairs.md`).

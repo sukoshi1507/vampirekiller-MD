@@ -42,7 +42,7 @@ Contact (hall) : `4638` baisse `C415` à la passe 2239 (barre du HUD dans l'imag
 
 | Élément | Écriture | Image (itération r) |
 |---|---|---|
-| Manette | `JOY_update` à chaque V-Int, lue par l'itération qui suit | chaque image (le MSX : une sur deux) |
+| Manette | `JOY_update` à chaque V-Int, lue par l'itération qui suit | chaque image (le MSX : une sur deux ; gardé, section 4) |
 | Sprites | `VDP_updateSprites(..., DMA_QUEUE)`, envoi à la V-Int r + 1 | r + 1 (avant correction pour tous) |
 | Tuiles sous le HUD : support des torches, blocs cachés, bougies de la salle 0, clé blanche et porte | `VDP_setTileMapDataRow(..., DMA_QUEUE_COPY)`, envoi à la V-Int r + 1 (avant : `VDP_setTileMapXY` au CPU, image r) | r + 1 (mesuré : A+B rallume la torche A, cellules et flamme-sprite à r + 1) |
 | Message de la ligne 26 (debug) | texte au CPU | r |
@@ -76,7 +76,7 @@ Mesures du port après correction (`tools/measure_md_frame_timing.py`) : fouet e
 ## 4. Écarts restants (non corrigés)
 
 - **Sons** : le port envoie tout son à r + 1 ; le MSX à p + 2 quand la demande tombe dans la 2e image de la passe (coup 0C `7FD8`, ramassage `8D3E`, 1B de 05). Le son du coup part donc une image avant la pose du contact (MSX : ensemble). Écart d'une image (17 ms), non corrigé.
-- **Lecture de la manette** : le MSX ne lit les touches qu'au début d'une passe (une image sur deux) ; le port à chaque image et lance le fouet ou la marche à n'importe quelle image. Retard touche → écran : MSX +2 ou +3, port +2.
+- **Lecture de la manette, gardée à chaque image (décision du 2026-10-30)**. MSX (code) : `4B9D` n'est appelé qu'au début d'une passe ; `4BBB` lit l'état instantané de la ligne 8 et du joystick, `4BB4` range les touches tenues dans `C007` et les nouvelles (`(ancien XOR nouveau) AND nouveau`) dans `C006`. Un appui qui commence et finit entre deux lectures (moins de 2 images, selon la phase) n'existe pas pour le jeu : un appui d'une image est perdu une fois sur deux, un appui de 2 images ou plus est toujours vu. Retard touche → écran : +2 ou +3 (moyenne 2,5) ; port : +2 (mesuré). Le port lit `JOY_update` à chaque V-Int et sa logique avance à chaque image (marche de 1 px par image, minuteries du fouet, saut dont la courbe est calée sur l'appui) ; il n'a pas la structure en passes de 2 images. Lire une image sur deux ne rapprocherait que la perte des appuis d'une image et la demi-image de retard en plus, sans autre effet visible : un appui humain dure en pratique 3 à 6 images (50 à 100 ms), toujours vu des deux côtés, et le calendrier d'affichage (Simon à r + 2) est déjà celui du MSX à la meilleure phase. Reproduire la lecture rendrait le jeu un peu moins réactif (appuis brefs perdus au hasard) pour un écart d'une image au plus : **non reproduit**. À revoir seulement si une mécanique dépendait de la parité de la passe au moment de l'appui (aucune trouvée : la phase du clignotement suit `C003`, déjà porté par `itemPhase`/`tick`).
 - **Contact** : le MSX baisse l'énergie (`4638`) une passe avant de poser `C42D` et le son 13h (`6F9F`) ; le port fait les trois dans la même itération. Logique de jeu, hors de ce calendrier.
 - **Bordure** : le MSX change R#7 au milieu de l'image p (vers la ligne 80) : la première image est coupée en deux. Le port change tout le fond à r + 1.
 - **Ligne de partage** des écritures VRAM du MSX calculée (50 lignes avant la ligne 0, 63,7 µs par ligne), non vérifiée au pixel (pas de capture d'écran sans rendu OpenGL).
