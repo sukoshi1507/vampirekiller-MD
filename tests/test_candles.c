@@ -210,6 +210,20 @@ int main(void)
     assert(c.drop[0].kind == VK_OBJ_GOLD_KEY && c.drop[1].kind == VK_OBJ_CHEST);
     assert(c.lit == (1u << c.count) - 1);
 
+    /* 8DF5-8E03: objects 0B, 0C, 0D set C431 bits 2, 3, 4 (effect 12); 70E8 clears it. */
+    c.drop[0].state = VK_DROP_REST;
+    c.drop[0].kind = 0x0C;
+    c.drop[0].fixed = 0;
+    c.drop[0].timer = 0xFF;
+    c.drop[0].x = 64;
+    c.drop[0].y = 176;
+    g.player.x = 72;
+    g.player.y = 176 + 2 + 20;
+    assert(vk_candles_tick(&c, &g, &w, &hit) & VK_CANDLE_EVENT_ITEM);
+    assert(c.c431 == 0x08 && c.drop[0].state == VK_DROP_NONE);
+    vk_candles_death(&c);
+    assert(c.c431 == 0);
+
     /* Death (70BF) then HUD redraw (4513): the HUD key stays drawn until the redraw. */
     c.gold_keys = 1;
     vk_candles_hud(&c);

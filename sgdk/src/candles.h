@@ -58,7 +58,8 @@ typedef enum {
     VK_CANDLE_EVENT_HEARTS = 2,      /* heart count changed */
     VK_CANDLE_EVENT_WHITE_KEY = 4,   /* the hidden white key block was hit (items.c) */
     VK_CANDLE_EVENT_WEAPON = 8,      /* C416 changed */
-    VK_CANDLE_EVENT_GOLD_KEY = 16    /* gold key count changed (key taken or chest opened) */
+    VK_CANDLE_EVENT_GOLD_KEY = 16,   /* gold key count changed (key taken or chest opened) */
+    VK_CANDLE_EVENT_ITEM = 32        /* C431 changed (objects 0B, 0C, 0D) */
 } VKCandleEvent;
 
 typedef struct {
@@ -73,6 +74,7 @@ typedef struct {
     VKByte out[VK_CANDLE_STAGES][VK_CANDLE_ROOMS];    /* candles hit, per room */
     VKByte taken[VK_CANDLE_STAGES][VK_CANDLE_ROOMS];  /* fixed objects picked up */
     VKByte hud_key;                  /* object 8EC9 last drew at (148, 12) in the HUD, 0 none */
+    VKByte c431;                     /* C431: bits 2, 3, 4 set by objects 0B, 0C, 0D (8DF5-8E03) */
 } VKCandles;
 
 void vk_candles_begin(VKCandles *c);

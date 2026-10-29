@@ -253,6 +253,166 @@
       ]
     },
     {
+      "stair_pose": 0,
+      "lower_frame": 4,
+      "upper_frame": 1,
+      "top": 30,
+      "source": [
+        {
+          "frame": 4,
+          "pattern_cpu": "B026",
+          "pattern_file_offset": "1B026",
+          "coordinate_cpu": "7A1D"
+        },
+        {
+          "frame": 1,
+          "pattern_cpu": "AD12",
+          "pattern_file_offset": "1AD12",
+          "coordinate_cpu": "7A45"
+        }
+      ]
+    },
+    {
+      "stair_pose": 1,
+      "lower_frame": 5,
+      "upper_frame": 2,
+      "top": 30,
+      "source": [
+        {
+          "frame": 5,
+          "pattern_cpu": "B09B",
+          "pattern_file_offset": "1B09B",
+          "coordinate_cpu": "7A1D"
+        },
+        {
+          "frame": 2,
+          "pattern_cpu": "AD87",
+          "pattern_file_offset": "1AD87",
+          "coordinate_cpu": "7A45"
+        }
+      ]
+    },
+    {
+      "stair_pose": 2,
+      "lower_frame": 3,
+      "upper_frame": 2,
+      "top": 30,
+      "source": [
+        {
+          "frame": 3,
+          "pattern_cpu": "AFB4",
+          "pattern_file_offset": "1AFB4",
+          "coordinate_cpu": "7A1D"
+        },
+        {
+          "frame": 2,
+          "pattern_cpu": "AD87",
+          "pattern_file_offset": "1AD87",
+          "coordinate_cpu": "7A45"
+        }
+      ]
+    },
+    {
+      "stair_pose": 3,
+      "lower_frame": 4,
+      "upper_frame": 2,
+      "top": 30,
+      "source": [
+        {
+          "frame": 4,
+          "pattern_cpu": "B026",
+          "pattern_file_offset": "1B026",
+          "coordinate_cpu": "7A1D"
+        },
+        {
+          "frame": 2,
+          "pattern_cpu": "AD87",
+          "pattern_file_offset": "1AD87",
+          "coordinate_cpu": "7A45"
+        }
+      ]
+    },
+    {
+      "stair_pose": 4,
+      "lower_frame": 14,
+      "upper_frame": 16,
+      "top": 30,
+      "source": [
+        {
+          "frame": 14,
+          "pattern_cpu": "A720",
+          "pattern_file_offset": "1A720",
+          "coordinate_cpu": "7A31"
+        },
+        {
+          "frame": 16,
+          "pattern_cpu": "A40B",
+          "pattern_file_offset": "1A40B",
+          "coordinate_cpu": "7A8A"
+        }
+      ]
+    },
+    {
+      "stair_pose": 5,
+      "lower_frame": 15,
+      "upper_frame": 17,
+      "top": 30,
+      "source": [
+        {
+          "frame": 15,
+          "pattern_cpu": "A795",
+          "pattern_file_offset": "1A795",
+          "coordinate_cpu": "7A31"
+        },
+        {
+          "frame": 17,
+          "pattern_cpu": "A480",
+          "pattern_file_offset": "1A480",
+          "coordinate_cpu": "7A8A"
+        }
+      ]
+    },
+    {
+      "stair_pose": 6,
+      "lower_frame": 13,
+      "upper_frame": 17,
+      "top": 30,
+      "source": [
+        {
+          "frame": 13,
+          "pattern_cpu": "A6AD",
+          "pattern_file_offset": "1A6AD",
+          "coordinate_cpu": "7A31"
+        },
+        {
+          "frame": 17,
+          "pattern_cpu": "A480",
+          "pattern_file_offset": "1A480",
+          "coordinate_cpu": "7A8A"
+        }
+      ]
+    },
+    {
+      "stair_pose": 7,
+      "lower_frame": 14,
+      "upper_frame": 17,
+      "top": 30,
+      "source": [
+        {
+          "frame": 14,
+          "pattern_cpu": "A720",
+          "pattern_file_offset": "1A720",
+          "coordinate_cpu": "7A31"
+        },
+        {
+          "frame": 17,
+          "pattern_cpu": "A480",
+          "pattern_file_offset": "1A480",
+          "coordinate_cpu": "7A8A"
+        }
+      ]
+    },
+    {
       "death_pose": 0,
       "lower_frame": 9,
       "upper_frame": 5,

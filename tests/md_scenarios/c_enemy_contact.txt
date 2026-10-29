@@ -3,6 +3,7 @@
 include boot_to_courtyard.inc
 until front_mode == MODES['INTERIOR'] max 3000 RIGHT
 until enemies.alive > 0 max 600
+poke vk_game+0 136                                  # Simon en X 136 (runs 3 et 4 MSX) : le recul reste dans la salle 0
 expect enemies.energy == 32 # energie pleine avant contact
 until enemies.energy < 32 max 600                 # aucune entree : l'ennemi avance jusqu'a Simon
 dump contact
@@ -19,11 +20,10 @@ set dir game.recoil_dir
 # Arc de 707D : 16 px de montee, un pas toutes les 2 images (passe a 30 Hz) ; les touches
 # sont ignorees.
 until game.player.y == y_contact - 16 max 24 LEFT+B
-# Touche en x 16 : la salle 0 a une salle a gauche, le port borne alors a x 8 (PROVISOIRE).
-expect game.player.x == max(8, min(248, x_contact + 2 * 9 * dir)) # 9 pas de montee
+expect game.player.x == x_contact + 2 * 9 * dir # 9 pas de montee
 shot c-recul
 until game.recoil == 3 max 40 LEFT+B
-expect game.player.x == max(8, min(248, x_contact + 44 * dir)) and game.player.y == y_contact # 22 pas, 44 px (trace : 136 -> 92)
+expect game.player.x == x_contact + 44 * dir and game.player.y == y_contact # 22 pas, 44 px (trace : 136 -> 92)
 expect whip.timer == 0 # B ignore pendant le recul
 shot c-pose-au-sol
 wait 8

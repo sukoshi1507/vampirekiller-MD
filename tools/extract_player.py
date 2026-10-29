@@ -76,6 +76,11 @@ def extract_pose(data, lower, upper, jumping=False, top=30):
 # Death (C420 = 6): 7073 sets C42E/C42F = 09/05 (+10/+15 facing left, 765F). Simon
 # lies on the floor: both parts side by side, 32 x 16 px above the feet.
 DEATH_POSES = [(9, 5), (19, 20)]
+# Stairs (6E14, 6E4B, 6E84, 6EBC with 6F09 / 6F24): C42E/C42F = 03/01 facing right,
+# 0D/10 facing left, plus one of these steps by (C42B >> 2) & 1: up (4,1) then (5,2),
+# down (4,1) then (3,2). A hit on the stairs sets C42F := 2 (6FB4): (4,1) -> (4,2).
+# Order per facing: (4,1), (5,2), (3,2), (4,2); facing left adds 10/15 (765F).
+STAIR_POSES = [(4, 1), (5, 2), (3, 2), (4, 2), (14, 16), (15, 17), (13, 17), (14, 17)]
 
 
 def extract_wide_pose(data, lower, upper):
@@ -107,6 +112,19 @@ def extract_wide_pose(data, lower, upper):
     return pixels, left
 
 
+def tile_words(pixels):
+    """24x32 pixels as 12 tiles in the column-major order of Mega Drive sprites."""
+    words = []
+    for tile_x in range(3):
+        for tile_y in range(4):
+            for row in range(8):
+                word = 0
+                for column in range(8):
+                    word = (word << 4) | pixels[(tile_y * 8 + row) * 24 + tile_x * 8 + column]
+                words.append(word)
+    return words
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('rom', type=Path)
@@ -132,17 +150,17 @@ def main():
         records.append({'pose': index, 'lower_frame': lower, 'upper_frame': upper,
                         'jumping': index in JUMP_POSES, 'top': POSE_TOP.get(index, 30),
                         'source': sources})
-        # Mega Drive hardware sprites use column-major tile order.
-        words = []
-        for tile_x in range(3):
-            for tile_y in range(4):
-                for row in range(8):
-                    word = 0
-                    for column in range(8):
-                        word = (word << 4) | pixels[(tile_y * 8 + row) * 24 + tile_x * 8 + column]
-                    words.append(word)
-        arrays.append(words)
+        arrays.append(tile_words(pixels))
     sheet.save(out / 'poses.png')
+    stair_arrays = []
+    for index, (lower, upper) in enumerate(STAIR_POSES):
+        pixels, sources = extract_pose(data, lower, upper)
+        image = Image.new('RGBA', (24, 32))
+        image.putdata([(*colors[p], 255) if p else (0, 0, 0, 0) for p in pixels])
+        image.save(out / f'stair-{index}.png')
+        records.append({'stair_pose': index, 'lower_frame': lower, 'upper_frame': upper,
+                        'top': 30, 'source': sources})
+        stair_arrays.append(tile_words(pixels))
     death_words, death_left = [], []
     for index, (lower, upper) in enumerate(DEATH_POSES):
         pixels, left = extract_wide_pose(data, lower, upper)
@@ -183,6 +201,11 @@ extern const VKByte vk_collision_limits[19];
 #define VK_PLAYER_DEATH_TILES 8
 extern const unsigned long vk_player_death_tiles[2][64];
 extern const signed char vk_player_death_left[2];
+/* Stair poses of the ROM (STAIR_POSES of tools/extract_player.py): VK_PLAYER_STAIR_POSE
+ * + k + 4 x facing, k: 0 = 04/01, 1 = 05/02, 2 = 03/02, 3 = 04/02 (hit, C42F := 2). */
+#define VK_PLAYER_STAIR_POSE (VK_PLAYER_DEATH_POSE + 2)
+#define VK_PLAYER_STAIR_POSES {len(STAIR_POSES)}
+extern const unsigned long vk_player_stair_tiles[{len(STAIR_POSES)}][96];
 #endif
 ''')
     lines = ['/* Generated from the supplied ROM. */', '#include "player_assets.h"',
@@ -201,6 +224,13 @@ extern const signed char vk_player_death_left[2];
         lines.append('    },')
     lines.append('};')
     lines.append(f'const signed char vk_player_death_left[2] = {{{death_left[0]}, {death_left[1]}}};')
+    lines.append(f'const unsigned long vk_player_stair_tiles[{len(STAIR_POSES)}][96] = {{')
+    for words in stair_arrays:
+        lines.append('    {')
+        lines.extend('        ' + ','.join(f'0x{v:08X}UL' for v in words[i:i + 8]) + ','
+                     for i in range(0, 96, 8))
+        lines.append('    },')
+    lines.append('};')
     for ctype, name, values in [('VKByte', 'vk_player_room', room_map),
                                ('signed char', 'vk_jump_deltas', jump),
                                ('VKByte', 'vk_fall_deltas', fall),

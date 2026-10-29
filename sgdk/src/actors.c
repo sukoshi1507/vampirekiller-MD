@@ -8,6 +8,8 @@
 _Static_assert(HUD_TEXT_TILE_INDEX + HUD_TEXT_TILE_COUNT <= DEATH_TILE_INDEX &&
                DEATH_TILE_INDEX + 2 * VK_PLAYER_DEATH_TILES <= FLAME_A_CLEAR_TILE_INDEX,
                "death pose tiles between the HUD text and the torch tiles");
+_Static_assert(STAIR_TILE_INDEX + VK_PLAYER_STAIR_POSES * VK_PLAYER_TILES_PER_POSE <= FLAME_A_CLEAR_TILE_INDEX,
+               "stair pose tiles before the torch tiles");
 #include "candle_view.h"
 #include "psg_player.h"
 
@@ -207,7 +209,11 @@ void vk_show_player(const VKPlayer *shown)
     /* Standing body on sprite 0. In crouch mode and during any attack the body
      * is the two-half composition drawn on sprites 5 and 6 (below); the lash
      * is part of those ROM-derived frames, so no separate lash is overlaid. */
-    if (player->pose >= VK_PLAYER_DEATH_POSE)
+    if (player->pose >= VK_PLAYER_STAIR_POSE && !crouch_mode && !attack_frame)
+        VDP_setSpriteFull(0, (s16)player->x - 8, (s16)player->y - 31, SPRITE_SIZE(3, 4),
+            TILE_ATTR_FULL(PAL2, TRUE, FALSE, FALSE, STAIR_TILE_INDEX +
+                (player->pose - VK_PLAYER_STAIR_POSE) * VK_PLAYER_TILES_PER_POSE), 1);
+    else if (player->pose >= VK_PLAYER_DEATH_POSE && player->pose < VK_PLAYER_STAIR_POSE)
     {
         /* 7073: the death pose lies on the floor, 32 x 16 px (4 x 2 tiles). */
         const u16 side = (u16)(player->pose - VK_PLAYER_DEATH_POSE);

@@ -82,6 +82,8 @@ static void vk_entrance_clear(VKGame *game)
     game->recoil = VK_RECOIL_NONE;
     game->ground_fall = 0;
     game->jump_step = 0;
+    game->x_frac = 0;
+    game->stair_steps = 0;
 }
 
 void vk_game_begin(VKGame *game)
@@ -91,6 +93,7 @@ void vk_game_begin(VKGame *game)
     game->room = 0;
     game->stage = 1;
     game->collision_verified = 1;
+    game->items = 0;
     game->player.y = 176;
     vk_entrance_clear(game);
 }
@@ -212,10 +215,13 @@ void vk_game_hit(VKGame *game, int dir, int dead)
 {
     VKPlayer *p = &game->player;
     /* 6FA2: on a staircase (C42B != 0) with energy left, C420 := 3 again at the next
-     * pass, without moving (traced 5 times in hall room 1). The C42F := 2 pose of
-     * 6FB4 is not ported: the port's stair poses are not the MSX ones. */
+     * pass, without moving (traced 5 times in hall room 1). */
     if (p->on_stairs && !dead)
     {
+        /* 6FB4: C42F := 2 (+15 facing left, 765F): 04/01 becomes 04/02; the other
+         * stair poses already have it. */
+        if (p->pose == VK_PLAYER_STAIR_POSE || p->pose == VK_PLAYER_STAIR_POSE + 4)
+            p->pose = (VKByte)(p->pose + 3);
         game->recoil = VK_RECOIL_STAIRS;
         game->recoil_count = VK_RECOIL_STAIRS_FRAMES;
         return;
@@ -238,27 +244,75 @@ int vk_game_recoiling(const VKGame *game)
     return game->recoil != VK_RECOIL_NONE;
 }
 
-/* 6C2F / 6C53: 2 px towards the push, unless a wall (7C05 / 7BA9) or, without
- * a room on that side, the screen side (X < 16 / X >= F0) stops it. The 2.5 px
- * step of C431 bit 3 is not ported. PROVISIONAL: with a room on that side the
- * port stops at its walk limits (8, 248) instead of changing room. */
+/* Room on the side dir of the current room, VK_ROOM_NONE without (C41E / C41F). */
+static VKByte vk_side_room(const VKGame *game, const VKRoomLink *links, int dir)
+{
+    if (game->area == VK_AREA_COURTYARD)
+    {
+        const VKByte n = vk_courtyard_neighbors[game->room][dir > 0 ? 3 : 2];
+        return n < 3 ? n : VK_ROOM_NONE;
+    }
+    return links ? (dir > 0 ? links[game->room].right : links[game->room].left) : VK_ROOM_NONE;
+}
+
+/* 6C2F / 6C53: 2 px towards the push (BC = FE00 / 0200 added to C426-C427 in 8.8,
+ * 6C94), 2.5 px with C431 bit 3 (FD80 / 0280), unless a wall (7C05 / 7BA9) or,
+ * without a room on that side, the screen side (X < 16 / X >= F0) stops it. With
+ * a room there nothing bounds X: the exit test 767B, which runs in C420 = 5 too,
+ * changes room at X < 8 / X >= F8 (vk_recoil_exit). */
 static void vk_recoil_move(VKGame *game, const VKRoomLink *links)
 {
     VKPlayer *p = &game->player;
     const int dir = game->recoil_dir;
-    int open;
-    int next;
-    if (game->area == VK_AREA_COURTYARD)
-        open = vk_courtyard_neighbors[game->room][dir > 0 ? 3 : 2] < 3;
-    else
-        open = links && (dir > 0 ? links[game->room].right : links[game->room].left) != VK_ROOM_NONE;
+    const int open = vk_side_room(game, links, dir) != VK_ROOM_NONE;
+    const int step = (game->items & VK_ITEM_FAST_RECOIL) ? 0x280 : 0x200;
+    unsigned int pos;
     p->facing = (VKByte)(dir < 0);
     if (!open && (dir < 0 ? p->x < 16 : p->x >= 0xF0)) return;
     if (vk_wall(vk_game_collision(game), p->x, p->y, dir, 0, vk_game_limit_stage(game), 0)) return;
-    next = (int)p->x + 2 * dir;
-    if (next < 8) next = 8;
-    if (next > 248) next = 248;
-    p->x = (VKByte)next;
+    pos = ((unsigned int)p->x << 8) | game->x_frac;
+    pos = (pos + (unsigned int)(dir < 0 ? 0x10000 - step : step)) & 0xFFFF;
+    p->x = (VKByte)(pos >> 8);
+    game->x_frac = (VKByte)pos;
+}
+
+/* 767B-770C during the recoil: X < 8 with a room on the left gives X := F6 there,
+ * X >= F8 with a room on the right X := 0A; C420 stays 5 and the recoil goes on in
+ * the new room after the freeze of state 9. */
+static VKEvent vk_recoil_exit(VKGame *game, const VKRoomLink *links)
+{
+    VKPlayer *p = &game->player;
+    const int dir = p->x < 8 ? -1 : (p->x >= 0xF8 ? 1 : 0);
+    VKByte target;
+    if (!dir) return VK_EVENT_NONE;
+    target = vk_side_room(game, links, dir);
+    if (target == VK_ROOM_NONE) return VK_EVENT_NONE;
+    game->room = target;
+    p->x = dir < 0 ? 0xF6 : 0x0A;
+    return VK_EVENT_ROOM;
+}
+
+/* Stair poses of the ROM (6E14, 6E4B, 6E84, 6EBC): at each step C42E/C42F are set
+ * from the direction and c = (C42B >> 2) & 1 (6F09 / 6F24), C42B before its
+ * increment: up 04/01 then 05/02, down 04/01 then 03/02, +10/+15 facing left.
+ * Between two steps the pose stays. The exit (6EF5) clears C42B and gives the
+ * standing pose 00/00 (+10/+15). */
+static void vk_stair_pose(VKGame *game, VKByte y0, VKByte pose0)
+{
+    VKPlayer *p = &game->player;
+    const VKByte side = (VKByte)(p->facing ? 4 : 0);
+    if (!p->on_stairs)
+    {
+        game->stair_steps = 0;
+        if (p->mode == 0) p->pose = (VKByte)(p->facing ? 3 : 0);
+        return;
+    }
+    if (p->y == y0) { p->pose = pose0; return; }
+    {
+        const VKByte c = (VKByte)((game->stair_steps >> 2) & 1);
+        p->pose = (VKByte)(VK_PLAYER_STAIR_POSE + side + (c ? (p->y < y0 ? 1 : 2) : 0));
+        game->stair_steps++;
+    }
 }
 
 /* One frame of C420 = 5 (6F85): the controls are ignored. The MSX runs a pass of
@@ -333,7 +387,13 @@ VKEvent vk_game_tick_controls(VKGame *game, int direction, int jump, int up, int
     /* After a fall Simon stays below the screen until the respawn (C420 = 6:
      * 767B and the player routines return at once). */
     if (p->y == VK_FALL_Y) return VK_EVENT_NONE;
-    if (recoiling) vk_recoil_tick(game, links);
+    if (recoiling)
+    {
+        VKEvent exit_event;
+        vk_recoil_tick(game, links);
+        exit_event = game->recoil == VK_RECOIL_DEAD ? VK_EVENT_NONE : vk_recoil_exit(game, links);
+        if (exit_event != VK_EVENT_NONE) return exit_event;
+    }
     else if (vk_entrance_zone(game))
     {
         game->entrance = VK_ENTRANCE_WALK;
@@ -347,8 +407,12 @@ VKEvent vk_game_tick_controls(VKGame *game, int direction, int jump, int up, int
     {
         const VKByte mode = p->mode;
         const VKByte phase = p->phase;
+        const VKByte was_on_stairs = p->on_stairs;
+        const VKByte y0 = p->y;
+        const VKByte pose0 = p->pose;
         vk_player_tick_controls(p, vk_game_collision(game), vk_game_limit_stage(game),
                                 direction, jump, down, up);
+        if (was_on_stairs) vk_stair_pose(game, y0, pose0);
         /* The MSX falls in state 4 only from the ground (6BA5); its jump lands in
          * state 1 (6D26), with effect 07 only when CFF0 != 0, i.e. at C428 >= 21
          * (6D1C: C428 - 2 >= 13h calls 6D6D, CFF0 := 1; traced: 07 at steps 21, 23

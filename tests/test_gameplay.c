@@ -284,6 +284,76 @@ int main(void)
         for (f = 0; f < 6; f++) vk_game_tick_controls(&g, 0, 0, 0, 0);
     }
     assert(g.player.x == 15);
+    /* With a room on that side nothing bounds X, and the exit test 767B also runs in
+     * C420 = 5: hall room 1 pushed left from X 20 enters room 0 at X F6 when X < 8,
+     * and the recoil goes on there. */
+    vk_game_debug_room(&g, 1);
+    g.player.x = 20;
+    g.player.y = 192;
+    g.x_frac = 0;
+    vk_game_hit(&g, -1, 0);
+    {
+        int f;
+        VKEvent e = VK_EVENT_NONE;
+        for (f = 0; f < 40 && e != VK_EVENT_ROOM; f++) e = vk_game_tick_controls(&g, 0, 0, 0, 0);
+        assert(e == VK_EVENT_ROOM && g.room == 0 && g.player.x == 0xF6);
+        assert(g.recoil == VK_RECOIL_AIR && g.recoil_count == 7);   /* X 20 - 7 x 2 = 6 < 8 */
+        for (f = 0; f < 80 && g.recoil != VK_RECOIL_FLOOR; f++) vk_game_tick_controls(&g, 0, 0, 0, 0);
+        assert(g.recoil == VK_RECOIL_FLOOR && g.player.y == 192 && g.player.x == 0xF6 - 2 * 15);
+        for (f = 0; f < 10; f++) vk_game_tick_controls(&g, 0, 0, 0, 0);
+        assert(!vk_game_recoiling(&g));
+    }
+    /* C431 bit 3 (object 0C): steps of 2.5 px in 8.8 (FD80, 6C4E), 55 px in 22 steps. */
+    vk_game_debug_room(&g, 0);
+    g.player.x = 120;
+    g.player.y = 192;
+    g.x_frac = 0;
+    g.items = VK_ITEM_FAST_RECOIL;
+    vk_game_hit(&g, -1, 0);
+    {
+        int f;
+        for (f = 0; f < 3; f++) vk_game_tick_controls(&g, 0, 0, 0, 0);
+        assert(g.player.x == 117 && g.x_frac == 0x80);
+        vk_game_tick_controls(&g, 0, 0, 0, 0);
+        vk_game_tick_controls(&g, 0, 0, 0, 0);
+        assert(g.player.x == 115 && g.x_frac == 0);
+        for (f = 0; f < 80 && g.recoil != VK_RECOIL_FLOOR; f++) vk_game_tick_controls(&g, 0, 0, 0, 0);
+        assert(g.recoil == VK_RECOIL_FLOOR && g.player.x == 65);
+        for (f = 0; f < 10; f++) vk_game_tick_controls(&g, 0, 0, 0, 0);
+    }
+    g.items = 0;
+    /* Stair poses of the ROM (6E84, 6F24): climbing right, 04/01 for C42B 0..3, then
+     * 05/02 for 4..7; still between steps; a hit gives 04/02 (6FB4, C42F := 2). */
+    vk_game_debug_room(&g, 1);
+    g.player.x = 48;
+    g.player.y = 192;
+    g.player.mode = 0;
+    g.stair_steps = 0;
+    vk_game_tick_controls(&g, 0, 0, 1, 0);
+    assert(g.player.on_stairs);
+    {
+        int f, steps = 0;
+        VKByte y = g.player.y;
+        for (f = 0; f < 40 && steps < 8; f++)
+        {
+            vk_game_tick_controls(&g, 0, 0, 1, 0);
+            if (g.player.y == y) continue;
+            y = g.player.y;
+            assert(g.player.pose == VK_PLAYER_STAIR_POSE + (steps < 4 ? 0 : 1));
+            steps++;
+        }
+        assert(steps == 8 && g.stair_steps == 8);
+        for (f = 0; f < 6; f++) vk_game_tick_controls(&g, 0, 0, 0, 0);
+        assert(g.player.pose == VK_PLAYER_STAIR_POSE + 1 && g.player.y == y);
+        /* Down from C42B 8: 04/01, then 03/02 from C42B 12. */
+        for (f = 0; f < 40 && g.stair_steps < 13; f++) vk_game_tick_controls(&g, 0, 0, 0, 1);
+        assert(g.player.pose == VK_PLAYER_STAIR_POSE + 4 + 2 && g.player.facing == 1);
+        for (f = 0; f < 40 && g.stair_steps < 17; f++) vk_game_tick_controls(&g, 0, 0, 1, 0);
+        assert(g.player.pose == VK_PLAYER_STAIR_POSE);
+        vk_game_hit(&g, -1, 0);
+        assert(g.player.pose == VK_PLAYER_STAIR_POSE + 3);
+        for (f = 0; f < 4; f++) vk_game_tick_controls(&g, 0, 0, 0, 0);
+    }
     /* Hit on a staircase with energy left (6FA2-6FB9, traced 5 times in hall room 1):
      * no recoil, C420 = 5 for one pass (2 frames) then 3 again, Simon keeps his step
      * and the climb resumes. Hall room 1, flight A from (48,192). */
@@ -308,11 +378,14 @@ int main(void)
         for (f = 0; f < 4; f++) vk_game_tick_controls(&g, 0, 0, 1, 0);
         assert(g.player.on_stairs && g.player.x == x + 2 && g.player.y == y - 2);
         /* With no energy left (6FAD -> 6FBC) he is knocked off the staircase, as on
-         * the ground (traced: from (64,176) down to the floor of Y 192). */
+         * the ground (traced: from (64,176) down to the floor of Y 192 at X 8). */
+        for (f = 0; f < 64 && g.player.x < 64; f++) vk_game_tick_controls(&g, 0, 0, 1, 0);
+        assert(g.player.on_stairs && g.player.x == 64 && g.player.y == 176);
         vk_game_hit(&g, -1, 1);
         assert(vk_game_recoiling(&g) && g.recoil == VK_RECOIL_START && !g.player.on_stairs);
         for (f = 0; f < 160 && g.recoil != VK_RECOIL_FLOOR; f++) vk_game_tick_controls(&g, 0, 0, 0, 0);
         assert(g.recoil == VK_RECOIL_FLOOR && g.player.y == 192 && g.recoil_count == 16);
+        assert(g.player.x == 8 && g.room == 1);
         for (f = 0; f < 32; f++) vk_game_tick_controls(&g, 0, 0, 0, 0);
         /* 7053-707A: then C420 = 6, the death pose (facing back towards the hit,
          * 704B), held until the respawn. */

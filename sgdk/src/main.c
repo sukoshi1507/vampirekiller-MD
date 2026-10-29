@@ -129,7 +129,7 @@ static void step_candles(void)
     /* Pickup effects, returned by the 8D3E handlers to 509F: hearts 0F (8DAF,
      * 8DB7), whip 12 (8D8A), gold key 14 (8E5D); a chest uses a key: 11 (8F7B). */
     if (events & VK_CANDLE_EVENT_HEARTS) vk_psg_effect(VK_SFX_HEART);
-    if (events & VK_CANDLE_EVENT_WEAPON) vk_psg_effect(VK_SFX_ITEM);
+    if (events & (VK_CANDLE_EVENT_WEAPON | VK_CANDLE_EVENT_ITEM)) vk_psg_effect(VK_SFX_ITEM);
     if (events & VK_CANDLE_EVENT_GOLD_KEY)
         vk_psg_effect(vk_candles.gold_keys < gold_keys ? VK_SFX_CHEST : VK_SFX_KEY);
 }
@@ -427,6 +427,7 @@ int main(bool hardReset)
                     else show_hall_room(vk_game.room);
                     show_message("BOUGIES RALLUMEES!");
                 }
+                vk_game.items = vk_candles.c431;
                 const VKEvent event = vk_game_tick_controls(&vk_game, direction,
                     jump, !!(held & BUTTON_UP),
                     !!(held & BUTTON_DOWN));

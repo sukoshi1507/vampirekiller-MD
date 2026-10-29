@@ -66,7 +66,7 @@ FRONT_MODES = ['LOGO', 'TITLE', 'CASTLE', 'COURTYARD', 'INTERIOR', 'VIEWER', 'TE
 # Blocs d'ennemis (ENEMY_MAX de enemies.h : les 7 blocs C800..CB00 de la ROM).
 ENEMY_SLOTS = 7
 # Tailles attendues (octets) des globales decodees : garde-fou contre une derive des structures.
-EXPECTED_SIZES = {'player': 14, 'game': 32, 'whip': 6, 'enemy_state': 144,
+EXPECTED_SIZES = {'player': 14, 'game': 34, 'whip': 6, 'enemy_state': 144,
                   'test_target': 18, 'courtyard_flame': 36, 'front_mode': 2, 'health': 6}
 # Noms C actuels des globales partagees (sgdk/src/frontend.h, actors.h) ; les scenarios
 # gardent les noms courts. test_target et courtyard_flame sont statiques (room_view.c).
@@ -289,7 +289,8 @@ class Game_View:
                              'recoil': m.rd8(a + 24), 'recoil_count': m.rd8(a + 25),
                              'recoil_land': m.rd8(a + 26), 'recoil_dir': s8(m.rd8(a + 27)),
                              'ground_fall': m.rd8(a + 28), 'jump_step': m.rd8(a + 29),
-                             'recoil_wait': m.rd8(a + 30)}
+                             'recoil_wait': m.rd8(a + 30), 'items': m.rd8(a + 31),
+                             'x_frac': m.rd8(a + 32), 'stair_steps': m.rd8(a + 33)}
         if 'player' in A:
             state['player'] = self.player_at(A['player'])
         if 'whip' in A:

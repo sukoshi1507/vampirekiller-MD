@@ -49,6 +49,7 @@ void vk_candles_begin(VKCandles *c)
     c->gold_keys = 0;
     c->weapon = 0;
     c->hud_key = 0;
+    c->c431 = 0;
     for (s = 0; s < VK_CANDLE_STAGES; s++)
         for (r = 0; r < VK_CANDLE_ROOMS; r++)
             c->out[s][r] = c->taken[s][r] = 0;
@@ -72,6 +73,7 @@ void vk_candles_new_life(VKCandles *c, VKByte stage)
 void vk_candles_death(VKCandles *c)
 {
     c->gold_keys = 0;                /* 70F7 */
+    c->c431 = 0;                     /* 70E8 */
 }
 
 void vk_candles_hud(VKCandles *c)
@@ -371,6 +373,14 @@ static int pick(VKCandles *c, VKDrop *d)
     {
         c->weapon = (VKByte)(kind - 0x19);
         return VK_CANDLE_EVENT_WEAPON;
+    }
+    /* 8DF5-8E03: C431 bits 2, 3, 4, then 8D8A (effect 12). Only bit 3 (recoil of
+     * 2.5 px, gameplay.c) is used: bit 2 doubles timers and bit 4 picks the jump
+     * table 6D94, neither ported. */
+    if (kind >= 0x0B && kind <= 0x0D)
+    {
+        c->c431 |= (VKByte)(1u << (kind - 0x0B + 2));
+        return VK_CANDLE_EVENT_ITEM;
     }
     /* PROVISIONAL: the other effects (timers, points, C701/C702 bits) are not ported. */
     return VK_CANDLE_EVENT_NONE;

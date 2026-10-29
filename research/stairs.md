@@ -39,6 +39,7 @@ Test : au stage 1 salle 1, `HAUT` à X=36 ne déclenche pas la volée (saut vert
 - `DE = 0x0103` ou `0x100D` (valeur 8.8 ; observé : 1 px sur X et 1 px sur Y toutes les 2 images).
 - **Relâcher la touche arrête Simon sur la marche** (trace r3 : `mask=0` à l'image 1983, position figée jusqu'au retour de la touche).
 - Pendant l'escalier, `C435` et `C42E/C42F` servent d'animation (cycle de 8 images), `C42B` compte les pas.
+- Poses (lecture du code, portées le 2026-10-29) : à chaque pas, `C42E/C42F` = `03/01` (vers la droite, `6E14`, `6E84`) ou `0D/10` (vers la gauche, `6E4B`, `6EBC`), puis `6F09` (descente) ou `6F24` (montée) ajoutent selon `c = (C42B >> 2) & 1`, `C42B` avant son incrément : montée `04/01` puis `05/02`, descente `04/01` puis `03/02` (vers la gauche +10/+15), soit une alternance tous les 4 pas (8 images). Entre deux pas la pose reste. La sortie `6EF5` remet `C42B` à 0 et la pose `00/00` (+10/+15). Port : `vk_stair_pose` (`gameplay.c`), `VKGame.stair_steps` (`C42B`, remis à 0 à toute sortie de l'escalier, PROVISOIRE pour le saut depuis une marche), 8 poses `STAIR_POSES` de `tools/extract_player.py` (tuiles 296-391). Test `test_gameplay.c`.
 
 ### 2.3 Sortie (prouvé en partie)
 

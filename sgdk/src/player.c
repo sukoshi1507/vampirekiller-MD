@@ -278,8 +278,8 @@ static void vk_stair_tick(VKPlayer *p, int direction, int down, int up)
     if (moved && (p->stair_anim == p->stair_len || p->y >= 225 ||
                   (p->stair_anim == 0 && !p->stair_glide)))
     { p->on_stairs = 0; p->mode = 0; p->phase = 0; }
-    /* Four-step walk cycle, one pose per eight pixels of progress. The poses are
-     * the walk frames of the assets, not recovered MSX2 stair poses. */
+    /* Four-step walk cycle, one pose per eight pixels of progress. gameplay.c
+     * (vk_stair_pose) replaces it with the stair poses of the ROM in play. */
     p->pose = (VKByte)(stair_frames[(p->stair_anim >> 3) & 3] + (p->facing ? 3 : 0));
 }
 

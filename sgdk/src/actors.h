@@ -26,6 +26,8 @@
 #define FLAME_A_CLEAR_TILE_INDEX 400
 /* Death pose (4 x 2 tiles each, two facings): after the HUD text tiles (hud.h). */
 #define DEATH_TILE_INDEX 280
+/* Stair poses of the ROM (12 tiles each), after the death pose. */
+#define STAIR_TILE_INDEX (DEATH_TILE_INDEX + 2 * VK_PLAYER_DEATH_TILES)
 /* Standing frames of whip levels 1 and 2 (6 frames: 3 right, 3 left, see
  * whip_levels_manifest.json). Loaded only when such a level is selected; level 0
  * keeps its frames at ATTACK_TILE_INDEX. */

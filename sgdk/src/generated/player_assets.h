@@ -16,4 +16,9 @@ extern const VKByte vk_collision_limits[19];
 #define VK_PLAYER_DEATH_TILES 8
 extern const unsigned long vk_player_death_tiles[2][64];
 extern const signed char vk_player_death_left[2];
+/* Stair poses of the ROM (STAIR_POSES of tools/extract_player.py): VK_PLAYER_STAIR_POSE
+ * + k + 4 x facing, k: 0 = 04/01, 1 = 05/02, 2 = 03/02, 3 = 04/02 (hit, C42F := 2). */
+#define VK_PLAYER_STAIR_POSE (VK_PLAYER_DEATH_POSE + 2)
+#define VK_PLAYER_STAIR_POSES 8
+extern const unsigned long vk_player_stair_tiles[8][96];
 #endif
