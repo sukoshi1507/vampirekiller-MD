@@ -85,8 +85,9 @@ Ce qui n'est pas porté ou reste provisoire :
   salle 2 et les hommes-poissons des salles 4 et 5 ne le sont pas. Après une mort, Simon reprend en salle 0
   (x 16, y 96), lieu provisoire. Les liens haut/bas viennent de la table de la ROM,
   sans trace en jeu.
-- **Objets, non portés** : effet de 0F (carte du stage sur F2), 10/11 (prix du
-  marchand), le marchand, les armes secondaires, les fouets 1C et 1D (seule la pause
+- **Objets, non portés** : effet de 0F (carte du stage sur F2), 10/11 (livres à croix :
+  ils changent seulement les prix du marchand et ne détruisent pas les ennemis, prouvé
+  par trace openMSX ; c'est la croix 05 qui les détruit), le marchand, les armes secondaires, les fouets 1C et 1D (seule la pause
   des apparitions est portée) et les autres contenus (effet de 04 et de 1E, 0E, 12,
   points 13/14).
   Les effets portés viennent de la lecture du code ; le clignotement de Simon (08, 09 et

@@ -254,6 +254,8 @@ void Enemies_item(EnemyState *s, EnemyU8 kind, EnemyU8 c431)
     case 0x08: s->guardTimer = timer; break;    /* 8DCD */
     case 0x09: s->killTimer = timer; break;     /* 8DE5 */
     /* 0A (8D94 : C701 |= 40h, sans minuterie) : seulement le bit de C701 (candles.c). */
+    /* 10, 11 (livres a croix, 8E1D / 8E26) : seulement C702 bit 6 / 7, lu par le seul
+     * marchand (9418) ; aucun effet sur les ennemis (trace openMSX, castle-candles.md 9.8). */
     case 0x06:                       /* 8D7C */
     case 0x1A: case 0x1B: case 0x1C: case 0x1D: /* 8D70 -> 8D7C */
         s->spawnPause = timer;
