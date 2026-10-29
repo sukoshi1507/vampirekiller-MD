@@ -82,12 +82,12 @@ int main(void)
     assert(vk_whip_active(&w));
     while(w.timer) vk_whip_tick(&w,&p,0);
     p.on_stairs=0;
-    /* Whip levels: default 0, levels 1 and 2 accepted, level 3 (no asset) refused.
+    /* Whip levels: default 0, levels 1 to 4 accepted (2..4 are thrown), 5 refused.
      * Hit box per level: 0 reaches x +32 (y -22..-15), 1 reaches x +39, and 2
      * reaches x +12 with y -19..-15. */
     vk_whip_reset(&w);
     assert(vk_whip_level(&w)==0);
-    assert(vk_whip_set_level(&w,3)==-1 && vk_whip_level(&w)==0);
+    assert(vk_whip_set_level(&w,5)==-1 && vk_whip_level(&w)==0);
     assert(vk_whip_set_level(&w,-1)==-1 && vk_whip_level(&w)==0);
     p.facing=0; p.crouched=0; p.x=80; p.y=160;
     vk_whip_tick(&w,&p,1);
@@ -137,9 +137,23 @@ int main(void)
             vk_whip_tick(&w,&p,0);
         }
         assert(frames==12);
-        /* The test frame is the same for every level. */
+        /* 7D7E: no whip test for the thrown weapons (levels 2..4); the throw ends at
+         * the 4th pass (timer 8, 7286): vk_whip_tick returns 1 once, timer 0. */
+        for(i=2;i<=4;i++){
+            int k, launches = 0, frames = 0;
+            vk_whip_reset(&w);
+            assert(vk_whip_set_level(&w,i)==0);
+            assert(vk_whip_tick(&w,&p,1)==0 && w.timer==14);
+            for(k=0;k<10;k++){
+                assert(!vk_whip_active(&w));
+                launches += vk_whip_tick(&w,&p,0);
+                frames++;
+                if(!w.timer) break;
+            }
+            assert(launches==1 && frames==6 && w.timer==0);
+        }
         vk_whip_reset(&w);
-        assert(vk_whip_set_level(&w,2)==0);
+        assert(vk_whip_set_level(&w,1)==0);
         vk_whip_tick(&w,&p,1);
         for(i=0;i<3;i++) vk_whip_tick(&w,&p,0);
         assert(vk_whip_active(&w) && w.timer==11);

@@ -1,5 +1,7 @@
 # Fouets : variantes dans la ROM MSX2 et séquence accroupie
 
+> **Correction (30 octobre)** : `C416` = 2, 3 et 4 ne sont pas des fouets mais la dague, la hache et la croix lancées (objets 1B, 1C, 1D). Les compositions 12-14 / 27-29 sont la pose de lancer ; le « verrou » de `C450` est la vie du projectile (hache : 94 images de boomerang à droite, bord gauche atteint en 6 images depuis X 16). Voir `secondary-weapons.md`.
+
 Objectif : savoir combien de fouets (apparences) le jeu MSX2 contient, comment on en change, et quelle est la séquence accroupie complète à porter. Aucun fichier de `validation/` n'a été modifié. Rien n'est committé ici hors de ce document et du commit de `sgdk/src/generated/simon_crouch_*`.
 
 ## Méthode

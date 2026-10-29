@@ -38,7 +38,8 @@ Ce qui fonctionne dans la ROM Mega Drive :
   tombe. Effets portés (`research/castle-candles.md` 9.5 à 9.8) : cœurs (01, 02) ;
   énergie (07 : +8, 16 : pleine) ; 09, contact destructeur 300 images (l'ennemi touché
   meurt et rapporte ses points, Simon clignote en rouge) ; 08, aucun contact 300 images
-  (Simon clignote en blanc) ; 06 et les fouets (1A, 1B : niveau du fouet) arrêtent les
+  (Simon clignote en blanc) ; 06 et les objets d'arme (1A : fouet à chaîne ; 1B, 1C, 1D : dague, hache, croix
+  lancées, `research/secondary-weapons.md`) arrêtent les
   apparitions 300 images ; 05 détruit les ennemis présents, le fond s'éclaire en blanc
   6 fois ; 03, armure : dégâts de face divisés par deux pendant 16 coups ; 0B, 0C, 0D
   (bits de `C431`) : minuteries portées à 480 images, recul rapide de 2,5 px, saut
@@ -98,13 +99,13 @@ Ce qui n'est pas porté ou reste provisoire :
   `CF10`) ; les liens haut/bas viennent de la table de la ROM, sans trace en jeu.
 - **Objets, non portés** : effet de 0F (carte du stage sur F2), 10/11 (livres à croix :
   ils changent seulement les prix du marchand et ne détruisent pas les ennemis, prouvé
-  par trace openMSX ; c'est la croix 05 qui les détruit), le marchand, les armes secondaires, les fouets 1C et 1D (seule la pause
-  des apparitions est portée) et les autres contenus (effet de 04 et de 1E, 0E, 12,
-  points 13/14).
+  par trace openMSX ; c'est la croix 05 qui les détruit), le marchand, l'objet 04 (destruction des
+  projectiles ennemis, absents des stages 0-2) et les autres contenus (0E, 12, points
+  13/14). Armes lancées : pose accroupie non dessinée à part, objets muraux non touchés.
   Les effets portés viennent de la lecture du code ; le clignotement de Simon (08, 09 et
   après un coup) est calé image par image sur une trace openMSX, les autres minuteries
   sans trace dédiée (`research/castle-candles.md` 9.8).
-- **Stages 3 et suivants, châteaux, attaques autres que le fouet** : non portés (dont le
+- **Stages 3 et suivants, châteaux** : non portés (dont le
   passage secret du stage 12, accroupi puis HAUT, `C420` = 7, `research/enemy-behavior.md`).
 - **Énergie (provisoire)** : commandes bloquées pendant la mort : non relevées sur le
   MSX2. Le lieu de reprise suit la table `641F` (salle 0 ; cour (16,176), hall (16,192),
@@ -123,10 +124,13 @@ Le détail par sujet est dans [research/INDEX.md](research/INDEX.md).
 | Croix gauche/droite | marche | curseurs |
 | HAUT / BAS | escaliers ; BAS au sol : accroupi | HAUT / BAS |
 | C | saut | HAUT (saut) |
-| B | fouet | ESPACE |
+| B | fouet, ou lancer de l'arme (dague 1B, hache 1C, croix 1D) | ESPACE |
+| GAUCHE / DROITE pendant un saut | eau bénite (objet 1E, 5 cœurs) | GAUCHE / DROITE pendant un saut (`714D`) |
 | BAS pendant un saut | arrêt du temps (objet 0A, 5 cœurs) | BAS pendant un saut (`C006` bit 1, `C420` = 1, `7136`-`716F`) |
 | START | pause | F1 (pause) |
 
+L'eau bénite garde aussi la touche du MSX2 : GAUCHE ou DROITE nouvellement pressée en
+l'air, avec 5 cœurs (`research/secondary-weapons.md`).
 L'arrêt du temps garde la touche du MSX2 : BAS nouvellement pressé en l'air, hors de
 l'image d'un coup de fouet. En l'air, BAS ne sert à rien d'autre (l'accroupi n'existe
 qu'au sol), et aucun bouton A n'entre en jeu : les raccourcis de debug restent libres.

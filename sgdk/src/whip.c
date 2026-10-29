@@ -13,11 +13,23 @@ int vk_whip_level(const VKWhip *w) { return w->level; }
  * tests of the next pass). That pass is timers 12 and 11 here; the test is on 11,
  * the frame that holds the jump step of that pass whatever the parity of the
  * button press (research/whip-hitbox.md, "Fouet en saut"). */
-int vk_whip_active(const VKWhip *w) { return w->timer == VK_WHIP_STRIKE_TIMER; }
-void vk_whip_tick(VKWhip *w, const VKPlayer *p, int attack_pressed)
+/* 7D7E: with C416 >= 2 (dagger, axe, cross) the three whip tests are replaced by a
+ * delay loop (7DA0): no whip contact at all. */
+int vk_whip_active(const VKWhip *w)
+{
+    return w->level < VK_WHIP_LEVEL_THROW && w->timer == VK_WHIP_STRIKE_TIMER;
+}
+int vk_whip_tick(VKWhip *w, const VKPlayer *p, int attack_pressed)
 {
     if (w->timer) w->timer--;
     else if (attack_pressed) w->timer = 14;
+    /* C416 >= 2: the stroke is 4 passes (71FA C42F 12, 7240 13, 7250 14, 7262 ->
+     * 7286): at the 4th, C422 = 0 and the reserved slot is launched (weapons.c). */
+    if (w->level >= VK_WHIP_LEVEL_THROW && w->timer == VK_WHIP_THROW_END)
+    {
+        w->timer = 0;
+        return 1;
+    }
     /* Direction and posture are taken at startup (7201: C42E from C420), so the
      * whip cannot turn across Simon during a stroke. The origin follows Simon on
      * every frame: the box 84A7/84D9 reads C425 and C427 in the pass of the test,
@@ -25,6 +37,7 @@ void vk_whip_tick(VKWhip *w, const VKPlayer *p, int attack_pressed)
      * of each pass (openMSX trace of a stroke in a jump). */
     if (w->timer == 14) { w->facing = p->facing; w->crouched = p->crouched; }
     if (w->timer) { w->x = p->x; w->y = p->y; }
+    return 0;
 }
 /* Standing lash box, inclusive: x +8..+32 and y -22..-15 relative to Simon.
  * These are the visible lash measured in-game (research/whip-hitbox-ingame.md),
@@ -72,7 +85,9 @@ static const VKAttackKey vk_attack_keys[15] = {
     {1,2,3}, {1,2,3}, {1,2,3}, {1,2,3}, {1,2,3},
     {1,2,3}, {1,1,2}, {1,1,2}, {1,0,1}, {1,0,1}
 };
-/* Level 2 lasts 6 frames in the openMSX trace: upper index 12 for 2 frames, 13 for
+/* Levels 2..4 are the throw of the dagger, axe and cross (C42F 12, 13, 14, one pass
+ * each, research/secondary-weapons.md), all drawn with this table.
+ * Level 2 lasts 6 frames in the openMSX trace: upper index 12 for 2 frames, 13 for
  * 2 frames, 14 for 2 frames (research/whip-variants.md, "Chronologie du niveau 2").
  * The same timer-14 start is kept, so the body is shown on timers 14..9 and the
  * entries for timers 8..0 are idle. The crouched column keeps the same 2-frame steps. */
@@ -85,7 +100,7 @@ static const VKAttackKey vk_attack_keys_level2[15] = {
 
 static const VKAttackKey *vk_attack_key(const VKWhip *w)
 {
-    const VKAttackKey *keys = w->level == VK_WHIP_LEVEL_SHORT ? vk_attack_keys_level2 : vk_attack_keys;
+    const VKAttackKey *keys = w->level >= VK_WHIP_LEVEL_SHORT ? vk_attack_keys_level2 : vk_attack_keys;
     return &keys[w->timer <= 14 ? w->timer : 0];
 }
 

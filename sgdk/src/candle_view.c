@@ -26,8 +26,15 @@
 #define ITEM_SLOT_TILE_A (STAIR_TILE_INDEX + VK_PLAYER_STAIR_POSES * VK_PLAYER_TILES_PER_POSE)
 #define ITEM_SLOT_TILE_B (ENEMY4_TILE_INDEX + VK_ENEMY4_TILE_COUNT)
 #define ITEM_SLOTS 4
+/* HUD weapon box (8E9A): object C416 + 19h copied at (80h, 0Ch), in the 5 free
+ * tiles between the HUD text tiles and the death pose (actors.h). */
+#define WEAPON_ICON_TILE_INDEX (HUD_TEXT_TILE_INDEX + HUD_TEXT_TILE_COUNT)
+#define HUD_WEAPON_X 0x80
+#define HUD_WEAPON_Y 0x0C
 #define CANDLE_FRAME_TICKS 8          /* PROVISIONAL: the MSX candle cadence is not measured */
 
+_Static_assert(WEAPON_ICON_TILE_INDEX + 4 <= DEATH_TILE_INDEX,
+               "HUD weapon icon tiles before the death pose");
 _Static_assert(GOLD_KEY_TILE_INDEX + 4 <= MSX_TEXT_TILE_INDEX,
                "candle tiles must end before the text tiles (msx_text.h)");
 _Static_assert(ITEM_SLOT_TILE_A + 2 * 4 <= FLAME_A_CLEAR_TILE_INDEX,
@@ -42,6 +49,8 @@ VKCandles vk_candles;
 static VKByte drop_loaded[VK_DROP_MAX];
 /* Sheet object in each item box slot, 0 when none is loaded. */
 static VKByte item_loaded[ITEM_SLOTS];
+/* Sheet object at WEAPON_ICON_TILE_INDEX, 0 when none is loaded. */
+static VKByte weapon_loaded;
 
 static u16 item_slot_tile(u16 slot)
 {
@@ -125,6 +134,7 @@ void vk_candle_view_room(void)
     load_object(VK_OBJ_GOLD_KEY, GOLD_KEY_TILE_INDEX);
     for (i = 0; i < VK_DROP_MAX; i++) drop_loaded[i] = 0;
     for (i = 0; i < ITEM_SLOTS; i++) item_loaded[i] = 0;
+    weapon_loaded = 0;
     vk_candles_enter(&vk_candles, &vk_game);
     vk_candles_item_box(&vk_candles);   /* 6316: 8EE6 at each room load */
     for (i = 0; i < vk_candles.count; i++)
@@ -150,6 +160,17 @@ u16 vk_candle_view_sprites(void)
     if (c->hud_key)
         set_sprite(n++, HUD_GOLD_KEY_X, HUD_GOLD_KEY_Y,
                    TILE_ATTR_FULL(PAL0, TRUE, FALSE, FALSE, GOLD_KEY_TILE_INDEX));
+    if (c->hud_weapon)
+    {
+        if (weapon_loaded != c->hud_weapon)
+        {
+            /* Queued with the sprite table, as the item box objects. */
+            VDP_loadTileData(&vk_object_tiles[(c->hud_weapon - 1) * 32], WEAPON_ICON_TILE_INDEX, 4, DMA_QUEUE);
+            weapon_loaded = c->hud_weapon;
+        }
+        set_sprite(n++, HUD_WEAPON_X, HUD_WEAPON_Y,
+                   TILE_ATTR_FULL(PAL0, TRUE, FALSE, FALSE, WEAPON_ICON_TILE_INDEX));
+    }
     /* HUD item box: the object just taken (8F2D), or the objects of C701 bits
      * 7..3 (8EE6), PAL0 sprites over the black box as the gold key. */
     {

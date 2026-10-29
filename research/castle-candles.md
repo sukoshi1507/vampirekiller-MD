@@ -299,6 +299,7 @@ Les noms des objets (croix, sablier, etc.) et leurs dessins ne sont pas releves 
 
 **Prouve (code)** :
 - **Arme deja tenue** (`8A29`) : un objet 1A a 1D egal a `C416 + 0x19` sort comme petit coeur (01).
+- **1B a 1D ne changent pas le fouet** : ce sont la dague, la hache et la croix lancees (`C416` = 2, 3, 4), et 1E l'eau benite (`C701` bit 3) ; voir `secondary-weapons.md`.
 - **Etat 1** (`8A99`) : 16 images (`+6 & 15`), puis type 82 ; objet 00 : retire ; 0x15 : cree un ennemi (`5F1D`, type pris dans `8AF0[D002]`) et se retire.
 - **Etat 2, chute** (`8AF8`) : pose si la tuile sous (X + 8, Y + 16) vaut 1 a 9, ou si Y + 16 > DB. Sinon Y += 8 par image ; le petit coeur (`8B22`) descend d'un pixel une image sur deux, X en 8.8 avance de `+9/+10` (depart +2,0), vitesse diminuee de `+11/+12` (0,125) a chaque image, signe inverse toutes les 32 images.
 - **Etat 3** (`8B70`) : X et Y arrondis a 8 pres, dessin dans le decor (`8CC1`) ; `+6` = 8, ou FF pour 17, 18, 19.

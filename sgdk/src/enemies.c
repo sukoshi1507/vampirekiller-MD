@@ -704,6 +704,32 @@ int Enemies_whipHitType2(EnemyState *s, int simonX, int simonY, int facingLeft, 
     return killed;
 }
 
+int Enemies_shotHit(EnemyState *s, ShotTouch touch, const void *ctx, int *slot, int *score)
+{
+    EnemyU8 i;
+    for (i = 0; i < ENEMY_MAX; i++) {
+        Enemy *e = &s->enemy[i];
+        int x, y, h, l, k;
+        if (!e->active || e->exiting || e->type == ENEMY_TYPE_SPLASH) continue;
+        /* 82CB puis 8388 / 83AA / 83E2 : classe de l'objet, D = X, E = Y de l'objet MSX. */
+        if (e->type == ENEMY_TYPE_5) { x = e->x; y = e->y; h = 0x0A; l = 0x0C; }
+        else if (e->type == ENEMY_TYPE_2) { x = e->x; y = e->y; h = 0x18; l = 0x05; }
+        else if (e->type == ENEMY_TYPE_4) { x = e->x + ENEMY_OBJ_X; y = e->y + ENEMY_TYPE4_OBJ_Y; h = 0x10; l = 0x08; }
+        else { x = e->x + ENEMY_OBJ_X; y = e->y + ENEMY_OBJ_Y; h = 0x18; l = 0x05; }
+        for (k = 0; k < 2; k++) {
+            if (!touch(ctx, k, x, y, h, l)) continue;
+            /* 8066 : +0D - degat (8048 : dague 1, hache 4, croix 2, eau 2) ; les types
+             * portes ont 1 point de vie : 81AB (points 81CE : 200 pour le type 2, 100
+             * pour les autres) et 9A3E. Un seul ennemi par passe (804C ... RET). */
+            e->active = 0;
+            *slot = k;
+            *score = e->type == ENEMY_TYPE_2 ? 2 : 1;
+            return 1;
+        }
+    }
+    return 0;
+}
+
 /* Entrees SAT d'un objet (table 6057 + type) : 4 pour les types 1, 2 et 5, 2 pour le type 4 et la goutte. */
 static EnemyU8 satCount(EnemyU8 type)
 {

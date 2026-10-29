@@ -15,7 +15,8 @@ et les limites. « Prouvé » = mesuré en trace openMSX ou lu dans la ROM ;
 | `player-health.md` | Énergie, contact, recul, invulnérabilité, mort, fin de partie | Prouvé par trace pour le contact et la mort. Le reste est lu dans le code. Porté : `enemies.c` (contact), `health.c` (vies, délais de mort et de fin de partie, test `tests/test_health.c`), `hud.c` (barre PLAYER, échelle provisoire). |
 | `whip-hitbox.md` | Forme de la lanière du fouet (openMSX) ; fouet en saut : un seul test par coup (passe `C422 = 3`), à la position de Simon de cette passe, affichage qui suit Simon | Prouvé pour les pixels mesurés ; fouet en saut prouvé (code et trace) et porté (timer 11). |
 | `whip-hitbox-ingame.md` | Boîte du fouet et cible d'entraînement, en jeu (MD) | Prouvé pour la boîte debout ; accroupi non mesuré. |
-| `whip-variants.md` | Fouets : variantes, séquence accroupie | Prouvé pour les niveaux 0 à 2 ; niveau 3 sans asset. |
+| `whip-variants.md` | Fouets : variantes, séquence accroupie | Prouvé pour les niveaux 0 et 1. Les « niveaux » 2 et 3 sont la dague et la hache lancées (`secondary-weapons.md`). |
+| `secondary-weapons.md` | Armes lancées : dague (1B), hache (1C), croix (1D), eau bénite (1E), touche, emplacements `C450`/`C460`, trajectoires, collisions, perte de l'arme ; objet 04 | Prouvé (code et trace openMSX) et porté (`weapons.c`, test natif, scénario `zb`). Ouvert : pose accroupie, objets muraux, objet 04 et `D700`, marchand. |
 | `door-room7.md` | Clés blanches et portes de sortie : salle 2 / salle 7 du hall, salle 5 / salle 1 du stage 2 | Prouvé : clé = objet 0x18 (C701 bit 0), porte ouverte avec la clé (K3) et fermée sans (K4), levée du barreau et sortie mesurées image par image ; stage 2 (table `BB61`, trace K4 du stage 2, saut sans plafond, §18). Porté sur MD (`items.c`, §17-18) ; sortie du stage 2 vers un écran provisoire. Ouvert : blocage à x 166 en salle 2. Clé dorée et coffre : `castle-candles.md` 9.7. |
 
 ## Mécaniques du joueur

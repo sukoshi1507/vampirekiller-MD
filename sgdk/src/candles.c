@@ -58,6 +58,7 @@ void vk_candles_begin(VKCandles *c)
     c->c701 = 0;                     /* 44C6: the RAM is cleared, C5E5/C5E6 too */
     c->box_items = c->box_pick = 0;
     c->box_timer_on = c->box_timer = c->box_phase = 0;
+    c->hud_weapon = 0;
     for (s = 0; s < VK_CANDLE_STAGES; s++)
         for (r = 0; r < VK_CANDLE_ROOMS; r++)
             c->out[s][r] = c->taken[s][r] = 0;
@@ -135,6 +136,13 @@ void vk_candles_hud(VKCandles *c)
      * no object 0x12 (C700 = 3, C701 bit 2) exists, so C701 bit 1 is set exactly
      * while C700 > 0 (8E50 sets both, 8C23 clears the bit when C700 reaches 0). */
     c->hud_key = c->gold_keys ? VK_OBJ_GOLD_KEY : 0;
+    c->hud_weapon = c->weapon ? (VKByte)(c->weapon + 0x19) : 0;   /* 4528 -> 8E9A */
+}
+
+void vk_candles_weapon_lost(VKCandles *c)
+{
+    c->weapon = 0;                   /* 8E93 */
+    c->hud_weapon = 0;               /* 8E9A with C416 = 0: 8979 clears the box */
 }
 
 void vk_candles_relight(VKCandles *c)
@@ -217,6 +225,7 @@ int vk_candle_whip_touch(const VKCandleDef *def, const VKWhip *whip, int weapon)
     const int dx = point - (def->x + 8);
     const int dy = whip->y - (whip->crouched ? WHIP_BODY_CROUCH : WHIP_BODY_STAND) - def->y;
     if (!vk_whip_active(whip)) return 0;   /* 7FB7: C422 = 3 only */
+    if (weapon >= 2) return 0;             /* 7D7E: no whip test for a thrown weapon */
     return dx > -reach && dx < reach && dy >= 0 && dy < WHIP_HEIGHT;
 }
 
@@ -324,6 +333,22 @@ int vk_candles_hit(VKCandles *c, int i)
     d->vx = HEART_VX0;
     d->ax = HEART_AX0;
     return VK_CANDLE_EVENT_HIT;
+}
+
+void vk_candles_drop(VKCandles *c, VKByte x, VKByte y, VKByte kind)
+{
+    VKDrop *d = free_drop(c);        /* 8A37: no free C500 slot, no object */
+    if (!d) return;
+    d->state = VK_DROP_BURST;
+    d->x = x;
+    d->y = y;
+    d->kind = kind;
+    d->timer = 0;
+    d->fixed = 0;
+    d->content = 0;
+    d->xfrac = (unsigned short)(x << 8);
+    d->vx = HEART_VX0;
+    d->ax = HEART_AX0;
 }
 
 /* 8AF8: lands when the tile under X + 8, Y + 16 is a floor (tile 1..9) or past
@@ -462,6 +487,7 @@ static int pick(VKCandles *c, VKDrop *d)
     if (kind >= VK_OBJ_CHAIN_WHIP && kind <= VK_OBJ_CHAIN_WHIP + 3)
     {
         c->weapon = (VKByte)(kind - 0x19);
+        c->hud_weapon = kind;        /* 8D79 -> 8E9A: the weapon box of the HUD */
         /* 8D70 falls into 8D7C: C440 too (enemies.c). */
         return VK_CANDLE_EVENT_WEAPON | VK_CANDLE_EVENT_PICK;
     }

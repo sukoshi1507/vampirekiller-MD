@@ -83,6 +83,7 @@ static void new_game(void)
     vk_items_begin(&items);
     vk_candles_begin(&vk_candles);
     vk_set_whip_level(0);
+    vk_weapons_reset(&vk_weapons);
     vk_room_freeze_clear(&room_freeze);
     show_courtyard(0);
     death_jingle_timer = 0;
@@ -106,13 +107,9 @@ static void show_hall_room(u16 room)
     vk_candle_view_room();
 }
 
-/* One frame of candles.c: whip hits, drops and pickups, and what they change on
- * screen and in items.c (white key) and the whip (C416). */
-static void step_candles(void)
+/* A candle put out by the whip or a thrown weapon: the view and items.c follow. */
+static void candle_hit_view(int events, int hit)
 {
-    int hit;
-    const VKByte gold_keys = vk_candles.gold_keys;
-    const int events = vk_candles_tick(&vk_candles, &vk_game, &vk_whip, &hit);
     if (events & VK_CANDLE_EVENT_HIT)
     {
         vk_courtyard_flame_out(hit);
@@ -126,6 +123,20 @@ static void step_candles(void)
         items.white_key_revealed = 1;
         vk_item_view_room(&items, &vk_game);
     }
+}
+
+/* One frame of candles.c: whip hits, drops and pickups, and what they change on
+ * screen and in items.c (white key) and the whip (C416). */
+static void step_candles(void)
+{
+    int hit;
+    const VKByte gold_keys = vk_candles.gold_keys;
+    const int events = vk_candles_tick(&vk_candles, &vk_game, &vk_whip, &hit);
+    candle_hit_view(events, hit);
+    /* 7FFD: any object taken clears C433 (the block an axe touched). */
+    if (events & (VK_CANDLE_EVENT_HEARTS | VK_CANDLE_EVENT_WEAPON | VK_CANDLE_EVENT_GOLD_KEY |
+                  VK_CANDLE_EVENT_ITEM | VK_CANDLE_EVENT_PICK | VK_CANDLE_EVENT_BOX_ITEM))
+        vk_weapons_pick(&vk_weapons);
     if (events & VK_CANDLE_EVENT_WEAPON) vk_set_whip_level(vk_candles.weapon);
     /* Energy, armor, timers C434/C43A/C440, enemy wipe (8D3E, enemies.c). */
     if (events & VK_CANDLE_EVENT_PICK)
@@ -210,6 +221,7 @@ static void begin_room_freeze(void)
     vk_room_freeze_begin(&room_freeze,
         vk_game.area == VK_AREA_INTERIOR ? vk_game.stage : 0, vk_game.room);
     hide_sprites();
+    vk_weapons_reset(&vk_weapons);   /* 639E: 7513 at the room load */
     freeze_vtimer = vtimer;
     freeze_drawn = FALSE;
 }
@@ -281,6 +293,7 @@ static void respawn(void)
     vk_candles_new_life(&vk_candles, vk_candles_stage_of(&vk_game));
     vk_candles_hud(&vk_candles);   /* 4237: 4513 draws the HUD again, gold key gone */
     vk_set_whip_level(0);
+    vk_weapons_reset(&vk_weapons);   /* 63B7 clears C420-C46F */
     hud_status();   /* 4237: C410 already decremented when 4513 draws the HUD */
     if (vk_game.area == VK_AREA_INTERIOR) show_hall_room(vk_game.room);
     else show_courtyard(vk_game.room);
@@ -374,6 +387,7 @@ int main(bool hardReset)
     {
         u16 pressed;
         bool dirty = FALSE;
+        int throw_launch = 0;
         handleInput(&input);
         pressed = input.pressed;
         if (vk_front_mode == FRONT_LOGO)
@@ -477,9 +491,14 @@ int main(bool hardReset)
                 {
                     const bool idle = vk_whip.timer == 0;
                     /* No whip while knocked back: C420 = 5 ignores the controls. */
-                    vk_whip_tick(&vk_whip, &vk_player, !!((pressed & BUTTON_B) && !(held & BUTTON_A)) &&
-                                 !vk_game_recoiling(&vk_game));
-                    if (idle && vk_whip.timer == 14) vk_psg_effect(VK_SFX_WHIP);   /* 7225 */
+                    bool strike = (pressed & BUTTON_B) && !(held & BUTTON_A) && !vk_game_recoiling(&vk_game);
+                    /* 7129-7132: with C416 >= 2 the stroke needs a free slot (71BE). */
+                    if (strike && idle && vk_whip_level(&vk_whip) >= VK_WHIP_LEVEL_THROW)
+                        strike = vk_weapons_reserve(&vk_weapons, (VKByte)vk_whip_level(&vk_whip));
+                    throw_launch = vk_whip_tick(&vk_whip, &vk_player, strike);
+                    /* 7225: effect 05 for the whips only (7213, C436 < 2). */
+                    if (idle && vk_whip.timer == 14 && vk_whip_level(&vk_whip) < VK_WHIP_LEVEL_THROW)
+                        vk_psg_effect(VK_SFX_WHIP);
                 }
                 /* Make controller/attack state observable in BlastEm. No text
                  * is reprinted every frame: refresh on input or at timeout. */
@@ -492,6 +511,7 @@ int main(bool hardReset)
                 {
                     castle_door_front(TRUE);
                     vk_whip_reset(&vk_whip);
+                    vk_weapons_reset(&vk_weapons);   /* 774F: 7513 at the door */
                     vk_psg_effect(VK_SFX_DOOR);   /* 7774: C5AC = 5 */
                 }
                 if (event == VK_EVENT_LAND) vk_psg_effect(VK_SFX_LANDING);   /* 6F7E */
@@ -550,6 +570,7 @@ int main(bool hardReset)
                         vk_reset_enemies();
                         vk_enemies.frozen = frozen;
                         vk_enemies.energy = energy;
+                        vk_weapons_reset(&vk_weapons);   /* 63B7, state 4 */
                         vk_candles_reset_stage(&vk_candles, 2);
                         vk_candles_hud(&vk_candles);   /* state 4 (4237): HUD drawn again */
                         show_hall_room(0);
@@ -569,9 +590,17 @@ int main(bool hardReset)
                         /* 6F9A: effect 13 when a contact starts the recoil (C42D set). */
                         const EnemyU8 invuln = vk_enemies.invuln;
                         /* 6B21 -> 710D: object 0A before the timers of 6B27-6B2D. */
+                        /* 713B: object 1E (714D) before object 0A (715F). */
+                        vk_step_water(!!(pressed & BUTTON_LEFT), !!(pressed & BUTTON_RIGHT),
+                                      !!(pressed & BUTTON_B));
                         vk_step_time_stop(!!(pressed & BUTTON_DOWN), !!(pressed & BUTTON_B));
                         vk_step_enemies();
                         if (!invuln && vk_enemies.invuln) vk_psg_effect(VK_SFX_DAMAGE);
+                    }
+                    {
+                        int shot_events;
+                        const int shot_hit = vk_step_weapons(throw_launch, &shot_events);
+                        candle_hit_view(shot_events, shot_hit);
                     }
                     step_candles();
                     vk_flames_tick();
