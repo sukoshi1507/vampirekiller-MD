@@ -194,6 +194,8 @@ void Enemies_init(EnemyState *s)
     s->contactScore = 0;
     s->itemSound = 0;
     s->tick = 0;
+    s->silhouette = 0;
+    s->hidden = 0;
     s->flash = 0;
     s->border = 0;
     s->timeStopEnd = 0;
@@ -975,6 +977,9 @@ int Enemies_frame(EnemyState *s, EnemySpawnTimer *t, const EnemyRoomVars *v)
             s->energy = (s->energy > damage) ? (EnemyU8)(s->energy - damage) : 0;
             s->invuln = ENEMY_INVULN_START;
             s->invulnPhase = 0;
+            /* 78CC suit 6F9F dans la passe du coup : hors image de passe, Simon est cache
+             * des maintenant si le bit 1 de C003 est mis (sinon voir plus bas). */
+            if (s->itemPhase == 0) s->hidden = (EnemyU8)(s->tick & 2);
             s->recoil = 1;    /* C420 := 5 : l'appelant l'efface a la fin du recul */
             /* Panthere assise (dx 0) : recul a l'oppose d'elle (PROVISOIRE, non mesure). */
             s->recoilDir = e->dx ? e->dx : (EnemyS8)(v->simonX >= e->x ? 1 : -1);
@@ -984,10 +989,10 @@ int Enemies_frame(EnemyState *s, EnemySpawnTimer *t, const EnemyRoomVars *v)
     }
 
     /* 75C0-75E9 : C440, C434 et C43A baissent a chaque passe de la routine de Simon,
-     * comme C42D (une image sur deux ; phase PROVISOIRE). C43A tombe a 10h : effet 17. */
+     * comme C42D (une image sur deux). C43A tombe a 10h : effet 17. */
     s->itemPhase ^= 1;
     if (s->itemPhase == 0) {
-        s->tick++;                   /* C003 (414D) */
+        s->tick++;                   /* C003 (414D), au debut de la passe */
         /* 7604 : tant que C43E != 0, F3EB = 0Eh si le bit 1 de C43E (avant la baisse) est
          * mis, 0 sinon, puis CHGCLR : 24 passes, 4 images de chaque couleur, fin a 0.
          * Second declencheur, non porte : 75D4 (6B30) met C43E = 18h quand C445 tombe a 0,
@@ -1000,6 +1005,14 @@ int Enemies_frame(EnemyState *s, EnemySpawnTimer *t, const EnemyRoomVars *v)
         if (s->spawnPause) s->spawnPause--;
         if (s->killTimer) s->killTimer--;
         if (s->guardTimer && --s->guardTimer == ENEMY_GUARD_WARNING) s->itemSound = 0x17;
+        /* 790C et 78CC remplissent D400/D600 apres ces baisses ; la passe suivante les
+         * envoie en VRAM (trace openMSX, research/castle-candles.md 9.8). L'objet ramasse
+         * plus loin (step_candles, comme 7FE2) attend donc la passe suivante. */
+        s->silhouette = !(s->tick & 1) ? 0 : s->guardTimer ? ENEMY_SIMON_GUARD_COLOR :
+                        s->killTimer ? ENEMY_SIMON_KILL_COLOR : 0;
+        /* C42D du MSX baisse dans la passe du coup ; ici invuln baisse a l'image suivante :
+         * C42D apres la baisse de la passe = invuln - 1 - invulnPhase. */
+        s->hidden = (EnemyU8)((s->tick & 2) && s->invuln > 1 + s->invulnPhase);
     }
 
     /* C42D ne decroit qu'une image sur deux : 0x5A x 2 = 180 images. */
@@ -1012,10 +1025,14 @@ int Enemies_frame(EnemyState *s, EnemySpawnTimer *t, const EnemyRoomVars *v)
 
 EnemyU8 Enemies_simonColor(const EnemyState *s)
 {
-    if (!(s->tick & 1)) return 0;                          /* 792A / 7938 : RRA de C003 */
-    if (s->guardTimer) return ENEMY_SIMON_GUARD_COLOR;     /* 7924 : C43A */
-    if (s->killTimer) return ENEMY_SIMON_KILL_COLOR;       /* 7932 : C434 */
-    return 0;
+    /* 7924 / 7932 figes a la passe (RRA de C003) ; une fin de mort (70BF) les coupe. */
+    return (s->guardTimer || s->killTimer) ? s->silhouette : 0;
+}
+
+EnemyU8 Enemies_simonHidden(const EnemyState *s)
+{
+    /* 78D2 : bit 1 de C003 ; une mort (7064) remet C42D a 0. */
+    return (EnemyU8)(s->invuln && s->hidden);
 }
 
 int Enemies_sprites(const EnemyState *s, EnemyU8 index, EnemySprite out[ENEMY_SPRITES])

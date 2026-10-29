@@ -621,13 +621,23 @@ static void test_items(void)
     {
         EnemyState w;                    /* etat a part : s garde son ennemi pour l'armure */
         Enemies_init(&w);
-        w.tick = 1;
-        CHECK(Enemies_simonColor(&w) == 0, "790C : sans C43A ni C434, couleurs normales");
+        /* Passe impaire (tick 0 -> 1 a la 2e image) : la couleur y est figee. */
+        (void)Enemies_frame(&w, &t, &v);
+        (void)Enemies_frame(&w, &t, &v);
+        CHECK(w.tick == 1 && Enemies_simonColor(&w) == 0, "790C : sans C43A ni C434, couleurs normales");
         w.killTimer = 0x40;
+        CHECK(Enemies_simonColor(&w) == 0, "790C : C434 pose apres la passe, pas encore de silhouette");
+        w.tick = 0;
+        (void)Enemies_frame(&w, &t, &v);   /* image sans passe */
+        (void)Enemies_frame(&w, &t, &v);   /* passe : tick 1 */
         CHECK(Enemies_simonColor(&w) == ENEMY_SIMON_KILL_COLOR, "7932 : C434 -> couleur 8");
         w.guardTimer = 0x40;
+        w.tick = 0;
+        (void)Enemies_frame(&w, &t, &v);
+        (void)Enemies_frame(&w, &t, &v);
         CHECK(Enemies_simonColor(&w) == ENEMY_SIMON_GUARD_COLOR, "7924 : C43A -> couleur 0Eh");
-        w.tick = 2;
+        (void)Enemies_frame(&w, &t, &v);
+        (void)Enemies_frame(&w, &t, &v);   /* passe : tick 2 */
         CHECK(Enemies_simonColor(&w) == 0, "792D : bit 0 de C003 a 0, couleurs normales");
         {
             /* Une passe sur deux : 2 images de silhouette, 2 normales. */
@@ -1408,6 +1418,110 @@ static void test_contact_posture(void)
     }
 }
 
+/* 7c. Phase du clignotement de Simon (trace openMSX, tools/run_simon_blink_trace.py,
+ * research/castle-candles.md 9.8). Le MSX remplit D400/D600 (790C, 78CC) dans chaque
+ * passe, apres la baisse des minuteries, et les envoie au debut de la passe suivante.
+ * - Objet 09 ou 08 ramasse (7FE2, apres 790C) dans une passe ou C003 est pair : silhouette
+ *   des la passe suivante, 75 passes (150 images) ; C003 impair : 74 passes (148 images),
+ *   a partir de la 2e passe. Mesure : C434 ecrit a la passe C003 = 238 (EEh), silhouette aux
+ *   images +4 a +301 du debut de cette passe ; passe C003 = 239 : +6 a +299. Idem C43A.
+ * - Coup (6F9F, puis 75CC et 78CC dans la meme passe, C42D 5A -> 59) : Simon cache des la
+ *   passe du coup si le bit 1 de C003 est mis, puis selon ce bit tant que C42D apres sa
+ *   baisse est non nul : passes 0 a 88 du coup. Mesure : coup a la passe C003 = 67,
+ *   cache aux images +2/+3, montre +4 a +7, cache +8...
+ * Ici une image de passe (tick + 1) et l'image suivante montrent la valeur figee a la
+ * passe ; le port affiche une image apres le calcul (le MSX deux, decalage commun a tous
+ * les sprites). */
+static void blink_vars(EnemyRoomVars *v)
+{
+    vars_default(v);
+    v->room = 2;       /* salle sans spawn */
+    v->simonX = 120;
+    v->simonY = 192;
+    v->facingLeft = 0;
+}
+
+/* Ramassage de kind dans une passe de parite c003 ; images (0 = image du ramassage) de la
+ * premiere et derniere silhouette, et leur nombre. */
+static void blink_item(EnemyU8 kind, int c003, int *first, int *last, int *count)
+{
+    EnemyState s;
+    EnemySpawnTimer t;
+    EnemyRoomVars v;
+    int f;
+    blink_vars(&v);
+    Enemies_init(&s);
+    Enemies_spawnTimerInit(&t);
+    do (void)Enemies_frame(&s, &t, &v); while (s.itemPhase != 0 || (s.tick & 1) != c003);
+    Enemies_item(&s, kind, 0);         /* apres Enemies_frame, comme step_candles */
+    *first = *last = -1;
+    *count = 0;
+    for (f = 0; f < 320; f++) {
+        if (f) (void)Enemies_frame(&s, &t, &v);
+        if (Enemies_simonColor(&s)) {
+            if (*first < 0) *first = f;
+            *last = f;
+            (*count)++;
+        }
+    }
+}
+
+/* Coup a une image de passe (onPass) ou a l'image suivante, dans une passe de tick c003 ;
+ * compare chaque image au modele MSX (passe k cachee si (c003 + k) & 2 et k <= 88). */
+static int blink_hit(int onPass, EnemyU8 c003, int *hiddenCount)
+{
+    EnemyState s;
+    EnemySpawnTimer t;
+    EnemyRoomVars v;
+    int f, ok = 1;
+    blink_vars(&v);
+    Enemies_init(&s);
+    Enemies_spawnTimerInit(&t);
+    for (;;) {
+        /* Image de passe : itemPhase 1 avant l'appel ; image suivante : itemPhase 0. */
+        if (onPass && s.itemPhase == 1 && s.tick == (EnemyU8)(c003 - 1)) break;
+        if (!onPass && s.itemPhase == 0 && s.tick == c003) break;
+        (void)Enemies_frame(&s, &t, &v);
+    }
+    (void)Enemies_spawn(&s, ENEMY_SIDE_RIGHT, ENEMY_TYPE_A, 0xA0, 1);
+    s.enemy[0].x = 126;
+    if (Enemies_frame(&s, &t, &v) != 1) return 0;
+    s.enemy[0].active = 0;
+    *hiddenCount = 0;
+    for (f = 0; f < 200; f++) {
+        /* Passe MSX de l'image f (0 = image du coup). */
+        const int k = onPass ? f / 2 : (f + 1) / 2;
+        const int msx = k <= 88 && (((c003 + k) & 2) != 0);
+        if (f) (void)Enemies_frame(&s, &t, &v);
+        if (s.recoil) s.recoil = 0;
+        if ((Enemies_simonHidden(&s) != 0) != msx) ok = 0;
+        *hiddenCount += Enemies_simonHidden(&s) != 0;
+    }
+    return ok;
+}
+
+static void test_blink_phase(void)
+{
+    int first, last, count, hidden;
+    blink_item(0x09, 0, &first, &last, &count);
+    CHECK(first == 2 && last == 299 && count == 150,
+          "C434, passe paire : images 2 a 299, 150 (obtenu %d a %d, %d)", first, last, count);
+    blink_item(0x09, 1, &first, &last, &count);
+    CHECK(first == 4 && last == 297 && count == 148,
+          "C434, passe impaire : images 4 a 297, 148 (obtenu %d a %d, %d)", first, last, count);
+    blink_item(0x08, 0, &first, &last, &count);
+    CHECK(first == 2 && last == 299 && count == 150,
+          "C43A, passe paire : images 2 a 299, 150 (obtenu %d a %d, %d)", first, last, count);
+    blink_item(0x08, 1, &first, &last, &count);
+    CHECK(first == 4 && last == 297 && count == 148,
+          "C43A, passe impaire : images 4 a 297, 148 (obtenu %d a %d, %d)", first, last, count);
+    CHECK(blink_hit(1, 67, &hidden) && hidden == 90,
+          "C42D, coup a la passe C003 = 67 (mesure) : cache comme le MSX (%d images)", hidden);
+    CHECK(blink_hit(1, 68, &hidden), "C42D, coup a la passe C003 = 68 : cache comme le MSX");
+    CHECK(blink_hit(0, 67, &hidden), "C42D, coup apres l'image de passe (C003 = 67)");
+    CHECK(blink_hit(0, 69, &hidden), "C42D, coup apres l'image de passe (C003 = 69)");
+}
+
 int main(void)
 {
     test_rom_tables();
@@ -1425,6 +1539,7 @@ int main(void)
     test_type4_timer();
     test_contact_recoil_invuln();
     test_items();
+    test_blink_phase();
     test_spawn_pause();
     test_time_stop();
     test_fall_to_floor();

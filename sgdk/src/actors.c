@@ -238,7 +238,8 @@ static u16 show_enemy_sprites(u16 tail)
 /* 790C: while C43A (object 08) or C434 (object 09) runs, every line of Simon's
  * sprites (D400, the lash included) takes colour 0Eh or 8 without the CC bit on the
  * passes where bit 0 of C003 is set: a one-colour silhouette, 2 frames out of 4.
- * The MD sprites switch to PAL3, whose entries 1..3 then hold that colour of the
+ * The colour is the one of the last pass (enemies.c), so a pickup shows from the
+ * next odd pass on, as on the MSX (openMSX trace). The MD sprites switch to PAL3, whose entries 1..3 then hold that colour of the
  * room palette (PAL2, the MSX palette). Returns the palette of Simon's sprites. */
 static u16 simon_palette(void)
 {
@@ -289,9 +290,9 @@ void vk_show_player(const VKPlayer *shown)
     const VKPlayer *player = &parked;
     if (parked.y == VK_FALL_Y) parked.y = 255;
     /* 78CC: while C42D runs, Simon's sprites go to Y E0 when bit 1 of the 30 Hz
-     * tick C003 is set: 4 frames hidden, 4 shown. C42D drops once a tick too, so
-     * its bit 1 gives the same rhythm (PROVISIONAL phase: C003 runs freely). */
-    if (vk_enemies.invuln & 2) parked.y = 255;
+     * tick C003 is set: 4 frames hidden, 4 shown, from the pass of the hit on
+     * (openMSX trace, research/castle-candles.md 9.8). */
+    if (Enemies_simonHidden(&vk_enemies)) parked.y = 255;
     const u16 simon_pal = simon_palette();
     /* Enemy sprites come after the player chain: sprite 6 (or 7 when the target is
      * shown) links to ENEMY_SPRITE_BASE when there are enemies, then the candles and
