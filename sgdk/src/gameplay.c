@@ -203,7 +203,7 @@ static VKByte vk_floor_arrival(const VKByte *map, VKByte x, VKByte stage)
     return 0;
 }
 
-/* Y steps of the recoil arc (707D): 16 px up, then down, 3 px a frame at the end. */
+/* Y steps of the recoil arc (707D): 16 px up, then down, 3 px a pass at the end. */
 static const signed char vk_recoil_arc[VK_RECOIL_STEPS] = {
     -3, -3, -2, -2, -2, -1, -1, -1, -1, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 3
 };
@@ -230,6 +230,7 @@ void vk_game_hit(VKGame *game, int dir, int dead)
     game->recoil_dir = (signed char)(dir < 0 ? -1 : 1);
     game->recoil_land = (VKByte)(dead ? 16 : 4);
     game->recoil_count = 0;
+    game->recoil_wait = 0;
 }
 
 int vk_game_recoiling(const VKGame *game)
@@ -260,7 +261,10 @@ static void vk_recoil_move(VKGame *game, const VKRoomLink *links)
     p->x = (VKByte)next;
 }
 
-/* One frame of C420 = 5 (6F85): the controls are ignored. */
+/* One frame of C420 = 5 (6F85): the controls are ignored. The MSX runs a pass of
+ * the state every 2 frames (30 Hz tick C003): the pose, each arc step and each
+ * floor count take 2 frames (traced: X 64 -> 8 and the arc of 707D in 2-frame
+ * steps, scratchpad/fidelity/out3, frames 3851-3909). */
 static void vk_recoil_tick(VKGame *game, const VKRoomLink *links)
 {
     VKPlayer *p = &game->player;
@@ -272,6 +276,8 @@ static void vk_recoil_tick(VKGame *game, const VKRoomLink *links)
         if (--game->recoil_count == 0) game->recoil = VK_RECOIL_NONE;
         return;
     }
+    if (game->recoil_wait) { game->recoil_wait = 0; return; }
+    game->recoil_wait = 1;
     if (game->recoil == VK_RECOIL_START)
     {
         p->mode = 0;

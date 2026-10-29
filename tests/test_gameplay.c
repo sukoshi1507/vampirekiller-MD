@@ -231,9 +231,9 @@ int main(void)
     vk_game_begin(&g);
     assert(!g.entrance);
 
-    /* Enemy contact recoil (6F85): one frame to set the hit pose, then the 707D
-     * arc at 2 px a frame, landing after 22 steps (44 px, as traced: X 136 -> 92),
-     * 4 frames on the floor, controls ignored all along. */
+    /* Enemy contact recoil (6F85), one pass every 2 frames: the hit pose, then the
+     * 707D arc at 2 px a pass, landing after 22 steps (44 px, as traced: X 136 -> 92),
+     * 4 passes (8 frames) on the floor, controls ignored all along. */
     vk_game_debug_room(&g, 0);
     g.player.x = 120;
     g.player.y = 192;
@@ -242,9 +242,14 @@ int main(void)
     assert(vk_game_recoiling(&g));
     vk_game_tick_controls(&g, 1, 1, 0, 0);
     assert(g.player.x == 120 && g.player.y == 192 && g.player.pose == VK_PLAYER_RECOIL_POSE);
+    vk_game_tick_controls(&g, 1, 1, 0, 0);
+    vk_game_tick_controls(&g, 1, 1, 0, 0);
+    assert(g.player.x == 118 && g.player.y == 189);       /* first step, frame 2 */
+    vk_game_tick_controls(&g, 1, 1, 0, 0);
+    assert(g.player.x == 118 && g.player.y == 189);       /* the frame between two passes */
     {
-        int f, top = 192;
-        for (f = 0; f < 22; f++)
+        int f, top = 189;
+        for (f = 0; f < 41; f++)
         {
             vk_game_tick_controls(&g, 1, 1, 0, 0);
             if (g.player.y < top) top = g.player.y;
@@ -253,19 +258,20 @@ int main(void)
     }
     assert(g.player.x == 76 && g.player.y == 192 && g.recoil == VK_RECOIL_FLOOR);
     assert(g.player.pose == VK_PLAYER_RECOIL_POSE + 2 && g.player.facing == 1);
-    vk_game_tick_controls(&g, 1, 1, 0, 0);
-    vk_game_tick_controls(&g, 1, 1, 0, 0);
-    vk_game_tick_controls(&g, 1, 1, 0, 0);
+    {
+        int f;
+        for (f = 0; f < 7; f++) vk_game_tick_controls(&g, 1, 1, 0, 0);
+    }
     assert(vk_game_recoiling(&g));
     vk_game_tick_controls(&g, 1, 1, 0, 0);
     assert(!vk_game_recoiling(&g) && g.player.x == 76);
-    /* Pushed right: the left-facing hit pose (+10/+15), 16 floor frames at energy 0. */
+    /* Pushed right: the left-facing hit pose (+10/+15), 16 floor passes at energy 0. */
     vk_game_hit(&g, 1, 1);
     vk_game_tick_controls(&g, 0, 0, 0, 0);
     assert(g.player.pose == VK_PLAYER_RECOIL_POSE + 1);
     {
         int f;
-        for (f = 0; f < 22; f++) vk_game_tick_controls(&g, 0, 0, 0, 0);
+        for (f = 0; f < 44; f++) vk_game_tick_controls(&g, 0, 0, 0, 0);
         assert(g.player.x == 120 && g.recoil == VK_RECOIL_FLOOR && g.recoil_count == 16);
     }
     /* No room on that side: no step left of X 16 (6C3A). Nothing on a staircase. */
@@ -273,9 +279,10 @@ int main(void)
     g.player.x = 15;
     g.player.y = 192;
     vk_game_hit(&g, -1, 0);
-    vk_game_tick_controls(&g, 0, 0, 0, 0);
-    vk_game_tick_controls(&g, 0, 0, 0, 0);
-    vk_game_tick_controls(&g, 0, 0, 0, 0);
+    {
+        int f;
+        for (f = 0; f < 6; f++) vk_game_tick_controls(&g, 0, 0, 0, 0);
+    }
     assert(g.player.x == 15);
     /* Hit on a staircase with energy left (6FA2-6FB9, traced 5 times in hall room 1):
      * no recoil, C420 = 5 for one pass (2 frames) then 3 again, Simon keeps his step
@@ -304,9 +311,9 @@ int main(void)
          * the ground (traced: from (64,176) down to the floor of Y 192). */
         vk_game_hit(&g, -1, 1);
         assert(vk_game_recoiling(&g) && g.recoil == VK_RECOIL_START && !g.player.on_stairs);
-        for (f = 0; f < 80 && g.recoil != VK_RECOIL_FLOOR; f++) vk_game_tick_controls(&g, 0, 0, 0, 0);
+        for (f = 0; f < 160 && g.recoil != VK_RECOIL_FLOOR; f++) vk_game_tick_controls(&g, 0, 0, 0, 0);
         assert(g.recoil == VK_RECOIL_FLOOR && g.player.y == 192 && g.recoil_count == 16);
-        for (f = 0; f < 16; f++) vk_game_tick_controls(&g, 0, 0, 0, 0);
+        for (f = 0; f < 32; f++) vk_game_tick_controls(&g, 0, 0, 0, 0);
         assert(!vk_game_recoiling(&g) && !g.player.on_stairs);
     }
 

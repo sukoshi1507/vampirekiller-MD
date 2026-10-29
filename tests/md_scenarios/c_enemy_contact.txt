@@ -13,16 +13,36 @@ expect enemies.recoil > 0 and game.recoil == 1 # recul en cours (C420 = 5, phase
 set x_contact game.player.x
 set y_contact game.player.y
 set dir game.recoil_dir
-# Arc de 707D : 16 px de montee, 2 px par image ; les touches sont ignorees.
-until game.player.y == y_contact - 16 max 12 LEFT+B
+# Arc de 707D : 16 px de montee, un pas toutes les 2 images (passe a 30 Hz) ; les touches
+# sont ignorees.
+until game.player.y == y_contact - 16 max 24 LEFT+B
 # Touche en x 16 : la salle 0 a une salle a gauche, le port borne alors a x 8 (PROVISOIRE).
-expect game.player.x == max(8, min(248, x_contact + 2 * 9 * dir)) # 9 images de montee
+expect game.player.x == max(8, min(248, x_contact + 2 * 9 * dir)) # 9 pas de montee
 shot c-recul
-until game.recoil == 3 max 20 LEFT+B
+until game.recoil == 3 max 40 LEFT+B
 expect game.player.x == max(8, min(248, x_contact + 44 * dir)) and game.player.y == y_contact # 22 pas, 44 px (trace : 136 -> 92)
 expect whip.timer == 0 # B ignore pendant le recul
 shot c-pose-au-sol
-wait 4
+wait 8
 dump apres-recul
-expect enemies.recoil == 0 and game.recoil == 0 # 4 images au sol puis fin (702A)
+expect enemies.recoil == 0 and game.recoil == 0 # 4 passes (8 images) au sol puis fin (702A)
 expect enemies.energy == 30 # pas de second degat pendant l'invulnerabilite
+# Clignotement (78CC) : Simon cache (Y SAT >= 224) 4 images sur 8 tant que C42D court.
+set n 0
+wait 1
+set n n + (1 if ram16('vdpSpriteCache') >= 128 + 224 else 0)
+wait 1
+set n n + (1 if ram16('vdpSpriteCache') >= 128 + 224 else 0)
+wait 1
+set n n + (1 if ram16('vdpSpriteCache') >= 128 + 224 else 0)
+wait 1
+set n n + (1 if ram16('vdpSpriteCache') >= 128 + 224 else 0)
+wait 1
+set n n + (1 if ram16('vdpSpriteCache') >= 128 + 224 else 0)
+wait 1
+set n n + (1 if ram16('vdpSpriteCache') >= 128 + 224 else 0)
+wait 1
+set n n + (1 if ram16('vdpSpriteCache') >= 128 + 224 else 0)
+wait 1
+set n n + (1 if ram16('vdpSpriteCache') >= 128 + 224 else 0)
+expect n == 4 and enemies.invuln > 0 # 4 images cachees sur 8

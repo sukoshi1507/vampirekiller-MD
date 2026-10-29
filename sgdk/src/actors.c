@@ -182,6 +182,10 @@ void vk_show_player(const VKPlayer *shown)
     VKPlayer parked = *shown;
     const VKPlayer *player = &parked;
     if (parked.y == VK_FALL_Y) parked.y = 255;
+    /* 78CC: while C42D runs, Simon's sprites go to Y E0 when bit 1 of the 30 Hz
+     * tick C003 is set: 4 frames hidden, 4 shown. C42D drops once a tick too, so
+     * its bit 1 gives the same rhythm (PROVISIONAL phase: C003 runs freely). */
+    if (vk_enemies.invuln & 2) parked.y = 255;
     /* Enemy sprites come after the player chain: sprite 6 (or 7 when the target is
      * shown) links to ENEMY_SPRITE_BASE when there are enemies, then the candles and
      * objects of candle_view.c close the chain. */

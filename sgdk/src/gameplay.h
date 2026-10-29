@@ -34,6 +34,7 @@ typedef struct {
     signed char recoil_dir;  /* -1 pushed left (6C2F), 1 pushed right (6C53) */
     VKByte ground_fall;      /* C420 = 4: a fall from the ground (6BA5), not a jump */
     VKByte jump_step;        /* jump past its table (port mode 4): 2 x C428 - 1 at the frame, 0 otherwise */
+    VKByte recoil_wait;      /* the recoil moves once a 30 Hz pass: 1 on the frame between two passes */
 } VKGame;
 /* 6D1C-6D22: a jump step with C428 - 2 >= 13h sets CFF0 := 1 (6D6D), and the landing
  * plays effect 07 only then (6D30-6D38). The table 6D95 has 19 steps: a jump landing
@@ -42,7 +43,7 @@ typedef struct {
 /* Enemy contact recoil (research/player-health.md, "Recul au coup recu"). */
 typedef enum { VK_RECOIL_NONE = 0,
                VK_RECOIL_START = 1,         /* C423 0 (6F93): pose set, no motion */
-               VK_RECOIL_AIR = 2,           /* C423 1 or 2: arc of 707D, 2 px a frame */
+               VK_RECOIL_AIR = 2,           /* C423 1 or 2: arc of 707D, 2 px a pass (2 frames) */
                VK_RECOIL_FLOOR = 3,         /* C423 3 (701D): on the floor, no control */
                VK_RECOIL_STAIRS = 4         /* hit on a staircase: C420 = 5 for one pass, then 3 (6FAF) */
              } VKRecoil;

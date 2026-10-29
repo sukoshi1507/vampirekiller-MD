@@ -196,7 +196,7 @@ Méthode : la recherche statique des références aux octets candidats (`scratch
 - Simon ne répond à aucune touche pendant `C420 = 5`.
 
 **Porté** (`gameplay.c` `vk_game_hit` / `vk_recoil_tick`, appelé par `actors.c` au contact ; `enemies.c` garde seulement le drapeau `recoil` = `C420 = 5` qui coupe le contact) :
-- une image de pose, puis l'arc de `707D` avec 2 px par image, le sol testé à partir du 11e pas, l'atterrissage avec Y aligné sur 8, puis 4 images au sol (16 à énergie nulle) ;
+- une passe toutes les 2 images, comme l'état 5 du MSX (tick 30 Hz `C003`) : la passe de pose, puis l'arc de `707D` à 2 px par passe, le sol testé à partir du 11e pas, l'atterrissage avec Y aligné sur 8, puis 4 passes au sol (16 à énergie nulle) ;
 - touches ignorées pendant tout le recul : pas de saut, pas de marche, pas de fouet (`main.c`), le fouet en cours est coupé (`C422 := 0`) ;
 - poses de la ROM (`tools/extract_player.py`, poses 8 à 11) : 07/03 (poussé à gauche, Simon tourné à droite), 17/18 (poussé à droite), puis 08/04 et 18/19 au sol. Ces poses montent un pixel plus haut que les autres et sont dessinées en y − 32.
 - Vérifié : la chute de l'arc retombe au sol après 22 pas, soit 44 px, comme la trace (X 136 → 92) ; tests `test_gameplay.c` et scénario `c_enemy_contact`.
@@ -207,7 +207,7 @@ Méthode : la recherche statique des références aux octets candidats (`scratch
 
 **PROVISOIRE** (escalier) : la pose `C42F := 2` (+15 à gauche, `765F`) n'est pas portée, les poses d'escalier du port n'étant pas celles du MSX ; dans les cinq coups tracés, `C42F` valait déjà 2 (pose de repos `05/02`).
 
-**Écart relevé, non corrigé ici** : dans la trace du coup à énergie nulle, l'arc de `707D` avance d'un pas toutes les 2 images (une passe de l'état 5 : Y 176 → 161 en 16 images, 8 pas), alors que le port (`vk_recoil_tick`) fait un pas par image.
+**Cadence (prouvé, trace)** : dans la trace du coup à énergie nulle (`out3`, images 3851-3909), l'état 5 fait une passe toutes les 2 images : pose à 3851, premier pas à 3853 (visible à 3855), X 64 → 8 et Y par la table `707D` en 27 passes, atterrissage à 3909. Le port suit cette cadence depuis le 2026-10-29 (`recoil_wait`, tests `test_gameplay.c` et scénario `c`). Clignotement pendant `C42D` (`78CC`) : Simon caché (Y `E0`) quand le bit 1 de `C003` est mis, 4 images sur 8 ; le port prend le bit 1 de `C42D`, même rythme, phase PROVISOIRE.
 
 **PROVISOIRE** :
 - avec une salle voisine du côté de la poussée, le port borne X à 8 / 248 et ne change pas de salle pendant le recul ; le comportement MSX au bord n'est pas tracé ;
