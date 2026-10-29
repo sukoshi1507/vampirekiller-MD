@@ -227,8 +227,8 @@ int main(void)
 
     /* 8D30: C419 = the object; 03, 05-0A and 16 have their effect in enemies.c
      * (VK_CANDLE_EVENT_PICK), and so does a whip for C440 (8D70 -> 8D7C). The
-     * handler's sound: 1B for 05, 16 for 08, 12 for the others. 0F, 10, 11 are
-     * taken without effect. */
+     * handler's sound: 1B for 05, 16 for 08, 12 for the others. 0A and 0F set
+     * their C701 bit here (VK_CANDLE_EVENT_BOX_ITEM, 0A also arms enemies.c); 10, 11 are taken without effect. */
     {
         static const struct { VKByte kind; int event; VKByte sound; } kPick[] = {
             { 0x03, VK_CANDLE_EVENT_PICK, 0x12 }, { 0x05, VK_CANDLE_EVENT_PICK, 0x1B },
@@ -236,7 +236,8 @@ int main(void)
             { 0x08, VK_CANDLE_EVENT_PICK, 0x16 }, { 0x09, VK_CANDLE_EVENT_PICK, 0x12 },
             { 0x16, VK_CANDLE_EVENT_PICK, 0x12 },
             { 0x1C, VK_CANDLE_EVENT_PICK | VK_CANDLE_EVENT_WEAPON, 0x12 },
-            { 0x0A, VK_CANDLE_EVENT_PICK, 0x12 }, { 0x0F, 0, 0x12 }, { 0x10, 0, 0x12 }, { 0x11, 0, 0x12 } };
+            { 0x0A, VK_CANDLE_EVENT_BOX_ITEM | VK_CANDLE_EVENT_PICK, 0x12 }, { 0x0F, VK_CANDLE_EVENT_BOX_ITEM, 0x12 },
+            { 0x10, 0, 0x12 }, { 0x11, 0, 0x12 } };
         unsigned n;
         for (n = 0; n < sizeof kPick / sizeof kPick[0]; n++)
         {
@@ -249,12 +250,69 @@ int main(void)
             c.drop[0].y = 176;
             events = vk_candles_tick(&c, &g, &w, &hit);
             assert(c.drop[0].state == VK_DROP_NONE && c.picked == kPick[n].kind);
-            assert((events & (VK_CANDLE_EVENT_PICK | VK_CANDLE_EVENT_WEAPON)) == kPick[n].event);
+            assert((events & (VK_CANDLE_EVENT_PICK | VK_CANDLE_EVENT_WEAPON |
+                              VK_CANDLE_EVENT_BOX_ITEM)) == kPick[n].event);
             assert(vk_candles_sound(c.picked) == kPick[n].sound);
         }
         c.weapon = 0;
         assert(vk_candles_sound(VK_OBJ_SMALL_HEART) == 0x0F && vk_candles_sound(VK_OBJ_NOTHING) == 0 &&
                vk_candles_sound(VK_OBJ_GOLD_KEY) == 0x14 && vk_candles_sound(VK_OBJ_CHEST) == 0);
+    }
+
+    /* HUD item box (8EE6, 8F23, 8F55). After the loop above C701 holds 03 (bit 4),
+     * 0A (bit 6) and 0F (bit 7); the last object taken (11) is alone in the box. */
+    assert(c.c701 == (VK_ITEM_BIT_03 | VK_ITEM_BIT_0A | VK_ITEM_BIT_0F));
+    assert(c.box_pick == 0x11 && c.box_items == 0 && c.box_timer_on);
+    {
+        int n, ticks = 0;
+        VKByte kind;
+        /* 8F23: 01 and 17 and up (but 1E) leave the box alone. */
+        static const VKByte kQuiet[] = { 0x01, 0x17, 0x1A, 0x1D };
+        static const VKByte kShown[] = { 0x02, 0x03, 0x05, 0x16, 0x1E };
+        for (n = 0; n < (int)(sizeof kQuiet); n++)
+        {
+            c.box_pick = 0x11; c.box_timer = 5;
+            c.drop[0].state = VK_DROP_REST; c.drop[0].kind = kQuiet[n];
+            c.drop[0].fixed = 0; c.drop[0].timer = 0xFF; c.drop[0].x = 64; c.drop[0].y = 176;
+            c.gold_keys = 0;
+            vk_candles_tick(&c, &g, &w, &hit);
+            assert(c.picked == kQuiet[n] && c.box_pick == 0x11);
+        }
+        c.weapon = 0;
+        for (n = 0; n < (int)(sizeof kShown); n++)
+        {
+            c.drop[0].state = VK_DROP_REST; c.drop[0].kind = kShown[n];
+            c.drop[0].fixed = 0; c.drop[0].timer = 0xFF; c.drop[0].x = 64; c.drop[0].y = 176;
+            vk_candles_tick(&c, &g, &w, &hit);
+            assert(c.box_pick == kShown[n] && c.box_items == 0 && c.box_timer == VK_ITEM_PICK_TICKS);
+        }
+        /* 1E: C701 bit 3; 04 (8DA1) takes bit 5 from bit 4, 03 the other way. */
+        assert(c.c701 == (VK_ITEM_BIT_03 | VK_ITEM_BIT_0A | VK_ITEM_BIT_0F | VK_ITEM_BIT_1E));
+        kind = 0x04;
+        c.drop[0].state = VK_DROP_REST; c.drop[0].kind = kind;
+        c.drop[0].fixed = 0; c.drop[0].timer = 0xFF; c.drop[0].x = 64; c.drop[0].y = 176;
+        assert(vk_candles_tick(&c, &g, &w, &hit) & VK_CANDLE_EVENT_PICK);
+        assert(c.c701 == (VK_ITEM_BIT_04 | VK_ITEM_BIT_0A | VK_ITEM_BIT_0F | VK_ITEM_BIT_1E));
+        c.drop[0].state = VK_DROP_REST; c.drop[0].kind = 0x03;
+        c.drop[0].fixed = 0; c.drop[0].timer = 0xFF; c.drop[0].x = 64; c.drop[0].y = 176;
+        vk_candles_tick(&c, &g, &w, &hit);
+        assert(c.c701 == (VK_ITEM_BIT_03 | VK_ITEM_BIT_0A | VK_ITEM_BIT_0F | VK_ITEM_BIT_1E));
+        /* 8F55: 32 counted passes (C003 & 3F != 0), then 8EE6 draws C701 bits 7..3. */
+        while (c.box_pick) { vk_candles_tick(&c, &g, &w, &hit); ticks++; }
+        assert(ticks >= VK_ITEM_PICK_TICKS && ticks <= VK_ITEM_PICK_TICKS + 1);
+        assert(c.box_items == c.c701 && c.box_timer == 0 && c.box_timer_on);
+        /* 819E: the armor used up clears bit 4 and redraws the box. */
+        vk_candles_armor_out(&c);
+        assert(c.c701 == (VK_ITEM_BIT_0A | VK_ITEM_BIT_0F | VK_ITEM_BIT_1E) && c.box_items == c.c701);
+        /* 70DC: the death keeps bit 7 only; the box is drawn again at the next 8EE6. */
+        vk_candles_death(&c);
+        assert(c.c701 == VK_ITEM_BIT_0F && c.box_items == (VK_ITEM_BIT_0A | VK_ITEM_BIT_0F | VK_ITEM_BIT_1E));
+        vk_candles_item_box(&c);
+        assert(c.box_items == VK_ITEM_BIT_0F && c.box_pick == 0);
+        assert(vk_item_box[0][1] == 0x0F && vk_item_box[3][0] == 0xC8 && vk_item_box[4][1] == 0x1E);
+        vk_candles_begin(&c);
+        assert(c.c701 == 0 && !c.box_timer_on && !c.box_items);
+        g.player.x = 72;
     }
 
     /* Death (70BF) then HUD redraw (4513): the HUD key stays drawn until the redraw. */

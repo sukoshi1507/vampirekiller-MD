@@ -699,6 +699,10 @@ static void test_items(void)
         (void)Enemies_frame(&s, &t, &v);
     }
     CHECK(s.armor == 0, "armure : 16 coups de face");
+    /* 04 (8DA1) efface C701 bit 4 : plus d'armure. */
+    Enemies_item(&s, 0x03, 0);
+    Enemies_item(&s, 0x04, 0);
+    CHECK(s.armor == 0, "objet 04 : C701 bit 4 efface");
 
     /* 05 : 7806, tous les ennemis detruits. */
     (void)Enemies_spawn(&s, ENEMY_SIDE_RIGHT, ENEMY_TYPE_A, 0xA0, 1);

@@ -60,9 +60,24 @@ typedef enum {
     VK_CANDLE_EVENT_WEAPON = 8,      /* C416 changed */
     VK_CANDLE_EVENT_GOLD_KEY = 16,   /* gold key count changed (key taken or chest opened) */
     VK_CANDLE_EVENT_ITEM = 32,       /* C431 changed (objects 0B, 0C, 0D) */
-    VK_CANDLE_EVENT_PICK = 64        /* an object whose effect lives in enemies.c was taken
-                                      * (03, 05-0A, 16, 1A-1D): see picked, Enemies_item */
+    VK_CANDLE_EVENT_PICK = 64,       /* an object whose effect lives in enemies.c was taken
+                                      * (03-0A, 16, 1A-1D): see picked, Enemies_item */
+    VK_CANDLE_EVENT_BOX_ITEM = 128   /* C701 bit 3, 6 or 7 set (objects 1E, 0A, 0F) */
 } VKCandleEvent;
+
+/* C701 bits 7..3 shown in the HUD item box (8EE6, table 8F19). */
+#define VK_ITEM_BIT_0F 0x80          /* 8E3D, x E8 */
+#define VK_ITEM_BIT_0A 0x40          /* 8D94, x D8 */
+#define VK_ITEM_BIT_04 0x20          /* 8DA1, x C8 (bit 4 cleared) */
+#define VK_ITEM_BIT_03 0x10          /* 8D98, x C8 (bit 5 cleared): the armor */
+#define VK_ITEM_BIT_1E 0x08          /* 8D8D, x B8 */
+#define VK_ITEM_BITS 0xF8
+#define VK_ITEM_SHIELD 0x30          /* 7618: Simon holds the shield while C701 & 30h */
+#define VK_ITEM_BOX_Y 12             /* 8F0F: E = 0C */
+#define VK_ITEM_PICK_X 0xD0          /* 8F3D: the object just taken, at D0 */
+#define VK_ITEM_PICK_TICKS 0x20      /* 8F35: C5E6 */
+/* 8F19: x and object for C701 bit 7 - i, i = 0..4. */
+extern const VKByte vk_item_box[5][2];
 
 typedef struct {
     VKByte stage, room;              /* room the candles belong to, 0xFF before the first */
@@ -78,6 +93,12 @@ typedef struct {
     VKByte hud_key;                  /* object 8EC9 last drew at (148, 12) in the HUD, 0 none */
     VKByte c431;                     /* C431: bits 2, 3, 4 set by objects 0B, 0C, 0D (8DF5-8E03) */
     VKByte picked;                   /* C419: last object taken (8D30), 0 none */
+    VKByte c701;                     /* C701 bits 7..3 (VK_ITEM_BITS): objects 0F, 0A, 04, 03, 1E;
+                                      * bits 0..2 (keys) live in items.c and gold_keys */
+    VKByte box_items;                /* C701 bits 7..3 that 8EE6 last drew in the item box */
+    VKByte box_pick;                 /* object 8F2D drew at (D0, 12) in the box, 0 none */
+    VKByte box_timer_on;             /* C5E5 = FF: 8F55 counts C5E6 down */
+    VKByte box_timer;                /* C5E6 */
 } VKCandles;
 
 void vk_candles_begin(VKCandles *c);
@@ -89,12 +110,17 @@ void vk_candles_reset_stage(VKCandles *c, VKByte stage);
  * candle and fixed object of the stage is back, and 70DC clears the weapon
  * (C416) and the gold keys (C700). The hearts stay. */
 void vk_candles_new_life(VKCandles *c, VKByte stage);
-/* End of a death (70BF, state 6): C700 = 0. The HUD key stays drawn until the
- * HUD is drawn again (vk_candles_hud). */
+/* End of a death (70BF, state 6): C700 = 0, C701 &= 80h. The HUD key and the
+ * item box stay drawn until the HUD is drawn again (vk_candles_hud, 8EE6). */
 void vk_candles_death(VKCandles *c);
 /* HUD drawn again (4513 -> 8EB4 -> 8EC9: state 4 at 4237, game over at 42F8):
  * the gold key icon while C700 > 0 (and C701 bit 1 or 2), else nothing. */
 void vk_candles_hud(VKCandles *c);
+/* 8EE6 (room load 6316, HUD redraw 4513, armor used up 81A4): the item box
+ * (x B8..F7, y 12..27) is cleared and the objects of C701 bits 7..3 drawn. */
+void vk_candles_item_box(VKCandles *c);
+/* 819E: C441 ran out with the armor (object 03): C701 bit 4 cleared, then 8EE6. */
+void vk_candles_armor_out(VKCandles *c);
 /* Debug (A+B): every candle of the current room is lit again. */
 void vk_candles_relight(VKCandles *c);
 /* Stage index of vk_candle_first: 0 courtyard, then the castle stage. */
