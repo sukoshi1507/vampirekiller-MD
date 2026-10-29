@@ -411,8 +411,8 @@ VKEvent vk_game_tick_controls(VKGame *game, int direction, int jump, int up, int
         const VKByte was_on_stairs = p->on_stairs;
         const VKByte y0 = p->y;
         const VKByte pose0 = p->pose;
-        vk_player_tick_controls(p, vk_game_collision(game), vk_game_limit_stage(game),
-                                direction, jump, down, up);
+        vk_player_tick_jump(p, vk_game_collision(game), vk_game_limit_stage(game),
+                            direction, jump, down, up, game->items & VK_ITEM_HIGH_JUMP);
         if (was_on_stairs) vk_stair_pose(game, y0, pose0);
         /* The MSX falls in state 4 only from the ground (6BA5); its jump lands in
          * state 1 (6D26), with effect 07 only when CFF0 != 0, i.e. at C428 >= 21
@@ -427,6 +427,9 @@ VKEvent vk_game_tick_controls(VKGame *game, int direction, int jump, int up, int
             game->ground_fall = 0;
             landed = 1;
         }
+        /* With the 21 steps of 6D94 (C431 bit 4) a jump back on its take-off floor
+         * lands in state 1 at C428 = 21, which plays effect 07 (6D1C). */
+        if (mode == 1 && p->mode == 0 && phase + 1 >= VK_JUMP_THUD_STEP) landed = 1;
         if (mode == 1 && p->mode == 4) game->jump_step = (VKByte)(2 * (phase + 1));
         else if (mode == 4 && game->jump_step)
         {

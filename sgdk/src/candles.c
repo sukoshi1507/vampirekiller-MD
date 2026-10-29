@@ -374,9 +374,9 @@ static int pick(VKCandles *c, VKDrop *d)
         c->weapon = (VKByte)(kind - 0x19);
         return VK_CANDLE_EVENT_WEAPON;
     }
-    /* 8DF5-8E03: C431 bits 2, 3, 4, then 8D8A (effect 12). Only bit 3 (recoil of
-     * 2.5 px, gameplay.c) is used: bit 2 doubles timers and bit 4 picks the jump
-     * table 6D94, neither ported. */
+    /* 8DF5-8E03: C431 bits 2, 3, 4, then 8D8A (effect 12). Bit 3: recoil of 2.5 px,
+     * bit 4: jump table 6D94 of 21 steps (gameplay.c, player.c); bit 2 doubles the
+     * item timers (enemies.c). */
     if (kind >= 0x0B && kind <= 0x0D)
     {
         c->c431 |= (VKByte)(1u << (kind - 0x0B + 2));

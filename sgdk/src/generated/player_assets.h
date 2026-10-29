@@ -8,6 +8,8 @@
 extern const unsigned long vk_player_tiles[12][96];
 extern const VKByte vk_player_room[768];
 extern const signed char vk_jump_deltas[19];
+/* 6D94, 21 steps: the jump table while C431 bit 4 is set (object 0D, 6CE7). */
+extern const signed char vk_jump_deltas_high[21];
 extern const VKByte vk_fall_deltas[4];
 extern const VKByte vk_collision_limits[19];
 /* Death pose (C420 = 6, 09/05 and 19/20 facing left): 4 x 2 tiles, top at Y - 15,

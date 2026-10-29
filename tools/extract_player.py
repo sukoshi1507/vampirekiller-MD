@@ -180,6 +180,8 @@ def main():
         records.append({'death_pose': index, 'lower_frame': lower, 'upper_frame': upper,
                         'left': left, 'top': 15})
     jump = [int.from_bytes(bytes((v,)), 'big', signed=True) for v in data[0x2D95:0x2DA8]]
+    # 6CE7: with C431 bit 4 (object 0D) the jump reads 21 steps from 6D94 instead.
+    jump_high = [int.from_bytes(bytes((v,)), 'big', signed=True) for v in data[0x2D94:0x2DA9]]
     fall = list(data[0x2F81:0x2F85])
     limits = list(data[0x3C78:0x3C8B])
     room_map = decode_room(data, 1, 0)[2]
@@ -193,6 +195,8 @@ def main():
 extern const unsigned long vk_player_tiles[{len(POSES)}][96];
 extern const VKByte vk_player_room[768];
 extern const signed char vk_jump_deltas[19];
+/* 6D94, 21 steps: the jump table while C431 bit 4 is set (object 0D, 6CE7). */
+extern const signed char vk_jump_deltas_high[21];
 extern const VKByte vk_fall_deltas[4];
 extern const VKByte vk_collision_limits[19];
 /* Death pose (C420 = 6, 09/05 and 19/20 facing left): 4 x 2 tiles, top at Y - 15,
@@ -233,6 +237,7 @@ extern const unsigned long vk_player_stair_tiles[{len(STAIR_POSES)}][96];
     lines.append('};')
     for ctype, name, values in [('VKByte', 'vk_player_room', room_map),
                                ('signed char', 'vk_jump_deltas', jump),
+                               ('signed char', 'vk_jump_deltas_high', jump_high),
                                ('VKByte', 'vk_fall_deltas', fall),
                                ('VKByte', 'vk_collision_limits', limits)]:
         lines.append(f'const {ctype} {name}[{len(values)}] = {{')
@@ -241,6 +246,7 @@ extern const unsigned long vk_player_stair_tiles[{len(STAIR_POSES)}][96];
         lines.append('};')
     (gen / 'player_assets.c').write_text('\n'.join(lines) + '\n')
     manifest = {'poses': records, 'jump_delta_cpu': '6D95', 'jump_deltas': jump,
+                'jump_high_delta_cpu': '6D94', 'jump_high_deltas': jump_high,
                 'fall_delta_cpu': '6F81', 'fall_deltas': fall,
                 'collision_limit_cpu': '7C78', 'collision_limits': limits,
                 'anchor': {'x': 8, 'y': 31},

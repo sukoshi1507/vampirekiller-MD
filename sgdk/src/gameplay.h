@@ -35,14 +35,17 @@ typedef struct {
     VKByte ground_fall;      /* C420 = 4: a fall from the ground (6BA5), not a jump */
     VKByte jump_step;        /* jump past its table (port mode 4): 2 x C428 - 1 at the frame, 0 otherwise */
     VKByte recoil_wait;      /* the recoil moves once a 30 Hz pass: 1 on the frame between two passes */
-    VKByte items;            /* C431, set by main.c from candles.c: bit 3 (object 0C) = recoil of 2.5 px */
+    VKByte items;            /* C431, set by main.c from candles.c: bit 3 (object 0C) = recoil of 2.5 px,
+                              * bit 4 (object 0D) = jump of 21 steps */
     VKByte x_frac;           /* C426: fraction of X, moved by the recoil steps (6C94) */
     VKByte stair_steps;      /* C42B: stair steps, up or down, since the last stair exit (6EF5) */
 } VKGame;
 #define VK_ITEM_FAST_RECOIL 0x08    /* C431 bit 3: recoil step FD80 / 0280 (6C44, 6C67) */
+#define VK_ITEM_HIGH_JUMP 0x10      /* C431 bit 4 (object 0D): jump table 6D94, 21 steps (6CE7) */
 /* 6D1C-6D22: a jump step with C428 - 2 >= 13h sets CFF0 := 1 (6D6D), and the landing
  * plays effect 07 only then (6D30-6D38). The table 6D95 has 19 steps: a jump landing
- * at its take-off height lands at step 19, a lower floor at step 21 or later. */
+ * at its take-off height lands at step 19, a lower floor at step 21 or later. The
+ * table 6D94 (C431 bit 4) has 21: back on the take-off floor at step 21, effect 07. */
 #define VK_JUMP_THUD_STEP 21
 /* Enemy contact recoil (research/player-health.md, "Recul au coup recu"). */
 typedef enum { VK_RECOIL_NONE = 0,
