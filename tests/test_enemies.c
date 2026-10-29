@@ -656,6 +656,13 @@ static void test_items(void)
         /* 05 : C43E = 18h ; 7604 : F3EB = 0Eh si le bit 1 de C43E est mis avant la baisse.
          * 24 passes de 2 images : 0, puis 4 images de chaque couleur, fin a 0. */
         w.enemy[0].active = 1;
+        /* Livres 10, 11 (8E1D, 8E26) : seulement C702 bit 6 / 7 (prix du marchand, 9418) ;
+         * trace openMSX, ramassage reel du 10 en hall salle 6 : aucun ennemi detruit,
+         * pas d'eclair (research/castle-candles.md 9.8). */
+        CHECK(w.flash == 0, "avant les livres : pas d'eclair");
+        Enemies_item(&w, 0x10, 0);
+        Enemies_item(&w, 0x11, 0);
+        CHECK(w.enemy[0].active && w.flash == 0, "livres 10, 11 : ennemis gardes, pas d'eclair");
         Enemies_item(&w, 0x05, 0);
         CHECK(w.flash == ENEMY_FLASH_START && !w.enemy[0].active, "objet 05 : C43E = 18h, ennemis detruits");
         {
