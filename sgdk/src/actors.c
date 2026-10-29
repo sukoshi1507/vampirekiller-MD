@@ -146,6 +146,7 @@ void vk_step_enemies(void)
     vars.map = vk_game_collision(&vk_game);   /* floor for falling enemies */
     vars.simonState = simon_state();          /* C420 for the contact box 847A */
     vars.facingLeft = vk_game.player.facing;  /* C42C: armor of object 03 (8179) */
+    vars.armorOn = (EnemyU8)!!(vk_candles.c701 & VK_ITEM_BIT_03);   /* 8179: C701 bit 4 */
     /* C420 = 5 while Simon is knocked back: no enemy contact (7EF4). */
     vk_enemies.recoil = (EnemyU8)vk_game_recoiling(&vk_game);
     /* 7064: the death (C420 = 6) clears C42D: no more blinking. */
@@ -176,6 +177,9 @@ void vk_step_enemies(void)
         /* 7DAD: one test per stroke, in the pass with C422 = 3 (vk_whip_active),
          * from Simon's place in that pass (C427/C425, whip.c). Type 5: */
         hits += Enemies_whipHitType5(&vk_enemies, vk_whip.x, vk_whip.y,
+                                     vk_whip.facing, vk_whip.crouched);
+        /* Type 4 (bats): ROM box of class 2, on the side Simon faces (84A7). */
+        hits += Enemies_whipHitType4(&vk_enemies, vk_whip.x, vk_whip.y,
                                      vk_whip.facing, vk_whip.crouched);
         /* Stage 2 type 1: ROM box of class 1 (enemies.h). */
         hits += Enemies_whipHitType1Rom(&vk_enemies, vk_whip.x, vk_whip.y,

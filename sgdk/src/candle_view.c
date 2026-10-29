@@ -48,9 +48,11 @@ static u16 item_slot_tile(u16 slot)
     return (u16)((slot < 2 ? ITEM_SLOT_TILE_A : ITEM_SLOT_TILE_B) + (slot & 1) * 4);
 }
 
+/* Queued (VBlank DMA) like the sprite table that shows the object: a CPU load would
+ * show the new object for one frame in the slot's previous sprite. */
 static void load_object(VKByte object, u16 index)
 {
-    VDP_loadTileData(&vk_object_tiles[(object - 1) * 32], index, 4, CPU);
+    VDP_loadTileData(&vk_object_tiles[(object - 1) * 32], index, 4, DMA_QUEUE);
 }
 
 /* 4x4 cells of a hidden block of the current castle room (rooms drawn from
@@ -59,14 +61,20 @@ static void load_object(VKByte object, u16 index)
 static void draw_hidden_block(const VKCandleDef *def, bool present)
 {
     const u16 *map = vk_maps[vk_stages[vk_game.stage - 1].first + vk_game.room];
-    u16 k;
-    for (k = 0; k < 16; k++)
+    u16 r, k;
+    for (r = 0; r < 4; r++)
     {
-        const u16 col = (u16)(def->x / 8 + (k & 3));
-        const u16 row = (u16)(def->y / 8 + (k >> 2));
-        const u16 tile = present ? vk_hidden_block_tiles[k] : map[(row - 4) * 32 + col];
-        VDP_setTileMapXY(BG_A, TILE_ATTR_FULL(PAL0, FALSE, FALSE, FALSE, TILE_USER_INDEX + tile),
-                         col, row);
+        u16 cells[4];
+        const u16 row = (u16)(def->y / 8 + r);
+        for (k = 0; k < 4; k++)
+        {
+            const u16 col = (u16)(def->x / 8 + k);
+            const u16 tile = present ? vk_hidden_block_tiles[r * 4 + k] : map[(row - 4) * 32 + col];
+            cells[k] = TILE_ATTR_FULL(PAL0, FALSE, FALSE, FALSE, TILE_USER_INDEX + tile);
+        }
+        /* The MSX copies the block (HMMM) during the pass: it shows in the next frame
+         * (p + 1, research/frame-timing.md). Queued for the VBlank, as the sprites. */
+        VDP_setTileMapDataRow(BG_A, cells, row, (u16)(def->x / 8), 4, DMA_QUEUE_COPY);
     }
 }
 
@@ -83,6 +91,7 @@ void vk_candle_view_out(int i)
 {
     const VKStage *group = &vk_stages[0];
     const VKCandleDef *def;
+    u16 cells[4];
     u16 k;
     if (castle_map_room() && i >= 0 && i < vk_candles.count &&
         vk_candles_def(&vk_candles, i)->mode == VK_CANDLE_HIDDEN_BLOCK)
@@ -100,9 +109,12 @@ void vk_candle_view_out(int i)
         const u16 row = (u16)(def->y / 8 + (k >> 1));
         const u16 tile = vk_maps[group->first][(row - 4) * 32 + col];
         const u16 index = (u16)(BAKED_TILE_INDEX + i * 4 + k);
-        VDP_loadTileData(&vk_tiles[group->tileset][tile * 8], index, 1, CPU);
-        VDP_setTileMapXY(BG_A, TILE_ATTR_FULL(PAL0, FALSE, FALSE, FALSE, index), col, row);
+        VDP_loadTileData(&vk_tiles[group->tileset][tile * 8], index, 1, DMA_QUEUE);
+        cells[k] = TILE_ATTR_FULL(PAL0, FALSE, FALSE, FALSE, index);
     }
+    /* Next frame, as the MSX restore (p + 1): queued for the VBlank. */
+    VDP_setTileMapDataRow(BG_A, cells, (u16)(def->y / 8), (u16)(def->x / 8), 2, DMA_QUEUE_COPY);
+    VDP_setTileMapDataRow(BG_A, cells + 2, (u16)(def->y / 8 + 1), (u16)(def->x / 8), 2, DMA_QUEUE_COPY);
 }
 
 void vk_candle_view_room(void)

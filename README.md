@@ -21,7 +21,8 @@ Ce qui fonctionne dans la ROM Mega Drive :
   plateformes, -6 d'énergie au contact, tuée par le fouet accroupi), avec
   apparition, mouvement, animation, contact (-2 d'énergie, recul, invulnérabilité),
   chute sur le sol et couleurs d'après la table de couleur du MSX2.
-  **Le fouet tue les ennemis de types 1 et 4** (type 1 confirmé à l'émulateur).
+  **Le fouet tue les ennemis de types 1 et 4** (type 1 confirmé à l'émulateur ; type 4 :
+  boîte `84A7` de la ROM, du côté où Simon regarde, vérifiée par trace openMSX).
 - **Clés blanches et portes** : la clé blanche (bloc caché de la salle 2 du hall, de la
   salle 5 du stage 2) se ramasse au contact et s'affiche dans le HUD ; la porte du stage
   (salle 7 du hall, salle 1 du stage 2) bloque Simon sans elle, s'ouvre avec (barreau
@@ -41,7 +42,10 @@ Ce qui fonctionne dans la ROM Mega Drive :
   apparitions 300 images ; 05 détruit les ennemis présents, le fond s'éclaire en blanc
   6 fois ; 03, armure : dégâts de face divisés par deux pendant 16 coups ; 0B, 0C, 0D
   (bits de `C431`) : minuteries portées à 480 images, recul rapide de 2,5 px, saut
-  haut. Minuteries, armure et bits de `C431` sont remis à 0 à la fin d'une mort.
+  haut. Minuteries, armure et bits de `C431` sont remis à 0 à la fin d'une mort. Au
+  changement de stage, le compteur d'armure (`C441`) passe à 0 mais l'armure reste : le
+  coup de face suivant le fait boucler à FFh, comme sur MSX2 (trace openMSX) ; l'énergie
+  est gardée.
 - **Stage 2 (jouable)** : six salles avec les collisions et les liens de la ROM
   (`tools/build_stage_maps_md.py`) ; arrivée en salle 0 à x 16, y 96, comme sur le MSX2.
   Tous les ennemis du MSX2 y sont portés : chauves-souris (type 4, salles 0, 1, 3),
@@ -76,17 +80,17 @@ Ce qui fonctionne dans la ROM Mega Drive :
 - **Calendrier d'affichage** : comme sur le MSX2, Simon, son fouet et les ennemis
   (sprites MSX) apparaissent deux images après le calcul de la passe, le décor, le HUD,
   la couleur de fond et les sons une image après (trace openMSX et harnais MD,
-  `research/frame-timing.md`). Restent : tuiles du décor une image trop tôt, sons demandés
-  en fin de passe MSX une image trop tôt, manette lue à chaque image (MSX : une sur deux).
+  `research/frame-timing.md`) ; les tuiles du décor (torche éteinte, bloc cassé, clé) passent
+  par la file DMA et changent une image après, comme sur le MSX2. Restent : sons demandés
+  en fin de passe MSX une image trop tôt. La manette est lue à chaque image (MSX : une
+  sur deux, un appui d'une image y est perdu une fois sur deux) : écart gardé, la logique du
+  port avançant à chaque image (`research/frame-timing.md`, section 4).
 - **Ajout du port, saut depuis l'escalier** : sur une marche, C fait sauter Simon hors de
   la volée. Le MSX2 ne le permet pas (HAUT, sa touche de saut, y fait monter) ; ce saut
   est gardé comme un plus de jouabilité (`research/stairs.md`).
 
 Ce qui n'est pas porté ou reste provisoire :
 
-- **Type 4** (salle 4, volant) : dessin, battement d'ailes et vol en vague d'après le
-  MSX2 ; tué par le fouet d'après la table des objets (boîte provisoire, direction
-  du fouet non vérifiée, `research/enemy-behavior.md`).
 - **Type 5** : l'objet de mort (`1E`) n'est pas reproduit ; la phase 3 du fouet
   est assimilée au fouet déployé (`vk_whip_phase` 2) et le recul face à une panthère
   assise est provisoire.
@@ -100,7 +104,8 @@ Ce qui n'est pas porté ou reste provisoire :
   Les effets portés viennent de la lecture du code ; le clignotement de Simon (08, 09 et
   après un coup) est calé image par image sur une trace openMSX, les autres minuteries
   sans trace dédiée (`research/castle-candles.md` 9.8).
-- **Stages 3 et suivants, châteaux, attaques autres que le fouet** : non portés.
+- **Stages 3 et suivants, châteaux, attaques autres que le fouet** : non portés (dont le
+  passage secret du stage 12, accroupi puis HAUT, `C420` = 7, `research/enemy-behavior.md`).
 - **Énergie (provisoire)** : commandes bloquées pendant la mort : non relevées sur le
   MSX2. Le lieu de reprise suit la table `641F` (salle 0 ; cour (16,176), hall (16,192),
   stage 2 (16,96)), tracé au stage 2 (`research/player-health.md`). La chute dans le vide tue

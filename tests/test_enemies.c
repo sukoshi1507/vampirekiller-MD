@@ -74,6 +74,7 @@ static void vars_default(EnemyRoomVars *v)
     v->simonY = 0xC0;
     v->sideFlag = 0;
     v->difficulty = 0;
+    v->armorOn = 0;
     v->simonState = ENEMY_SIMON_GROUND;
     v->map = 0;
 }
@@ -401,6 +402,7 @@ static void test_type4_timer(void)
     v.simonY = 0xC0;   /* au sol du hall : spawn en Y SAT 0xAA (C425 - 22) */
     v.sideFlag = 0;
     v.difficulty = 0;
+    v.armorOn = 0;
     v.simonState = ENEMY_SIMON_GROUND;
     Enemies_init(&s);
     Enemies_spawnTimerInit(&t);
@@ -500,6 +502,7 @@ static void test_contact_recoil_invuln(void)
     v.simonY = 192;
     v.sideFlag = 0;
     v.difficulty = 0;
+    v.armorOn = 0;
     v.simonState = ENEMY_SIMON_GROUND;
     v.map = 0;
     Enemies_init(&s);
@@ -556,6 +559,7 @@ static void test_items(void)
     v.simonY = 192;
     v.sideFlag = 0;
     v.difficulty = 0;
+    v.armorOn = 0;
     v.map = 0;
     v.facingLeft = 0;
     v.simonState = ENEMY_SIMON_GROUND;
@@ -696,6 +700,7 @@ static void test_items(void)
     /* 03 : de face, degat 1 au lieu de 2 (C441 - 1) ; de dos, 2. Ennemi a droite. */
     Enemies_item(&s, 0x03, 0);
     CHECK(s.armor == ENEMY_ARMOR_HITS, "objet 03 : C441 = 10h");
+    v.armorOn = 1;                   /* C701 bit 4 */
     s.energy = ENEMY_ENERGY_MAX;
     s.enemy[0].active = 1;
     s.enemy[0].x = 126;
@@ -716,10 +721,24 @@ static void test_items(void)
         (void)Enemies_frame(&s, &t, &v);
     }
     CHECK(s.armor == 0, "armure : 16 coups de face");
-    /* 04 (8DA1) efface C701 bit 4 : plus d'armure. */
+    /* Changement de stage (63B7) : C441 = 0, C701 bit 4 garde. Le coup de face suivant
+     * est reduit et passe C441 a FFh (819B) : l'armure tient encore 255 coups. */
+    s.recoil = 0;
+    s.invuln = 0;
+    s.energy = ENEMY_ENERGY_MAX;
+    s.enemy[0].x = 126;
+    CHECK(Enemies_frame(&s, &t, &v) == 1 && s.energy == ENEMY_ENERGY_MAX - ENEMY_CONTACT_DAMAGE / 2 &&
+          s.armor == 0xFF, "armure apres changement de stage : C441 0 -> FFh, degat reduit");
+    /* 04 (8DA1) efface C701 bit 4 : plus d'armure ; C441 = 10h (8DA8) sans effet. */
     Enemies_item(&s, 0x03, 0);
     Enemies_item(&s, 0x04, 0);
-    CHECK(s.armor == 0, "objet 04 : C701 bit 4 efface");
+    v.armorOn = 0;
+    s.recoil = 0;
+    s.invuln = 0;
+    s.energy = ENEMY_ENERGY_MAX;
+    s.enemy[0].x = 126;
+    CHECK(Enemies_frame(&s, &t, &v) == 1 && s.energy == ENEMY_ENERGY_MAX - ENEMY_CONTACT_DAMAGE &&
+          s.armor == ENEMY_ARMOR_HITS, "objet 04 : C701 bit 4 efface, degat double");
 
     /* 05 : 7806, tous les ennemis detruits. */
     (void)Enemies_spawn(&s, ENEMY_SIDE_RIGHT, ENEMY_TYPE_A, 0xA0, 1);
@@ -836,6 +855,7 @@ static void test_fall_to_floor(void)
     v.simonY = 0x40;
     v.sideFlag = 0;
     v.difficulty = 0;
+    v.armorOn = 0;
     v.simonState = ENEMY_SIMON_GROUND;
     v.map = map;
     Enemies_init(&s);
@@ -855,6 +875,9 @@ static void test_fall_to_floor(void)
     (void)Enemies_frame(&s, &t, &v);
     CHECK(s.enemy[0].y == 0xA1, "sur le sol : reste a Y 0xA1");
 }
+
+#define T4_OBJ_X 8    /* objet MSX = SAT + 8 en X (enemies.c, ENEMY_OBJ_X) */
+#define T4_OBJ_Y 15   /* type 4 : objet = SAT + 15 en Y (ENEMY_TYPE4_OBJ_Y) */
 
 /* 9. Coup de fouet : tue un ennemi de type 1 ou 4 touche (boite du fouet, coordonnees de jeu),
  * laisse le type 4 et un ennemi hors de portee. */
@@ -879,7 +902,41 @@ static void test_whip_kills_type1(void)
     (void)Enemies_spawn(&s, ENEMY_SIDE_RIGHT, ENEMY_TYPE_4, ENEMY_TYPE4_Y, 0);
     s.enemy[0].x = 120;
     killed = Enemies_whipHit(&s, 128, 170, 152, 177);
-    CHECK(killed == 1 && !s.enemy[0].active, "fouet : type 4 touche, mort (table C800, scratchpad/type4)");
+    CHECK(killed == 0 && s.enemy[0].active, "fouet : le type 4 a son propre test (84A7)");
+
+    /* Type 4, boite 84A7 classe 2 : cas de la trace openMSX (stage 2 salle 0, Simon Y 96).
+     * Objet MSX (X, Y) = SAT + (8, 15). Simon x 50 a droite, objet (84, 80) : mort. */
+    s.enemy[0].x = 84 - T4_OBJ_X;
+    s.enemy[0].y = 80 - T4_OBJ_Y;
+    CHECK(Enemies_whipHitType4(&s, 50, 96, 0, 0) == 1 && !s.enemy[0].active, "type 4 : |70 - 84| < 20, mort");
+    /* Meme objet, Simon tourne a gauche : le fouet part de l'autre cote (84D9). */
+    s.enemy[0].active = 1;
+    CHECK(Enemies_whipHitType4(&s, 50, 96, 1, 0) == 0, "type 4 : fouet du cote du regard seulement");
+    /* Simon x 46 a gauche, objet (12, 87) : mort (trace, image 12735). */
+    s.enemy[0].x = 12 - T4_OBJ_X;
+    s.enemy[0].y = 87 - T4_OBJ_Y;
+    CHECK(Enemies_whipHitType4(&s, 46, 96, 1, 0) == 1, "type 4 : fouet a gauche, mort");
+    /* Bornes : |dX| = 20 ou Y = C425 - 18 + 17 : rien ; Y = C425 - 21 et C425 - 2 : touche. */
+    s.enemy[0].active = 1;
+    s.enemy[0].x = 90 - T4_OBJ_X;
+    s.enemy[0].y = 80 - T4_OBJ_Y;
+    CHECK(Enemies_whipHitType4(&s, 50, 96, 0, 0) == 0, "type 4 : |dX| = 20, pas de coup");
+    s.enemy[0].x = 89 - T4_OBJ_X;
+    CHECK(Enemies_whipHitType4(&s, 50, 96, 0, 0) == 1, "type 4 : |dX| = 19, coup");
+    s.enemy[0].active = 1;
+    s.enemy[0].y = 96 - 18 + 17 - T4_OBJ_Y;
+    CHECK(Enemies_whipHitType4(&s, 50, 96, 0, 0) == 0, "type 4 : Y = C425 - 1, pas de coup");
+    s.enemy[0].y = 96 - 18 + 16 - T4_OBJ_Y;
+    CHECK(Enemies_whipHitType4(&s, 50, 96, 0, 0) == 1, "type 4 : Y = C425 - 2, coup");
+    s.enemy[0].active = 1;
+    s.enemy[0].y = 96 - 18 - 3 - T4_OBJ_Y;
+    CHECK(Enemies_whipHitType4(&s, 50, 96, 0, 0) == 1, "type 4 : Y = C425 - 21, coup");
+    s.enemy[0].active = 1;
+    s.enemy[0].y = 96 - 18 - 4 - T4_OBJ_Y;
+    CHECK(Enemies_whipHitType4(&s, 50, 96, 0, 0) == 0, "type 4 : Y = C425 - 22, pas de coup");
+    /* Accroupi (B = 10) : la fenetre descend de 8 px. */
+    s.enemy[0].y = 96 - 10 + 16 - T4_OBJ_Y;
+    CHECK(Enemies_whipHitType4(&s, 50, 96, 0, 1) == 1, "type 4 accroupi : Y = C425 + 6, coup");
 }
 
 /* Type 5 (panthere), research/enemy-behavior.md section Type 5 : creation 21 images apres
@@ -966,6 +1023,7 @@ static void vars_stage2_room2(EnemyRoomVars *v)
     v->simonY = 160;
     v->sideFlag = 0;
     v->difficulty = 0;
+    v->armorOn = 0;
     v->simonState = ENEMY_SIMON_GROUND;
     v->map = 0;
 }
