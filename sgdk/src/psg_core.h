@@ -16,7 +16,10 @@
  *   end (8AF1-8B00); the other music channels go on;
  * - an effect is accepted if no effect plays or its id >= the current one
  *   (5172-5179), and never while a music has locked effects (C0A8, 516B);
- * - a music request ends the current effect (5118) and the lock (5131);
+ * - FB (5276, object 0A) freezes the music channels (C098 bit 1) and loops the
+ *   timed item stream on AY channel A (SN tone 0); effects still play on C. FC
+ *   (52C9) gives the music back where it was;
+ * - a music request ends the current effect (5118), the lock (5131) and FB (5122);
  *   request 00 stops everything (5085); FF fades the music out (C0A5/C0A6). */
 
 typedef unsigned char VKPsgByte;
@@ -63,6 +66,9 @@ typedef struct {
     VKPsgVoice pause;            /* FD jingle (C01A), the only voice while paused */
     VKPsgByte paused;            /* C098 bit 0 */
     VKPsgByte pause_edge;        /* 1: silence everything (FD), 2: restore (FE) */
+    VKPsgVoice timer;            /* FB loop (C018), on tone 0 while timed */
+    VKPsgByte timed;             /* C098 bit 1 */
+    VKPsgByte timer_edge;        /* 1: music channels silent (FB), 2: restore (FC), 3: tone 0 silent */
 } VKPsg;
 
 void vk_psg_core_reset(VKPsg *p);
@@ -75,6 +81,11 @@ void vk_psg_core_fade(VKPsg *p);
  * alone. FE (522D): the music channels come back where they were. */
 void vk_psg_core_pause(VKPsg *p, const VKSoundStream *s);
 void vk_psg_core_resume(VKPsg *p);
+/* FB (5276): the music channels stop where they are, s loops on tone 0 and the
+ * effects go on. FC (52C9): the music channels come back. FC without FB does
+ * nothing here (the MSX would write back the registers saved by the last FB). */
+void vk_psg_core_timer(VKPsg *p, const VKSoundStream *s);
+void vk_psg_core_timer_end(VKPsg *p);
 /* Bytes to silence the PSG (written by a stop). */
 int vk_psg_core_silence(VKPsgByte *out);
 /* One 60 Hz frame: fills out with the PSG bytes to write, returns their count. */

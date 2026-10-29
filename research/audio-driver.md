@@ -178,11 +178,13 @@ Cadence et interruption : comme le pilote MSX, appelé par le VBLANK `4028` (H.T
 | Atterrissage d'un saut plus bas que son départ (`C428 ≥ 21`) | 07 | `6D38` | `gameplay.c` (`jump_step`) → `VK_EVENT_LAND` → `main.c` |
 | START en partie (pause) | FD : silence, jingle `9463` seul, musique et effet figés | `51C4` | `main.c` (`pause_start`), `psg_core.c` |
 | START pendant la pause | FE : voies de musique restaurées, la musique reprend où elle était | `522D` | `main.c` (`pause_end`) |
+| Arrêt du temps (objet 0A, BAS pendant un saut) | FB : voies de musique coupées et gelées, boucle `948B` sur la voie A, effets sur C | `718F` → `5276` | `actors.c` (`vk_step_time_stop`), `psg_core.c` (`vk_psg_core_timer`) |
+| Fin de l'arrêt du temps (`C43B` à 0) | FC : voies de musique rendues | `75FF` → `52C9` | `actors.c` (`timeStopEnd`), `psg_core.c` (`vk_psg_core_timer_end`) ; voir `castle-candles.md` 9.9 |
 | Chute dans un trou ou dans l'eau | cri de Wilhelm (PCM, DAC) | **ajout du port**, absent de la ROM | `main.c` (voir §7.1) |
 
 **Atterrissage d'un saut (6D26-6D38), prouvé le 2026-10-29.** `CFF0` n'est pas un reste des sondes de mur : la descente du saut (`C428 ≥ 9`, `6D13`) écrit `CFF0 := 0` à chaque pas (`6D17`), puis `CFF0 := 1` en `6D6F` quand `C428 - 2 ≥ 13h` (`6D1C`-`6D22`, appel de `6D6D`) ; la sonde de sol `7B88` n'écrit pas `CFF0`. Le son 07 du saut joue donc si l'atterrissage tombe au pas 21 ou plus. La table `6D95` a 19 pas et revient à la hauteur de départ au pas 19 ; au-delà, +6 par pas. Trace (`scratchpad/fidelity/out1`, Simon soulevé de 0, 0, 12, 24 et 40 px au départ du saut, point d'arrêt `6BA0`) : atterrissages au pas 19 sans 07 (deux fois), aux pas 21, 23 et 26 avec `CFF0 = 1` et une requête 07 à `509F` à la même image. Sens de jeu : **un saut qui retombe plus bas que son départ fait le bruit d'atterrissage**, pas un saut sur sol plat. Le port compte `C428` après la table (son saut passe en chute, mode 4, au pas 19) : `19 + ceil(images / 2)` (`gameplay.c`, `jump_step`), test `test_gameplay.c` (départs soulevés de 4, 12, 24, 40 px). PROVISOIRE : la table à 21 pas (`6D94`, `C431` bit 4, non portée) atteindrait le pas 21 même sur sol plat.
 
-Non branchés (événements non portés) : 01, 02, 03/06 (escaliers : à brancher quand le pas d'escalier sera relevé), 04, 08, 0A, 0B, 0D, 10, 16-19, 1B, 1C, 81-88, 8C-8E, FB, FF. Les sons 03 et 06 ne viennent pas des escaliers mais des projectiles des armes secondaires (`72DE`, `7473`), non portées. Tous sont jouables dans le menu de test son (code Konami au titre).
+Non branchés (événements non portés) : 01, 02, 03/06 (escaliers : à brancher quand le pas d'escalier sera relevé), 04, 08, 0A, 0B, 0D, 10, 16-19, 1B, 1C, 81-88, 8C-8E, FF. Les sons 03 et 06 ne viennent pas des escaliers mais des projectiles des armes secondaires (`72DE`, `7473`), non portées. Tous sont jouables dans le menu de test son (code Konami au titre).
 
 ## 8. Fichiers
 

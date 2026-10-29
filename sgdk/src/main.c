@@ -496,9 +496,16 @@ int main(bool hardReset)
                     vk_player = vk_game.player;
                     if (item == VK_ITEM_STAGE_EXIT)
                     {
-                        /* Stage 2 room 0. */
+                        /* Stage 2 room 0. 63B7 (state 4) clears C420-C46F, C43B
+                         * included, but neither D010 nor C701: enemies frozen by
+                         * object 0A stay frozen until a death (70D3), and 7777
+                         * plays no music for stage 2, so the FB loop goes on. */
+                        const EnemyU8 frozen = vk_enemies.frozen;
+                        const EnemyU8 time_stop_item = vk_enemies.timeStopItem;
                         vk_game_enter_stage(&vk_game, 2);
                         vk_reset_enemies();
+                        vk_enemies.frozen = frozen;
+                        vk_enemies.timeStopItem = time_stop_item;
                         vk_candles_reset_stage(&vk_candles, 2);
                         vk_candles_hud(&vk_candles);   /* state 4 (4237): HUD drawn again */
                         show_hall_room(0);
@@ -513,6 +520,8 @@ int main(bool hardReset)
                     {
                         /* 6F9A: effect 13 when a contact starts the recoil (C42D set). */
                         const EnemyU8 invuln = vk_enemies.invuln;
+                        /* 6B21 -> 710D: object 0A before the timers of 6B27-6B2D. */
+                        vk_step_time_stop(!!(pressed & BUTTON_DOWN), !!(pressed & BUTTON_B));
                         vk_step_enemies();
                         if (!invuln && vk_enemies.invuln) vk_psg_effect(VK_SFX_DAMAGE);
                     }

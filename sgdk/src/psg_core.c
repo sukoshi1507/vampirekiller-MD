@@ -46,6 +46,13 @@ int vk_psg_core_music(VKPsg *p, const VKSoundStream *s, VKPsgByte id)
     p->fade_timer = 0;
     p->noise = 0;
     p->music_id = id;
+    /* 5122: C098 bit 1 cleared, the FB loop stops. */
+    if (p->timed)
+    {
+        p->timed = 0;
+        p->timer.playing = 0;
+        p->timer_edge = 3;
+    }
     voice_start(&p->music, s);
     return 1;
 }
@@ -76,6 +83,9 @@ void vk_psg_core_stop(VKPsg *p)
     p->c_muted = 0;
     p->fade_steps = 0;
     p->fade_timer = 0;
+    p->timed = 0;                                           /* 5089: C098 = 0 */
+    p->timer.playing = 0;
+    p->timer_edge = 0;
 }
 
 void vk_psg_core_fade(VKPsg *p)
@@ -99,6 +109,22 @@ void vk_psg_core_resume(VKPsg *p)
     p->paused = 0;
     p->pause.playing = 0;
     p->pause_edge = 2;
+}
+
+void vk_psg_core_timer(VKPsg *p, const VKSoundStream *s)
+{
+    if (!s || !s->data) return;
+    p->timed = 1;
+    p->timer_edge = 1;
+    voice_start(&p->timer, s);
+}
+
+void vk_psg_core_timer_end(VKPsg *p)
+{
+    if (!p->timed) return;
+    p->timed = 0;
+    p->timer.playing = 0;
+    p->timer_edge = 2;
 }
 
 /* Music volume byte with the fade: one AY step (3 dB) is 1.5 SN steps (2 dB). */
@@ -210,6 +236,36 @@ static int effect_frame(VKPsg *p, VKPsgByte *out)
     return n;
 }
 
+/* One frame of the FB loop on tone 0 (8964 with C098 bit 1: voice C018 on AY A). */
+static int timer_frame(VKPsg *p, VKPsgByte *out)
+{
+    VKPsgVoice *v = &p->timer;
+    VKPsgByte header = *v->cursor;
+    int count, i, n = 0;
+    if (header == VK_PSG_FRAME_END)
+    {
+        if (v->stream->loop == VK_PSG_NO_LOOP)
+        {
+            v->playing = 0;
+            out[0] = silence_bytes[0];
+            return 1;
+        }
+        v->cursor = v->stream->data + v->stream->loop;
+        header = *v->cursor;
+    }
+    /* The noise belongs to the effects (mixer 1B keeps noise C, 5293): the noise
+     * volume bytes the converter put in the stream for AY A are left out. */
+    count = header & VK_PSG_COUNT_MASK;
+    for (i = 0; i < count; i++)
+    {
+        const VKPsgByte b = v->cursor[1 + i];
+        if ((b & SN_LATCH) && SN_CHANNEL(b) == 3) continue;
+        out[n++] = b;
+    }
+    v->cursor += 1 + count;
+    return n;
+}
+
 /* One frame of the pause jingle; at its end its channels go silent. */
 static int pause_frame(VKPsg *p, VKPsgByte *out)
 {
@@ -237,7 +293,8 @@ int vk_psg_core_frame(VKPsg *p, VKPsgByte *out)
     int n = 0;
     if (p->pause_edge == 1)
         n += vk_psg_core_silence(out);
-    else if (p->pause_edge == 2 && p->music.playing)
+    /* FE during FB: the music channels stay frozen, the loop goes on. */
+    else if (p->pause_edge == 2 && p->music.playing && !p->timed)
         /* 522D: the saved registers go back; channel C waits for the effect or
          * its next note as after an effect. */
         n += restore(p, out, 0x0F & ~music_mask(p));
@@ -246,6 +303,33 @@ int vk_psg_core_frame(VKPsg *p, VKPsgByte *out)
     if (p->paused)
     {
         if (p->pause.playing) n += pause_frame(p, out + n);
+        return n;
+    }
+    if (p->timer_edge == 1)
+    {
+        /* 527E-5295: mixer BF (every channel off), or 1B with an effect playing
+         * (channels A and B off, C kept for the effect). */
+        const int keep = p->effect.playing ? EFFECT_CHANNELS : 0;
+        int i;
+        for (i = 0; i < 4; i++)
+            if (!(keep & (1 << i))) out[n++] = silence_bytes[i];
+    }
+    else if (p->timer_edge == 2)
+    {
+        /* 52C9-5303: mixer and channel A registers back; the music channels sound
+         * again where they stopped. Channel C waits for the effect or its next note. */
+        out[n++] = silence_bytes[0];
+        if (p->music.playing) n += restore(p, out + n, 0x0F & ~music_mask(p));
+    }
+    else if (p->timer_edge == 3)
+        out[n++] = silence_bytes[0];
+    p->timer_edge = 0;
+    /* 8964 with C098 bit 1: the music channels are frozen, voice C018 plays on AY
+     * A, then the effect channel. */
+    if (p->timed)
+    {
+        if (p->timer.playing) n += timer_frame(p, out + n);
+        if (p->effect.playing) n += effect_frame(p, out + n);
         return n;
     }
     /* 8964 order: the three music channels, then the effect channel. */

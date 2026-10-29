@@ -61,7 +61,7 @@ typedef enum {
     VK_CANDLE_EVENT_GOLD_KEY = 16,   /* gold key count changed (key taken or chest opened) */
     VK_CANDLE_EVENT_ITEM = 32,       /* C431 changed (objects 0B, 0C, 0D) */
     VK_CANDLE_EVENT_PICK = 64        /* an object whose effect lives in enemies.c was taken
-                                      * (03, 05-09, 16, 1A-1D): see picked, Enemies_item */
+                                      * (03, 05-0A, 16, 1A-1D): see picked, Enemies_item */
 } VKCandleEvent;
 
 typedef struct {

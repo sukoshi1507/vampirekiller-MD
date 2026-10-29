@@ -196,14 +196,33 @@ void Enemies_init(EnemyState *s)
     s->tick = 0;
     s->flash = 0;
     s->border = 0;
+    s->timeStopEnd = 0;
 }
 
 void Enemies_death(EnemyState *s)
 {
     s->killTimer = 0;                /* 70C7 */
     s->guardTimer = 0;               /* 70CA */
+    s->timeStop = 0;                 /* 70CD */
     s->spawnPause = 0;               /* 70D0 */
+    s->frozen = 0;                   /* 70D3 : D010 a 0, sans son FC */
     s->armor = 0;                    /* 70DC (C701 bit 4) et 70EE (C441) */
+    s->timeStopItem = 0;             /* 70DC : C701 &= 80h efface le bit 6 */
+}
+
+int Enemies_useTimeStop(EnemyState *s, EnemyU8 *hearts, EnemyU8 c431)
+{
+    if (!s->timeStopItem) return 0;                     /* 713B : C701 bit 6 */
+    if (s->timeStop) return 0;                          /* 715F : C43B != 0 */
+    if (*hearts < ENEMY_TIME_STOP_HEARTS) return 0;     /* 7164 : C417 < 5 */
+    *hearts = (EnemyU8)(*hearts - ENEMY_TIME_STOP_HEARTS);  /* 7170-7179, puis 4566 (HUD) */
+    s->timeStop = (c431 & 0x04) ? ENEMY_TIME_STOP_LONG : ENEMY_TIME_STOP;   /* 717C-7187 */
+    s->frozen = 1;                                      /* 718A : SET 0,(D010) */
+    /* 710D tourne dans une passe de la routine de Simon, qui baisse C43B aussitot (75F2,
+     * 5A puis 59 a la meme image dans la trace) : la passe des minuteries est calee sur
+     * cette image (decalage d'une image au plus des autres minuteries d'objet). */
+    s->itemPhase = 1;
+    return 1;
 }
 
 void Enemies_item(EnemyState *s, EnemyU8 kind, EnemyU8 c431)
@@ -228,6 +247,7 @@ void Enemies_item(EnemyState *s, EnemyU8 kind, EnemyU8 c431)
         break;
     case 0x08: s->guardTimer = timer; break;    /* 8DCD */
     case 0x09: s->killTimer = timer; break;     /* 8DE5 */
+    case 0x0A: s->timeStopItem = 1; break;      /* 8D94 : C701 |= 40h, sans minuterie */
     case 0x06:                       /* 8D7C */
     case 0x1A: case 0x1B: case 0x1C: case 0x1D: /* 8D70 -> 8D7C */
         s->spawnPause = timer;
@@ -487,7 +507,7 @@ static EnemyU8 roomFlags(const EnemyRoomVars *v)
 }
 
 /* Une image pour un ennemi deja actif. */
-static void advance(Enemy *e)
+static void advance(Enemy *e, EnemyU8 frozen)
 {
     if (e->type == ENEMY_TYPE_5 || e->type == ENEMY_TYPE_2 || e->type == ENEMY_TYPE_SPLASH)
         return;                            /* mis a jour par Enemies_frame (carte, Simon) */
@@ -495,6 +515,9 @@ static void advance(Enemy *e)
         e->active = 0;
         return;
     }
+    /* 98F9 -> 992F : D010 != 0 et +7E = 1 (objet cree par 5F35) : ni comportement (993B,
+     * pose comprise) ni vitesse (99B9) ; l'objet reste dessine a sa place. */
+    if (frozen) return;
     e->age++;
     if (e->type == ENEMY_TYPE_4) {
         /* La SAT suit l'objet une image sur deux : 3 px en X et une marche de la
@@ -530,7 +553,7 @@ void Enemies_update(EnemyState *s)
 {
     EnemyU8 i;
     for (i = 0; i < ENEMY_MAX; i++) {
-        if (s->enemy[i].active) advance(&s->enemy[i]);
+        if (s->enemy[i].active) advance(&s->enemy[i], s->frozen);
     }
 }
 
@@ -796,6 +819,7 @@ static void type2Channel(EnemyState *s, EnemySpawnTimer *t, const EnemyRoomVars 
     EnemyU8 period, c, x;
     if (!(++s->type2Frames & 1)) return;
     if (s->spawnPause) return;                      /* 5EB8 : C440 != 0, boucle 5ED8 sautee */
+    if (s->frozen) return;                          /* 98E5 : D010 != 0, 5EB8 n'est pas appele */
     t->phase--;                                     /* 9CC3 : DEC (CF10) */
     if ((t->phase & 0x03) != 0) return;
     if (--s->type2Count != 0) return;               /* DEC (CF02) */
@@ -821,7 +845,8 @@ static void type2Frame(EnemyState *s, EnemySpawnTimer *t, const EnemyRoomVars *v
         for (i = 0; i < ENEMY_MAX; i++) {
             Enemy *e = &s->enemy[i];
             if (!e->active) continue;
-            if (e->type == ENEMY_TYPE_2) fishStep(s, e, v);
+            /* Type 2 fige par D010 ; la goutte (+7E = 0, 9C84) tombe toujours. */
+            if (e->type == ENEMY_TYPE_2) { if (!s->frozen) fishStep(s, e, v); }
             else if (e->type == ENEMY_TYPE_SPLASH && e->age) {   /* 9CA3 : gravite seule */
                 fallSpeed(e);
                 moveObject(e, ENEMY_SPLASH_VX * e->dx);
@@ -861,13 +886,23 @@ int Enemies_frame(EnemyState *s, EnemySpawnTimer *t, const EnemyRoomVars *v)
     EnemyU8 i;
     int hit = 0;
 
+    /* 75F2-7601 (6B2D) : C43B baisse a chaque passe de la routine de Simon (les images
+     * ou itemPhase repasse a 0 plus bas), avant la boucle des objets de la meme passe
+     * (trace : les ennemis repartent dans la passe ou D010 s'efface). A 0, D010 bit 0
+     * efface et son FC. */
+    s->timeStopEnd = 0;
+    if (s->timeStop && s->itemPhase && --s->timeStop == 0) {
+        s->frozen = 0;
+        s->timeStopEnd = 1;
+    }
+
     Enemies_update(s);
     if (v->map) {
         for (i = 0; i < ENEMY_MAX; i++) {
             Enemy *e = &s->enemy[i];
             /* Le type 4 vole : sa hauteur suit kType4Y, sans chute. */
-            if (e->active && !e->exiting && e->type != ENEMY_TYPE_4 && e->type != ENEMY_TYPE_5 &&
-                e->type != ENEMY_TYPE_2 && e->type != ENEMY_TYPE_SPLASH)
+            if (e->active && !e->exiting && !s->frozen && e->type != ENEMY_TYPE_4 &&
+                e->type != ENEMY_TYPE_5 && e->type != ENEMY_TYPE_2 && e->type != ENEMY_TYPE_SPLASH)
                 fall(e, v->map, v->stage);
         }
     }
@@ -875,13 +910,16 @@ int Enemies_frame(EnemyState *s, EnemySpawnTimer *t, const EnemyRoomVars *v)
     for (i = 0; i < ENEMY_MAX; i++) {
         Enemy *e = &s->enemy[i];
         if (!e->active || e->type != ENEMY_TYPE_5) continue;
-        if (++e->age & 1) pantherStep(e, v);
+        /* D010 : la panthere (creee par 61BB -> 5F35, +7E = 1) est figee ; la phase de ses
+         * mises a jour (passe de 30 Hz) continue. */
+        if ((++e->age & 1) && !s->frozen) pantherStep(e, v);
     }
 
     /* Une passe de l'etat 5 sur deux images, a partir de la premiere image de jeu de la
      * salle : canal type 1 (9CE6, cote alterne par tir, provisoire) puis canal type 4 (9D97,
      * hall salle 4, stage 2 salles 0, 1, 3), dans l'ordre des bits de la boucle 5ED8. */
-    if (s->parity == 0 && !s->spawnPause) {         /* 5EB8 : rien tant que C440 != 0 */
+    /* 98E5 : D010 != 0 saute tout l'appel de 5EB8 (CF10 compris). */
+    if (s->parity == 0 && !s->spawnPause && !s->frozen) {   /* 5EB8 : rien tant que C440 != 0 */
         w.sideFlag = (EnemyU8)(t->index & 1);
         (void)Enemies_spawnTimerTick(t, &w, s);
         if (roomFlags(v) & ENEMY_FLAG_TYPE4) type4Channel(s, t, v);
@@ -899,7 +937,8 @@ int Enemies_frame(EnemyState *s, EnemySpawnTimer *t, const EnemyRoomVars *v)
     type2Frame(s, t, v);
 
     /* Contact (7E67) : desactive pendant le recul, l'invulnerabilite et C43A (objet 08) ;
-     * avec C434 (objet 09) ces gardes sont sautees et le contact detruit l'ennemi. */
+     * avec C434 (objet 09) ces gardes sont sautees et le contact detruit l'ennemi.
+     * D010 (objet 0A) ne coupe ni le contact ni le fouet (seuls 98F9 et 9E3E le lisent). */
     s->contactScore = 0;
     s->itemSound = 0;
     if (s->killTimer || (s->recoil == 0 && s->invuln == 0 && s->guardTimer == 0)) {

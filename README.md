@@ -55,6 +55,10 @@ Ce qui fonctionne dans la ROM Mega Drive :
 - **Son** : musiques et effets MSX2 émulés depuis le pilote de la ROM sur le PSG
   (`research/audio-driver.md`). Ajout du port : le cri de Wilhelm (CC0) quand Simon
   tombe dans un trou ou dans l'eau.
+- **Objet 0A, arrêt du temps** (arme secondaire du MSX2) : une fois ramassé, BAS pendant
+  un saut coûte 5 cœurs et fige les ennemis 178 images (298 avec l'objet 0B), avec la
+  boucle sonore FB du MSX2 et la musique gelée ; durée et gel vérifiés par une trace
+  openMSX (`research/castle-candles.md` 9.9).
 - **Ajout du port, saut depuis l'escalier** : sur une marche, C fait sauter Simon hors de
   la volée. Le MSX2 ne le permet pas (HAUT, sa touche de saut, y fait monter) ; ce saut
   est gardé comme un plus de jouabilité (`research/stairs.md`).
@@ -87,6 +91,25 @@ Ce qui n'est pas porté ou reste provisoire :
   (`research/enemy-behavior.md`, « Contact selon la posture de Simon »).
 
 Le détail par sujet est dans [research/INDEX.md](research/INDEX.md).
+
+## Contrôles (manette 3 boutons)
+
+| Touche | En jeu | Touche MSX2 |
+|---|---|---|
+| Croix gauche/droite | marche | curseurs |
+| HAUT / BAS | escaliers ; BAS au sol : accroupi | HAUT / BAS |
+| C | saut | HAUT (saut) |
+| B | fouet | ESPACE |
+| BAS pendant un saut | arrêt du temps (objet 0A, 5 cœurs) | BAS pendant un saut (`C006` bit 1, `C420` = 1, `7136`-`716F`) |
+| START | pause | F1 (pause) |
+
+L'arrêt du temps garde la touche du MSX2 : BAS nouvellement pressé en l'air, hors de
+l'image d'un coup de fouet. En l'air, BAS ne sert à rien d'autre (l'accroupi n'existe
+qu'au sol), et aucun bouton A n'entre en jeu : les raccourcis de debug restent libres.
+
+Debug : A+START retourne au titre, A+GAUCHE / A+DROITE change de salle, A+B rallume les
+bougies de la salle ; au titre, C lance une partie au stage 2 et A ouvre l'explorateur
+de salles.
 
 ## Construire la ROM
 

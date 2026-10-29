@@ -34,7 +34,8 @@ Les EXPR sont du Python evalue sur l'etat : frame, front_mode, game.area, game.r
 game.player.x/.y/.facing/.mode/.crouched/.on_stairs..., game.recoil/.recoil_count/.recoil_dir,
 player (copie affichee),
 whip.timer/.facing/.x/.y, enemies.energy/.invuln/.recoil/.alive (nb actifs),
-enemies.enemy[i].active/.type/.x/.y/.dx/.age/.romBox/.timer (i < 7), target (test_target), flames[0..1],
+enemies.enemy[i].active/.type/.x/.y/.dx/.age/.romBox/.timer (i < 7),
+enemies.timeStopItem/.timeStop/.frozen (objet 0A : C701 bit 6, C43B, D010), target (test_target), flames[0..1],
 health.lives/.phase/.timer/.fell (C410 ; phase 0 vivant, 1 mort, 2 reapparition, 3 fin de partie),
 ram8/ram16/ram32(addr|'symbole'), et les noms memorises par `set`.
 Boutons : A B C START UP DOWN LEFT RIGHT (manette 3 boutons, port 1).
@@ -66,7 +67,7 @@ FRONT_MODES = ['LOGO', 'TITLE', 'CASTLE', 'COURTYARD', 'INTERIOR', 'VIEWER', 'TE
 # Blocs d'ennemis (ENEMY_MAX de enemies.h : les 7 blocs C800..CB00 de la ROM).
 ENEMY_SLOTS = 7
 # Tailles attendues (octets) des globales decodees : garde-fou contre une derive des structures.
-EXPECTED_SIZES = {'player': 15, 'game': 36, 'whip': 6, 'enemy_state': 154,
+EXPECTED_SIZES = {'player': 15, 'game': 36, 'whip': 6, 'enemy_state': 158,
                   'test_target': 18, 'courtyard_flame': 36, 'front_mode': 2, 'health': 6}
 # Noms C actuels des globales partagees (sgdk/src/frontend.h, actors.h) ; les scenarios
 # gardent les noms courts. test_target et courtyard_flame sont statiques (room_view.c).
@@ -320,7 +321,9 @@ class Game_View:
                                 'guardTimer': m.rd8(b + 18), 'spawnPause': m.rd8(b + 19),
                                 'armor': m.rd8(b + 20), 'itemPhase': m.rd8(b + 21),
                                 'contactScore': m.rd8(b + 22), 'itemSound': m.rd8(b + 23),
-                                'tick': m.rd8(b + 24), 'flash': m.rd8(b + 25), 'border': m.rd8(b + 26)}
+                                'tick': m.rd8(b + 24), 'flash': m.rd8(b + 25), 'border': m.rd8(b + 26),
+                                'timeStopItem': m.rd8(b + 27), 'timeStop': m.rd8(b + 28),
+                                'frozen': m.rd8(b + 29), 'timeStopEnd': m.rd8(b + 30)}
         if 'health' in A:
             a = A['health']   # VKHealth (health.h), statique de main.c
             state['health'] = {'lives': m.rd8(a), 'phase': m.rd8(a + 1), 'timer': m.rd16(a + 2),

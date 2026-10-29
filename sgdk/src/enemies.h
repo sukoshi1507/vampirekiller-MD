@@ -128,6 +128,11 @@ typedef struct {
     EnemyU8 tick;            /* C003 : +1 a chaque passe de 2 images (phase PROVISOIRE, C003 court librement) */
     EnemyU8 flash;           /* C43E (objet 05) : eclair de la couleur de bordure (7604) */
     EnemyU8 border;          /* F3EB : couleur de bordure posee par 7604 (0 ou 0Eh) */
+    /* Objet 0A, arret du temps (7116-718F, 75F2, 992F ; research/castle-candles.md 9.8). */
+    EnemyU8 timeStopItem;    /* C701 bit 6 (8D94) : garde jusqu'a la fin d'une mort (70DC) */
+    EnemyU8 timeStop;        /* C43B : baisse comme C434 (75F2), 0 = libre */
+    EnemyU8 frozen;          /* D010 bit 0 : ennemis figes (992F), canaux d'apparition arretes (98E5) */
+    EnemyU8 timeStopEnd;     /* image courante : C43B tombe a 0 (75FA), son FC a jouer */
 } EnemyState;
 
 /* Drapeaux de salle du stage 2 (D000 = 2) : ROM 85D7-85DC (pointeur 85AA), salles 0 a 5.
@@ -191,8 +196,8 @@ void Enemies_init(EnemyState *s);
 #define ENEMY_ITEM_ENERGY 8          /* objet 07 : 4605 avec B = 08 (C415, max 20h) */
 #define ENEMY_ARMOR_HITS 0x10        /* objet 03 : C441 = 10h (8DA8) */
 #define ENEMY_GUARD_WARNING 0x10     /* 75EA : effet 17 quand C43A tombe a 10h */
-/* Effet d'un objet ramasse sur cet etat (table 8D3E) : 03, 05, 06, 07, 08, 09, 16 et les
- * fouets 1A-1D (C440). c431 = C431 (bit 2 : minuteries F0h). Les autres objets sont sans
+/* Effet d'un objet ramasse sur cet etat (table 8D3E) : 03, 05, 06, 07, 08, 09, 0A, 16 et
+ * les fouets 1A-1D (C440). c431 = C431 (bit 2 : minuteries F0h). Les autres objets sont sans
  * effet ici. */
 void Enemies_item(EnemyState *s, EnemyU8 kind, EnemyU8 c431);
 #define ENEMY_FLASH_START 0x18      /* objet 05 : C43E = 18h (8DC5) */
@@ -203,8 +208,19 @@ void Enemies_item(EnemyState *s, EnemyU8 kind, EnemyU8 c431);
  * nuls et le bit 0 de C003 mis, 0Eh puis 8 (sans le bit CC 40h : silhouette d'une seule
  * couleur) ; 0 = couleurs normales (1 et 42h). */
 EnemyU8 Enemies_simonColor(const EnemyState *s);
-/* Fin d'une mort (70BF) : C434, C43A, C440 et C441 a 0 (C701 &= 80 retire l'armure). */
+/* Fin d'une mort (70BF) : C434, C43A, C43B, C440, C441 et D010 a 0 (C701 &= 80 retire
+ * l'armure et l'objet 0A). */
 void Enemies_death(EnemyState *s);
+
+/* Objet 0A : C43B = 5Ah (96h si C431 bit 2) au declenchement (717C-7187), 5 coeurs (7170). */
+#define ENEMY_TIME_STOP 0x5A
+#define ENEMY_TIME_STOP_LONG 0x96
+#define ENEMY_TIME_STOP_HEARTS 5
+/* 715F-718F : avec C701 bit 6, C43B = 0 et au moins 5 coeurs, retire 5 coeurs (*hearts,
+ * C417), C43B = 5Ah (96h si c431 bit 2) et D010 bit 0. Retourne 1 si le temps s'arrete
+ * (l'appelant joue FB, 718F), 0 sinon. L'appelant verifie la touche (C006 bit 1 : BAS
+ * nouvellement presse), C420 = 1 (saut, 7136) et l'absence de coup de fouet (7116). */
+int Enemies_useTimeStop(EnemyState *s, EnemyU8 *hearts, EnemyU8 c431);
 
 /* Debut de partie : CF10 = 0 (44C6 efface C405-E000, trace : 0 a la premiere salle du hall),
  * puis Enemies_spawnTimerRoom. */

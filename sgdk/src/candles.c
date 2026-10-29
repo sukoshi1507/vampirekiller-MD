@@ -385,12 +385,13 @@ static int pick(VKCandles *c, VKDrop *d)
         c->c431 |= (VKByte)(1u << (kind - 0x0B + 2));
         return VK_CANDLE_EVENT_ITEM;
     }
-    /* 8D98 (03), 8DBB (05), 8D7C (06), 8DDE (07), 8DCD (08), 8DE5 (09), 8E0D (16):
-     * energy, armor, timers and the enemy wipe live in enemies.c (Enemies_item). */
-    if (kind == 0x03 || (kind >= 0x05 && kind <= 0x09) || kind == 0x16)
+    /* 8D98 (03), 8DBB (05), 8D7C (06), 8DDE (07), 8DCD (08), 8DE5 (09), 8D94 (0A, C701
+     * bit 6: time stop), 8E0D (16): energy, armor, timers, the enemy wipe and the time
+     * stop live in enemies.c (Enemies_item, Enemies_useTimeStop). */
+    if (kind == 0x03 || (kind >= 0x05 && kind <= 0x0A) || kind == 0x16)
         return VK_CANDLE_EVENT_PICK;
-    /* PROVISIONAL: the other effects (C701/C702 bits of 04, 0A, 0E-12, 1E, points of
-     * 13-14) are not ported; none but 0A, 0F, 10 and 11 is found in stages 0-2. */
+    /* PROVISIONAL: the other effects (C701/C702 bits of 04, 0E-12, 1E, points of
+     * 13-14) are not ported; none but 0F, 10 and 11 is found in stages 0-2. */
     return VK_CANDLE_EVENT_NONE;
 }
 

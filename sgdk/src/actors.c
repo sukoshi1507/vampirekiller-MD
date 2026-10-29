@@ -98,6 +98,17 @@ static u8 simon_state(void)
     return ENEMY_SIMON_GROUND;
 }
 
+/* Object 0A (7116-718F, in Simon's routine before the timers 75C0-75F2): DOWN newly
+ * pressed (C006 bit 1) during a jump (C420 = 1, 7136), not on the frame of a whip
+ * stroke (C006 bit 4 takes the 711D branch). Then 715F: C701 bit 6, C43B = 0, 5 hearts. */
+void vk_step_time_stop(int down_pressed, int whip_pressed)
+{
+    if (whip_pressed || !down_pressed || simon_state() != ENEMY_SIMON_JUMP) return;
+    if (!room_key()) return;   /* no 0A in the courtyard, whose frames run no Enemies_frame */
+    if (Enemies_useTimeStop(&vk_enemies, &vk_candles.hearts, vk_candles.c431))
+        vk_psg_timer();        /* 718F: FB */
+}
+
 void vk_step_enemies(void)
 {
     const u16 key = room_key();
@@ -143,6 +154,8 @@ void vk_step_enemies(void)
      * effect 0D (7EBC). Object 08 (C43A): effect 17 when it drops to 10h (75ED). */
     if (vk_enemies.contactScore) vk_hud_add_score((u32)vk_enemies.contactScore * 100);
     if (vk_enemies.itemSound) vk_psg_effect(vk_enemies.itemSound);
+    /* 75FA-7601: C43B ran out, D010 bit 0 cleared, FC gives the music back. */
+    if (vk_enemies.timeStopEnd) vk_psg_timer_end();
     if (vk_whip_active(&vk_whip))
     {
         int left = 0, top = 0, right = 0, bottom = 0;

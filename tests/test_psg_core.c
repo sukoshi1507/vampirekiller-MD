@@ -182,6 +182,47 @@ int main(void)
         vk_psg_core_frame(&p, out);
     assert(!p.music.playing);
 
+    /* FB (5276): music channels silent and frozen, the loop on tone 0, effects
+     * still on C; FC (52C9): the music channels come back where they stopped. */
+    vk_psg_core_reset(&p);
+    vk_psg_core_music(&p, &music, 0x80);
+    vk_psg_core_frame(&p, out);                   /* music frame 0 */
+    vk_psg_core_timer(&p, &effect);
+    n = vk_psg_core_frame(&p, out);
+    assert(p.timed && contains(out, n, 0x9F) && contains(out, n, 0xBF) && contains(out, n, 0xDF));
+    assert(contains(out, n, 0xCA) && !contains(out, n, 0xC6));   /* timer frame 0, music held */
+    assert(vk_psg_core_effect(&p, &effect, 0x05));
+    n = vk_psg_core_frame(&p, out);
+    /* Timer frame 1 is a noise byte, left to the effects; effect frame 0 plays. */
+    assert(!contains(out, n, 0xF1) && contains(out, n, 0xCA) && contains(out, n, 0xD0));
+    vk_psg_core_timer_end(&p);
+    assert(!p.timed);
+    n = vk_psg_core_frame(&p, out);
+    assert(contains(out, n, 0x81) && contains(out, n, 0x90));    /* channel A restored */
+    assert(contains(out, n, 0xC6) || p.c_muted);                 /* then music frame 1 */
+    vk_psg_core_timer_end(&p);                    /* FC without FB: nothing */
+    assert(!p.timer_edge);
+    /* A music request ends FB (5122), a stop too (5089). */
+    vk_psg_core_timer(&p, &effect);
+    vk_psg_core_music(&p, &music, 0x80);
+    assert(!p.timed && !p.timer.playing);
+    vk_psg_core_timer(&p, &effect);
+    vk_psg_core_stop(&p);
+    assert(!p.timed && !p.timer.playing);
+    /* The generated FB stream loops and keeps to tone 0 (AY channel A). */
+    assert(vk_msx_timed_item.loop != VK_PSG_NO_LOOP);
+    vk_psg_core_reset(&p);
+    vk_psg_core_timer(&p, &vk_msx_timed_item);
+    for (i = 0; i < 400; i++)
+    {
+        int k;
+        n = vk_psg_core_frame(&p, out);
+        assert(n <= VK_PSG_OUT_MAX);
+        if (i) for (k = 0; k < n; k++) if (out[k] & 0x80) assert(((out[k] >> 5) & 3) == 0);
+        if (i) assert(!contains(out, n, 0xFF));   /* no noise byte: the noise is the effects' */
+    }
+    assert(p.timed && p.timer.playing);
+
     /* Real data: whip 05 over stage music 80 for 200 frames never writes music
      * bytes on tone 2 while the effect plays. */
     vk_psg_core_reset(&p);
