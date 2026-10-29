@@ -65,9 +65,8 @@ Ce qui n'est pas porté ou reste provisoire :
   (`research/castle-candles.md` 9.7).
 - **Stages 3 et suivants, châteaux, attaques autres que le fouet** : non portés.
 - **Énergie (provisoire)** : lieu de reprise (entrée du hall), commandes bloquées
-  pendant la mort : non relevés sur le MSX2.
-  La chute dans le vide
-  ne tue pas.
+  pendant la mort : non relevés sur le MSX2. La chute dans le vide tue
+  (`vk_health_fall`), avec le cri de Wilhelm ajouté au port.
 - **Provisoires** : vitesse de chute des ennemis, boîte de contact de Simon.
 
 Le détail par sujet est dans [research/INDEX.md](research/INDEX.md).
