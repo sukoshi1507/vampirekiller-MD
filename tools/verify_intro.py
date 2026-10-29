@@ -6,13 +6,12 @@ import argparse
 import hashlib
 import json
 from pathlib import Path
-import re
 from PIL import Image, ImageChops, ImageDraw
 from probe import ROOT, load_rom
 from intro_harness import IntroHarness
 from extract_player import extract_pose, POSES
 from verify_viewer import gx_rgb565
-from run_headless import run
+from md_harness import BUTTONS, FRONT_MODES as MODES, Machine, load_symbols, lookup
 
 
 def quantize(image, palette):
@@ -29,6 +28,8 @@ def main():
     parser.add_argument('source_rom', type=Path)
     parser.add_argument('md_rom', type=Path)
     parser.add_argument('symbols', type=Path)
+    parser.add_argument('--out', type=Path, default=ROOT / 'validation',
+                        help='output directory (default: validation/)')
     args = parser.parse_args()
     data = load_rom(args.source_rom)
     # Regression for the faulty routine adapters: HMMV consumes HL and returns
@@ -45,32 +46,64 @@ def main():
     for i, (r, g, b) in enumerate(probe.palette):
         rb, green = probe.vram[0xF680 + i * 2:0xF682 + i * 2]
         assert (r, g, b) == ((rb >> 4) & 7, green & 7, rb & 7)
-    symbols = {name: int(address, 16) & 65535 for address, name in
-               re.findall(r'^([0-9a-f]+) [bB] (front_mode|front_timer|courtyard_room|player)$',
-                          args.symbols.read_text(), re.M)}
+    symbols = load_symbols(None, args.symbols)
+    address = {name: lookup(symbols, name)[0] for name in
+               ('front_mode', 'front_timer', 'courtyard_room', 'player')}
     images, states = {}, {}
-    output = ROOT / 'validation'
+    output = args.out
+    output.mkdir(parents=True, exist_ok=True)
+    machine = Machine(args.core, args.md_rom)
 
-    def memory(raw, step):
-        def word(a): return (raw[a ^ 1] << 8) | raw[(a + 1) ^ 1]
-        state = {name: word(address) for name, address in symbols.items() if name != 'player'}
-        address = symbols['player']
-        state['player'] = dict(zip(('x', 'y', 'facing', 'mode', 'phase', 'clock', 'pose'),
-                                  [raw[(address + i) ^ 1] for i in range(7)]))
-        states[step] = state
+    def state():
+        result = {name: machine.rd16(a) for name, a in address.items() if name != 'player'}
+        result['player'] = dict(zip(('x', 'y', 'facing', 'mode', 'phase', 'clock', 'pose'),
+                                    [machine.rd8(address['player'] + i) for i in range(7)]))
+        return result
 
-    def image(frame, step): images[step] = frame.copy()
-    script = [([3], 5), ([], 60), ([], 180), ([], 100), ([7], 120), ([7], 120),
-              ([7], 110), ([], 5), ([4], 5), ([], 10)]
-    run(args.core, args.md_rom, output / 'md-interior.png', script=script,
-        memory_observer=memory, observe=image)
-    assert states[0]['front_mode'] == 1
-    assert all(states[i]['front_mode'] == 2 for i in (1, 2, 3))
-    assert states[4]['front_mode'] == 3 and states[4]['courtyard_room'] == 0
-    assert states[5]['courtyard_room'] == 1
-    assert states[6]['courtyard_room'] == 2
-    assert states[8]['front_mode'] == 3 and states[8]['player']['x'] >= 192
-    assert states[9]['front_mode'] == states[10]['front_mode'] == 4
+    def capture(step):
+        states[step] = state()
+        images[step] = machine.image()
+
+    def until(condition, buttons=(), limit=3000):
+        for _ in range(limit):
+            if condition(state()):
+                return
+            machine.run(1, frozenset(buttons))
+        raise AssertionError(f'condition not reached in {limit} frames: {state()}')
+
+    def hold(buttons, frames):
+        machine.run(frames, frozenset(buttons))
+
+    # The flow is driven by RAM states rather than fixed delays: walking speed and
+    # room drawing time may change without breaking the check.
+    START, UP, RIGHT = BUTTONS['START'], BUTTONS['UP'], BUTTONS['RIGHT']
+    until(lambda s: s['front_mode'] == MODES.index('TITLE'), limit=300)
+    hold((), 60)                                          # title faded in
+    capture(0)
+    hold((START,), 5)
+    capture(1)
+    hold((), 60)
+    capture(2)
+    hold((), 180)
+    capture(3)
+    until(lambda s: s['front_mode'] == MODES.index('COURTYARD'), limit=400)
+    hold((), 30)                                          # room, HUD and Simon drawn
+    capture(4)
+    until(lambda s: s['courtyard_room'] == 1, (RIGHT,))
+    until(lambda s: s['courtyard_room'] == 2, (RIGHT,))
+    # Courtyard 2: walk to the door, then stop while the scene is still the courtyard.
+    until(lambda s: s['player']['x'] >= 192 or s['front_mode'] != MODES.index('COURTYARD'), (RIGHT,))
+    hold((), 2)
+    capture(8)
+    until(lambda s: s['front_mode'] == MODES.index('INTERIOR'), (RIGHT,))
+    hold((), 30)
+    capture(10)
+    machine.close()
+    assert states[0]['front_mode'] == MODES.index('TITLE')
+    assert all(states[i]['front_mode'] == MODES.index('CASTLE') for i in (1, 2, 3))
+    assert states[4]['front_mode'] == MODES.index('COURTYARD') and states[4]['courtyard_room'] == 0
+    assert states[8]['front_mode'] == MODES.index('COURTYARD') and states[8]['player']['x'] >= 192
+    assert states[10]['front_mode'] == MODES.index('INTERIOR')
     assert (states[10]['player']['x'], states[10]['player']['y']) == (16, 192)
     manifest = json.loads((ROOT / 'assets/intro/manifest.json').read_text())
     comparisons = []
@@ -79,6 +112,8 @@ def main():
         diff = ImageChops.difference(expected, actual)
         if diff.getbbox():
             diff.save(output / f'intro-difference-{name}.png')
+            expected.save(output / f'intro-expected-{name}.png')
+            actual.save(output / f'intro-actual-{name}.png')
             raise AssertionError(f'Scene pixels differ: {name}')
         comparisons.append(name)
 
@@ -109,6 +144,12 @@ def main():
         matched.append({'md_timer': timer, 'original_frame': equal[0]})
         comparisons.append(f'castle_frame_{equal[0]}')
 
+    # Courtyard torch flames (room_view.c, courtyard_flame_x/y) and hall candles
+    # (candle_view.c) are animated sprites over the baked scene: their 16x16 boxes
+    # are left out of the comparison. In the hall the play note (row 26, y 208)
+    # covers the last four MSX lines.
+    flames = {3: ((64, 144), (192, 144)), 5: ((64, 144),), 6: ((112, 144), (176, 144))}
+    note_rows = {6: 208}
     for step, scene in ((4, 3), (8, 5), (10, 6)):
         palette = manifest['scenes'][scene]['palette']
         expected = quantize(Image.open(ROOT / 'assets/intro' /
@@ -121,9 +162,18 @@ def main():
                 x, y = actor['x'] - 8 + xx, actor['y'] - 31 + yy
                 if color and 0 <= x < 256 and 0 <= y < 212:
                     expected.putpixel((x, y), gx_rgb565(palette[color]))
-        compare(expected.crop((0, 0, 256, 212)), images[step].crop((0, 0, 256, 212)), f'scene_{scene}_with_player')
+        actual = images[step].crop((0, 0, 256, 212))
+        expected = expected.crop((0, 0, 256, 212))
+        for x, y in flames.get(scene, ()):
+            for im in (expected, actual): ImageDraw.Draw(im).rectangle((x, y, x + 15, y + 15), fill=(0, 0, 0))
+        if scene in note_rows:
+            for im in (expected, actual): ImageDraw.Draw(im).rectangle((0, note_rows[scene], 255, 211), fill=(0, 0, 0))
+        compare(expected, actual, f'scene_{scene}_with_player')
     # Logo capture is made while its adapted fade has reached full intensity.
-    run(args.core, args.md_rom, output / 'md-konami.png', frames=60)
+    machine = Machine(args.core, args.md_rom)
+    machine.run(60)
+    machine.image().save(output / 'md-konami.png')
+    machine.close()
     logo = quantize(Image.open(ROOT / 'assets/intro/konami.png').convert('RGB'), manifest['scenes'][0]['palette'])
     compare(logo, Image.open(output / 'md-konami.png').convert('RGB'), 'konami_logo')
     for step, name in [(0, 'title'), (2, 'castle-entry'), (4, 'courtyard'),
@@ -136,7 +186,8 @@ def main():
               'reference_scope': 'Original Z80 palette and command routines executed through VDP ports; synchronous drawing, not full MSX emulation.',
               'graphics_regressions': ['HMMV register side effects', 'blue title frame index 15',
                                        'black frame perforation', 'VDP palette matches VRAM mirror'],
-              'limits': ['silent', 'no enemies/attack', 'static courtyard flames', 'simplified door activation']}
+              'masked': ['title controller prompt', 'animated torch and candle flames',
+                         'hall play note over lines 208-211']}
     (output / 'intro-checks.json').write_text(json.dumps(report, indent=2) + '\n')
     print(json.dumps({k: v for k, v in report.items() if k != 'states'}, indent=2))
 

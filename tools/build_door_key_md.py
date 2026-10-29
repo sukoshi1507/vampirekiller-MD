@@ -67,17 +67,6 @@ def cells(pixel, cx, cy, w, h):
     return out
 
 
-def without_colour(words, colour):
-    """Clears every pixel of one colour (index 0 instead)."""
-    out = []
-    for word in words:
-        for shift in range(0, 32, 4):
-            if (word >> shift) & 15 == colour:
-                word &= ~(15 << shift)
-        out.append(word)
-    return out
-
-
 def door_rows(pixel):
     """48 rows of the bar, two 32-bit words (left and right 8 pixels) per row."""
     out = []
@@ -108,10 +97,10 @@ def generate(snaps=DEFAULT_SNAPS):
     tables = {
         'vk_key_tiles': cells(room2, *KEY_CELL, 2, 2),
         'vk_key_clear_tiles': cells(room2_after, *KEY_CELL, 2, 2),
-        # Column 144 holds the red end (colour 8) of the MSX ENEMY bar, longer than
-        # the MD one (hud.c): it is cleared so that only the box remains.
-        'vk_hud_box_tiles': without_colour(cells(room2, *HUD_CELL, *HUD_SIZE), 8),
-        'vk_hud_key_tiles': without_colour(cells(hud_key, *HUD_CELL, *HUD_SIZE), 8),
+        # Column 144 (colour 8, rows 11..28) is the right edge of the red box that
+        # starts at x 127, as in the intro scenes: it is kept.
+        'vk_hud_box_tiles': cells(room2, *HUD_CELL, *HUD_SIZE),
+        'vk_hud_key_tiles': cells(hud_key, *HUD_CELL, *HUD_SIZE),
         'vk_door_bar_rows': door_rows(room7),
     }
     # The open door shows black (index 0) where the bar was: every pixel of the bar

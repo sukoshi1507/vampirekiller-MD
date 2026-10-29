@@ -342,7 +342,8 @@ void vk_load_whip_graphics(void)
     last_attack_frame = -1;
 }
 
-/* Independent on-screen state check for BlastEm. */
+/* Independent on-screen state check for BlastEm, on the diagnostic rows under
+ * the 212 MSX lines (row 2 would land in the weapon box of the HUD). */
 void vk_draw_attack_frame_label(void)
 {
     int frame = vk_whip_arm_frame(&vk_whip);
@@ -351,6 +352,6 @@ void vk_draw_attack_frame_label(void)
         last_attack_frame = frame;
         VDP_drawText(frame == 0 ? "F0" :
             (frame == 1 ? "F1" : (frame == 2 ? "F2" :
-            (frame == 3 ? "F3" : "F4"))), 28, 2);
+            (frame == 3 ? "F3" : "F4"))), 30, 27);
     }
 }
