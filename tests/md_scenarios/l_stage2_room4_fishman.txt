@@ -7,8 +7,8 @@ include boot_to_courtyard.inc
 until front_mode == MODES['INTERIOR'] max 3000 RIGHT
 wait 20                                   # fin du chargement de la scene 6
 # Stage 2, salle 3 par la memoire, puis A+DROITE (debug) vers la salle 4.
-poke vk_game+20 2
-poke vk_game+18 3
+poke vk_game+22 2
+poke vk_game+20 3
 hold A 3
 hold A+RIGHT 3
 expect game.stage == 2 and game.room == 4 # stage 2, salle 4

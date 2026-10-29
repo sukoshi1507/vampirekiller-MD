@@ -56,7 +56,7 @@ void vk_player_reset(VKPlayer *p)
     p->y = 192;
     p->facing = p->mode = p->phase = p->clock = p->pose = 0;
     p->crouched = p->on_stairs = p->stair_anim = 0;
-    p->stair_dir = p->stair_len = p->stair_glide = 0;
+    p->stair_dir = p->stair_len = p->stair_glide = p->stair_move = 0;
     p->jump_frames = 0;
 }
 
@@ -141,6 +141,7 @@ static int vk_stair_enter(VKPlayer *p, const VKByte *map)
     p->stair_len = (VKByte)(8 * steps + 8);
     p->stair_anim = 0;
     p->stair_glide = 0;
+    p->stair_move = 1; /* 6BEE: C435 := the key, the first cell is climbed */
     p->on_stairs = 1;
     p->mode = 0;
     p->phase = 0;
@@ -178,6 +179,7 @@ static int vk_stair_enter_top(VKPlayer *p, const VKByte *map)
     p->stair_len = (VKByte)(8 * steps + 8);
     p->stair_anim = p->stair_len; /* the progress starts at the top */
     p->stair_glide = 0;
+    p->stair_move = 2; /* 6BEE: C435 := the key (BAS), the first cell is descended */
     p->facing = (VKByte)dir; /* entering from the top, Simon goes down */
     p->on_stairs = 1;
     p->mode = 0;
@@ -227,6 +229,7 @@ int vk_stair_resume(VKPlayer *p, const VKByte *map)
     p->stair_len = (VKByte)(8 * (top + 1) + 8);
     p->stair_anim = (VKByte)(8 * below);
     p->stair_glide = 0;
+    p->stair_move = 0;
     p->on_stairs = 1;
     p->mode = 0;
     p->phase = 0;
@@ -237,16 +240,34 @@ int vk_stair_resume(VKPlayer *p, const VKByte *map)
 }
 
 /* Climb or descend one pixel on each axis every two frames. stair_anim is the
- * progress along the flight: 0 at the foot, stair_len at the top. Releasing the
- * key holds Simon on the step; reaching either end leaves the staircase. */
+ * progress along the flight: 0 at the foot, stair_len at the top. A step under
+ * way runs to the next cell edge whatever the keys (6DE2: C435 is the direction
+ * while C42B & 7 != 0; traced, scratchpad/trace3 runs out2 and out3: HAUT held 4
+ * frames gives 8 steps). On a cell edge the keys are read in the order HAUT, BAS,
+ * GAUCHE, DROITE (6DF6 / 6E07); with no key Simon stands on the step. Reaching
+ * either end leaves the staircase. */
 static void vk_stair_tick(VKPlayer *p, int direction, int down, int up)
 {
     /* Right-up flights climb with HAUT or DROITE, left-up flights with HAUT or GAUCHE. */
-    const int want_up = up || (p->stair_dir ? direction > 0 : direction < 0);
-    const int want_down = !want_up && (down || (p->stair_dir ? direction < 0 : direction > 0));
+    int want_up, want_down;
     const int sx = p->stair_dir ? 1 : -1; /* horizontal sign of a climb */
     int moved = 0;
     static const VKByte stair_frames[4] = {0, 1, 2, 1};
+    if (p->stair_move && !p->stair_glide)
+    {
+        want_up = p->stair_move == 1;
+        want_down = !want_up;
+    }
+    else if (up || down)
+    {
+        want_up = up;
+        want_down = !up;
+    }
+    else
+    {
+        want_up = direction && ((direction > 0) == (p->stair_dir != 0));
+        want_down = direction && !want_up;
+    }
     p->crouched = 0;
     p->clock++;
     if ((p->clock & 1) == 0)
@@ -274,6 +295,8 @@ static void vk_stair_tick(VKPlayer *p, int direction, int down, int up)
     }
     /* Simon looks along the direction of travel: up is !dir, down is dir. */
     if (moved) p->facing = (VKByte)(want_up ? !p->stair_dir : p->stair_dir);
+    if (moved && !p->stair_glide)
+        p->stair_move = (VKByte)((p->stair_anim & 7) ? (want_up ? 1 : 2) : 0);
     if (p->stair_anim == p->stair_len) p->stair_glide = 0;
     if (moved && (p->stair_anim == p->stair_len || p->y >= 225 ||
                   (p->stair_anim == 0 && !p->stair_glide)))

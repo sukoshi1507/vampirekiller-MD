@@ -66,7 +66,7 @@ FRONT_MODES = ['LOGO', 'TITLE', 'CASTLE', 'COURTYARD', 'INTERIOR', 'VIEWER', 'TE
 # Blocs d'ennemis (ENEMY_MAX de enemies.h : les 7 blocs C800..CB00 de la ROM).
 ENEMY_SLOTS = 7
 # Tailles attendues (octets) des globales decodees : garde-fou contre une derive des structures.
-EXPECTED_SIZES = {'player': 14, 'game': 34, 'whip': 6, 'enemy_state': 144,
+EXPECTED_SIZES = {'player': 15, 'game': 36, 'whip': 6, 'enemy_state': 144,
                   'test_target': 18, 'courtyard_flame': 36, 'front_mode': 2, 'health': 6}
 # Noms C actuels des globales partagees (sgdk/src/frontend.h, actors.h) ; les scenarios
 # gardent les noms courts. test_target et courtyard_flame sont statiques (room_view.c).
@@ -265,7 +265,7 @@ class Game_View:
     def player_at(self, a):
         m = self.m
         keys = ('x', 'y', 'facing', 'mode', 'phase', 'clock', 'pose', 'crouched', 'on_stairs',
-                'stair_anim', 'stair_dir', 'stair_len', 'stair_glide', 'jump_frames')
+                'stair_anim', 'stair_dir', 'stair_len', 'stair_glide', 'stair_move', 'jump_frames')
         return {k: m.rd8(a + i) for i, k in enumerate(keys)}
 
     def target_at(self, a):
@@ -282,15 +282,15 @@ class Game_View:
             state['front_mode_name'] = FRONT_MODES[mode] if mode < len(FRONT_MODES) else '?'
         if 'game' in A:
             a = A['game']
-            state['game'] = {'player': self.player_at(a), 'area': m.rd32(a + 14),
-                             'room': m.rd8(a + 18), 'collision_verified': m.rd8(a + 19),
-                             'stage': m.rd8(a + 20), 'entrance': m.rd8(a + 21),
-                             'entrance_step': m.rd8(a + 22), 'entrance_timer': m.rd8(a + 23),
-                             'recoil': m.rd8(a + 24), 'recoil_count': m.rd8(a + 25),
-                             'recoil_land': m.rd8(a + 26), 'recoil_dir': s8(m.rd8(a + 27)),
-                             'ground_fall': m.rd8(a + 28), 'jump_step': m.rd8(a + 29),
-                             'recoil_wait': m.rd8(a + 30), 'items': m.rd8(a + 31),
-                             'x_frac': m.rd8(a + 32), 'stair_steps': m.rd8(a + 33)}
+            state['game'] = {'player': self.player_at(a), 'area': m.rd32(a + 16),
+                             'room': m.rd8(a + 20), 'collision_verified': m.rd8(a + 21),
+                             'stage': m.rd8(a + 22), 'entrance': m.rd8(a + 23),
+                             'entrance_step': m.rd8(a + 24), 'entrance_timer': m.rd8(a + 25),
+                             'recoil': m.rd8(a + 26), 'recoil_count': m.rd8(a + 27),
+                             'recoil_land': m.rd8(a + 28), 'recoil_dir': s8(m.rd8(a + 29)),
+                             'ground_fall': m.rd8(a + 30), 'jump_step': m.rd8(a + 31),
+                             'recoil_wait': m.rd8(a + 32), 'items': m.rd8(a + 33),
+                             'x_frac': m.rd8(a + 34), 'stair_steps': m.rd8(a + 35)}
         if 'player' in A:
             state['player'] = self.player_at(A['player'])
         if 'whip' in A:
