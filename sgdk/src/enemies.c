@@ -189,6 +189,47 @@ void Enemies_init(EnemyState *s)
     s->invulnPhase = 0;
     s->recoil = 0;
     s->recoilDir = 0;
+    Enemies_death(s);
+    s->itemPhase = 0;
+    s->contactScore = 0;
+    s->itemSound = 0;
+}
+
+void Enemies_death(EnemyState *s)
+{
+    s->killTimer = 0;                /* 70C7 */
+    s->guardTimer = 0;               /* 70CA */
+    s->spawnPause = 0;               /* 70D0 */
+    s->armor = 0;                    /* 70DC (C701 bit 4) et 70EE (C441) */
+}
+
+void Enemies_item(EnemyState *s, EnemyU8 kind, EnemyU8 c431)
+{
+    const EnemyU8 timer = (c431 & 0x04) ? ENEMY_ITEM_TIMER_LONG : ENEMY_ITEM_TIMER;
+    EnemyU8 i;
+    switch (kind) {
+    case 0x03:                       /* 8D98 : C701 bit 4 (bit 5 efface), C441 = 10h */
+        s->armor = ENEMY_ARMOR_HITS;
+        break;
+    case 0x05:                       /* 8DBB -> 7806 : tous les objets C800 et D700 detruits
+                                      * (9A3A, sans points) ; l'eclair C43E n'est pas porte */
+        for (i = 0; i < ENEMY_MAX; i++) clearEnemy(&s->enemy[i]);
+        break;
+    case 0x07:                       /* 8DDE : 4605 avec B = 08 */
+    case 0x16:                       /* 8E0D : 4605 avec B = 20h */
+        {
+            const int energy = s->energy + (kind == 0x07 ? ENEMY_ITEM_ENERGY : ENEMY_ENERGY_MAX);
+            s->energy = (EnemyU8)(energy > ENEMY_ENERGY_MAX ? ENEMY_ENERGY_MAX : energy);
+        }
+        break;
+    case 0x08: s->guardTimer = timer; break;    /* 8DCD */
+    case 0x09: s->killTimer = timer; break;     /* 8DE5 */
+    case 0x06:                       /* 8D7C */
+    case 0x1A: case 0x1B: case 0x1C: case 0x1D: /* 8D70 -> 8D7C */
+        s->spawnPause = timer;
+        break;
+    default: break;
+    }
 }
 
 void Enemies_spawnTimerInit(EnemySpawnTimer *t)
@@ -750,6 +791,7 @@ static void type2Channel(EnemyState *s, EnemySpawnTimer *t, const EnemyRoomVars 
 {
     EnemyU8 period, c, x;
     if (!(++s->type2Frames & 1)) return;
+    if (s->spawnPause) return;                      /* 5EB8 : C440 != 0, boucle 5ED8 sautee */
     t->phase--;                                     /* 9CC3 : DEC (CF10) */
     if ((t->phase & 0x03) != 0) return;
     if (--s->type2Count != 0) return;               /* DEC (CF02) */
@@ -835,7 +877,7 @@ int Enemies_frame(EnemyState *s, EnemySpawnTimer *t, const EnemyRoomVars *v)
     /* Une passe de l'etat 5 sur deux images, a partir de la premiere image de jeu de la
      * salle : canal type 1 (9CE6, cote alterne par tir, provisoire) puis canal type 4 (9D97,
      * hall salle 4, stage 2 salles 0, 1, 3), dans l'ordre des bits de la boucle 5ED8. */
-    if (s->parity == 0) {
+    if (s->parity == 0 && !s->spawnPause) {         /* 5EB8 : rien tant que C440 != 0 */
         w.sideFlag = (EnemyU8)(t->index & 1);
         (void)Enemies_spawnTimerTick(t, &w, s);
         if (roomFlags(v) & ENEMY_FLAG_TYPE4) type4Channel(s, t, v);
@@ -852,15 +894,37 @@ int Enemies_frame(EnemyState *s, EnemySpawnTimer *t, const EnemyRoomVars *v)
     /* Type 2 (stage 2, salles 4 et 5) et ses gouttes. */
     type2Frame(s, t, v);
 
-    /* Contact : desactive pendant le recul et l'invulnerabilite (C420, C42D). */
-    if (s->recoil == 0 && s->invuln == 0) {
+    /* Contact (7E67) : desactive pendant le recul, l'invulnerabilite et C43A (objet 08) ;
+     * avec C434 (objet 09) ces gardes sont sautees et le contact detruit l'ennemi. */
+    s->contactScore = 0;
+    s->itemSound = 0;
+    if (s->killTimer || (s->recoil == 0 && s->invuln == 0 && s->guardTimer == 0)) {
         for (i = 0; i < ENEMY_MAX; i++) {
-            const Enemy *e = &s->enemy[i];
+            Enemy *e = &s->enemy[i];
             if (!e->active || e->exiting) continue;
             if (e->type == ENEMY_TYPE_SPLASH) continue;   /* goutte : +E = 0, ni contact ni fouet */
-            const EnemyU8 damage = e->type == ENEMY_TYPE_5 ? ENEMY_TYPE5_DAMAGE :
-                                   e->type == ENEMY_TYPE_2 ? ENEMY_TYPE2_DAMAGE : ENEMY_CONTACT_DAMAGE;
+            EnemyU8 damage = e->type == ENEMY_TYPE_5 ? ENEMY_TYPE5_DAMAGE :
+                             e->type == ENEMY_TYPE_2 ? ENEMY_TYPE2_DAMAGE : ENEMY_CONTACT_DAMAGE;
             if (!Enemies_touches(e, v)) continue;
+            if (s->killTimer) {
+                /* 7EB0 : 81AB (points de la table 81CE, comme au fouet), 9A3E, effet 0D ;
+                 * un seul ennemi par passe (JP 509F). */
+                s->contactScore = (EnemyU8)(e->type == ENEMY_TYPE_2 ? 2 : 1);
+                s->itemSound = 0x0D;
+                clearEnemy(e);
+                break;
+            }
+            /* 8179 : avec C701 bit 4 (objet 03) et Simon tourne vers l'ennemi
+             * (C427 - X et C42C), le degat n'est pas double et C441 baisse. X de
+             * l'ennemi : centre de sa boite (PROVISOIRE pour les types 1 et 4). */
+            if (s->armor) {
+                const int ex = (e->type == ENEMY_TYPE_5 || e->type == ENEMY_TYPE_2) ? e->x :
+                               e->romBox ? e->x + ENEMY_OBJ_X : e->x + 8;
+                if ((v->simonX < ex) != (v->facingLeft != 0)) {
+                    damage = (EnemyU8)(damage / 2);
+                    s->armor--;              /* 819B ; a 0, 819E efface C701 bit 4 */
+                }
+            }
             s->energy = (s->energy > damage) ? (EnemyU8)(s->energy - damage) : 0;
             s->invuln = ENEMY_INVULN_START;
             s->invulnPhase = 0;
@@ -870,6 +934,15 @@ int Enemies_frame(EnemyState *s, EnemySpawnTimer *t, const EnemyRoomVars *v)
             hit = 1;
             break;
         }
+    }
+
+    /* 75C0-75E9 : C440, C434 et C43A baissent a chaque passe de la routine de Simon,
+     * comme C42D (une image sur deux ; phase PROVISOIRE). C43A tombe a 10h : effet 17. */
+    s->itemPhase ^= 1;
+    if (s->itemPhase == 0) {
+        if (s->spawnPause) s->spawnPause--;
+        if (s->killTimer) s->killTimer--;
+        if (s->guardTimer && --s->guardTimer == ENEMY_GUARD_WARNING) s->itemSound = 0x17;
     }
 
     /* C42D ne decroit qu'une image sur deux : 0x5A x 2 = 180 images. */

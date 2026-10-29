@@ -309,6 +309,15 @@ static void vk_stair_tick(VKPlayer *p, int direction, int down, int up)
 void vk_player_tick_controls(VKPlayer *p, const VKByte *map, VKByte stage,
                              int direction, int jump_pressed, int down, int up)
 {
+    vk_player_tick_jump(p, map, stage, direction, jump_pressed, down, up, 0);
+}
+
+void vk_player_tick_jump(VKPlayer *p, const VKByte *map, VKByte stage,
+                         int direction, int jump_pressed, int down, int up, int high_jump)
+{
+    /* 6CE7: C431 bit 4 picks the 21 steps of 6D94 (D = 15h), else the 19 of 6D95. */
+    const signed char *const deltas = high_jump ? vk_jump_deltas_high : vk_jump_deltas;
+    const VKByte steps = high_jump ? VK_JUMP_STEPS_HIGH : VK_JUMP_STEPS;
     /* Staircases exist only inside the interior areas (stage 1). */
     if (p->on_stairs && jump_pressed) { p->on_stairs = 0; p->mode = 1; p->phase = 0; p->jump_frames = 0; }
     else if (p->on_stairs) { vk_stair_tick(p, direction, down, up); return; }
@@ -360,11 +369,11 @@ void vk_player_tick_controls(VKPlayer *p, const VKByte *map, VKByte stage,
         if (p->jump_frames >= 4 && (p->jump_frames & 1) == 0)
         {
             VKByte next_phase = (VKByte)(p->phase + 1);
-            if (next_phase > 19) next_phase = 19;
+            if (next_phase > steps) next_phase = steps;
             p->phase = next_phase;
-            vertical = vk_jump_deltas[next_phase - 1];
+            vertical = deltas[next_phase - 1];
             hit = vk_move_vertical(p, map, stage, vertical);
-            if (hit == -1 || hit == 1 || p->phase >= 19)
+            if (hit == -1 || hit == 1 || p->phase >= steps)
             {
                 if (hit == 1) { p->mode = 0; p->phase = 0; }
                 else { p->mode = 4; p->phase = 0; }

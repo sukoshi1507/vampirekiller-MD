@@ -59,7 +59,9 @@ typedef enum {
     VK_CANDLE_EVENT_WHITE_KEY = 4,   /* the hidden white key block was hit (items.c) */
     VK_CANDLE_EVENT_WEAPON = 8,      /* C416 changed */
     VK_CANDLE_EVENT_GOLD_KEY = 16,   /* gold key count changed (key taken or chest opened) */
-    VK_CANDLE_EVENT_ITEM = 32        /* C431 changed (objects 0B, 0C, 0D) */
+    VK_CANDLE_EVENT_ITEM = 32,       /* C431 changed (objects 0B, 0C, 0D) */
+    VK_CANDLE_EVENT_PICK = 64        /* an object whose effect lives in enemies.c was taken
+                                      * (03, 05-09, 16, 1A-1D): see picked, Enemies_item */
 } VKCandleEvent;
 
 typedef struct {
@@ -75,6 +77,7 @@ typedef struct {
     VKByte taken[VK_CANDLE_STAGES][VK_CANDLE_ROOMS];  /* fixed objects picked up */
     VKByte hud_key;                  /* object 8EC9 last drew at (148, 12) in the HUD, 0 none */
     VKByte c431;                     /* C431: bits 2, 3, 4 set by objects 0B, 0C, 0D (8DF5-8E03) */
+    VKByte picked;                   /* C419: last object taken (8D30), 0 none */
 } VKCandles;
 
 void vk_candles_begin(VKCandles *c);
@@ -109,6 +112,10 @@ int vk_candles_tick(VKCandles *c, VKGame *game, const VKWhip *whip, int *hit_ind
 int vk_candle_whip_touch(const VKCandleDef *def, const VKWhip *whip, int weapon);
 /* Puts out candle i of the current room and creates its drop (898F). */
 int vk_candles_hit(VKCandles *c, int i);
+/* Sound request returned by the 8D3E handler of an object (A at its RET, played by
+ * 509F): 0F hearts, 1B object 05, 16 object 08, 10 objects 13-14, 14 keys, 12 the
+ * others; 0 for 00, 15 and 19 (no effect). */
+VKByte vk_candles_sound(VKByte kind);
 /* Sheet object of a drop to draw, 0 for none. Bursting drops show nothing here
  * (the flame is drawn by the caller); falling ones show the small heart (E8) or
  * the orb (EC), PROVISIONAL stand-ins taken from the sheet. */

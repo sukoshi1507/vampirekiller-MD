@@ -126,10 +126,16 @@ static void step_candles(void)
         vk_item_view_room(&items, &vk_game);
     }
     if (events & VK_CANDLE_EVENT_WEAPON) vk_set_whip_level(vk_candles.weapon);
+    /* Energy, armor, timers C434/C43A/C440, enemy wipe (8D3E, enemies.c). */
+    if (events & VK_CANDLE_EVENT_PICK)
+        Enemies_item(&vk_enemies, vk_candles.picked, vk_candles.c431);
     /* Pickup effects, returned by the 8D3E handlers to 509F: hearts 0F (8DAF,
-     * 8DB7), whip 12 (8D8A), gold key 14 (8E5D); a chest uses a key: 11 (8F7B). */
+     * 8DB7), most objects 12 (8D8A), 05: 1B, 08: 16, gold key 14 (8E5D); a chest
+     * uses a key: 11 (8F7B). */
     if (events & VK_CANDLE_EVENT_HEARTS) vk_psg_effect(VK_SFX_HEART);
-    if (events & (VK_CANDLE_EVENT_WEAPON | VK_CANDLE_EVENT_ITEM)) vk_psg_effect(VK_SFX_ITEM);
+    if ((events & (VK_CANDLE_EVENT_WEAPON | VK_CANDLE_EVENT_ITEM | VK_CANDLE_EVENT_PICK)) &&
+        vk_candles_sound(vk_candles.picked))
+        vk_psg_effect(vk_candles_sound(vk_candles.picked));
     if (events & VK_CANDLE_EVENT_GOLD_KEY)
         vk_psg_effect(vk_candles.gold_keys < gold_keys ? VK_SFX_CHEST : VK_SFX_KEY);
 }
@@ -308,7 +314,11 @@ static void step_health(void)
         vk_candles.hearts = VK_HEALTH_HEARTS_AFTER_FALL;
     }
     /* 70BF: the death clears the gold keys (C700) before state 6. */
-    if (life == VK_HEALTH_REFILL || life == VK_HEALTH_GAME_OVER) vk_candles_death(&vk_candles);
+    if (life == VK_HEALTH_REFILL || life == VK_HEALTH_GAME_OVER)
+    {
+        vk_candles_death(&vk_candles);
+        Enemies_death(&vk_enemies);   /* 70C7-70EE: C434, C43A, C440, C441 */
+    }
     if (life == VK_HEALTH_REFILL) vk_enemies.energy = ENEMY_ENERGY_MAX;
     else if (life == VK_HEALTH_RESPAWN) respawn();
     /* PROVISIONAL: the MSX game over screen (state 7) is not captured. */

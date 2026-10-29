@@ -116,6 +116,15 @@ typedef struct {
     EnemyU16 type2Frames;    /* images depuis l'entree dans la salle (canal du type 2) */
     EnemyU16 type2Count;     /* CF02 : compte a rebours du canal type 2 (decremente tous les 4 appels de 9CC3) */
     EnemyU8 splashCount;     /* CF30 : gouttes creees (parite = sens et vitesse), garde d'une salle a l'autre */
+    /* Objets ramasses (8D3E, research/castle-candles.md 9.8). Les minuteries baissent d'une
+     * unite une image sur deux (75C0-75E9, routine de Simon a 30 Hz, comme C42D). */
+    EnemyU8 killTimer;       /* C434 (objet 09) : un contact detruit l'ennemi, sans degat */
+    EnemyU8 guardTimer;      /* C43A (objet 08) : aucun contact */
+    EnemyU8 spawnPause;      /* C440 (objet 06, fouets 1A-1D) : canaux d'apparition arretes (5EB8) */
+    EnemyU8 armor;           /* C441 avec C701 bit 4 (objet 03) : coups de face encore reduits de moitie */
+    EnemyU8 itemPhase;       /* les minuteries ci-dessus ne baissent qu'une image sur deux */
+    EnemyU8 contactScore;    /* image courante : points (centaines) des ennemis detruits par C434 (81AB) */
+    EnemyU8 itemSound;       /* image courante : effet a jouer (0D destruction par C434, 17 C43A a 10h), 0 sinon */
 } EnemyState;
 
 /* Drapeaux de salle du stage 2 (D000 = 2) : ROM 85D7-85DC (pointeur 85AA), salles 0 a 5.
@@ -154,6 +163,7 @@ typedef struct {
     EnemyU8 difficulty;      /* D012 : soustrait 2*D012 a la periode (valeur 0 observee) */
     const EnemyU8 *map;      /* carte de collision de la salle (sol pour la chute) ; NULL = pas de chute */
     EnemyU8 simonState;      /* C420, lu par la boite de contact 847A : ENEMY_SIMON_* */
+    EnemyU8 facingLeft;      /* C42C : Simon regarde a gauche (armure de l'objet 03, 8179) */
 } EnemyRoomVars;
 
 /* Valeurs de C420 qui comptent pour la boite de contact 847A (banque 2). 847A ne distingue
@@ -171,6 +181,19 @@ void Enemies_setRoom(EnemyState *s);
 
 /* Debut de partie : energie pleine, aucune invulnerabilite ni recul, salle vide. */
 void Enemies_init(EnemyState *s);
+
+/* Duree des minuteries d'objet : 96h, F0h si C431 bit 2 (objet 0B, 8D7C, 8DCD, 8DE5). */
+#define ENEMY_ITEM_TIMER 0x96
+#define ENEMY_ITEM_TIMER_LONG 0xF0
+#define ENEMY_ITEM_ENERGY 8          /* objet 07 : 4605 avec B = 08 (C415, max 20h) */
+#define ENEMY_ARMOR_HITS 0x10        /* objet 03 : C441 = 10h (8DA8) */
+#define ENEMY_GUARD_WARNING 0x10     /* 75EA : effet 17 quand C43A tombe a 10h */
+/* Effet d'un objet ramasse sur cet etat (table 8D3E) : 03, 05, 06, 07, 08, 09, 16 et les
+ * fouets 1A-1D (C440). c431 = C431 (bit 2 : minuteries F0h). Les autres objets sont sans
+ * effet ici. */
+void Enemies_item(EnemyState *s, EnemyU8 kind, EnemyU8 c431);
+/* Fin d'une mort (70BF) : C434, C43A, C440 et C441 a 0 (C701 &= 80 retire l'armure). */
+void Enemies_death(EnemyState *s);
 
 /* Debut de partie : CF10 = 0 (44C6 efface C405-E000, trace : 0 a la premiere salle du hall),
  * puis Enemies_spawnTimerRoom. */

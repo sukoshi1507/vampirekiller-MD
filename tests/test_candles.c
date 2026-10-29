@@ -221,8 +221,41 @@ int main(void)
     g.player.y = 176 + 2 + 20;
     assert(vk_candles_tick(&c, &g, &w, &hit) & VK_CANDLE_EVENT_ITEM);
     assert(c.c431 == 0x08 && c.drop[0].state == VK_DROP_NONE);
+    assert(c.picked == 0x0C && vk_candles_sound(c.picked) == 0x12);
     vk_candles_death(&c);
     assert(c.c431 == 0);
+
+    /* 8D30: C419 = the object; 03, 05-09 and 16 have their effect in enemies.c
+     * (VK_CANDLE_EVENT_PICK), and so does a whip for C440 (8D70 -> 8D7C). The
+     * handler's sound: 1B for 05, 16 for 08, 12 for the others. 0A, 0F, 10, 11 are
+     * taken without effect. */
+    {
+        static const struct { VKByte kind; int event; VKByte sound; } kPick[] = {
+            { 0x03, VK_CANDLE_EVENT_PICK, 0x12 }, { 0x05, VK_CANDLE_EVENT_PICK, 0x1B },
+            { 0x06, VK_CANDLE_EVENT_PICK, 0x12 }, { 0x07, VK_CANDLE_EVENT_PICK, 0x12 },
+            { 0x08, VK_CANDLE_EVENT_PICK, 0x16 }, { 0x09, VK_CANDLE_EVENT_PICK, 0x12 },
+            { 0x16, VK_CANDLE_EVENT_PICK, 0x12 },
+            { 0x1C, VK_CANDLE_EVENT_PICK | VK_CANDLE_EVENT_WEAPON, 0x12 },
+            { 0x0A, 0, 0x12 }, { 0x0F, 0, 0x12 }, { 0x10, 0, 0x12 }, { 0x11, 0, 0x12 } };
+        unsigned n;
+        for (n = 0; n < sizeof kPick / sizeof kPick[0]; n++)
+        {
+            int events;
+            c.drop[0].state = VK_DROP_REST;
+            c.drop[0].kind = kPick[n].kind;
+            c.drop[0].fixed = 0;
+            c.drop[0].timer = 0xFF;
+            c.drop[0].x = 64;
+            c.drop[0].y = 176;
+            events = vk_candles_tick(&c, &g, &w, &hit);
+            assert(c.drop[0].state == VK_DROP_NONE && c.picked == kPick[n].kind);
+            assert((events & (VK_CANDLE_EVENT_PICK | VK_CANDLE_EVENT_WEAPON)) == kPick[n].event);
+            assert(vk_candles_sound(c.picked) == kPick[n].sound);
+        }
+        c.weapon = 0;
+        assert(vk_candles_sound(VK_OBJ_SMALL_HEART) == 0x0F && vk_candles_sound(VK_OBJ_NOTHING) == 0 &&
+               vk_candles_sound(VK_OBJ_GOLD_KEY) == 0x14 && vk_candles_sound(VK_OBJ_CHEST) == 0);
+    }
 
     /* Death (70BF) then HUD redraw (4513): the HUD key stays drawn until the redraw. */
     c.gold_keys = 1;

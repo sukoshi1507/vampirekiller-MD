@@ -438,6 +438,40 @@ int main(void)
             assert(g.jump_step == 0);
         }
     }
+    /* Object 0D (C431 bit 4, 6CE7): the jump reads the 21 steps of 6D94, 38 px
+     * high instead of 32, and back on its take-off floor it lands at C428 = 21,
+     * so with effect 07 (6D1C). */
+    {
+        int f, lands = 0, top = 192, steps = 0;
+        VKByte y = 192;
+        for (f = 0; f < 21; f++) { y = (VKByte)(y + vk_jump_deltas_high[f]); if (y < top) top = y; }
+        assert(y == 192 && top == 192 - 38);
+        g.items = VK_ITEM_HIGH_JUMP;
+        g.player.x = 120;
+        g.player.y = 192;
+        g.player.mode = 0;
+        top = 192;
+        assert(vk_game_tick_controls(&g, 0, 1, 0, 0) == VK_EVENT_NONE && g.player.mode == 1);
+        for (f = 0; f < 120; f++)
+        {
+            const VKByte before = g.player.phase;
+            const VKEvent e = vk_game_tick_controls(&g, 0, 0, 0, 0);
+            if (g.player.mode == 1 && g.player.phase != before) steps = g.player.phase;
+            if (g.player.y < top) top = g.player.y;
+            if (e == VK_EVENT_LAND) { lands++; assert(steps == 20 && g.player.mode == 0); }
+        }
+        assert(lands == 1 && top == 192 - 38 && g.player.y == 192 && g.player.mode == 0);
+        /* Without the bit: 32 px and no effect. */
+        g.items = 0;
+        top = 192;
+        assert(vk_game_tick_controls(&g, 0, 1, 0, 0) == VK_EVENT_NONE && g.player.mode == 1);
+        for (f = 0; f < 120; f++)
+        {
+            if (vk_game_tick_controls(&g, 0, 0, 0, 0) == VK_EVENT_LAND) lands++;
+            if (g.player.y < top) top = g.player.y;
+        }
+        assert(lands == 1 && top == 192 - 32 && g.player.y == 192);
+    }
 
     /* Stage 2 after the door of hall room 7: room 0 at x 16, y 96, on a floor of
      * its own map; the six rooms and the ROM links (U2 D4 R1 for room 0). */

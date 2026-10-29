@@ -66,7 +66,7 @@ FRONT_MODES = ['LOGO', 'TITLE', 'CASTLE', 'COURTYARD', 'INTERIOR', 'VIEWER', 'TE
 # Blocs d'ennemis (ENEMY_MAX de enemies.h : les 7 blocs C800..CB00 de la ROM).
 ENEMY_SLOTS = 7
 # Tailles attendues (octets) des globales decodees : garde-fou contre une derive des structures.
-EXPECTED_SIZES = {'player': 15, 'game': 36, 'whip': 6, 'enemy_state': 144,
+EXPECTED_SIZES = {'player': 15, 'game': 36, 'whip': 6, 'enemy_state': 150,
                   'test_target': 18, 'courtyard_flame': 36, 'front_mode': 2, 'health': 6}
 # Noms C actuels des globales partagees (sgdk/src/frontend.h, actors.h) ; les scenarios
 # gardent les noms courts. test_target et courtyard_flame sont statiques (room_view.c).
@@ -316,7 +316,10 @@ class Game_View:
                                 'type4Side': m.rd8(b + 8), 'type5Timer': m.rd8(b + 9),
                                 'type4Shots': m.rd8(b + 10), 'type2Shots': m.rd8(b + 11),
                                 'type2Frames': m.rd16(b + 12), 'type2Count': m.rd16(b + 14),
-                                'splashCount': m.rd8(b + 16)}
+                                'splashCount': m.rd8(b + 16), 'killTimer': m.rd8(b + 17),
+                                'guardTimer': m.rd8(b + 18), 'spawnPause': m.rd8(b + 19),
+                                'armor': m.rd8(b + 20), 'itemPhase': m.rd8(b + 21),
+                                'contactScore': m.rd8(b + 22), 'itemSound': m.rd8(b + 23)}
         if 'health' in A:
             a = A['health']   # VKHealth (health.h), statique de main.c
             state['health'] = {'lives': m.rd8(a), 'phase': m.rd8(a + 1), 'timer': m.rd16(a + 2),

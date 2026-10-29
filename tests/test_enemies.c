@@ -521,6 +521,153 @@ static void test_contact_recoil_invuln(void)
     CHECK(s.energy == 0x20 - 3 * ENEMY_CONTACT_DAMAGE, "energie : 0x20 - 3 contacts x 2");
 }
 
+/* 7b. Objets ramasses (8D3E) : 07 (energie + 8), 09 (C434 : contact destructeur), 08 (C43A :
+ * aucun contact, effet 17 a 10h), 03 (armure : degat de face non double, 16 coups), 05
+ * (tous les ennemis detruits), C431 bit 2 (minuteries F0h), fin de mort (70BF). */
+static int first_spawn_frame(int pause_kind)
+{
+    EnemyState s;
+    EnemySpawnTimer t;
+    EnemyRoomVars v;
+    int f;
+    vars_default(&v);
+    v.facingLeft = 0;
+    Enemies_init(&s);
+    Enemies_spawnTimerInit(&t);
+    s.invuln = 0xFF;
+    if (pause_kind) Enemies_item(&s, (EnemyU8)pause_kind, 0);
+    for (f = 1; f <= 1000; f++) {
+        (void)Enemies_frame(&s, &t, &v);
+        if (s.enemy[0].active || s.enemy[1].active) return f;
+    }
+    return 0;
+}
+
+static void test_items(void)
+{
+    EnemyState s;
+    EnemySpawnTimer t;
+    EnemyRoomVars v;
+    int f, hits, sounds17 = 0, frames = 0;
+
+    v.stage = 1;
+    v.room = 2;        /* salle sans spawn */
+    v.simonX = 120;
+    v.simonY = 192;
+    v.sideFlag = 0;
+    v.difficulty = 0;
+    v.map = 0;
+    v.facingLeft = 0;
+    v.simonState = ENEMY_SIMON_GROUND;
+    Enemies_init(&s);
+    Enemies_spawnTimerInit(&t);
+
+    /* 07 : 4605, C415 += 8, au plus 20h ; 16 : + 20h. */
+    s.energy = 10;
+    Enemies_item(&s, 0x07, 0);
+    CHECK(s.energy == 18, "objet 07 : energie 10 + 8 (obtenu %d)", s.energy);
+    s.energy = 30;
+    Enemies_item(&s, 0x07, 0);
+    CHECK(s.energy == ENEMY_ENERGY_MAX, "objet 07 : plafond 20h");
+    s.energy = 1;
+    Enemies_item(&s, 0x16, 0);
+    CHECK(s.energy == ENEMY_ENERGY_MAX, "objet 16 : energie pleine");
+
+    /* 09 : C434 = 96h, le contact detruit l'ennemi (100 points, effet 0D), sans degat ni
+     * recul, meme pendant l'invulnerabilite ; 300 images (une baisse toutes les 2). */
+    Enemies_item(&s, 0x09, 0);
+    CHECK(s.killTimer == ENEMY_ITEM_TIMER, "objet 09 : C434 = 96h");
+    s.invuln = 0x20;
+    (void)Enemies_spawn(&s, ENEMY_SIDE_RIGHT, ENEMY_TYPE_A, 0xA0, 1);
+    s.enemy[0].x = 126;
+    CHECK(Enemies_frame(&s, &t, &v) == 0, "C434 : pas de recul");
+    CHECK(!s.enemy[0].active && s.contactScore == 1 && s.itemSound == 0x0D,
+          "C434 : ennemi detruit, 100 points, effet 0D");
+    CHECK(s.energy == ENEMY_ENERGY_MAX && s.recoil == 0, "C434 : pas de degat");
+    s.invuln = 0;
+    for (f = 2; s.killTimer; f++) (void)Enemies_frame(&s, &t, &v);
+    CHECK(f - 1 == 2 * ENEMY_ITEM_TIMER || f - 1 == 2 * ENEMY_ITEM_TIMER - 1,
+          "C434 : 150 passes de 2 images (obtenu %d images)", f - 1);
+    (void)Enemies_spawn(&s, ENEMY_SIDE_RIGHT, ENEMY_TYPE_A, 0xA0, 1);
+    s.enemy[0].x = 126;
+    CHECK(Enemies_frame(&s, &t, &v) == 1 && s.energy == ENEMY_ENERGY_MAX - ENEMY_CONTACT_DAMAGE,
+          "C434 a 0 : contact normal");
+    s.recoil = 0;
+    s.invuln = 0;
+    s.energy = ENEMY_ENERGY_MAX;
+
+    /* 08 : C43A = 96h, aucun contact ; effet 17 une fois, quand C43A tombe a 10h. */
+    Enemies_item(&s, 0x08, 0);
+    hits = 0;
+    while (s.guardTimer) {
+        s.enemy[0].x = 126;
+        s.enemy[0].active = 1;
+        s.enemy[0].exiting = 0;
+        hits += Enemies_frame(&s, &t, &v);
+        if (s.itemSound == 0x17) {
+            sounds17++;
+            CHECK(s.guardTimer == ENEMY_GUARD_WARNING, "effet 17 a 10h");
+        }
+        frames++;
+    }
+    CHECK(hits == 0 && sounds17 == 1 && s.energy == ENEMY_ENERGY_MAX, "C43A : ni contact ni degat, un effet 17");
+    CHECK(frames >= 2 * ENEMY_ITEM_TIMER - 1 && frames <= 2 * ENEMY_ITEM_TIMER, "C43A : 300 images (%d)", frames);
+    CHECK(Enemies_frame(&s, &t, &v) == 1, "C43A a 0 : contact");
+    s.recoil = 0;
+    s.invuln = 0;
+
+    /* C431 bit 2 (objet 0B) : F0h. */
+    Enemies_item(&s, 0x08, 0x04);
+    Enemies_item(&s, 0x09, 0x04);
+    Enemies_item(&s, 0x06, 0x04);
+    CHECK(s.guardTimer == ENEMY_ITEM_TIMER_LONG && s.killTimer == ENEMY_ITEM_TIMER_LONG &&
+          s.spawnPause == ENEMY_ITEM_TIMER_LONG, "C431 bit 2 : minuteries F0h");
+    Enemies_item(&s, 0x1A, 0);
+    CHECK(s.spawnPause == ENEMY_ITEM_TIMER, "fouet 1A : C440 = 96h (8D70 -> 8D7C)");
+    Enemies_death(&s);
+    CHECK(!s.guardTimer && !s.killTimer && !s.spawnPause && !s.armor, "70BF : minuteries a 0");
+
+    /* 03 : de face, degat 1 au lieu de 2 (C441 - 1) ; de dos, 2. Ennemi a droite. */
+    Enemies_item(&s, 0x03, 0);
+    CHECK(s.armor == ENEMY_ARMOR_HITS, "objet 03 : C441 = 10h");
+    s.energy = ENEMY_ENERGY_MAX;
+    s.enemy[0].active = 1;
+    s.enemy[0].x = 126;
+    v.facingLeft = 0;
+    CHECK(Enemies_frame(&s, &t, &v) == 1 && s.energy == ENEMY_ENERGY_MAX - ENEMY_CONTACT_DAMAGE / 2 &&
+          s.armor == ENEMY_ARMOR_HITS - 1, "armure de face : -1, C441 - 1");
+    s.recoil = 0;
+    s.invuln = 0;
+    v.facingLeft = 1;
+    CHECK(Enemies_frame(&s, &t, &v) == 1 && s.energy == ENEMY_ENERGY_MAX - 3 * ENEMY_CONTACT_DAMAGE / 2 &&
+          s.armor == ENEMY_ARMOR_HITS - 1, "armure de dos : -2");
+    for (f = 0; f < 15; f++) {
+        s.recoil = 0;
+        s.invuln = 0;
+        s.energy = ENEMY_ENERGY_MAX;
+        s.enemy[0].x = 126;
+        v.facingLeft = 0;
+        (void)Enemies_frame(&s, &t, &v);
+    }
+    CHECK(s.armor == 0, "armure : 16 coups de face");
+
+    /* 05 : 7806, tous les ennemis detruits. */
+    (void)Enemies_spawn(&s, ENEMY_SIDE_RIGHT, ENEMY_TYPE_A, 0xA0, 1);
+    (void)Enemies_spawn(&s, ENEMY_SIDE_LEFT, ENEMY_TYPE_B, 0xA0, 1);
+    Enemies_item(&s, 0x05, 0);
+    for (f = 0; f < ENEMY_MAX; f++) CHECK(!s.enemy[f].active, "objet 05 : ennemi %d detruit", f);
+}
+
+/* 7c. 06 (C440) : la boucle d'apparition 5ED8 est sautee 150 passes (300 images). */
+static void test_spawn_pause(void)
+{
+    const int normal = first_spawn_frame(0);
+    const int paused = first_spawn_frame(0x06);
+    CHECK(normal > 0 && paused == normal + 2 * ENEMY_ITEM_TIMER,
+          "C440 : premiere apparition %d images plus tard (obtenu %d -> %d)",
+          2 * ENEMY_ITEM_TIMER, normal, paused);
+}
+
 /* 8. Chute : sans sol sous lui un ennemi descend ; posé sur le sol de la salle (ligne 22 :
  * pieds en Y 192), il s'arrete. Carte synthetique : une seule rangee de tuiles pleines. */
 static void test_fall_to_floor(void)
@@ -1144,6 +1291,8 @@ int main(void)
     test_type4_motion();
     test_type4_timer();
     test_contact_recoil_invuln();
+    test_items();
+    test_spawn_pause();
     test_fall_to_floor();
     test_whip_kills_type1();
     test_type5();

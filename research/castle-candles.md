@@ -271,22 +271,22 @@ Hors fouet (`C422 = 0`), pour les objets `C500` de type >= `80` : centre `D = X 
 | 00 | - | rien (pas de flamme) |
 | 01 | `8DAF` | coeurs + 1 (`4594` : `C417` += 1 en BCD, max 99) ; son `0F` |
 | 02 | `8DB7` | coeurs + 5 (mesure : torche B de la cour) |
-| 03 | `8D98` | `C701` : bit 5 efface, bit 4 mis ; `C441` = 10 |
-| 04 | `8DA1` | `C701` : bit 4 efface, bit 5 mis ; `C441` = 10 |
-| 05 | `8DBB` | `7806`, `928D`, `C43E` = 18 ; son `1B` |
-| 06 | `8D7C` | minuterie `C440` = 96 (F0 si bit 2 de `C431`) |
-| 07 | `8DDE` | points (`4605`, B = 08) |
-| 08 | `8DCD` | minuterie `C43A` = 96 / F0 ; son `16` |
-| 09 | `8DE5` | minuterie `C434` = 96 / F0 |
+| 03 | `8D98` | `C701` : bit 5 efface, bit 4 mis ; `C441` = 10h (armure, voir 9.8) |
+| 04 | `8DA1` | `C701` : bit 4 efface, bit 5 mis ; `C441` = 10h (projectiles `D700` detruits au contact, `8610`) |
+| 05 | `8DBB` | `7806` (tous les objets `C800` et `D700` detruits, sans points), `928D`, `C43E` = 18h (eclair de la couleur de bordure) ; son `1B` |
+| 06 | `8D7C` | minuterie `C440` = 96h (F0h si bit 2 de `C431`) : apparitions arretees (`5EB8`) |
+| 07 | `8DDE` | **energie** + 8 (`4605` : `C415` += B, max 20h) ; ce ne sont pas des points |
+| 08 | `8DCD` | minuterie `C43A` = 96h / F0h : aucun contact ; son `16` |
+| 09 | `8DE5` | minuterie `C434` = 96h / F0h : le contact detruit l'ennemi |
 | 0A | `8D94` | `C701` bit 6 |
 | 0B, 0C, 0D | `8DF5`, `8DFC`, `8E03` | `C431` bits 2, 3, 4 |
 | 0E | `8E16` | `870C`, `C702` bit 0 |
-| 0F, 10 | `8E33`, `8E1D` | `C431` bit 6 et `C70F` = 3 ; `C702` bit 6 |
-| 11 | `8E26` | `C702` bit 7 |
+| 0F, 10 | `8E33`, `8E1D` | `C431` bit 6, `C70F` = 3 et `C701` bit 7 ; `C702` bit 6 (bit 7 efface) |
+| 11 | `8E26` | `C702` bit 7 (bit 6 efface) |
 | 12 | `8E79` | `C431` bit 1, `C701` bit 2, `C700` = 3 |
 | 13, 14 | `8E42`, `8E4B` | points (`44EC`, 5000 et 1000) |
 | 15 | `8E14` | rien (pas de flamme) |
-| 16 | `8E0D` | points (`4605`, B = 20) |
+| 16 | `8E0D` | **energie** + 20h (`4605`) |
 | 17 | `8E50` | **cle doree** : `C701` bit 1, `C700` = 1 |
 | 18 | `8E60` | **cle blanche** : `C701` bit 0 (prouve, `door-room7.md`) |
 | 19 | `8E14` | rien ici (coffre) |
@@ -319,7 +319,7 @@ Les noms des objets (croix, sablier, etc.) et leurs dessins ne sont pas releves 
 **PROVISOIRE** :
 - la flamme `C800` est remplacee par les etincelles de l'effet de flamme, et l'orbe EC par l'objet 07 de la planche ;
 - la cadence de la bougie murale (8 images) n'est pas mesuree ;
-- les contenus 0x1F (`+7`-`+9`) et les objets 03-16 (minuteries, points, bits `C701`/`C702`) n'ont pas d'effet ;
+- objets 03-16 : voir 9.8 (03, 05-09, 0C, 0D portes ; 0A, 0F, 10, 11 sans effet) ;
 - 1B a 1D (dague, hache, croix) ne changent pas l'arme ;
 - les bougies restent eteintes jusqu'au changement de stage (le rechargement du flux de stage n'est pas trace) ;
 - (fait) icone de la cle doree : voir 9.7.
@@ -366,9 +366,39 @@ La cour n'en a pas. Les blocs 0x1F de la salle 7 du hall (+9 = E1), de la salle 
 - Tests : `tests/test_candles.c` (coeur attrape en chute, contenu du coffre non ramasse en chute, cle refusee, icone, attente du coffre, blocs du stage 2, mort) ; scenario `tests/md_scenarios/p_gold_key_chest.txt` (hall salle 2 : prise de la cle, mort avec la cle, icone gardee jusqu'a l'etat 4, retour de la cle et du coffre, ouverture, gros coeur apres 32 images, coeurs 0 -> 5).
 
 **PROVISOIRE / non porte** :
-- effets des contenus 03, 0A, 0C, 0D, 0F, 11 (minuteries, bits `C701`/`C702`) : objets ramassables sans effet, comme pour les bougies ;
+- effets des contenus 03, 0C, 0D : portes (voir 9.8) ; 0A, 0F, 11 : sans effet (voir 9.8) ;
 - objet 0x12 (3 cles, icone 0x12) : absent des stages 0-2 ;
 - blocs 0x1F a `+9 & C0 = C0` (`9179`) : le bloc se casse sans rien donner et ne revient pas ;
 - les eclats de briques du bloc (`88C7`, `C5A6`) ne sont pas dessines ;
 - l'orbe `EC` est remplace par l'objet 07 ; coffre et objets poses sont des sprites (le MSX les dessine dans le decor, `8CC1`/`8CE6`) ;
 - pas de trace openMSX de la prise de cle ni de l'ouverture du coffre.
+
+### 9.8 Effets des objets des stages 0 a 2 (lecture du code, 2026-10-29)
+
+**Objets presents** (`candles_md.c`) : bougies 05 (stage 2 salle 2), 06 (hall 1), 07 (stage 2 salle 1), 08 (stage 2 salle 2), 09 (hall 0 et 1, stage 2 salles 3 et 4), 10 (hall 6, stage 2 salle 5), 1C (bloc, stage 2 salle 4) ; coffres 03, 0C, 0D, 0F, 11 ; blocs 0x1F de contenu 0A et 0C. Absents : 04, 0B, 0E, 12-14, 16, 1E.
+
+**Lu dans le code** (banques 0 a 2, `tools/disasm_rom_window.py`). Aucune trace openMSX dediee : le port est verifie par les tests natifs (`tests/test_enemies.c` `test_items`, `test_spawn_pause` ; `tests/test_candles.c`) et le scenario MD `t_item_effects` (07, 09, 08 en hall salle 0).
+
+- **Cadence** : `75C0` (`C440`), `75C6` (`C434`), `75CC` (`C42D`) et `75E2` (`C43A`) sont appeles de `6B27`-`6B2A`, dans la routine de Simon, comme la baisse de `C42D` mesuree a une fois toutes les 2 images (180 images pour 5Ah). 96h = 300 images, F0h = 480. Phase de la baisse : PROVISOIRE.
+- **09, `C434`** (`7E67`, `7EB0`) : tant que `C434` != 0, les gardes du contact (`C42D`, `C43A`, `C420` >= 5) sont sautees ; un ennemi `C800` touche est detruit (`81AB` : points de la table `81CE`, comme au fouet ; `9A3E`), effet 0D, un par passe, sans degat ni recul. Les projectiles `D700` (`7EE4` -> `822A`) donnent 100 points. Simon clignote (couleur 8 une passe sur deux, `7932`).
+- **08, `C43A`** (`7E72`, `7EEF`) : tant que `C43A` != 0, aucun contact. Effet 17 quand `C43A` tombe a 10h (`75EA`). Simon clignote (couleur 0Eh, `7924`).
+- **06, `C440`** (`5EB8`) : la boucle des canaux d'apparition `5ED8` est sautee (types 1, 2, 4...) ; la minuterie partagee `CF10` ne bouge pas. Les fouets 1A a 1D passent aussi par `8D7C` (`8D70` sans RET) : prendre un fouet arrete les apparitions 300 images.
+- **07 / 16** : `4605` ajoute B a `C415` (energie, max 20h) puis redessine la barre (`45B9`).
+- **05** : `7806` detruit tous les objets `C800` (`9A3A`, sans points) et `D700` ; `928D` met +3 = FF aux objets `C5B5`/`C5C5` ; `C43E` = 18h fait clignoter la couleur de bordure (`7604` : `F3EB` = 0Eh ou 0, `CHGCLR`).
+- **03, armure** (`816C`-`81A8`) : degat = table `81CE` doublee, sauf si `C701` bit 4 et Simon tourne vers l'ennemi (`C427 - X` et `C42C`) : degat de la table, et `C441` - 1 ; a 0, `C701` bit 4 efface et cases du HUD redessinees (`8EE6`). Avec `C701` & 30h, la pose de Simon prend +14h (`761E` : graphismes avec bouclier).
+- **0A** (`C701` bit 6) : `713B` -> `715F` : avec 5 coeurs ou plus, une touche (`C006` bit 1) retire 5 coeurs et lance `C43B` = 5Ah (96h avec `C431` bit 2), `D010` bit 0 (ennemis figes) et le son FB : une arme secondaire qui arrete le temps.
+- **0F** (`C701` bit 7, `C70F` = 3, `C431` bit 6) : `9566` : sur une touche (`C00B` bit 1), `C70F` - 1 (3 usages, puis bit 7 efface) et un affichage `47FE`/`490A` (carte ? non verifie). `C431` bit 6 : aucun lecteur trouve par adresse directe.
+- **10, 11** (`C702` bits 6, 7) : lus en `9418` pour choisir `C707` dans la table `9428` (9 entrees de 4 octets) apres `93FF` ; role non compris.
+- **Cases du HUD** (`8EE6`, table `8F19`) : `C701` bits 7 a 3 -> objets 0F (x E8), 0A (D8), 04 et 03 (C8), 1E (B8), en y 12.
+- **Fin de mort** (`70BF`) : `C434`, `C43A`, `C43B`, `C440`, `C441`, `C431`, `C702`, `C700` a 0, `C701` &= 80h.
+
+**Porte** (`sgdk/src/enemies.c` `Enemies_item` / `Enemies_death`, `candles.c` `VK_CANDLE_EVENT_PICK`, `picked` = `C419`, `vk_candles_sound`, `main.c`, `actors.c`) :
+- 07 et 16 (energie), 09 (contact destructeur : points et effet 0D), 08 (aucun contact, effet 17 a 10h), 06 et fouets (`C440`), 05 (ennemis detruits, effet 1B), 03 (armure, 16 coups de face), `C431` bit 2 (F0h), remise a 0 en fin de mort ; son de chaque handler (`8D3E`).
+- PROVISOIRE : X de l'ennemi pour le cote de l'armure (centre de sa boite pour les types 1 et 4).
+
+**Non porte** :
+- clignotement de Simon (`7918`-`794A`) : Simon partage PAL2 avec les ennemis, une couleur unique demanderait une palette a part ;
+- eclair de bordure de 05 (`C43E`) et `928D` ;
+- cases d'objets du HUD (`8EE6`) et pose au bouclier (`761E`) : graphismes non extraits ;
+- 0A (arret du temps), 0F (affichage a 3 usages), 10/11 (`C707`), `C431` bit 6 : touches et routines non portees ou role non compris ;
+- objet 04 et projectiles `D700` : absents du port.

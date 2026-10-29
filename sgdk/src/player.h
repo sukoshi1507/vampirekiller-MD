@@ -24,6 +24,12 @@ void vk_player_reset(VKPlayer *player);
 void vk_player_tick(VKPlayer *player, int direction, int jump_pressed);
 void vk_player_tick_controls(VKPlayer *player, const VKByte *map, VKByte stage,
                              int direction, int jump_pressed, int down, int up);
+/* Same, with the jump table chosen by C431 bit 4 (6CE7): high_jump != 0 takes the
+ * 21 steps of 6D94 (object 0D), else the 19 steps of 6D95. */
+#define VK_JUMP_STEPS 19
+#define VK_JUMP_STEPS_HIGH 21
+void vk_player_tick_jump(VKPlayer *player, const VKByte *map, VKByte stage,
+                         int direction, int jump_pressed, int down, int up, int high_jump);
 void vk_player_tick_map(VKPlayer *player, const VKByte *map, VKByte stage,
                         int direction, int jump_pressed);
 

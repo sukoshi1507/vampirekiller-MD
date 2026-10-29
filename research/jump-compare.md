@@ -143,7 +143,7 @@ Cause dans le code MD (lecture de `sgdk/src/player.c`, `vk_player_tick_controls`
 | Blocage au départ | `6B97` appelle `7B78` (tuile à X, Y-44) ; si solide, `RET C` : pas de saut | aucun test de plafond au départ | lu dans le code (sens de la retenue déduit de `7C5E`) ; non tracé |
 | Décalage de départ | pas au tick suivant : `C420` posé au tick 177, premier pas au tick 179 (4 images après l'appui) | premier pas à la première image (k = 1) | prouvé (trace) ; cause précise inconnue |
 | Atterrissage | sonde de sol seulement si `C428 >= 9` (`6D13`, `CP 9`) ; sinon le saut continue | atterrissage testé seulement en descente | lu dans le code ; équivalent sur sol plat |
-| Table de saut | `C431` bit 4 = 0 : table `6D95` (19 valeurs) ; bit 4 = 1 : table `6D94` (21 valeurs) | une seule table | prouvé pour le cas testé (`C431` = 0) ; la seconde table n'a pas été tracée |
+| Table de saut | `C431` bit 4 = 0 : table `6D95` (19 valeurs) ; bit 4 = 1 : table `6D94` (21 valeurs) | les deux tables (`vk_jump_deltas`, `vk_jump_deltas_high`, `vk_player_tick_jump`) | prouvé pour le cas testé (`C431` = 0) ; la seconde table est lue dans le code, non tracée |
 | Horizontal en l'air | 2 px par tick, dans la même routine que le pas vertical (`6D61`/`6D67` appellent la marche puis `6CE7`) | 1 px par image | prouvé (trace) ; même vitesse moyenne |
 
 ### (4) Dépendance à la touche tenue
@@ -182,7 +182,7 @@ Cadencer la trajectoire de saut sur un tick de 30 Hz, comme le MSX2, sans touche
 
 - Cadence et trajectoire de la **chute** au MSX2 (table `6F81`, 2,4,6,6) : non tracées. Le portage `mode == 4` suit le même schéma que le saut en MD.
 - Cause de la latence de 2 ticks entre `C420` posé au tick 177 et le premier pas au tick 179 (ordre d'appel de la routine d'état) : non identifiée.
-- Table à 21 entrées (`6D94`, `C431` bit 4) : non tracée.
+- Table à 21 entrées (`6D94`, `C431` bit 4) : non tracée. **Lu dans le code et porté** (2026-10-29) : `6CE7` prend `BC = 6D94`, `D = 15h` ; valeurs `-6,-6,-6,-5,-5,0,-4,-3,-2,-1,0,0,1,2,3,4,5,5,6,6,6` (somme nulle), soit un sommet à 38 px au lieu de 32 et un retour au sol de départ au pas 21. Le test de `6D1C` (`C428 - 2 >= 13h`) ne dépend pas de la table : avec `6D94`, un saut qui retombe à sa hauteur de départ arrive au pas 21, donc `CFF0 = 1` et l'effet 07 joue (le saut normal arrive au pas 19, sans 07). Porté : `gameplay.c` lève `VK_EVENT_LAND` pour un atterrissage en mode 1 au pas >= 21 (`VK_JUMP_THUD_STEP`). Non porté : `6D6D` décale aussi X de `(C428 - 13h) * 8 / 256` px quand `C420` vaut 2 ou 3 (ce cas n'est pas identifié ; en saut `C420 = 1` et `6D73` sort tout de suite).
 - Appui UP en l'air (`C420` = 1) : non testé.
 - Arrêt de la marche à X = 14 en `turn_jump` : cause non identifiée.
 - Blocage au départ par plafond (`7B78`) : lu dans le code, non testé.

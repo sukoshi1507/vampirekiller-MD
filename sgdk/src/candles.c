@@ -50,6 +50,7 @@ void vk_candles_begin(VKCandles *c)
     c->weapon = 0;
     c->hud_key = 0;
     c->c431 = 0;
+    c->picked = 0;
     for (s = 0; s < VK_CANDLE_STAGES; s++)
         for (r = 0; r < VK_CANDLE_ROOMS; r++)
             c->out[s][r] = c->taken[s][r] = 0;
@@ -357,6 +358,7 @@ static int pick(VKCandles *c, VKDrop *d)
     if (kind == VK_OBJ_GOLD_KEY && c->gold_keys) return VK_CANDLE_EVENT_NONE;
     mark_taken(c, d);
     d->state = VK_DROP_NONE;
+    c->picked = kind;                /* 8D30: LD (C419),A */
     if (kind == VK_OBJ_SMALL_HEART || kind == VK_OBJ_BIG_HEART)
     {
         const int hearts = c->hearts + (kind == VK_OBJ_SMALL_HEART ? 1 : 5);
@@ -372,18 +374,38 @@ static int pick(VKCandles *c, VKDrop *d)
     if (kind >= VK_OBJ_CHAIN_WHIP && kind <= VK_OBJ_CHAIN_WHIP + 3)
     {
         c->weapon = (VKByte)(kind - 0x19);
-        return VK_CANDLE_EVENT_WEAPON;
+        /* 8D70 falls into 8D7C: C440 too (enemies.c). */
+        return VK_CANDLE_EVENT_WEAPON | VK_CANDLE_EVENT_PICK;
     }
-    /* 8DF5-8E03: C431 bits 2, 3, 4, then 8D8A (effect 12). Only bit 3 (recoil of
-     * 2.5 px, gameplay.c) is used: bit 2 doubles timers and bit 4 picks the jump
-     * table 6D94, neither ported. */
+    /* 8DF5-8E03: C431 bits 2, 3, 4, then 8D8A (effect 12). Bit 3: recoil of 2.5 px,
+     * bit 4: jump table 6D94 of 21 steps (gameplay.c, player.c); bit 2 doubles the
+     * item timers (enemies.c). */
     if (kind >= 0x0B && kind <= 0x0D)
     {
         c->c431 |= (VKByte)(1u << (kind - 0x0B + 2));
         return VK_CANDLE_EVENT_ITEM;
     }
-    /* PROVISIONAL: the other effects (timers, points, C701/C702 bits) are not ported. */
+    /* 8D98 (03), 8DBB (05), 8D7C (06), 8DDE (07), 8DCD (08), 8DE5 (09), 8E0D (16):
+     * energy, armor, timers and the enemy wipe live in enemies.c (Enemies_item). */
+    if (kind == 0x03 || (kind >= 0x05 && kind <= 0x09) || kind == 0x16)
+        return VK_CANDLE_EVENT_PICK;
+    /* PROVISIONAL: the other effects (C701/C702 bits of 04, 0A, 0E-12, 1E, points of
+     * 13-14) are not ported; none but 0A, 0F, 10 and 11 is found in stages 0-2. */
     return VK_CANDLE_EVENT_NONE;
+}
+
+VKByte vk_candles_sound(VKByte kind)
+{
+    switch (kind)
+    {
+    case 0x00: case 0x15: case 0x19: return 0;                 /* 8E14: POP HL, no 509F */
+    case 0x01: case 0x02: case 0x12: return 0x0F;              /* 8DB4, 8E90 */
+    case 0x05: return 0x1B;                                    /* 8DCA */
+    case 0x08: return 0x16;                                    /* 8DDB */
+    case 0x13: case 0x14: return 0x10;                         /* 8E48 */
+    case 0x17: case 0x18: return 0x14;                         /* 8E5D, 8E68 */
+    default: return kind < 0x1F ? 0x12 : 0;                    /* 8D8A, 8E30 */
+    }
 }
 
 int vk_candles_tick(VKCandles *c, VKGame *game, const VKWhip *whip, int *hit_index)

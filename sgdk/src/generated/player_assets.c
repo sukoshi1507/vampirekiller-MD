@@ -336,6 +336,9 @@ const VKByte vk_player_room[768] = {
 const signed char vk_jump_deltas[19] = {
     -6,-6,-5,-5,0,-4,-3,-2,-1,0,0,1,2,3,4,5,5,6,6,
 };
+const signed char vk_jump_deltas_high[21] = {
+    -6,-6,-6,-5,-5,0,-4,-3,-2,-1,0,0,1,2,3,4,5,5,6,6,6,
+};
 const VKByte vk_fall_deltas[4] = {
     2,4,6,6,
 };
