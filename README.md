@@ -84,8 +84,9 @@ Ce qui n'est pas porté ou reste provisoire :
   marchand), le marchand, les armes secondaires, les fouets 1C et 1D (seule la pause
   des apparitions est portée) et les autres contenus (effet de 04 et de 1E, 0E, 12,
   points 13/14).
-  Les effets portés viennent de la lecture du code, sans trace openMSX dédiée ; la phase
-  des minuteries est provisoire (`research/castle-candles.md` 9.8).
+  Les effets portés viennent de la lecture du code ; le clignotement de Simon (08, 09 et
+  après un coup) est calé image par image sur une trace openMSX, les autres minuteries
+  sans trace dédiée (`research/castle-candles.md` 9.8).
 - **Stages 3 et suivants, châteaux, attaques autres que le fouet** : non portés.
 - **Énergie (provisoire)** : lieu de reprise (entrée du hall), commandes bloquées
   pendant la mort : non relevés sur le MSX2. La chute dans le vide tue
