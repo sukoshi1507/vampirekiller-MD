@@ -12,6 +12,7 @@ _Static_assert(STAIR_TILE_INDEX + VK_PLAYER_STAIR_POSES * VK_PLAYER_TILES_PER_PO
                "stair pose tiles before the torch tiles");
 #include "candle_view.h"
 #include "psg_player.h"
+#include "generated/weapons_md.h"
 
 _Static_assert(ENEMY4_TILE_INDEX + VK_ENEMY4_TILE_COUNT <= HUD_TILE_INDEX,
                "sprite tiles 400.. must end before the HUD tiles");
@@ -24,6 +25,15 @@ _Static_assert(ENEMY5_TILE_INDEX + VK_ENEMY2_TILE_COUNT <= HUD_TILE_INDEX,
                "type 2 tiles (loaded in the type 5 block) must end before the HUD tiles");
 _Static_assert(ENEMY_TIME_STOP_ITEM == VK_ITEM_BIT_0A,
                "object 0A: Enemies_useTimeStop reads the C701 bit 6 of vk_candles.c701");
+
+/* Thrown weapons (weapons.c): one 16x16 sprite per slot (sprites 1 and 2, in Simon's
+ * delayed group: the MSX shows them from D618-D627 with Simon's SAT), whose frame is
+ * copied in 4 tiles after the crouch frames when it changes. */
+#define SHOT_TILE_INDEX (CROUCH_TILE_INDEX + VK_CROUCH_TILE_COUNT)
+_Static_assert(SHOT_TILE_INDEX + VK_WEAPON_SLOTS * VK_WEAPON_TILES_PER_FRAME <= 1440,
+               "shot tiles before the SGDK font");
+VKWeapons vk_weapons;
+static int shot_loaded[VK_WEAPON_SLOTS];
 
 /* Simon, whip and hall enemies on screen. Their gameplay lives in player.c,
  * whip.c and enemies.c; this module only feeds them and draws the result. */
@@ -114,6 +124,69 @@ void vk_step_time_stop(int down_pressed, int whip_pressed)
     if (!room_key()) return;   /* no 0A in the courtyard, whose frames run no Enemies_frame */
     if (Enemies_useTimeStop(&vk_enemies, &vk_candles.hearts, vk_candles.c431, vk_candles.c701))
         vk_psg_timer();        /* 718F: FB */
+}
+
+/* Object 1E (714D, before 715F of object 0A): LEFT (7194) or RIGHT (71A1) newly
+ * pressed in a jump (C420 = 1), not on a B press (7116), with C701 bit 3 and 5
+ * hearts: the holy water leaves from C460. */
+void vk_step_water(int left_pressed, int right_pressed, int whip_pressed)
+{
+    if (whip_pressed || (!left_pressed && !right_pressed) || simon_state() != ENEMY_SIMON_JUMP) return;
+    if (!(vk_candles.c701 & VK_ITEM_BIT_1E)) return;
+    vk_weapons_water(&vk_weapons, &vk_candles.hearts, left_pressed);
+}
+
+static int shot_touch(const void *ctx, int slot, int x, int y, int h, int l)
+{
+    return vk_shot_touches(&((const VKWeapons *)ctx)->shot[slot], x, y, h, l);
+}
+
+int vk_step_weapons(int launch, int *candle_events)
+{
+    VKWeaponEvents ev;
+    const VKWeaponSimon simon = { vk_game.player.x, vk_game.player.y, simon_state(),
+                                  vk_game.player.facing };
+    const u16 d000 = vk_game.area == VK_AREA_INTERIOR ? vk_game.stage : 0;
+    int i, hit = -1;
+    *candle_events = 0;
+    if (launch) vk_weapons_launch(&vk_weapons, vk_whip.level);
+    if (!vk_weapons_frame(&vk_weapons, &simon, vk_candles.weapon, vk_game_collision(&vk_game),
+                          (VKByte)d000, &ev))
+        return -1;
+    for (i = 0; i < ev.sounds; i++) vk_psg_effect(ev.sound[i]);
+    if (ev.drop) vk_candles_drop(&vk_candles, ev.drop_x, ev.drop_y, 0x1C);   /* 8992 */
+    if (ev.lost)
+    {
+        vk_candles_weapon_lost(&vk_candles);   /* 8E93 */
+        vk_set_whip_level(0);
+    }
+    if (!vk_weapons.shot[0].state && !vk_weapons.shot[1].state) return -1;   /* 801E */
+    /* 801E: the first enemy touched by a shot, one per pass. */
+    if (room_key() && enemy_room_key == room_key())
+    {
+        int slot = 0, score = 0;
+        if (Enemies_shotHit(&vk_enemies, shot_touch, &vk_weapons, &slot, &score))
+        {
+            vk_psg_effect(VK_SFX_HIT);          /* 804C */
+            vk_hud_add_score((u32)score * 100); /* 81AB */
+            vk_weapons_enemy_hit(&vk_weapons, slot);
+        }
+    }
+    /* 80A6: the first lit candle touched (8460), one per pass; C433 = its mode. */
+    for (i = 0; i < vk_candles.count; i++)
+    {
+        const VKCandleDef *def = vk_candles_def(&vk_candles, i);
+        int slot;
+        if (!vk_candles_lit(&vk_candles, i)) continue;
+        slot = vk_shot_touches_candle(&vk_weapons, def->x, def->y, def->mode);
+        if (slot < 0) continue;
+        *candle_events = vk_candles_hit(&vk_candles, i);
+        if (def->mode == VK_CANDLE_HIDDEN_BLOCK) vk_game_room_block(&vk_game, def->x, def->y, 0);
+        vk_weapons_candle_hit(&vk_weapons, slot, def->mode);
+        hit = i;
+        break;
+    }
+    return hit;
 }
 
 void vk_step_enemies(void)
@@ -273,6 +346,7 @@ static u16 late_enemy_count;
 static bool late_valid;
 static int late_shield = -1;
 static u8 late_color;
+static int late_shot[VK_WEAPON_SLOTS] = { -1, -1 };
 
 void vk_actors_flush(void)
 {
@@ -280,6 +354,7 @@ void vk_actors_flush(void)
     late_enemy_count = 0;
     late_shield = -1;
     late_color = 0;
+    late_shot[0] = late_shot[1] = -1;
 }
 
 /* Exchanges the n entries at cache[first] (this turn) with the delayed ones. */
@@ -350,6 +425,7 @@ void vk_show_player(const VKPlayer *shown)
     const u16 crouch_frame = attack_frame ? (u16)vk_whip_crouch_visual_step(&vk_whip) : 0;
     const u16 crouch_facing = attack_frame ? vk_whip.facing : player->facing;
     const int shield = shield_pose(player, crouch_mode, attack_frame);
+    int shot_frame[VK_WEAPON_SLOTS];
     /* Standing body on sprite 0. In crouch mode and during any attack the body
      * is the two-half composition drawn on sprites 5 and 6 (below); the lash
      * is part of those ROM-derived frames, so no separate lash is overlaid. */
@@ -379,38 +455,23 @@ void vk_show_player(const VKPlayer *shown)
             (s16) player->y - (player->pose >= VK_PLAYER_RECOIL_POSE ? 32 : 31), SPRITE_SIZE(3, 4),
             TILE_ATTR_FULL(simon_pal, TRUE, FALSE, FALSE,
                            PLAYER_TILE_INDEX + player->pose * VK_PLAYER_TILES_PER_POSE), 1);
+    /* Sprites 1 and 2: the shots of C450 and C460 (7535: SAT D618/D620 at X - 8,
+     * Y - 16, shown one line lower, the two layers composed in one PAL2 frame by
+     * tools/build_weapons_md.py). Sprites 3 and 4 stay parked: the ROM compositions
+     * already hold the lash and the arm. */
     {
-        int left = 0, top = 0, right = 0, bottom = 0;
-        /* The MSX2 ROM composition already contains the visible lash.
-         * Keep gameplay reach in whip.c, but never overlay the old synthetic
-         * three-segment graphics on top of the ROM sprite. */
-        int count = 0;
-        int segment;
-        if (count) vk_whip_bounds(&vk_whip, &left, &top, &right, &bottom);
-        for (segment = 0; segment < 3; segment++)
+        u16 k;
+        for (k = 0; k < VK_WEAPON_SLOTS; k++)
         {
-            s16 sx = -32;
-            s16 sy = -32;
-            u16 tile = WHIP_TILE_INDEX;
-            if (segment < count)
-            {
-                /* Sprite positions and collision reach now match exactly.
-                 * Left-facing attacks are drawn from Simon outwards. */
-                sx = (s16)(vk_whip.facing ? right - 8 - segment * 8 : left + segment * 8);
-                sy = (s16)top - 2;
-                tile += (u16)(segment == count - 1 ? 2 : (segment == 0 ? 0 : 1));
-            }
-            VDP_setSpriteFull((u16)(segment + 1), sx, sy, SPRITE_SIZE(1, 1),
-                TILE_ATTR_FULL(PAL3, TRUE, FALSE, FALSE, tile), (u16)(segment + 2));
+            const VKShot *shot = &vk_weapons.shot[k];
+            const int frame = shot_frame[k] = vk_weapons_frame_index(shot);
+            VDP_setSpriteFull((u16)(1 + k), frame < 0 ? -32 : (s16)shot->x - 8,
+                frame < 0 ? -32 : (s16)shot->y - 15, SPRITE_SIZE(2, 2),
+                TILE_ATTR_FULL(PAL2, TRUE, FALSE, FALSE, SHOT_TILE_INDEX + k * VK_WEAPON_TILES_PER_FRAME),
+                (u16)(2 + k));
         }
-    }
-    /* Retired placeholder arm: ROM-derived body already contains the arm, so
-     * this sprite stays parked off-screen. */
-    {
-        int frame = vk_whip_arm_frame(&vk_whip);
-        VDP_setSpriteFull(4, -32, -32, SPRITE_SIZE(1, 1),
-            TILE_ATTR_FULL(PAL3, TRUE, FALSE, vk_whip.facing,
-                           ARM_TILE_INDEX + (frame ? (u16)(frame - 1) : 0)), 5);
+        for (k = 3; k <= 4; k++)
+            VDP_setSpriteFull(k, -32, -32, SPRITE_SIZE(1, 1), 0, (u16)(k + 1));
     }
     /* Two 32x32 hardware sprites cover a 64x32 anchored composition, both for
      * the standing attack and for the crouch body / crouched attack.
@@ -470,6 +531,17 @@ void vk_show_player(const VKPlayer *shown)
             shield_loaded = late_shield;
         }
         if (late_valid) load_simon_color(late_color);
+        if (late_valid)
+            for (u16 k = 0; k < VK_WEAPON_SLOTS; k++)
+                if (late_shot[k] >= 0 && late_shot[k] != shot_loaded[k])
+                {
+                    VDP_loadTileData(&vk_weapon_tiles[late_shot[k] * VK_WEAPON_TILES_PER_FRAME * 8],
+                                     (u16)(SHOT_TILE_INDEX + k * VK_WEAPON_TILES_PER_FRAME),
+                                     VK_WEAPON_TILES_PER_FRAME, DMA_QUEUE);
+                    shot_loaded[k] = late_shot[k];
+                }
+        late_shot[0] = shot_frame[0];
+        late_shot[1] = shot_frame[1];
         late_enemy_count = enemy_count;
         late_shield = shield_now;
         late_color = color;
@@ -486,17 +558,21 @@ void vk_show_player(const VKPlayer *shown)
                       : shown_enemies ? ENEMY_SPRITE_BASE + shown_enemies : (target_visible ? 8 : 7), DMA_QUEUE);
 }
 
-/* Whip level given by an object (C416, candles.c): loads its standing frames.
- * PROVISIONAL: C416 2..4 are the dagger, axe and cross; only the levels with an
- * asset (whip.h) are taken, the others keep the current whip. */
+/* Whip level given by an object (C416, candles.c): loads its standing frames, the
+ * level 2 frames (throw pose, upper compositions 12-14) for the thrown weapons 2..4. */
+static void load_whip_level(int level)
+{
+    if (level == 1)
+        VDP_loadTileData((const u32 *)vk_whip_level1_tiles, WHIP_LEVEL_TILE_INDEX, WHIP_LEVEL_TILE_COUNT, CPU);
+    else if (level >= VK_WHIP_LEVEL_THROW)
+        VDP_loadTileData((const u32 *)vk_whip_level2_tiles, WHIP_LEVEL_TILE_INDEX, WHIP_LEVEL_TILE_COUNT, CPU);
+}
+
 void vk_set_whip_level(int level)
 {
     if (vk_whip_set_level(&vk_whip, level) < 0) return;
     whip_level_choice = level;
-    if (level == 1)
-        VDP_loadTileData((const u32 *)vk_whip_level1_tiles, WHIP_LEVEL_TILE_INDEX, WHIP_LEVEL_TILE_COUNT, CPU);
-    else if (level == 2)
-        VDP_loadTileData((const u32 *)vk_whip_level2_tiles, WHIP_LEVEL_TILE_INDEX, WHIP_LEVEL_TILE_COUNT, CPU);
+    load_whip_level(level);
 }
 
 /* Flame and spark tiles with MSX colours 1 and 2 moved to PAL3 entries 4 and 5,
@@ -536,10 +612,8 @@ void vk_load_whip_graphics(void)
     VDP_loadTileData((const u32 *)vk_simon_crouch_tiles, CROUCH_TILE_INDEX, VK_CROUCH_TILE_COUNT, CPU);
     vk_whip_reset(&vk_whip);
     vk_whip_set_level(&vk_whip, whip_level_choice);
-    if (vk_whip_level(&vk_whip) == 1)
-        VDP_loadTileData((const u32 *)vk_whip_level1_tiles, WHIP_LEVEL_TILE_INDEX, WHIP_LEVEL_TILE_COUNT, CPU);
-    else if (vk_whip_level(&vk_whip) == 2)
-        VDP_loadTileData((const u32 *)vk_whip_level2_tiles, WHIP_LEVEL_TILE_INDEX, WHIP_LEVEL_TILE_COUNT, CPU);
+    load_whip_level(vk_whip_level(&vk_whip));
+    shot_loaded[0] = shot_loaded[1] = -1;
     vk_hide_targets();
     last_attack_frame = -1;
     shield_loaded = -1;              /* the scene tiles may have covered the slot */

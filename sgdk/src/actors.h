@@ -4,6 +4,7 @@
 #include <genesis.h>
 #include "player.h"
 #include "enemies.h"
+#include "weapons.h"
 #include "generated/player_assets.h"
 #include "generated/simon_attack_md.h"
 #include "generated/whip_level1_md.h"
@@ -49,6 +50,8 @@
 
 /* Hall enemies (enemies.c). Energy and invulnerability live here across rooms. */
 extern EnemyState vk_enemies;
+/* Thrown weapons, slots C450 and C460 (weapons.c). */
+extern VKWeapons vk_weapons;
 
 /* New game or new life: Enemies_init (full energy, no invulnerability or
  * recoil) and a rebuild of the room's enemies on the next step. */
@@ -73,6 +76,12 @@ void vk_step_enemies(void);
 /* Object 0A, before vk_step_enemies: DOWN newly pressed in a jump stops the enemies
  * for 5 hearts (Enemies_useTimeStop) and plays FB. */
 void vk_step_time_stop(int down_pressed, int whip_pressed);
+/* Object 1E: LEFT or RIGHT newly pressed in a jump throws the holy water (714D). */
+void vk_step_water(int left_pressed, int right_pressed, int whip_pressed);
+/* One frame of the thrown weapons: launch at the end of a throw (vk_whip_tick), the
+ * pass of 72B2, then the hits of 801E (enemies) and 80A6 (candles). Returns the
+ * candle put out (its vk_candles_hit events in *candle_events), -1 for none. */
+int vk_step_weapons(int launch, int *candle_events);
 /* "F0".."F4" whip keyframe check at the top right, redrawn on change only. */
 void vk_draw_attack_frame_label(void);
 

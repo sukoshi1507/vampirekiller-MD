@@ -101,6 +101,8 @@ typedef struct {
     VKByte box_timer_on;             /* C5E5 = FF: 8F55 counts C5E6 down */
     VKByte box_timer;                /* C5E6 */
     VKByte box_phase;                /* 8A4A runs at every other frame (state 5 pass): 1 between */
+    VKByte hud_weapon;               /* object 8E9A last drew in the HUD weapon box at (80h, 0Ch):
+                                      * C416 + 19h, 0 none */
 } VKCandles;
 
 void vk_candles_begin(VKCandles *c);
@@ -116,7 +118,8 @@ void vk_candles_new_life(VKCandles *c, VKByte stage);
  * item box stay drawn until the HUD is drawn again (vk_candles_hud, 8EE6). */
 void vk_candles_death(VKCandles *c);
 /* HUD drawn again (4513 -> 8EB4 -> 8EC9: state 4 at 4237, game over at 42F8):
- * the gold key icon while C700 > 0 (and C701 bit 1 or 2), else nothing. */
+ * the gold key icon while C700 > 0 (and C701 bit 1 or 2), else nothing; and the
+ * weapon box (4528 -> 8E9A): object C416 + 19h, or nothing for C416 = 0. */
 void vk_candles_hud(VKCandles *c);
 /* 8EE6 (room load 6316, HUD redraw 4513, armor used up 81A4): the item box
  * (x B8..F7, y 12..27) is cleared and the objects of C701 bits 7..3 drawn. */
@@ -126,6 +129,12 @@ void vk_candles_armor_out(VKCandles *c);
 /* 8C0B: the white key of a hidden block was taken (items.c): the stream flag the
  * key carried is cleared, so the block of the current room does not come back. */
 void vk_candles_white_key_taken(VKCandles *c);
+/* 8E93: the axe or the cross is lost (screen edge, or the axe on a block): C416 = 0
+ * and 8E9A clears the HUD weapon box. */
+void vk_candles_weapon_lost(VKCandles *c);
+/* 8992 (the thrown axe on a block, 74A5): a flame and a falling object at (x, y), as
+ * a candle's drop but without the small heart of 8A29. */
+void vk_candles_drop(VKCandles *c, VKByte x, VKByte y, VKByte kind);
 /* Debug (A+B): every candle of the current room is lit again. */
 void vk_candles_relight(VKCandles *c);
 /* Stage index of vk_candle_first: 0 courtyard, then the castle stage. */

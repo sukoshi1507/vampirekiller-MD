@@ -110,10 +110,13 @@ Le détail par sujet est dans [research/INDEX.md](research/INDEX.md).
 | Croix gauche/droite | marche | curseurs |
 | HAUT / BAS | escaliers ; BAS au sol : accroupi | HAUT / BAS |
 | C | saut | HAUT (saut) |
-| B | fouet | ESPACE |
+| B | fouet, ou lancer de l'arme (dague 1B, hache 1C, croix 1D) | ESPACE |
+| GAUCHE / DROITE pendant un saut | eau bénite (objet 1E, 5 cœurs) | GAUCHE / DROITE pendant un saut (`714D`) |
 | BAS pendant un saut | arrêt du temps (objet 0A, 5 cœurs) | BAS pendant un saut (`C006` bit 1, `C420` = 1, `7136`-`716F`) |
 | START | pause | F1 (pause) |
 
+L'eau bénite garde aussi la touche du MSX2 : GAUCHE ou DROITE nouvellement pressée en
+l'air, avec 5 cœurs (`research/secondary-weapons.md`).
 L'arrêt du temps garde la touche du MSX2 : BAS nouvellement pressé en l'air, hors de
 l'image d'un coup de fouet. En l'air, BAS ne sert à rien d'autre (l'accroupi n'existe
 qu'au sol), et aucun bouton A n'entre en jeu : les raccourcis de debug restent libres.

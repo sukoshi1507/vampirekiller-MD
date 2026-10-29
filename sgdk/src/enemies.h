@@ -291,6 +291,14 @@ int Enemies_whipHitType1Rom(EnemyState *s, int simonX, int simonY, int facingLef
  * pas touchables (+E = 0). Retourne le nombre d'hommes-poissons tues. */
 int Enemies_whipHitType2(EnemyState *s, int simonX, int simonY, int facingLeft, int crouched);
 
+/* Armes lancees (801E -> 82A4 -> 84F0/8500, research/secondary-weapons.md) : pour chaque
+ * ennemi actif dans l'ordre des blocs C800, puis pour l'emplacement C450 (k = 0) et C460
+ * (k = 1), touch(ctx, k, X, Y, H, L) dit si le projectile k touche la boite de la classe
+ * de l'ennemi (X, Y : objet MSX). Le premier contact tue l'ennemi (points de vie 1) et
+ * termine la passe : *slot = k, *score = points en centaines. Retourne 1 sur un contact. */
+typedef int (*ShotTouch)(const void *ctx, int slot, int x, int y, int h, int l);
+int Enemies_shotHit(EnemyState *s, ShotTouch touch, const void *ctx, int *slot, int *score);
+
 /* Avance d'une image les ennemis actifs (mouvement, animation, sortie). */
 void Enemies_update(EnemyState *s);
 
