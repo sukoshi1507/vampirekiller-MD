@@ -87,8 +87,8 @@ Pointeurs relus dans la ROM : `research/audio/msx_sounds.json` (`effect_pointers
 | 19 | `9470` | `938F`, `959E` | objets, texte (`490A`) | PROVISOIRE | non |
 | 1A | `931A` | `776F` | porte de `772A` quand `C5AC ≠ 5` | déduit | oui, PROVISOIRE (porte de la salle 7) |
 | 1B | `93CA` | `8DCA` | objet 05 | prouvé (code) | non |
-| 1C | `939F` | `7E1C` | `C445 = 14` | PROVISOIRE | non |
-| 1D | `8E69` | `934E` | cœurs + 5 par un autre chemin (`45A0`) ; le pointeur tombe au milieu des données de 02 (`8E58`-`8E89`) | PROVISOIRE ; **non extrait** (hors de la plage 01-1C de l'outil) | non |
+| 1C | `939F` | `7E1C` | défaite d'un boss : jauge ENEMY `C418` à 0 (`7E17`), avec `C445 = 14h`, `7806` et `CE15 = 1` (voir `castle-candles.md` 9.8) | déduit (code) | non (pas de boss aux stages 0-2) |
+| 1D | `8E69` | `934E` | objet mural `C5B5`/`C5C5`, résultat `C70C = 4` : cœurs - 5 (`45A0`) ; le pointeur tombe au milieu des données de 02 (`8E58`-`8E89`) | PROVISOIRE ; **non extrait** (hors de la plage 01-1C de l'outil) | non |
 
 ### 3.2 Musiques (voies A, B, C)
 

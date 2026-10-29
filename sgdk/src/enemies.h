@@ -126,7 +126,7 @@ typedef struct {
     EnemyU8 contactScore;    /* image courante : points (centaines) des ennemis detruits par C434 (81AB) */
     EnemyU8 itemSound;       /* image courante : effet a jouer (0D destruction par C434, 17 C43A a 10h), 0 sinon */
     EnemyU8 tick;            /* C003 : +1 a chaque passe de 2 images (phase PROVISOIRE, C003 court librement) */
-    EnemyU8 flash;           /* C43E (objet 05) : eclair de la couleur de bordure (7604) */
+    EnemyU8 flash;           /* C43E (objet 05 ; boss : 75D4) : eclair de bordure (7604) */
     EnemyU8 border;          /* F3EB : couleur de bordure posee par 7604 (0 ou 0Eh) */
     /* Objet 0A, arret du temps (7116-718F, 75F2, 992F ; research/castle-candles.md 9.8). */
     EnemyU8 timeStopItem;    /* C701 bit 6 (8D94) : garde jusqu'a la fin d'une mort (70DC) */
