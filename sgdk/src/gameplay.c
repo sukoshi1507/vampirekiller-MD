@@ -230,6 +230,7 @@ void vk_game_hit(VKGame *game, int dir, int dead)
      * the step at (64, 176) down to the floor). */
     p->on_stairs = 0;
     p->stair_anim = 0;
+    p->stair_move = 0;
     p->stair_glide = 0;
     game->jump_step = 0;
     game->recoil = VK_RECOIL_START;
@@ -468,6 +469,7 @@ VKEvent vk_game_tick_controls(VKGame *game, int direction, int jump, int up, int
             p->y = 48;
             p->on_stairs = 0;
             p->stair_anim = 0;
+            p->stair_move = 0;
             p->mode = 4;
             p->phase = 0;
             /* A flight of the room below through this point takes Simon on its stairs
@@ -495,6 +497,7 @@ VKEvent vk_game_tick_controls(VKGame *game, int direction, int jump, int up, int
         p->y = 224;
         p->stair_len = 32;
         p->stair_anim = 0;
+        p->stair_move = 0;
         p->stair_glide = 1;
         p->pose = 0;
         return VK_EVENT_VERTICAL;
@@ -513,6 +516,7 @@ VKEvent vk_game_tick_controls(VKGame *game, int direction, int jump, int up, int
         p->y = vk_floor_arrival(vk_castle_map(game->stage, target), p->x, game->stage);
         p->on_stairs = 0;
         p->stair_anim = 0;
+        p->stair_move = 0;
         p->mode = p->y ? 0 : 4;
         p->phase = 0;
         if (!p->y) p->y = 200;

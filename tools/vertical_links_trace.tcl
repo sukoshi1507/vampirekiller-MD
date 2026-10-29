@@ -1,9 +1,9 @@
 # Trace openMSX des liens verticaux (HAUT/BAS) et des sorties gauche/droite.
 # Usage : run_vertical_links_trace.py ROM.rom OUTDIR PLANFILE [TIMEOUT_S]
 # Variables attendues : vk_out (dossier de sortie), vk_plan (lignes d'actions).
-# Actions : hold KEYS MAX LABEL | wait N | poke ADDR VAL. Journaux : frames.csv, writes.csv, events.txt.
-# Trace des liens verticaux. Variables : vk_out (dossier), vk_plan (lignes).
-# Actions : hold KEYS MAX LABEL | wait N | poke ADDR VAL | snap LABEL | title (implicite)
+# Actions : hold KEYS MAX LABEL | wait N | poke ADDR VAL | gotox X MAX LABEL | snap LABEL (le script
+# ajoute doit definir key_snap). Journaux : frames.csv, writes.csv, events.txt.
+# Deux poke de suite : mettre un wait 1 entre eux (sinon l'action suivante est sautee).
 set throttle off
 set pause off
 set power on
@@ -81,6 +81,17 @@ proc vk_next_action {} {
                 vk_log_ev "BEGIN hold [lindex $w 1] $vk_act_label"
             }
             wait { set vk_act_max [lindex $w 1]; set vk_act_label wait; vk_press 0; vk_log_ev "BEGIN wait $vk_act_max" }
+            gotox {
+                global vk_goto vk_godir
+                set vk_goto [lindex $w 1]; set vk_act_max [lindex $w 2]; set vk_act_label [lindex $w 3]
+                set cx [vk_rd 0xC427]
+                if {$cx < $vk_goto} { set vk_godir 1; vk_press 128 } else { set vk_godir -1; vk_press 16 }
+                vk_log_ev "BEGIN gotox $vk_goto from x=$cx $vk_act_label"
+            }
+            snap {
+                set vk_act_max 1; set vk_act_label [lindex $w 1]; vk_press 0
+                key_snap [lindex $w 1]
+            }
             poke {
                 set addr [lindex $w 1]; set val [lindex $w 2]
                 vk_press 0
@@ -140,6 +151,20 @@ proc vk_frame_hook {} {
                     } else {
                         if {$vk_act_frames >= $vk_act_max} {
                             set end 1; set res "TIMEOUT x=$x y=$y mode=$mode"
+                        }
+                    }
+                }
+            }
+            gotox {
+                global vk_goto vk_godir
+                if {($vk_godir > 0 && $x >= $vk_goto) || ($vk_godir < 0 && $x <= $vk_goto)} {
+                    set end 1; set res "REACHED x=$x y=$y mode=$mode"
+                } else {
+                    if {$d0 != $vk_start_d000 || $d1 != $vk_start_d001} {
+                        set end 1; set res "CHANGE $vk_start_d000/$vk_start_d001 -> $d0/$d1 x=$x y=$y mode=$mode"
+                    } else {
+                        if {$vk_stuck >= 45} { set end 1; set res "STUCK x=$x y=$y mode=$mode" } else {
+                            if {$vk_act_frames >= $vk_act_max} { set end 1; set res "TIMEOUT x=$x y=$y mode=$mode" }
                         }
                     }
                 }

@@ -5,7 +5,7 @@ include boot_to_courtyard.inc
 until front_mode == MODES['INTERIOR'] max 3000 RIGHT
 # Stage 2 force (VKGame.stage), puis changement de salle debug : salle 0 -> 2
 # (A tenu, puis A+DROITE ; le premier front est perdu).
-poke vk_game+20 2
+poke vk_game+22 2
 hold A 3
 hold A+RIGHT 3
 wait 10

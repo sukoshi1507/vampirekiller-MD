@@ -61,8 +61,10 @@ int main(void)
         start(&p,160);
         vk_player_tick_controls(&p,map,1,0,0,0,1);
         assert(p.on_stairs && p.x==80 && p.y==160 && p.stair_dir==1 && p.stair_len==40);
-        for(i=0;i<6;i++) vk_player_tick_controls(&p,map,1,0,0,0,0);
-        assert(p.on_stairs && p.x==80 && p.y==160);
+        /* Released at once, the first cell is still climbed (6BEE: C435), then
+         * Simon stands on the step. */
+        for(i=0;i<40;i++) vk_player_tick_controls(&p,map,1,0,0,0,0);
+        assert(p.on_stairs && p.x==88 && p.y==152);
         for(frames=0;frames<200 && p.on_stairs;frames++) {
             vk_player_tick_controls(&p,map,1,0,0,0,1);
             assert(p.x-80 == 160-p.y);

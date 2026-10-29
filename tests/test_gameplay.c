@@ -88,9 +88,11 @@ int main(void)
         assert(vk_game_tick_controls(&g, 0, 0, 1, 0) == VK_EVENT_NONE);
         assert(g.player.on_stairs && g.player.x == 48 && g.player.y == 192);
         assert(g.player.stair_dir == 1 && g.player.stair_len == 64);
-        /* Releasing the key holds Simon on the step. */
-        for (frames = 0; frames < 6; frames++) vk_game_tick_controls(&g, 0, 0, 0, 0);
-        assert(g.player.on_stairs && g.player.x == 48 && g.player.y == 192);
+        /* Releasing the key: the first cell is climbed anyway (6BEE: C435 := the
+         * key), then Simon stands on the step (traced, scratchpad/trace3 out3:
+         * HAUT held 4 frames, (48,192) -> (56,184) in 8 steps). */
+        for (frames = 0; frames < 40; frames++) vk_game_tick_controls(&g, 0, 0, 0, 0);
+        assert(g.player.on_stairs && g.player.x == 56 && g.player.y == 184);
         for (frames = 0; frames < 200 && g.player.on_stairs; frames++) {
             vk_game_tick_controls(&g, 0, 0, 1, 0);
             assert(g.player.x - 48 == 192 - g.player.y);
@@ -345,11 +347,17 @@ int main(void)
         assert(steps == 8 && g.stair_steps == 8);
         for (f = 0; f < 6; f++) vk_game_tick_controls(&g, 0, 0, 0, 0);
         assert(g.player.pose == VK_PLAYER_STAIR_POSE + 1 && g.player.y == y);
-        /* Down from C42B 8: 04/01, then 03/02 from C42B 12. */
-        for (f = 0; f < 40 && g.stair_steps < 13; f++) vk_game_tick_controls(&g, 0, 0, 0, 1);
+        /* One more cell up, then down from C42B 16: 04/01, then 03/02 from C42B 20
+         * (traced, scratchpad/trace3 out3: 14/16 then 13/17 facing left). BAS let go
+         * mid-cell: the step runs on to the cell edge (C42B 24), then HAUT climbs
+         * again with 04/01 from C42B 24. */
+        for (f = 0; f < 40 && g.stair_steps < 16; f++) vk_game_tick_controls(&g, 0, 0, 1, 0);
+        for (f = 0; f < 40 && g.stair_steps < 21; f++) vk_game_tick_controls(&g, 0, 0, 0, 1);
         assert(g.player.pose == VK_PLAYER_STAIR_POSE + 4 + 2 && g.player.facing == 1);
-        for (f = 0; f < 40 && g.stair_steps < 17; f++) vk_game_tick_controls(&g, 0, 0, 1, 0);
-        assert(g.player.pose == VK_PLAYER_STAIR_POSE);
+        for (f = 0; f < 40 && g.stair_steps < 24; f++) vk_game_tick_controls(&g, 0, 0, 1, 0);
+        assert(g.stair_steps == 24 && g.player.facing == 1);
+        for (f = 0; f < 40 && g.stair_steps < 25; f++) vk_game_tick_controls(&g, 0, 0, 1, 0);
+        assert(g.player.pose == VK_PLAYER_STAIR_POSE && g.player.facing == 0);
         vk_game_hit(&g, -1, 0);
         assert(g.player.pose == VK_PLAYER_STAIR_POSE + 3);
         for (f = 0; f < 4; f++) vk_game_tick_controls(&g, 0, 0, 0, 0);
