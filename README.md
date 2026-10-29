@@ -25,6 +25,17 @@ Ce qui fonctionne dans la ROM Mega Drive :
 - **Clé et porte** : la clé blanche de la salle 2 se ramasse au contact et s'affiche
   dans le HUD ; la porte de la salle 7 bloque Simon sans elle, s'ouvre avec (barreau
   qui se lève, Simon qui sort seul) et mène vers le stage 2.
+- **Bougies, clé dorée et coffres** (cour, hall, stage 2) : les objets lâchés et les
+  objets fixes se ramassent au contact, aussi pendant leur chute ; une seule clé dorée
+  à la fois (icône du HUD), qui ouvre un coffre dont le contenu attend 32 images puis
+  tombe. Effets portés (`research/castle-candles.md` 9.5 à 9.8) : cœurs (01, 02) ;
+  énergie (07 : +8, 16 : pleine) ; 09, contact destructeur 300 images (l'ennemi touché
+  meurt et rapporte ses points, Simon clignote en rouge) ; 08, aucun contact 300 images
+  (Simon clignote en blanc) ; 06 et les fouets (1A, 1B : niveau du fouet) arrêtent les
+  apparitions 300 images ; 05 détruit les ennemis présents, le fond s'éclaire en blanc
+  6 fois ; 03, armure : dégâts de face divisés par deux pendant 16 coups ; 0B, 0C, 0D
+  (bits de `C431`) : minuteries portées à 480 images, recul rapide de 2,5 px, saut
+  haut. Minuteries, armure et bits de `C431` sont remis à 0 à la fin d'une mort.
 - **Stage 2 (jouable, chauves-souris seules)** : six salles avec les collisions et les liens
   de la ROM (`tools/build_stage_maps_md.py`) ; arrivée en salle 0 à x 16, y 96, comme
   sur le MSX2.
@@ -58,14 +69,15 @@ Ce qui n'est pas porté ou reste provisoire :
   est assimilée au fouet déployé (`vk_whip_phase` 2) et le recul face à une panthère
   assise est provisoire.
 - **Stage 2** : seules les chauves-souris (salles 0, 1, 3) sont portées ; le type 1 de la
-  salle 2 et les hommes-poissons des salles 4 et 5 ne le sont pas. Pas d'objets. Après une mort, Simon reprend en salle 0
+  salle 2 et les hommes-poissons des salles 4 et 5 ne le sont pas. Après une mort, Simon reprend en salle 0
   (x 16, y 96), lieu provisoire. Les liens haut/bas viennent de la table de la ROM,
   sans trace en jeu.
-- **Clé dorée et coffre** : portés pour la cour, le hall et le stage 2 (objets fixes,
-  clés et coffres des blocs cachés, une seule clé à la fois, attente de 32 images du
-  contenu, icône du HUD gardée jusqu'au retour en jeu après une mort) d'après la lecture du code, sans
-  trace openMSX dédiée. Les contenus autres que les cœurs n'ont pas d'effet
-  (`research/castle-candles.md` 9.7).
+- **Objets, non portés** : cases d'objets du HUD et pose de Simon au bouclier
+  (armure 03), objet 0A (arrêt du temps), 0F (carte du stage sur F2), 10/11 (prix du
+  marchand), le marchand, les armes secondaires, les fouets 1C et 1D (seule la pause
+  des apparitions est portée) et les autres contenus (04, 0E, 12, 1E, points 13/14).
+  Les effets portés viennent de la lecture du code, sans trace openMSX dédiée ; la phase
+  des minuteries est provisoire (`research/castle-candles.md` 9.8).
 - **Stages 3 et suivants, châteaux, attaques autres que le fouet** : non portés.
 - **Énergie (provisoire)** : lieu de reprise (entrée du hall), commandes bloquées
   pendant la mort : non relevés sur le MSX2. La chute dans le vide tue
