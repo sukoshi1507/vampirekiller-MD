@@ -891,7 +891,7 @@ static void test_type2_spawn(void)
     Enemies_spawnTimerInit(&t);
     CHECK(kEnemyStage2RoomFlags[4] == 0x02 && kEnemyStage2RoomFlags[5] == 0x02, "drapeaux 85DB-85DC : bit 1");
     /* Tirs mesures : +51 (X D0), +67 (X 30), +267 (X 90), +467 (X A0) apres D001 ; deux gouttes chacun.
-     * Images de jeu comptees apres l'etat 9 (FISH_STATE9 = 20 de moins, ENEMY_TYPE2_FIRST). */
+     * Images de jeu comptees apres l'etat 9 (FISH_STATE9 = 20 de moins), CF10 = 0 a l'entree. */
     for (n = 1; n <= 467 - FISH_STATE9; n++) {
         int before = count_type(&s, ENEMY_TYPE_2);
         (void)Enemies_frame(&s, &t, &v);
@@ -921,6 +921,22 @@ static void test_type2_spawn(void)
     Enemies_init(&s);
     for (n = 1; n <= 67 - FISH_STATE9; n++) (void)Enemies_frame(&s, &t, &v);
     CHECK(find_type2(&s, 0x50) >= 0, "garde : X 30 decale en 50");
+    /* 9CC3 : CF10 n'est pas remis a zero par 9CA9. Phase p a l'entree : CF02 (4) atteint 0 au
+     * 4e appel ou (p - k) & 3 = 0, appel k = (p & 3 ? p & 3 : 4) + 12, image 2k - 1. */
+    {
+        static const EnemyU8 phases[4] = { 0, 1, 2, 3 };
+        static const int first[4] = { 31, 25, 27, 29 };
+        int p;
+        for (p = 0; p < 4; p++) {
+            vars_stage2_room4(&v);
+            Enemies_init(&s);
+            Enemies_spawnTimerInit(&t);
+            t.phase = phases[p];
+            for (n = 1; n <= 40 && count_type(&s, ENEMY_TYPE_2) == 0; n++) (void)Enemies_frame(&s, &t, &v);
+            CHECK(n - 1 == first[p], "CF10 & 3 = %d a l'entree : premier tir a l'image %d (obtenu %d)",
+                  p, first[p], n - 1);
+        }
+    }
 }
 
 static void test_type2_trajectory(void)
@@ -1021,7 +1037,8 @@ static void test_type2_sat_budget(void)
     for (i = 1; i <= 4; i++) {
         s.enemy[i].active = 1; s.enemy[i].type = ENEMY_TYPE_SPLASH; s.enemy[i].x = 160; s.enemy[i].y = 180;
     }
-    s.type2Frames = ENEMY_TYPE2_FIRST - 1;   /* le prochain appel est l'image du premier tir */
+    s.type2Count = 1;                         /* le prochain appel de 9CC3 a CF10 & 3 = 0 tire */
+    t.phase = 1;
     (void)Enemies_frame(&s, &t, &v);
     CHECK(s.type2Shots == 1 && count_type(&s, ENEMY_TYPE_2) == 1, "tir perdu faute d'entrees SAT");
     CHECK(count_type(&s, ENEMY_TYPE_SPLASH) == 4, "et sans gouttes");

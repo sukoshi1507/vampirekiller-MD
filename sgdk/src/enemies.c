@@ -176,7 +176,7 @@ void Enemies_setRoom(EnemyState *s)
     s->type4Shots = 0;
     s->type2Shots = 0;               /* 9CA9 au chargement de la salle : CF02 = 04, CF03 = 00 */
     s->type2Frames = 0;
-    s->type2Next = ENEMY_TYPE2_FIRST;
+    s->type2Count = ENEMY_TYPE2_COUNT;
 }
 
 void Enemies_init(EnemyState *s)
@@ -736,20 +736,21 @@ static void fishSpawn(EnemyState *s, EnemyU8 x, const EnemyRoomVars *v)
     splashSpawn(s, x, ENEMY_TYPE2_Y);
 }
 
-/* Canal 9D4B (bit 1 du drapeau) : tir a type2Next, X de la table 9D87 avec la garde 9D6E.
- * Le compte a rebours suit 9CC3 (CF02, CF03) ; un tir sans place est perdu, l'index avance.
- * Chaque appel (une image sur deux, a partir de la premiere) decremente CF10, partage avec
- * les autres canaux ; la phase du premier tir (ENEMY_TYPE2_FIRST) reste celle de CF10 = 0. */
+/* Canal 9D4B (bit 1 du drapeau), un appel par passe de l'etat 5 (une image sur deux, a partir
+ * de la premiere) : 9CC3 sur CF02/CF03 comme le canal 9D97 (DEC CF10 partage, puis CF02 tous
+ * les 4 appels ; recharge table 9D8F + 1). X de la table 9D87 a CF03 apres l'increment, garde
+ * 9D6E. Un tir sans place est perdu, l'index avance. */
 static void type2Channel(EnemyState *s, EnemySpawnTimer *t, const EnemyRoomVars *v)
 {
-    EnemyU8 period, c, reload, x;
-    if (++s->type2Frames & 1) t->phase--;
-    if (s->type2Frames != s->type2Next) return;
-    period = kType2Period[s->type2Shots & 7];
+    EnemyU8 period, c, x;
+    if (!(++s->type2Frames & 1)) return;
+    t->phase--;                                     /* 9CC3 : DEC (CF10) */
+    if ((t->phase & 0x03) != 0) return;
+    if (--s->type2Count != 0) return;               /* DEC (CF02) */
+    period = kType2Period[s->type2Shots & 7];       /* 9CD0 : CF03 avant l'increment */
     s->type2Shots++;
     c = (EnemyU8)(v->difficulty << 1);
-    reload = (EnemyU8)((period >= c ? period - c : 0) + 1);
-    s->type2Next = (EnemyU16)(s->type2Next + 8 * reload);
+    s->type2Count = (EnemyU16)((period >= c ? period - c : 0) + 1);
     x = kType2X[s->type2Shots & 7];
     if ((EnemyU8)(v->simonX - x + ENEMY_TYPE2_NEAR) < 2 * ENEMY_TYPE2_NEAR)
         x = (EnemyU8)(x < 0x80 ? x + 0x20 : x - 0x20);

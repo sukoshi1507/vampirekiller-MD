@@ -314,7 +314,7 @@ class Game_View:
                                 'parity': m.rd8(b + 5), 'type4Count': m.rd16(b + 6),
                                 'type4Side': m.rd8(b + 8), 'type5Timer': m.rd8(b + 9),
                                 'type4Shots': m.rd8(b + 10), 'type2Shots': m.rd8(b + 11),
-                                'type2Frames': m.rd16(b + 12), 'type2Next': m.rd16(b + 14),
+                                'type2Frames': m.rd16(b + 12), 'type2Count': m.rd16(b + 14),
                                 'splashCount': m.rd8(b + 16)}
         if 'health' in A:
             a = A['health']   # VKHealth (health.h), statique de main.c

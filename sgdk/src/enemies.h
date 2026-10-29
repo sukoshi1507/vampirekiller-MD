@@ -46,9 +46,9 @@ typedef short EnemyS16;
 #define ENEMY_TYPE5_DELAY 1         /* creee par 61BB a la fin de 62F5 (etat 9) : premiere image de jeu de la salle
                                        (21 ou 22 images apres D001 = duree de l'etat 9 des salles 2, 3, 7) */
 #define ENEMY_TYPE2_DAMAGE 4        /* table 81CE : base 2, doublee (bit 4 de C701 nul) ; mesure 8 fois */
-#define ENEMY_TYPE2_FIRST 31        /* 51 images apres l'ecriture de D001 (2 mesures) : D001 en f0, etat 9
-                                       de f0 a f0 + 20 (salles 4, 5), premiere image de jeu f0 + 21 = 1,
-                                       donc tir a l'image de jeu 31 (minuterie 9CA9/9CC3 de l'etat 5) */
+#define ENEMY_TYPE2_COUNT 4         /* CF02 a l'entree (9CA9, table 9CBB) : premier tir au 4e appel de 9CC3
+                                       ou CF10 & 3 = 0, soit 25 a 31 images de jeu (phase de CF10) ; 31 avec
+                                       CF10 & 3 = 0, mesure 2 fois (51 images apres D001, etat 9 de 20 images) */
 #define ENEMY_SAT_SLOTS 14          /* entrees SAT des objets (D638.., 5F5C) : une creation sans place est perdue */
 
 /* Cote d'apparition, en repere d'ecran (observe). */
@@ -114,7 +114,7 @@ typedef struct {
     EnemyU8 type4Shots;      /* CF07 : tirs de type 4 depuis l'entree (index de la table 9DBB) */
     EnemyU8 type2Shots;      /* CF03 : tirs de type 2 depuis l'entree (index des tables 9D87 et 9D8F) */
     EnemyU16 type2Frames;    /* images depuis l'entree dans la salle (canal du type 2) */
-    EnemyU16 type2Next;      /* valeur de type2Frames du prochain tir de type 2 */
+    EnemyU16 type2Count;     /* CF02 : compte a rebours du canal type 2 (decremente tous les 4 appels de 9CC3) */
     EnemyU8 splashCount;     /* CF30 : gouttes creees (parite = sens et vitesse), garde d'une salle a l'autre */
 } EnemyState;
 

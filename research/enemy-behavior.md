@@ -447,8 +447,8 @@ Lecture du code (`tools/disasm_rom_window.py`) et trace openMSX `scratchpad/stag
 
 | Point | Port | Statut |
 |---|---|---|
-| Cadence, X, garde, perte faute de SAT | `type2Channel` (compteur d'images `type2Frames`, prochain tir `type2Next`), `newObject` (7 blocs, 14 entrées SAT) | prouvé |
-| Premier tir | `ENEMY_TYPE2_FIRST` = 31 images de jeu après la fin de l'état 9 (51 après `D001`, `research/room-links.md` section 9.4) | mesuré 2 fois ; **PROVISOIRE** (dépend de la phase de `CF10` à l'entrée : 31 correspond à `CF10 & 3 = 0`). Le canal décrémente bien `CF10` partagé à chaque appel, mais son instant de tir reste fixe |
+| Cadence, X, garde, perte faute de SAT | `type2Channel` (minuterie `9CC3` : `CF10` partagé, compte à rebours `type2Count` = `CF02`, index `type2Shots` = `CF03`), `newObject` (7 blocs, 14 entrées SAT) | prouvé |
+| Premier tir | `9D4B` appelle `9CC3` avec `HL = CF02` (désassemblage `9D4B`-`9D5B`), comme le canal `9D97` : `CF02 = 4` à l'entrée (`ENEMY_TYPE2_COUNT`), décrémenté quand `CF10 & 3` revient à 0, donc premier tir 25, 27, 29 ou 31 images de jeu après la fin de l'état 9 selon `CF10 & 3` (3 → 29, 2 → 27, 1 → 25, 0 → 31) | lu dans le code ; 31 mesuré 2 fois (51 après `D001`, `CF10` non relevé dans les traces `P1`/`P2`) ; test natif des quatre phases (port 2026-10-29) |
 | Saut, sol, marche, chute, plongeon | `fishStep`, tests de sol `7B98` sur la carte de collision du port | prouvé (test natif : atterrissage 121, chute 145, plongeon 183 images après l'entrée, comme en 6236, 6260 et 6298) |
 | Gouttes | `splashSpawn`, mise à jour dans `type2Frame` ; ni contact ni fouet | prouvé ; la goutte sans gravité de la mort au fouet n'est pas reproduite |
 | Contact | `touches` : boîte `8378` de la classe 1, Simon debout ; dégât 4 | prouvé debout ; **PROVISOIRE** accroupi et en saut (`C420` non transmis) |
