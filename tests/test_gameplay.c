@@ -277,13 +277,41 @@ int main(void)
     vk_game_tick_controls(&g, 0, 0, 0, 0);
     vk_game_tick_controls(&g, 0, 0, 0, 0);
     assert(g.player.x == 15);
-    vk_game_debug_room(&g, 0);
-    g.player.on_stairs = 1;
-    vk_game_hit(&g, -1, 0);
-    assert(!vk_game_recoiling(&g));
+    /* Hit on a staircase with energy left (6FA2-6FB9, traced 5 times in hall room 1):
+     * no recoil, C420 = 5 for one pass (2 frames) then 3 again, Simon keeps his step
+     * and the climb resumes. Hall room 1, flight A from (48,192). */
+    vk_game_debug_room(&g, 1);
+    g.player.x = 48;
+    g.player.y = 192;
+    g.player.mode = 0;
+    assert(vk_game_tick_controls(&g, 0, 0, 1, 0) == VK_EVENT_NONE && g.player.on_stairs);
+    {
+        int f;
+        VKByte x, y;
+        for (f = 0; f < 16; f++) vk_game_tick_controls(&g, 0, 0, 1, 0);
+        x = g.player.x;
+        y = g.player.y;
+        assert(g.player.on_stairs && x > 48 && x - 48 == 192 - y);
+        vk_game_hit(&g, -1, 0);
+        assert(vk_game_recoiling(&g) && g.recoil == VK_RECOIL_STAIRS);
+        vk_game_tick_controls(&g, 0, 1, 1, 0);
+        vk_game_tick_controls(&g, 0, 1, 1, 0);
+        assert(!vk_game_recoiling(&g) && g.player.on_stairs && g.player.mode == 0);
+        assert(g.player.x == x && g.player.y == y);
+        for (f = 0; f < 4; f++) vk_game_tick_controls(&g, 0, 0, 1, 0);
+        assert(g.player.on_stairs && g.player.x == x + 2 && g.player.y == y - 2);
+        /* With no energy left (6FAD -> 6FBC) he is knocked off the staircase, as on
+         * the ground (traced: from (64,176) down to the floor of Y 192). */
+        vk_game_hit(&g, -1, 1);
+        assert(vk_game_recoiling(&g) && g.recoil == VK_RECOIL_START && !g.player.on_stairs);
+        for (f = 0; f < 80 && g.recoil != VK_RECOIL_FLOOR; f++) vk_game_tick_controls(&g, 0, 0, 0, 0);
+        assert(g.recoil == VK_RECOIL_FLOOR && g.player.y == 192 && g.recoil_count == 16);
+        for (f = 0; f < 16; f++) vk_game_tick_controls(&g, 0, 0, 0, 0);
+        assert(!vk_game_recoiling(&g) && !g.player.on_stairs);
+    }
 
     /* Effect 07 (6F7E): a fall begun on the ground ends with VK_EVENT_LAND; a
-     * jump lands without it (6D26, CFF0 not ported). */
+     * jump landing at its take-off height (C428 = 19, CFF0 = 0) lands without it. */
     vk_game_debug_room(&g, 0);
     g.player.x = 120;
     g.player.y = 150;
@@ -296,6 +324,26 @@ int main(void)
         for (f = 0; f < 120; f++)
             if (vk_game_tick_controls(&g, 0, 0, 0, 0) == VK_EVENT_LAND) lands++;
         assert(lands == 1 && g.player.y == 192 && g.player.mode == 0);
+    }
+    /* A jump landing lower than its take-off (traced with Simon lifted by 4, 12, 24
+     * and 40 px at the take-off: 07 at C428 = 21, 23, 26, none at 19 or 20). */
+    {
+        static const struct { VKByte lift; int lands; } kLift[4] = {
+            { 4, 0 }, { 12, 1 }, { 24, 1 }, { 40, 1 } };
+        int n;
+        for (n = 0; n < 4; n++)
+        {
+            int f, lands = 0;
+            g.player.x = 120;
+            g.player.y = 192;
+            g.player.mode = 0;
+            assert(vk_game_tick_controls(&g, 0, 1, 0, 0) == VK_EVENT_NONE && g.player.mode == 1);
+            g.player.y = (VKByte)(g.player.y - kLift[n].lift);
+            for (f = 0; f < 120; f++)
+                if (vk_game_tick_controls(&g, 0, 0, 0, 0) == VK_EVENT_LAND) lands++;
+            assert(lands == kLift[n].lands && g.player.y == 192 && g.player.mode == 0);
+            assert(g.jump_step == 0);
+        }
     }
 
     /* Stage 2 after the door of hall room 7: room 0 at x 16, y 96, on a floor of

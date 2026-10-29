@@ -81,6 +81,7 @@ static void vk_entrance_clear(VKGame *game)
     game->entrance_timer = 0;
     game->recoil = VK_RECOIL_NONE;
     game->ground_fall = 0;
+    game->jump_step = 0;
 }
 
 void vk_game_begin(VKGame *game)
@@ -210,7 +211,21 @@ static const signed char vk_recoil_arc[VK_RECOIL_STEPS] = {
 void vk_game_hit(VKGame *game, int dir, int dead)
 {
     VKPlayer *p = &game->player;
-    if (p->on_stairs) return;
+    /* 6FA2: on a staircase (C42B != 0) with energy left, C420 := 3 again at the next
+     * pass, without moving (traced 5 times in hall room 1). The C42F := 2 pose of
+     * 6FB4 is not ported: the port's stair poses are not the MSX ones. */
+    if (p->on_stairs && !dead)
+    {
+        game->recoil = VK_RECOIL_STAIRS;
+        game->recoil_count = VK_RECOIL_STAIRS_FRAMES;
+        return;
+    }
+    /* 6FAD: with C415 = 0 the hit knocks Simon off the staircase (traced: arc from
+     * the step at (64, 176) down to the floor). */
+    p->on_stairs = 0;
+    p->stair_anim = 0;
+    p->stair_glide = 0;
+    game->jump_step = 0;
     game->recoil = VK_RECOIL_START;
     game->recoil_dir = (signed char)(dir < 0 ? -1 : 1);
     game->recoil_land = (VKByte)(dead ? 16 : 4);
@@ -251,6 +266,12 @@ static void vk_recoil_tick(VKGame *game, const VKRoomLink *links)
     VKPlayer *p = &game->player;
     /* Hit pose 07/03, +10/+15 when C43C = 1 (pushed right: Simon faces left). */
     const VKByte pose = (VKByte)(VK_PLAYER_RECOIL_POSE + (game->recoil_dir > 0));
+    if (game->recoil == VK_RECOIL_STAIRS)
+    {
+        /* The pass of the hit: no stair step, no control. */
+        if (--game->recoil_count == 0) game->recoil = VK_RECOIL_NONE;
+        return;
+    }
     if (game->recoil == VK_RECOIL_START)
     {
         p->mode = 0;
@@ -309,16 +330,31 @@ VKEvent vk_game_tick_controls(VKGame *game, int direction, int jump, int up, int
     if (!recoiling)
     {
         const VKByte mode = p->mode;
+        const VKByte phase = p->phase;
         vk_player_tick_controls(p, vk_game_collision(game), vk_game_limit_stage(game),
                                 direction, jump, down, up);
         /* The MSX falls in state 4 only from the ground (6BA5); its jump lands in
-         * state 1 (6D26), where effect 07 needs CFF0 != 0 (PROVISIONAL, not ported). */
-        if (mode == 0 && p->mode == 4) game->ground_fall = 1;
+         * state 1 (6D26), with effect 07 only when CFF0 != 0, i.e. at C428 >= 21
+         * (6D1C: C428 - 2 >= 13h calls 6D6D, CFF0 := 1; traced: 07 at steps 21, 23
+         * and 26, none at step 19). The port leaves its jump table at step 19 for a
+         * mode 4 fall; the MSX keeps stepping (+6 a 30 Hz tick), so C428 is counted
+         * from the frames of that fall: 19 + ceil(frames / 2). */
+        if (mode == 0 && p->mode == 4) { game->ground_fall = 1; game->jump_step = 0; }
         else if (p->mode == 1) game->ground_fall = 0;
         else if (mode == 4 && p->mode == 0 && game->ground_fall)
         {
             game->ground_fall = 0;
             landed = 1;
+        }
+        if (mode == 1 && p->mode == 4) game->jump_step = (VKByte)(2 * (phase + 1));
+        else if (mode == 4 && game->jump_step)
+        {
+            if (game->jump_step < 254) game->jump_step++;
+            if (p->mode == 0)
+            {
+                if ((game->jump_step + 1) / 2 >= VK_JUMP_THUD_STEP) landed = 1;
+                game->jump_step = 0;
+            }
         }
     }
 

@@ -10,7 +10,8 @@ typedef enum { VK_EVENT_NONE = 0, VK_EVENT_ROOM = 1, VK_EVENT_ENTER = 2,
                VK_EVENT_ENTRANCE = 4,       /* castle door reached: Simon walks in alone */
                VK_EVENT_ENTRANCE_DARK = 5,  /* courtyard left: the screen goes black */
                VK_EVENT_FALL = 6,           /* bottom edge without a room below: life lost */
-               VK_EVENT_LAND = 7            /* landing of a fall begun on the ground (6F7E) */
+               VK_EVENT_LAND = 7            /* landing with effect 07: a fall begun on the ground
+                                               (6F7E) or a jump ending at C428 >= 21 (6D38) */
              } VKEvent;
 /* Castle entrance of courtyard room 2 (research/castle-entrance.md). */
 typedef enum { VK_ENTRANCE_NONE = 0,
@@ -32,13 +33,20 @@ typedef struct {
     VKByte recoil_land;      /* C42A on landing: 4, or 16 when the energy is 0 (6FFF) */
     signed char recoil_dir;  /* -1 pushed left (6C2F), 1 pushed right (6C53) */
     VKByte ground_fall;      /* C420 = 4: a fall from the ground (6BA5), not a jump */
+    VKByte jump_step;        /* jump past its table (port mode 4): 2 x C428 - 1 at the frame, 0 otherwise */
 } VKGame;
+/* 6D1C-6D22: a jump step with C428 - 2 >= 13h sets CFF0 := 1 (6D6D), and the landing
+ * plays effect 07 only then (6D30-6D38). The table 6D95 has 19 steps: a jump landing
+ * at its take-off height lands at step 19, a lower floor at step 21 or later. */
+#define VK_JUMP_THUD_STEP 21
 /* Enemy contact recoil (research/player-health.md, "Recul au coup recu"). */
 typedef enum { VK_RECOIL_NONE = 0,
                VK_RECOIL_START = 1,         /* C423 0 (6F93): pose set, no motion */
                VK_RECOIL_AIR = 2,           /* C423 1 or 2: arc of 707D, 2 px a frame */
-               VK_RECOIL_FLOOR = 3          /* C423 3 (701D): on the floor, no control */
+               VK_RECOIL_FLOOR = 3,         /* C423 3 (701D): on the floor, no control */
+               VK_RECOIL_STAIRS = 4         /* hit on a staircase: C420 = 5 for one pass, then 3 (6FAF) */
              } VKRecoil;
+#define VK_RECOIL_STAIRS_FRAMES 2   /* one pass of state 5 (traced: C420 = 5 at 2 frames) */
 #define VK_RECOIL_STEPS 21          /* 6FDA: D = 15h entries in 707D */
 #define VK_RECOIL_LAND_TEST 11      /* 6FE5: floor tested from the 11th step on */
 
@@ -63,7 +71,9 @@ void vk_game_room_block(const VKGame *game, VKByte x, VKByte y, const VKByte *ti
 void vk_game_respawn(VKGame *game);
 /* Enemy contact (7EC1/7F1B): Simon is knocked back in direction dir (-1 left,
  * 1 right) and loses control until the recoil ends; dead = energy now 0. On a
- * staircase there is no recoil (6FA2: C420 := 3, PROVISIONAL, not ported). */
+ * staircase with energy left there is no recoil (6FA2-6FB9): Simon stays on his
+ * step and only loses the pass of the hit; with no energy left he is knocked off
+ * the staircase like on the ground (6FAD -> 6FBC). */
 void vk_game_hit(VKGame *game, int dir, int dead);
 int vk_game_recoiling(const VKGame *game);
 /* Start of a castle stage after the door of the stage before (items.c): room 0,

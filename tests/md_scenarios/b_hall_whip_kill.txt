@@ -12,12 +12,13 @@ set slot [i for i, e in enumerate(enemies.enemy) if e.active][0]
 dump spawn
 shot b-spawn
 expect enemies.enemy[slot].type in (0, 1) # type 1 MSX (A = 0 droite, B = 1 gauche)
+expect enemies.enemy[slot].romBox == 1 # objet de la ROM : sortie 99E5, contact 8290, fouet 7DAD (comme au stage 2)
 expect enemies.enemy[slot].dx == (1 if enemies.enemy[slot].x < game.player.x else -1) # avance vers Simon
 # Simon se tourne vers l'ennemi (2 images de direction, deplacement de 1 a 2 px).
 tap LEFT 2
 expect game.player.facing == 1 # face a gauche, vers l'ennemi
-# Boite du fouet face gauche x-32..x-8 ; ennemi (x de jeu = x ecran + 8) touche si
-# x-48 < ex <= x-8. On frappe quand ex atteint x-36 : le fouet devient actif ~4 images plus tard.
+# Fouet 84A7 face gauche : X du fouet = x - 20, ennemi (X objet = x ecran + 8) touche si
+# |x - 20 - ex| < 17 en phase 2 du port. On frappe quand ex atteint x-36 : le fouet frappe ~4 images plus tard.
 until enemies.enemy[slot].x + 8 >= game.player.x - 36 max 600
 set energy0 enemies.energy
 dump avant-coup

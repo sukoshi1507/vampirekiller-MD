@@ -77,6 +77,7 @@ static void new_game(void)
 {
     vk_game_begin(&vk_game);
     vk_reset_enemies();
+    vk_reset_enemy_clock();
     vk_health_begin(&health);
     vk_items_begin(&items);
     vk_candles_begin(&vk_candles);

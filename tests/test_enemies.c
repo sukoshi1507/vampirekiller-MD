@@ -35,13 +35,16 @@ static int failures = 0;
 #define ENEMY_SPAWN_X_RIGHT_TEST 0xE5  /* SAT X observe au spawn droit (909) */
 #define ENEMY_SPAWN_X_LEFT_TEST  0x0A  /* SAT X observe au spawn gauche (1013) */
 
-/* Driver de test : une image = Enemies_update, puis spawns observes (908 et 1012). */
+/* Driver de test : une image = Enemies_update, puis spawns observes (908 et 1012), marques
+ * romBox comme ceux de Enemies_spawnTimerTick (objet de la ROM, sortie 99E5). */
 static void frame_step(EnemyState *s, int *rf)
 {
+    int k = -1;
     Enemies_update(s);
     (*rf)++;
-    if (*rf == SPAWN_E1_REL) (void)Enemies_spawn(s, ENEMY_SIDE_RIGHT, ENEMY_TYPE_A, 0xA0, 1);
-    if (*rf == SPAWN_E2_REL) (void)Enemies_spawn(s, ENEMY_SIDE_LEFT, ENEMY_TYPE_B, 0xA0, 15);
+    if (*rf == SPAWN_E1_REL) k = Enemies_spawn(s, ENEMY_SIDE_RIGHT, ENEMY_TYPE_A, 0xA0, 1);
+    if (*rf == SPAWN_E2_REL) k = Enemies_spawn(s, ENEMY_SIDE_LEFT, ENEMY_TYPE_B, 0xA0, 15);
+    if (k >= 0) s->enemy[k].romBox = 1;
 }
 
 static void advance_to(EnemyState *s, int *rf, int n)
@@ -212,6 +215,7 @@ static void test_side_left(void)
     CHECK(s.enemy[0].type == ENEMY_TYPE_B, "cote gauche : type B");
     CHECK(Enemies_sprites(&s, 0, sp) == ENEMY_SPRITES && sp[0].pattern == 0x58, "motif type B : 58");
     CHECK(s.enemy[0].y == 0xA0, "Y = C0 - 20 = A0 attendu");
+    CHECK(s.enemy[0].romBox == 1, "hall : objet de la ROM (romBox), comme au stage 2");
 }
 
 /* 2g. Salle D001 = 1 avec Simon haut (C425 < 88) : E = 60, D = F0. Code seul. */
@@ -248,7 +252,8 @@ static void test_e1_trajectory(void)
         { 925, 212, 0x50 },  /* D4 : pas supplementaire a l'age 17 */
         { 931, 206, 0x48 },  /* CE : retour pose A */
         { 941, 195, 0x50 },  /* C3 */
-        { 1125, 0,  0x48 },  /* 00 : derniere position visible */
+        { 1125, 0,  0x48 },  /* 00 (trace du hall, ombre SAT D638 : 00 a l'age 217) */
+        { 1126, 0,  0x48 },  /* 00 tenu une image de plus (99E5 a l'age pair, comme au stage 2) */
     };
     size_t i;
 
@@ -268,8 +273,8 @@ static void test_e1_trajectory(void)
               e1[i].n, e1[i].bottom, sp[2].pattern);
     }
 
-    advance_to(&s, &rf, 1126);
-    CHECK(!s.enemy[0].active, "E1 doit etre inactif a l'image 1126");
+    advance_to(&s, &rf, 1127);
+    CHECK(!s.enemy[0].active, "E1 doit etre inactif a l'image 1127");
     CHECK(Enemies_sprites(&s, 0, sp) == 0, "E1 inactif ne doit rien produire");
 }
 
@@ -286,7 +291,9 @@ static void test_e2_trajectory(void)
         { 1027, 25, 0x68 },  /* 19 : pose B a l'age 15, pas supplementaire */
         { 1035, 33, 0x60 },  /* 21 */
         { 1043, 42, 0x68 },  /* 2A */
-        { 1207, 216, 0x68 }, /* D8 : derniere position visible */
+        { 1207, 216, 0x68 }, /* D8 : ancienne borne du port, l'objet continue */
+        { 1221, 231, 0x68 }, /* E7 (trace du hall : E7 a l'age 209, objet supprime a X F1.25) */
+        { 1222, 231, 0x68 }, /* E7 tenu une image de plus (99E5 a l'age pair) */
     };
     size_t i;
 
@@ -304,8 +311,8 @@ static void test_e2_trajectory(void)
               e2[i].n, e2[i].bottom, sp[2].pattern);
     }
 
-    advance_to(&s, &rf, 1208);
-    CHECK(!s.enemy[1].active, "E2 doit etre inactif a l'image 1208");
+    advance_to(&s, &rf, 1223);
+    CHECK(!s.enemy[1].active, "E2 doit etre inactif a l'image 1223");
 }
 
 /* 4. Limites de la liste d'ennemis et de la visibilite. */
@@ -376,7 +383,9 @@ static void test_type4_motion(void)
     CHECK(!s.enemy[0].active, "type 4 gauche : inactif a l'age 148 (image 3013)");
 }
 
-/* 6. Type 4 par Enemies_frame : un tir tous les 168 images, cote droit puis gauche. */
+/* 6. Type 4 par Enemies_frame (canal 9D97) : CF06 = 8 a l'entree, decremente quand CF10 & 3
+ * tombe a 0 (un appel toutes les 2 images) ; avec CF10 = 0, premier tir a l'appel 32 (image 63),
+ * puis 168, 168, 168, 328 images (table 9DBB), cote droit puis gauche. */
 static void test_type4_timer(void)
 {
     EnemyState s;
@@ -394,17 +403,18 @@ static void test_type4_timer(void)
     Enemies_init(&s);
     Enemies_spawnTimerInit(&t);
     s.invuln = 0xFF;   /* pas de contact dans ce test (510 images) */
-    for (f = 1; f <= 167; f++) (void)Enemies_frame(&s, &t, &v);
-    CHECK(!s.enemy[0].active, "type 4 : aucun tir avant 168 images");
+    for (f = 1; f <= 62; f++) (void)Enemies_frame(&s, &t, &v);
+    CHECK(!s.enemy[0].active, "type 4 : aucun tir avant l'image 63");
     (void)Enemies_frame(&s, &t, &v);
     CHECK(s.enemy[0].active && s.enemy[0].type == ENEMY_TYPE_4 && s.enemy[0].dx == -1 && s.enemy[0].x == 0xE5,
-          "type 4 : premier tir a 168 images, cote droit");
+          "type 4 : premier tir a l'image 63 (CF10 = 0), cote droit");
     CHECK(s.enemy[0].y == ENEMY_TYPE4_Y, "type 4 : Y SAT 0xAA pour C425 = C0");
-    for (f = 169; f <= 335; f++) (void)Enemies_frame(&s, &t, &v);
+    CHECK(s.type4Count == 21 && s.type4Shots == 1, "type 4 : CF06 recharge a 21, CF07 = 1");
+    for (f = 64; f <= 230; f++) (void)Enemies_frame(&s, &t, &v);
     (void)Enemies_frame(&s, &t, &v);
-    /* Le premier tir est sorti vers 320 images : son slot (0) est reutilise. */
+    /* Le premier tir est sorti vers 150 images d'age : son slot (0) est reutilise. */
     CHECK(s.enemy[0].active && s.enemy[0].type == ENEMY_TYPE_4 && s.enemy[0].dx == 1 && s.enemy[0].x == 0x0B,
-          "type 4 : second tir a 336 images, cote gauche (slot libere reutilise)");
+          "type 4 : second tir a l'image 231 (+168), cote gauche (slot libere reutilise)");
     CHECK(!s.enemy[1].active, "type 4 : un seul ennemi actif apres le second tir");
     CHECK(s.energy == ENEMY_ENERGY_MAX, "pas de contact dans ce test");
 
@@ -415,7 +425,7 @@ static void test_type4_timer(void)
     s.invuln = 0xFF;
     v.stage = 2; v.room = 0; v.simonX = 0x10; v.simonY = 96;
     {
-        static const int shots[5] = { 168, 336, 504, 672, 1000 };
+        static const int shots[5] = { 63, 231, 399, 567, 895 };
         int n = 0;
         for (f = 1; f <= 1000; f++) {
             int k, before = 0, after = 0;
@@ -425,6 +435,9 @@ static void test_type4_timer(void)
             for (k = 0; k < ENEMY_MAX; k++) after += s.enemy[k].type == ENEMY_TYPE_4 && s.enemy[k].active && s.enemy[k].age == 0;
             if (after > before) {
                 CHECK(n < 5 && f == shots[n], "stage 2 : tir %d a l'image %d (attendu %d)", n, f, n < 5 ? shots[n] : -1);
+                /* 9E16 : Simon en X 10 (< 40), le tir de gauche passe a droite (D = F0). */
+                for (k = 0; k < ENEMY_MAX; k++)
+                    if (s.enemy[k].active && s.enemy[k].age == 0) CHECK(s.enemy[k].dx == -1, "stage 2 : 9E16, tir a droite");
                 for (k = 0; k < ENEMY_MAX; k++)
                     if (s.enemy[k].active && s.enemy[k].age == 0) CHECK(s.enemy[k].y == 74, "stage 2 : Y SAT 74");
                 n++;
@@ -433,6 +446,32 @@ static void test_type4_timer(void)
         CHECK(n == 5, "stage 2 : 5 tirs en 1000 images (obtenu %d)", n);
     }
     v.stage = 1;
+
+    /* Phase de CF10 a l'entree (trace scratchpad/fidelity/out1, hall salle 4, Simon en X 16) :
+     * CF10 = 206 au premier appel -> tir a la premiere passe + 58 (image 59) ; CF10 = 25 ->
+     * premiere passe + 56 (image 57). CF10 n'est pas remis a zero par le changement de salle. */
+    {
+        static const struct { EnemyU8 cf10; int frame; } kEntry[2] = { { 206, 59 }, { 25, 57 } };
+        int n;
+        for (n = 0; n < 2; n++) {
+            int first = 0;
+            Enemies_init(&s);
+            Enemies_spawnTimerInit(&t);
+            t.phase = kEntry[n].cf10;
+            Enemies_spawnTimerRoom(&t);
+            CHECK(t.phase == kEntry[n].cf10, "CF10 garde sa valeur au chargement de salle (9CA9)");
+            s.invuln = 0xFF;
+            v.room = 4; v.simonX = 0x10; v.simonY = 0xC0;
+            for (f = 1; f <= 80 && !first; f++) {
+                (void)Enemies_frame(&s, &t, &v);
+                if (s.enemy[0].active) first = f;
+            }
+            CHECK(first == kEntry[n].frame, "CF10 = %d : premier tir a l'image %d (attendu %d)",
+                  kEntry[n].cf10, first, kEntry[n].frame);
+            CHECK(s.enemy[0].dx == -1, "Simon en X 10 : premier tir a droite (D = F0)");
+        }
+        v.simonX = 0x7A;
+    }
 
     /* Salle 2 (drapeau 0) : ni type 1 ni type 4. */
     Enemies_init(&s);

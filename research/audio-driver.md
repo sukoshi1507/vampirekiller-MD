@@ -66,7 +66,7 @@ Pointeurs relus dans la ROM : `research/audio/msx_sounds.json` (`effect_pointers
 | 04 | `8E99` | `7470` | lancement d'un projectile depuis Simon (`C425`/`C427`) : arme secondaire | déduit | non (pas d'arme secondaire) |
 | 05 | `8EAE` | `7225` | coup de fouet (`C42F = 6`) | **prouvé** (trace, 13/13 images identiques) | oui (`main.c`) |
 | 06 | `8ECB` | `7489` | comme 03, autre sens d'escalier | déduit | non |
-| 07 | `8EE4` | `6D38` (si `CFF0 ≠ 0`), `6F7E`, `A34D` | atterrissage | déduit | non |
+| 07 | `8EE4` | `6D38` (si `CFF0 ≠ 0`, soit `C428 ≥ 21`), `6F7E`, `A34D` | atterrissage | **prouvé** pour `6D38` (trace `scratchpad/fidelity/out1`) | oui (`main.c`, `VK_EVENT_LAND`) |
 | 08 | `8EF3` | `A2F9` (banque 3, ennemi) | ennemi | PROVISOIRE | non |
 | 09 | `8F25` | `76E5`, `A386` | chute dans l'eau (stages 2 et 10 ; ennemi sous Y C0) | prouvé (code) | oui |
 | 0A | `8F56` | `B9A9` | ennemi (banque 3) | PROVISOIRE | non |
@@ -174,12 +174,15 @@ Cadence et interruption : comme le pilote MSX, appelé par le VBLANK `4028` (H.T
 | Chute dans l'eau (stage 2) | 09 | `76E5` | `main.c` |
 | Mort | arrêt puis 89 : chute 30 images (eau) ou 1 image ; contact **79 images** (PROVISOIRE, mesuré `player-health.md` : 40,617 s → 41,94 s) | `70A0`-`70AC` | `main.c` |
 | Fin de partie | 8B | `42AB` | `main.c` |
-| Atterrissage d'une chute commencée au sol (mode 0 → 4) | 07 | `6F7E` | `main.c` (`VK_EVENT_LAND`) ; l'atterrissage d'un saut (`6D38`, si `CFF0 ≠ 0`) n'est pas porté (**PROVISOIRE**) |
+| Atterrissage d'une chute commencée au sol (mode 0 → 4) | 07 | `6F7E` | `main.c` (`VK_EVENT_LAND`) |
+| Atterrissage d'un saut plus bas que son départ (`C428 ≥ 21`) | 07 | `6D38` | `gameplay.c` (`jump_step`) → `VK_EVENT_LAND` → `main.c` |
 | START en partie (pause) | FD : silence, jingle `9463` seul, musique et effet figés | `51C4` | `main.c` (`pause_start`), `psg_core.c` |
 | START pendant la pause | FE : voies de musique restaurées, la musique reprend où elle était | `522D` | `main.c` (`pause_end`) |
 | Chute dans un trou ou dans l'eau | cri de Wilhelm (PCM, DAC) | **ajout du port**, absent de la ROM | `main.c` (voir §7.1) |
 
-Non branchés (événements non portés) : 01, 02, 03/06 (escaliers : à brancher quand le pas d'escalier sera relevé), 04, 07 depuis un saut (condition `CFF0` non relevée), 08, 0A, 0B, 0D, 10, 16-19, 1B, 1C, 81-88, 8C-8E, FB, FF. Les sons 03 et 06 ne viennent pas des escaliers mais des projectiles des armes secondaires (`72DE`, `7473`), non portées. Tous sont jouables dans le menu de test son (code Konami au titre).
+**Atterrissage d'un saut (6D26-6D38), prouvé le 2026-10-29.** `CFF0` n'est pas un reste des sondes de mur : la descente du saut (`C428 ≥ 9`, `6D13`) écrit `CFF0 := 0` à chaque pas (`6D17`), puis `CFF0 := 1` en `6D6F` quand `C428 - 2 ≥ 13h` (`6D1C`-`6D22`, appel de `6D6D`) ; la sonde de sol `7B88` n'écrit pas `CFF0`. Le son 07 du saut joue donc si l'atterrissage tombe au pas 21 ou plus. La table `6D95` a 19 pas et revient à la hauteur de départ au pas 19 ; au-delà, +6 par pas. Trace (`scratchpad/fidelity/out1`, Simon soulevé de 0, 0, 12, 24 et 40 px au départ du saut, point d'arrêt `6BA0`) : atterrissages au pas 19 sans 07 (deux fois), aux pas 21, 23 et 26 avec `CFF0 = 1` et une requête 07 à `509F` à la même image. Sens de jeu : **un saut qui retombe plus bas que son départ fait le bruit d'atterrissage**, pas un saut sur sol plat. Le port compte `C428` après la table (son saut passe en chute, mode 4, au pas 19) : `19 + ceil(images / 2)` (`gameplay.c`, `jump_step`), test `test_gameplay.c` (départs soulevés de 4, 12, 24, 40 px). PROVISOIRE : la table à 21 pas (`6D94`, `C431` bit 4, non portée) atteindrait le pas 21 même sur sol plat.
+
+Non branchés (événements non portés) : 01, 02, 03/06 (escaliers : à brancher quand le pas d'escalier sera relevé), 04, 08, 0A, 0B, 0D, 10, 16-19, 1B, 1C, 81-88, 8C-8E, FB, FF. Les sons 03 et 06 ne viennent pas des escaliers mais des projectiles des armes secondaires (`72DE`, `7473`), non portées. Tous sont jouables dans le menu de test son (code Konami au titre).
 
 ## 8. Fichiers
 

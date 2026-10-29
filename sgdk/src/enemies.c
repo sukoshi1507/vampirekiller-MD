@@ -6,7 +6,7 @@
  *   - 9CC3 (banque 2) : minuterie partagee CF10 + compte a rebours CF00.
  *   - 9CFC (banque 2) : position de spawn (E = Y, D = X de spawn).
  *   - 9E16 (banque 2) : garde de spawn selon Simon (C427) et D.
- *   - 9D97 (banque 2) : canal type 4 (salle 4). Garde non verifiee, cadence mesuree.
+ *   - 9D97 (banque 2) : canal type 4 (drapeau bit 3) : 9CC3 sur CF06/CF07, table 9DBB, garde 9E16.
  *   - 5F1D (banque 0) : creation de l'entite dans le premier bloc libre.
  *   - 9D4B, A2E0, A310 : type 2, l'homme-poisson des salles 4 et 5 du stage 2 ; 9C66/9CA3 :
  *     ses gouttes (objet 0x20). Voir la section « Type 2 » de enemy-behavior.md.
@@ -17,7 +17,8 @@
  *   - Garde 9E16                                           verifie code + 6 cas de trace
  *   - Cote = type (A droite, B gauche)                     enemy-behavior 6.3
  *   - Mouvement, animation, sortie du type 1               observe (trace frames.txt)
- *   - Type 4 : cadence 168 images, 1,5 px/image, sortie    observe (4 creations)
+ *   - Type 4 : canal 9D97 (premier tir, cadence, cote, 9E16) code + trace (scratchpad/fidelity)
+ *   - Type 4 : 1,5 px/image, sortie                        observe (4 creations)
  *   - Contact -2, invulnerabilite 180 images               observe (run 3, run 6) ;
  *     le recul lui-meme est dans gameplay.c (vk_game_hit)
  *   - Type 1 du stage 2 (salle 2) : spawn 9CFC (E = A0, cote = bit 1 de CF01), sortie 99E5,
@@ -29,7 +30,6 @@
  *   - Boite de contact de Simon : 16 px centres sur X (X-8 a X+7), 32 px au-dessus de Y.
  *     La boite de contact MSX n'est pas mesuree ; l'ennemi touche observe a X ~ 122 pour Simon en 120.
  *   - Recul : 2 px par image dans le sens de l'ennemi, sans blocage des commandes ni arc vertical (C420, C425).
- *   - Type 4 : phase du premier tir (168 images apres l'entree) et absence de garde 9E16 non verifiees.
  *   - Type 5 (salles 2, 3, 7) : non porte (graphisme et declencheur inconnus).
  *   - extraPhase (1 pour A, 15 pour B) : observe, cause inconnue.
  *   - Type 2 : premier tir 51 images apres l'entree (2 mesures, depend de la phase de CF10) ;
@@ -37,7 +37,7 @@
  *     bloc) ; premiere mise a jour des gouttes (la ROM en fait une de plus, voir 9CA3) ;
  *     contact calcule pour Simon debout ; objet 1E, score et sons 7/8/9 non portes.
  *   - Salle 1 avec Simon haut (E = 60) : condition C425 < 0x88 (module), pas une regle verifiee.
- *   - Type 1 du stage 2 : contact calcule pour Simon debout (C420 = 0) ; accroupi ou en saut,
+ *   - Type 1 (romBox, hall et stage 2) : contact calcule pour Simon debout (C420 = 0) ; accroupi ou en saut,
  *     la ROM reduit la hauteur a 42 (et C425 - 8 en saut), non transmis par EnemyRoomVars.
  */
 #include "enemies.h"
@@ -70,6 +70,8 @@
 const EnemyU8 kEnemyStage1RoomFlags[8] = { 0x01, 0x01, 0x00, 0x00, 0x08, 0x01, 0x01, 0x00 };
 const EnemyU8 kEnemyStage2RoomFlags[6] = { 0x08, 0x08, 0x01, 0x08, 0x02, 0x02 };
 const EnemyU8 kEnemySpawnPeriod[8] = { 0x0C, 0x12, 0x0C, 0x0C, 0x0C, 0x12, 0x0C, 0x0C };
+/* 9DBB-9DC2 (banque 2) : periodes du canal type 4, index CF07 & 7 avant l'increment. */
+static const EnemyU8 kType4Period[8] = { 0x14, 0x14, 0x14, 0x28, 0x14, 0x14, 0x14, 0x28 };
 
 #define ENEMY_FLAG_TYPE1 0x01
 #define ENEMY_FLAG_TYPE2 0x02
@@ -168,7 +170,7 @@ void Enemies_setRoom(EnemyState *s)
     EnemyU8 i;
     for (i = 0; i < ENEMY_MAX; i++) clearEnemy(&s->enemy[i]);
     s->parity = 0;
-    s->type4Frames = 0;
+    s->type4Count = ENEMY_TYPE4_COUNT;   /* 9CA9 : CF06 = 08, CF07 = 00 */
     s->type4Side = ENEMY_SIDE_RIGHT;
     s->type5Timer = 0;
     s->type4Shots = 0;
@@ -190,9 +192,15 @@ void Enemies_init(EnemyState *s)
 
 void Enemies_spawnTimerInit(EnemySpawnTimer *t)
 {
-    /* ROM 9CBB : CF00 = 04, CF01 = 00. CF10 non initialise par cette routine :
-     * sa valeur de depart n'est pas prouvee ; 0 est choisi ici (provisoire). */
+    /* 44C6 : la RAM C405-E000 est effacee en debut de partie, CF10 compris (trace :
+     * CF10 = 0 jusqu'au premier appel de 9CC3, dans la salle 0 du hall). */
     t->phase = 0;
+    Enemies_spawnTimerRoom(t);
+}
+
+void Enemies_spawnTimerRoom(EnemySpawnTimer *t)
+{
+    /* 9CA9 (table 9CBB) : CF00 = 04, CF01 = 00. CF10 n'est ecrit que par 9CC3. */
     t->counter = 4;
     t->index = 0;
 }
@@ -328,8 +336,14 @@ int Enemies_spawnTimerTick(EnemySpawnTimer *t, const EnemyRoomVars *v, EnemyStat
 
     /* Y de sprite = E - 0x20 (observe pour E = C0 -> A0). */
     yCoord = (EnemyU8)(yCoord - 0x20);
-    return Enemies_spawn(s, side, type, yCoord,
-                         (type == ENEMY_TYPE_A) ? 1 : 15) >= 0;
+    {
+        /* Meme objet que le type 1 du stage 2 (routine A964) : sortie 99E5, contact 8290 et
+         * fouet 7DAD de la ROM (trace du hall : suppression a X 06.40 et F1.40, Y C0). */
+        const int k = Enemies_spawn(s, side, type, yCoord, (type == ENEMY_TYPE_A) ? 1 : 15);
+        if (k < 0) return 0;
+        s->enemy[k].romBox = 1;
+        return 1;
+    }
 }
 
 /* Chute : un ennemi sans sol sous lui tombe (ENEMY_FALL_SPEED px par image). Le sol se teste
@@ -723,11 +737,14 @@ static void fishSpawn(EnemyState *s, EnemyU8 x, const EnemyRoomVars *v)
 }
 
 /* Canal 9D4B (bit 1 du drapeau) : tir a type2Next, X de la table 9D87 avec la garde 9D6E.
- * Le compte a rebours suit 9CC3 (CF02, CF03) ; un tir sans place est perdu, l'index avance. */
-static void type2Channel(EnemyState *s, const EnemyRoomVars *v)
+ * Le compte a rebours suit 9CC3 (CF02, CF03) ; un tir sans place est perdu, l'index avance.
+ * Chaque appel (une image sur deux, a partir de la premiere) decremente CF10, partage avec
+ * les autres canaux ; la phase du premier tir (ENEMY_TYPE2_FIRST) reste celle de CF10 = 0. */
+static void type2Channel(EnemyState *s, EnemySpawnTimer *t, const EnemyRoomVars *v)
 {
     EnemyU8 period, c, reload, x;
-    if (++s->type2Frames != s->type2Next) return;
+    if (++s->type2Frames & 1) t->phase--;
+    if (s->type2Frames != s->type2Next) return;
     period = kType2Period[s->type2Shots & 7];
     s->type2Shots++;
     c = (EnemyU8)(v->difficulty << 1);
@@ -742,11 +759,11 @@ static void type2Channel(EnemyState *s, const EnemyRoomVars *v)
 /* Types 2 et gouttes : tir puis mises a jour, une image sur deux (valeurs impaires de
  * type2Frames, celles des tirs : le type 2 bouge des l'image de sa creation, la goutte a
  * partir de la mise a jour suivante). */
-static void type2Frame(EnemyState *s, const EnemyRoomVars *v)
+static void type2Frame(EnemyState *s, EnemySpawnTimer *t, const EnemyRoomVars *v)
 {
     EnemyU8 i;
     if (!(roomFlags(v) & ENEMY_FLAG_TYPE2)) return;
-    type2Channel(s, v);
+    type2Channel(s, t, v);
     if (s->type2Frames & 1) {
         for (i = 0; i < ENEMY_MAX; i++) {
             Enemy *e = &s->enemy[i];
@@ -760,6 +777,29 @@ static void type2Frame(EnemyState *s, const EnemyRoomVars *v)
     }
     for (i = 0; i < ENEMY_MAX; i++)
         if (s->enemy[i].active && s->enemy[i].type == ENEMY_TYPE_SPLASH) s->enemy[i].age = 1;
+}
+
+/* Canal 9D97 (bit 3 du drapeau), un appel par passe de l'etat 5 (une image sur deux) :
+ * 9CC3 sur CF06/CF07 (CF06 = 8 a l'entree, recharge table 9DBB + 1), cote D = F0 si le bit 0
+ * de CF07 (deja incremente) vaut 1, sinon 10 ; 9E16 deplace D de l'autre cote si Simon est a
+ * moins de 64 px de ce bord (pas de refus : 9D97 ignore la retenue) ; E = C425 - 8 (9DB2). */
+static void type4Channel(EnemyState *s, EnemySpawnTimer *t, const EnemyRoomVars *v)
+{
+    EnemyU8 period, c, d;
+    int k;
+    t->phase--;                                     /* 9CC3 : DEC (CF10) */
+    if ((t->phase & 0x03) != 0) return;
+    if (--s->type4Count != 0) return;               /* DEC (CF06) */
+    period = kType4Period[s->type4Shots & 7];       /* 9CD0 : CF07 avant l'increment */
+    s->type4Shots++;
+    c = (EnemyU8)(v->difficulty << 1);
+    s->type4Count = (EnemyU16)(((period >= c) ? period - c : 0) + 1);
+    d = (s->type4Shots & 1) ? 0xF0 : 0x10;          /* 9DA5-9DAD */
+    if (v->simonX >= 0xC0) { if (d >= 0xC0) d = 0x10; }   /* 9E29-9E2E */
+    else if (v->simonX < 0x40) { if (d < 0x40) d = 0xF0; } /* 9E22-9E26 */
+    s->type4Side = (d == 0xF0) ? ENEMY_SIDE_RIGHT : ENEMY_SIDE_LEFT;
+    k = Enemies_spawn(s, s->type4Side, ENEMY_TYPE_4, (EnemyU8)(v->simonY - ENEMY_TYPE4_Y_FROM_SIMON), 0);
+    if (k >= 0) s->enemy[k].sub = (EnemyU8)(s->enemy[k].y - ENEMY_TYPE4_Y);
 }
 
 int Enemies_frame(EnemyState *s, EnemySpawnTimer *t, const EnemyRoomVars *v)
@@ -785,28 +825,15 @@ int Enemies_frame(EnemyState *s, EnemySpawnTimer *t, const EnemyRoomVars *v)
         if (++e->age & 1) pantherStep(e, v);
     }
 
-    /* Type 1 : 9CC3 une image sur deux. Le cote alterne par tir (provisoire). */
+    /* Une passe de l'etat 5 sur deux images, a partir de la premiere image de jeu de la
+     * salle : canal type 1 (9CE6, cote alterne par tir, provisoire) puis canal type 4 (9D97,
+     * hall salle 4, stage 2 salles 0, 1, 3), dans l'ordre des bits de la boucle 5ED8. */
     if (s->parity == 0) {
         w.sideFlag = (EnemyU8)(t->index & 1);
         (void)Enemies_spawnTimerTick(t, &w, s);
+        if (roomFlags(v) & ENEMY_FLAG_TYPE4) type4Channel(s, t, v);
     }
     s->parity ^= 1;
-
-    /* Type 4 : drapeau bit3 (hall salle 4, stage 2 salles 0, 1, 3). Periodes 168, 168, 168, 328
-     * (table 9DBB), cote alterne, droite d'abord ; Y SAT du spawn = C425 - 22. */
-    if (roomFlags(v) & ENEMY_FLAG_TYPE4) {
-        /* Premier tir : delai de chargement ; ensuite table[(tirs - 1) & 7], longue a l'index 3. */
-        const EnemyU16 period = (s->type4Shots && ((s->type4Shots - 1) & 3) == 3) ?
-            ENEMY_TYPE4_PERIOD_LONG : ENEMY_TYPE4_PERIOD;
-        if (++s->type4Frames >= period) {
-            const int k = Enemies_spawn(s, s->type4Side, ENEMY_TYPE_4,
-                                        (EnemyU8)(v->simonY - ENEMY_TYPE4_Y_FROM_SIMON), 0);
-            s->type4Frames = 0;
-            s->type4Shots++;
-            if (k >= 0) s->enemy[k].sub = (EnemyU8)(s->enemy[k].y - ENEMY_TYPE4_Y);
-            s->type4Side ^= 1;
-        }
-    }
 
     /* Type 5 : une panthere par visite des salles 2, 3 et 7, a la premiere image de jeu apres
      * l'etat 9 (62F5 recopie la liste a chaque chargement de salle et la cree en 61BB). */
@@ -816,7 +843,7 @@ int Enemies_frame(EnemyState *s, EnemySpawnTimer *t, const EnemyRoomVars *v)
     }
 
     /* Type 2 (stage 2, salles 4 et 5) et ses gouttes. */
-    type2Frame(s, v);
+    type2Frame(s, t, v);
 
     /* Contact : desactive pendant le recul et l'invulnerabilite (C420, C42D). */
     if (s->recoil == 0 && s->invuln == 0) {

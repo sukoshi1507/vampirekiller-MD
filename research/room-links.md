@@ -191,7 +191,7 @@ Aucune logique d'ennemi ne tourne pendant `62F5` ; `9CA9` réinitialise les minu
 |---|---|---|
 | 1 (zombie, hall et stage 2 salle 2) | état 5 (`CF00 = 04`) ; hall : 31 images après l'état 5 (image 877 → 908) | inchangé : la minuterie du port démarre à la fin du gel ; stage 2 salle 2 : 52 images après `D001` contre 48 mesurées (au lieu de 32), toujours **PROVISOIRE** (phase de `CF10`) |
 | 2 (homme-poisson) | état 5 (`CF02 = 04`) ; 51 images après `D001` = 21 d'état 9 + 30 | `ENEMY_TYPE2_FIRST` 51 → **31** (image de jeu 31 = `D001` + 51) ; tests natifs décalés de 20 |
-| 4 (chauve-souris) | état 5 (`CF06 = 08`) ; premier tir 56-57 images après l'état 5 (hall salle 4 : 2638 → 2694 ; stage 2 salle 0 : 6009 → 6065) | inchangé (168 depuis la fin du gel) : **écart non corrigé**, le premier tir du port vient environ 110 images trop tard |
+| 4 (chauve-souris) | état 5 (`CF06 = 08`) ; premier tir 56-57 images après l'état 5 (hall salle 4 : 2638 → 2694 ; stage 2 salle 0 : 6009 → 6065) | canal `9D97` porté (`type4Channel`) : `CF06 = 8`, `CF10` partagé et gardé d'une salle à l'autre ; tir 56 à 62 images après la première image de jeu selon la phase de `CF10` (`research/enemy-behavior.md` §3.3) |
 | 5 (panthère) | créée par `61BB` à la fin de `62F5` (dernière image `C000 = 9`) | `ENEMY_TYPE5_DELAY` 21 → **1** (première image de jeu) |
 
 ### 9.5 Port
