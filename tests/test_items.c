@@ -37,6 +37,11 @@ int main(void)
     assert(vk_items_tick(&it, &g) == VK_ITEM_KEY_TAKEN);
     assert((it.keys & VK_KEY_WHITE) && !vk_items_key_shown(&it, &g));
     assert(vk_items_tick(&it, &g) == VK_ITEM_NONE);          /* taken once */
+    /* Revealed, then the room is left: the C500 key is gone, the block is back. */
+    vk_items_begin(&it);
+    it.white_key_revealed = 1;
+    vk_items_enter_room(&it);
+    assert(!vk_items_key_shown(&it, &g));
 
     /* K4: without the key the door is a wall at x 228 on the ledge (y 96). */
     vk_items_begin(&it);

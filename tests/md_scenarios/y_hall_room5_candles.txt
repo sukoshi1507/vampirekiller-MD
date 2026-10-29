@@ -1,0 +1,64 @@
+# (y) Les deux bougies de la salle 5 du hall (5B1B : C470 01 90 40 00 00 00 et
+# C480 01 80 90 00 00 1A). La bougie (64,144) contient l'objet 00 : pas de flamme
+# C800 (8996), un objet C500 de type 01 dessine en flamme rouge F4/F8 (8C7E)
+# pendant 16 images (8A99), puis retire (8AA7 -> 8B1B) : rien a ramasser, comme
+# sur le MSX. La bougie (144,128) donne le fouet a chaine 1A (petit coeur si
+# C416 = 1, 8A29). research/castle-candles.md 9.10.
+# vk_candles : +4 allumees, objets en +6 (14 octets : etat, x, y, objet), coeurs
+# +118, fouet +120.
+include boot_to_courtyard.inc
+until front_mode == MODES['INTERIOR'] max 3000 RIGHT
+# Changement de salle debug du hall : A tenu, puis A+DROITE (le premier front est perdu).
+hold A 3
+hold A+RIGHT 3
+wait 10
+hold A 3
+hold A+RIGHT 3
+wait 10
+hold A 3
+hold A+RIGHT 3
+wait 10
+hold A 3
+hold A+RIGHT 3
+wait 10
+hold A 3
+hold A+RIGHT 3
+wait 10
+hold A 3
+hold A+RIGHT 3
+wait 10
+expect game.room == 5 # salle 5 du hall
+wait 30
+expect ram8('vk_candles+4') == 3 # deux bougies allumees
+poke enemy_state+0 0
+# Bougie (64,144), objet 00 : saut avec fouet (C425 - 18 - 144 dans [0, 20)).
+poke vk_game+0 50
+wait 4
+tap C 1
+wait 6
+hold B 2
+until (ram8('vk_candles+4') & 1) == 0 max 40
+set f0 frame
+expect ram8('vk_candles+6') == 1 and ram8('vk_candles+9') == 0 # flamme de l'objet 00
+expect ram8('vk_candles+7') == 64 and ram8('vk_candles+8') == 144
+wait 4
+shot y-bougie-objet-00
+until ram8('vk_candles+6') == 0 max 40
+expect frame - f0 == 15 # 16 images (8A99, la premiere est celle du coup), puis retire (8B1B)
+wait 60
+expect ram8('vk_candles+118') == 0 and ram8('vk_candles+120') == 0 # rien gagne
+expect all(ram8('vk_candles+%d' % (6 + 14 * i)) == 0 for i in range(8)) # aucun objet
+# Bougie (144,128), objet 1A : saut sous la bougie, fouet au sommet du saut.
+until game.player.mode == 0 max 80
+poke vk_game+0 124
+wait 4
+tap C 1
+wait 14
+hold B 2
+until (ram8('vk_candles+4') & 2) == 0 max 40
+expect ram8('vk_candles+9') == 0x1A # fouet a chaine
+until ram8('vk_candles+6') == 3 max 300
+expect ram8('vk_candles+7') == 144 and ram8('vk_candles+8') == 176 # pose au sol
+shot y-fouet-pose
+until ram8('vk_candles+120') == 1 max 200 RIGHT
+expect ram8('vk_candles+6') == 0 # ramasse : C416 = 1

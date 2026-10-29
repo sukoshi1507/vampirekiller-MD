@@ -148,6 +148,43 @@ int main(void)
     /* 8899: broken, the ROM tiles are back. */
     assert(vk_sample_tile(vk_game_collision(&g), 128, 160) == vk_stage1_collision[2][(160 - 16) / 8 * 32 + 16]);
     assert(c.drop[2].state == VK_DROP_NONE);
+    /* 883E -> 89FD: the stream flag goes to the key; leaving the room without it,
+     * the block is back (flag still set, 5B1B). */
+    assert(c.out[1][2] == 0);
+    place(&g, VK_AREA_INTERIOR, 1, 3, 16, 192);
+    vk_candles_enter(&c, &g);
+    place(&g, VK_AREA_INTERIOR, 1, 2, 166, 192);
+    vk_candles_enter(&c, &g);
+    assert(vk_candles_lit(&c, 1) && vk_candles_def(&c, 1)->kind == VK_OBJ_WHITE_KEY);
+    assert(vk_sample_tile(vk_game_collision(&g), 128, 160) == 0x01);
+    /* 8C0B: once the key is taken, the block does not come back. */
+    vk_whip_reset(&w);
+    lash(&w, &g, 1);
+    assert(vk_candles_tick(&c, &g, &w, &hit) & VK_CANDLE_EVENT_WHITE_KEY);
+    vk_candles_white_key_taken(&c);
+    assert(c.out[1][2] == 2);
+    place(&g, VK_AREA_INTERIOR, 1, 3, 16, 192);
+    vk_candles_enter(&c, &g);
+    place(&g, VK_AREA_INTERIOR, 1, 2, 166, 192);
+    vk_candles_enter(&c, &g);
+    assert(!vk_candles_lit(&c, 1));
+
+    /* Hall room 5: candle (64,144) holds object 0 (C470: 01 90 40 00 00 00): the
+     * red flame of 8C7E for 16 frames (8A99), then nothing (8B1B); candle (144,128)
+     * holds 1A, the chain whip. */
+    vk_candles_begin(&c);
+    place(&g, VK_AREA_INTERIOR, 1, 5, 50, 192);
+    vk_whip_reset(&w);
+    vk_candles_enter(&c, &g);
+    assert(c.count == 2 && vk_candles_def(&c, 0)->kind == 0 && vk_candles_def(&c, 1)->kind == 0x1A);
+    assert(vk_candles_hit(&c, 0) == VK_CANDLE_EVENT_HIT);
+    assert(c.drop[0].state == VK_DROP_BURST && c.drop[0].kind == 0);
+    run(&c, &g, &w, 15);
+    assert(c.drop[0].state == VK_DROP_BURST);
+    run(&c, &g, &w, 1);
+    assert(c.drop[0].state == VK_DROP_NONE && c.hearts == 0 && c.weapon == 0);
+    vk_candles_hit(&c, 1);
+    assert(c.drop[0].state == VK_DROP_BURST && c.drop[0].kind == VK_OBJ_CHAIN_WHIP);
 
     /* Hall room 2: gold key (64,176) then chest (176,176) with a big heart. */
     vk_candles_begin(&c);

@@ -101,6 +101,7 @@ static void show_courtyard(u16 room)
 static void show_hall_room(u16 room)
 {
     vk_show_castle_room(vk_game.stage, room);
+    vk_items_enter_room(&items);
     vk_item_view_room(&items, &vk_game);
     vk_candle_view_room();
 }
@@ -520,7 +521,11 @@ int main(bool hardReset)
                     vk_item_view_event(item, &items, &vk_game);
                     /* 8E68: white key 14. PROVISIONAL: the room 7 door gives 1A
                      * (7772: 15 only when C5AC reaches 5, at the castle door). */
-                    if (item == VK_ITEM_KEY_TAKEN) vk_psg_effect(VK_SFX_KEY);
+                    if (item == VK_ITEM_KEY_TAKEN)
+                    {
+                        vk_psg_effect(VK_SFX_KEY);
+                        vk_candles_white_key_taken(&vk_candles);   /* 8C0B */
+                    }
                     else if (item == VK_ITEM_DOOR_OPENED) vk_psg_effect(VK_SFX_DOOR_1A);
                     {
                         /* 6F9A: effect 13 when a contact starts the recoil (C42D set). */
