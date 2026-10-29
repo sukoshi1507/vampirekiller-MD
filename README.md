@@ -27,7 +27,7 @@ Ce qui fonctionne dans la ROM Mega Drive :
   qui se lève, Simon qui sort seul) et mène vers le stage 2.
 - **Bougies, clé dorée et coffres** (cour, hall, stage 2) : les objets lâchés et les
   objets fixes se ramassent au contact, aussi pendant leur chute ; une seule clé dorée
-  à la fois (icône du HUD), qui ouvre un coffre dont le contenu attend 32 images puis
+  à la fois (icône du HUD, gardée jusqu'au retour en jeu après une mort), qui ouvre un coffre dont le contenu attend 32 images puis
   tombe. Effets portés (`research/castle-candles.md` 9.5 à 9.8) : cœurs (01, 02) ;
   énergie (07 : +8, 16 : pleine) ; 09, contact destructeur 300 images (l'ennemi touché
   meurt et rapporte ses points, Simon clignote en rouge) ; 08, aucun contact 300 images
