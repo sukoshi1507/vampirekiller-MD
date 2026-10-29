@@ -12,6 +12,12 @@ until enemies.energy == 0 max 600
 set f_contact frame
 expect health.phase == 1 # mort au contact fatal
 shot d-dying
+# 7053-707A : le recul fatal fini (16 passes au sol), C420 = 6 et pose de mort 09/05
+# (+10/+15 tourne a gauche), vers 79 images apres le contact (jingle 89, 70A0).
+until game.recoil == 5 max 120
+expect 74 <= frame - f_contact <= 84 and game.player.pose in (12, 13) and enemies.invuln == 0
+wait 2
+shot d-pose-mort
 until health.phase == 2 max 400
 expect 248 <= frame - f_contact <= 256 # etat 6 environ 252 images apres le contact
 expect enemies.energy == 32 # refill (62D0)

@@ -215,6 +215,8 @@ static void load_actor(u16 scene)
 {
     VDP_loadTileData((const u32 *) vk_player_tiles, PLAYER_TILE_INDEX,
                     VK_PLAYER_POSES * VK_PLAYER_TILES_PER_POSE, CPU);
+    VDP_loadTileData((const u32 *) vk_player_death_tiles, DEATH_TILE_INDEX,
+                    2 * VK_PLAYER_DEATH_TILES, CPU);
     PAL_setPalette(PAL2, vk_scenes[scene].palette, CPU);
     vk_load_whip_graphics();
     if (scene == 6 || (scene >= 3 && scene <= 5)) vk_reset_training_target();

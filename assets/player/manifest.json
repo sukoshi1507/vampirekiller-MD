@@ -251,6 +251,20 @@
           "coordinate_cpu": "7A94"
         }
       ]
+    },
+    {
+      "death_pose": 0,
+      "lower_frame": 9,
+      "upper_frame": 5,
+      "left": -16,
+      "top": 15
+    },
+    {
+      "death_pose": 1,
+      "lower_frame": 19,
+      "upper_frame": 20,
+      "left": -15,
+      "top": 15
     }
   ],
   "jump_delta_cpu": "6D95",

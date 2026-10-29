@@ -66,7 +66,7 @@ Ce qui n'est pas porté ou reste provisoire :
 - **Stages 3 et suivants, châteaux, attaques autres que le fouet** : non portés.
 - **Énergie (provisoire)** : lieu de reprise (entrée du hall), commandes bloquées
   pendant la mort : non relevés sur le MSX2.
-  Pas d'animation de mort. La chute dans le vide
+  La chute dans le vide
   ne tue pas.
 - **Provisoires** : vitesse de chute des ennemis, boîte de contact de Simon.
 

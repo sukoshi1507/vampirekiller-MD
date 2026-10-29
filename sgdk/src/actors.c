@@ -4,6 +4,10 @@
 #include "generated/whip_level2_md.h"
 #include "generated/enemy_sprites_md.h"
 #include "hud.h"
+
+_Static_assert(HUD_TEXT_TILE_INDEX + HUD_TEXT_TILE_COUNT <= DEATH_TILE_INDEX &&
+               DEATH_TILE_INDEX + 2 * VK_PLAYER_DEATH_TILES <= FLAME_A_CLEAR_TILE_INDEX,
+               "death pose tiles between the HUD text and the torch tiles");
 #include "candle_view.h"
 #include "psg_player.h"
 
@@ -98,6 +102,8 @@ void vk_step_enemies(void)
     vars.map = vk_game_collision(&vk_game);   /* floor for falling enemies */
     /* C420 = 5 while Simon is knocked back: no enemy contact (7EF4). */
     vk_enemies.recoil = (EnemyU8)vk_game_recoiling(&vk_game);
+    /* 7064: the death (C420 = 6) clears C42D: no more blinking. */
+    if (vk_game.recoil == VK_RECOIL_DEAD) vk_enemies.invuln = 0;
     if (Enemies_frame(&vk_enemies, &enemy_timer, &vars))
     {
         /* 7EC1: the whip stops (C422 := 0) and Simon is knocked back. */
@@ -201,7 +207,15 @@ void vk_show_player(const VKPlayer *shown)
     /* Standing body on sprite 0. In crouch mode and during any attack the body
      * is the two-half composition drawn on sprites 5 and 6 (below); the lash
      * is part of those ROM-derived frames, so no separate lash is overlaid. */
-    if (crouch_mode || attack_frame)
+    if (player->pose >= VK_PLAYER_DEATH_POSE)
+    {
+        /* 7073: the death pose lies on the floor, 32 x 16 px (4 x 2 tiles). */
+        const u16 side = (u16)(player->pose - VK_PLAYER_DEATH_POSE);
+        VDP_setSpriteFull(0, (s16)player->x + vk_player_death_left[side], (s16)player->y - 15,
+            SPRITE_SIZE(4, 2),
+            TILE_ATTR_FULL(PAL2, TRUE, FALSE, FALSE, DEATH_TILE_INDEX + side * VK_PLAYER_DEATH_TILES), 1);
+    }
+    else if (crouch_mode || attack_frame)
         VDP_setSpriteFull(0, -32, -32, SPRITE_SIZE(3, 4),
             TILE_ATTR_FULL(PAL2, TRUE, FALSE, FALSE,
                            PLAYER_TILE_INDEX + player->pose * VK_PLAYER_TILES_PER_POSE), 1);

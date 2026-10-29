@@ -10,4 +10,10 @@ extern const VKByte vk_player_room[768];
 extern const signed char vk_jump_deltas[19];
 extern const VKByte vk_fall_deltas[4];
 extern const VKByte vk_collision_limits[19];
+/* Death pose (C420 = 6, 09/05 and 19/20 facing left): 4 x 2 tiles, top at Y - 15,
+ * left at X + vk_player_death_left[facing]. Poses VK_PLAYER_DEATH_POSE + facing. */
+#define VK_PLAYER_DEATH_POSE 12
+#define VK_PLAYER_DEATH_TILES 8
+extern const unsigned long vk_player_death_tiles[2][64];
+extern const signed char vk_player_death_left[2];
 #endif

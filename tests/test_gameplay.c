@@ -314,7 +314,12 @@ int main(void)
         for (f = 0; f < 160 && g.recoil != VK_RECOIL_FLOOR; f++) vk_game_tick_controls(&g, 0, 0, 0, 0);
         assert(g.recoil == VK_RECOIL_FLOOR && g.player.y == 192 && g.recoil_count == 16);
         for (f = 0; f < 32; f++) vk_game_tick_controls(&g, 0, 0, 0, 0);
-        assert(!vk_game_recoiling(&g) && !g.player.on_stairs);
+        /* 7053-707A: then C420 = 6, the death pose (facing back towards the hit,
+         * 704B), held until the respawn. */
+        assert(g.recoil == VK_RECOIL_DEAD && !g.player.on_stairs && g.player.facing == 0);
+        assert(g.player.pose == VK_PLAYER_DEATH_POSE && g.player.x == 16);
+        for (f = 0; f < 20; f++) vk_game_tick_controls(&g, 1, 1, 0, 0);
+        assert(g.recoil == VK_RECOIL_DEAD && g.player.pose == VK_PLAYER_DEATH_POSE && g.player.x == 16);
     }
 
     /* Effect 07 (6F7E): a fall begun on the ground ends with VK_EVENT_LAND; a

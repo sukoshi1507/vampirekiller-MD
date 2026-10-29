@@ -73,6 +73,40 @@ def extract_pose(data, lower, upper, jumping=False, top=30):
     return pixels, provenance
 
 
+# Death (C420 = 6): 7073 sets C42E/C42F = 09/05 (+10/+15 facing left, 765F). Simon
+# lies on the floor: both parts side by side, 32 x 16 px above the feet.
+DEATH_POSES = [(9, 5), (19, 20)]
+
+
+def extract_wide_pose(data, lower, upper):
+    """32x16 canvas of a pose whose parts lie side by side; returns the pixels and
+    the X offset of the canvas from Simon's X (the top is Y - 15)."""
+    patterns = RomView(data, (0, 11, 12, 13))
+    positions = RomView(data, (0, 1, 2, 3))
+    parts = []
+    for frame, table, coords in [(lower, 0xA281, 0x7985), (upper, 0xA2D1, 0x79D5)]:
+        raw = decode_rle(patterns, patterns.word(table + frame * 2))
+        coordinate = positions.word(coords + frame * 2)
+        if len(raw) != 64 or positions.byte(coordinate) != 2:
+            raise ValueError('Pose requires a different sprite layout')
+        offsets = [struct.unpack('bb', positions.read(coordinate + 1 + layer * 2, 2))
+                   for layer in range(2)]
+        parts.append((raw, offsets))
+    left = min(dx for _, offsets in parts for _, dx in offsets)
+    pixels = [0] * (32 * 16)
+    for raw, offsets in parts:
+        for layer, (dy, dx) in enumerate(offsets):
+            for y in range(16):
+                for x in range(16):
+                    if not raw[layer * 32 + y + (16 if x >= 8 else 0)] & (128 >> (x & 7)):
+                        continue
+                    xx, yy = x + dx - left, y + dy + 15
+                    if not (0 <= xx < 32 and 0 <= yy < 16):
+                        raise ValueError('Nontransparent sprite pixel would be clipped')
+                    pixels[yy * 32 + xx] |= layer + 1
+    return pixels, left
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('rom', type=Path)
@@ -109,6 +143,24 @@ def main():
                     words.append(word)
         arrays.append(words)
     sheet.save(out / 'poses.png')
+    death_words, death_left = [], []
+    for index, (lower, upper) in enumerate(DEATH_POSES):
+        pixels, left = extract_wide_pose(data, lower, upper)
+        image = Image.new('RGBA', (32, 16))
+        image.putdata([(*colors[p], 255) if p else (0, 0, 0, 0) for p in pixels])
+        image.save(out / f'death-{index}.png')
+        words = []
+        for tile_x in range(4):
+            for tile_y in range(2):
+                for row in range(8):
+                    word = 0
+                    for column in range(8):
+                        word = (word << 4) | pixels[(tile_y * 8 + row) * 32 + tile_x * 8 + column]
+                    words.append(word)
+        death_words.append(words)
+        death_left.append(left)
+        records.append({'death_pose': index, 'lower_frame': lower, 'upper_frame': upper,
+                        'left': left, 'top': 15})
     jump = [int.from_bytes(bytes((v,)), 'big', signed=True) for v in data[0x2D95:0x2DA8]]
     fall = list(data[0x2F81:0x2F85])
     limits = list(data[0x3C78:0x3C8B])
@@ -125,6 +177,12 @@ extern const VKByte vk_player_room[768];
 extern const signed char vk_jump_deltas[19];
 extern const VKByte vk_fall_deltas[4];
 extern const VKByte vk_collision_limits[19];
+/* Death pose (C420 = 6, 09/05 and 19/20 facing left): 4 x 2 tiles, top at Y - 15,
+ * left at X + vk_player_death_left[facing]. Poses VK_PLAYER_DEATH_POSE + facing. */
+#define VK_PLAYER_DEATH_POSE {len(POSES)}
+#define VK_PLAYER_DEATH_TILES 8
+extern const unsigned long vk_player_death_tiles[2][64];
+extern const signed char vk_player_death_left[2];
 #endif
 ''')
     lines = ['/* Generated from the supplied ROM. */', '#include "player_assets.h"',
@@ -135,6 +193,14 @@ extern const VKByte vk_collision_limits[19];
                      for i in range(0, 96, 8))
         lines.append('    },')
     lines.append('};')
+    lines.append('const unsigned long vk_player_death_tiles[2][64] = {')
+    for words in death_words:
+        lines.append('    {')
+        lines.extend('        ' + ','.join(f'0x{v:08X}UL' for v in words[i:i + 8]) + ','
+                     for i in range(0, 64, 8))
+        lines.append('    },')
+    lines.append('};')
+    lines.append(f'const signed char vk_player_death_left[2] = {{{death_left[0]}, {death_left[1]}}};')
     for ctype, name, values in [('VKByte', 'vk_player_room', room_map),
                                ('signed char', 'vk_jump_deltas', jump),
                                ('VKByte', 'vk_fall_deltas', fall),

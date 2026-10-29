@@ -45,7 +45,8 @@ typedef enum { VK_RECOIL_NONE = 0,
                VK_RECOIL_START = 1,         /* C423 0 (6F93): pose set, no motion */
                VK_RECOIL_AIR = 2,           /* C423 1 or 2: arc of 707D, 2 px a pass (2 frames) */
                VK_RECOIL_FLOOR = 3,         /* C423 3 (701D): on the floor, no control */
-               VK_RECOIL_STAIRS = 4         /* hit on a staircase: C420 = 5 for one pass, then 3 (6FAF) */
+               VK_RECOIL_STAIRS = 4,        /* hit on a staircase: C420 = 5 for one pass, then 3 (6FAF) */
+               VK_RECOIL_DEAD = 5           /* C420 = 6 after a fatal recoil (7070): death pose until the respawn */
              } VKRecoil;
 #define VK_RECOIL_STAIRS_FRAMES 2   /* one pass of state 5 (traced: C420 = 5 at 2 frames) */
 #define VK_RECOIL_STEPS 21          /* 6FDA: D = 15h entries in 707D */

@@ -24,6 +24,8 @@
  * tiles (user index up to 313) and the HUD tiles (900, hud.h). Tiles from 1536 on
  * hold the plane tables, so nothing may be loaded past the sprite tiles (1024..1382). */
 #define FLAME_A_CLEAR_TILE_INDEX 400
+/* Death pose (4 x 2 tiles each, two facings): after the HUD text tiles (hud.h). */
+#define DEATH_TILE_INDEX 280
 /* Standing frames of whip levels 1 and 2 (6 frames: 3 right, 3 left, see
  * whip_levels_manifest.json). Loaded only when such a level is selected; level 0
  * keeps its frames at ATTACK_TILE_INDEX. */

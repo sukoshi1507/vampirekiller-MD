@@ -207,6 +207,8 @@ Méthode : la recherche statique des références aux octets candidats (`scratch
 
 **PROVISOIRE** (escalier) : la pose `C42F := 2` (+15 à gauche, `765F`) n'est pas portée, les poses d'escalier du port n'étant pas celles du MSX ; dans les cinq coups tracés, `C42F` valait déjà 2 (pose de repos `05/02`).
 
+**Fin du recul et mort (lecture du code, port 2026-10-29)** : à la fin de la phase 3 (`702A`), `C42C ^= 1` (`704B`, sauf `C5AC` = 2, 3 ou 5) : Simon se retrouve tourné vers le coup ; le port inversait l'orientation, c'est corrigé. Si `C415 = 0` (`7053`) : X < 10h avance de 8 px, `C42D := 0`, `C428 := 1`, `C420 := 6`, pose `C42E/C42F := 09/05` (+10/+15 tourné à gauche, `765F`) : les restes de Simon, deux demi-sprites côte à côte (32 × 16 px, `tools/extract_player.py`, `vk_player_death_tiles`). L'état 6 (`7093`) attend `C428` puis lance l'arrêt et le jingle 89 (`70A0`), soit environ 79 images après le contact (recul de 39 passes), ce qui recoupe la mesure de 79 images. Port : état `VK_RECOIL_DEAD`, pose `VK_PLAYER_DEATH_POSE` jusqu'à la réapparition ; test `test_gameplay.c`, scénario `d` (pose à 74-84 images du contact).
+
 **Cadence (prouvé, trace)** : dans la trace du coup à énergie nulle (`out3`, images 3851-3909), l'état 5 fait une passe toutes les 2 images : pose à 3851, premier pas à 3853 (visible à 3855), X 64 → 8 et Y par la table `707D` en 27 passes, atterrissage à 3909. Le port suit cette cadence depuis le 2026-10-29 (`recoil_wait`, tests `test_gameplay.c` et scénario `c`). Clignotement pendant `C42D` (`78CC`) : Simon caché (Y `E0`) quand le bit 1 de `C003` est mis, 4 images sur 8 ; le port prend le bit 1 de `C42D`, même rythme, phase PROVISOIRE.
 
 **PROVISOIRE** :

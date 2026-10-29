@@ -276,6 +276,7 @@ static void vk_recoil_tick(VKGame *game, const VKRoomLink *links)
         if (--game->recoil_count == 0) game->recoil = VK_RECOIL_NONE;
         return;
     }
+    if (game->recoil == VK_RECOIL_DEAD) return;
     if (game->recoil_wait) { game->recoil_wait = 0; return; }
     game->recoil_wait = 1;
     if (game->recoil == VK_RECOIL_START)
@@ -305,10 +306,19 @@ static void vk_recoil_tick(VKGame *game, const VKRoomLink *links)
         p->pose = (VKByte)(pose + 2);
         return;
     }
-    /* 7024: then 702A gives the controls back. */
+    /* 7024: then 702A gives the controls back, Simon turned back towards the hit
+     * (704B: C42C ^= 1; not when C5AC is 2, 3 or 5, a door state the port does
+     * not reach here). */
     if (--game->recoil_count) return;
     game->recoil = VK_RECOIL_NONE;
+    p->facing ^= 1;
     p->pose = (VKByte)(p->facing ? 3 : 0);
+    if (game->recoil_land != 16) return;
+    /* 7053: with C415 = 0, X < 10h moves 8 px right, then C420 := 6 with the death
+     * pose 09/05 (+10/+15 facing left, 765F) until the respawn. */
+    if (p->x < 0x10) p->x = (VKByte)(p->x + 8);
+    game->recoil = VK_RECOIL_DEAD;
+    p->pose = (VKByte)(VK_PLAYER_DEATH_POSE + p->facing);
 }
 
 VKEvent vk_game_tick_controls(VKGame *game, int direction, int jump, int up, int down)
