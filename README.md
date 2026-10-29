@@ -161,7 +161,7 @@ et les ennemis. Ils doivent afficher PASS.
 Tests Python (certains lisent la ROM de référence) :
 
 ```sh
-python3 -m unittest discover -s tests -p 'test_*.py'
+scratchpad/venv/bin/python -m unittest discover -s tests -p 'test_*.py'
 ```
 
 ## Données générées
