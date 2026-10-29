@@ -21,7 +21,8 @@ Ce qui fonctionne dans la ROM Mega Drive :
   plateformes, -6 d'énergie au contact, tuée par le fouet accroupi), avec
   apparition, mouvement, animation, contact (-2 d'énergie, recul, invulnérabilité),
   chute sur le sol et couleurs d'après la table de couleur du MSX2.
-  **Le fouet tue les ennemis de types 1 et 4** (type 1 confirmé à l'émulateur).
+  **Le fouet tue les ennemis de types 1 et 4** (type 1 confirmé à l'émulateur ; type 4 :
+  boîte `84A7` de la ROM, du côté où Simon regarde, vérifiée par trace openMSX).
 - **Clé et porte** : la clé blanche de la salle 2 se ramasse au contact et s'affiche
   dans le HUD ; la porte de la salle 7 bloque Simon sans elle, s'ouvre avec (barreau
   qui se lève, Simon qui sort seul) et mène vers le stage 2.
@@ -78,9 +79,6 @@ Ce qui fonctionne dans la ROM Mega Drive :
 
 Ce qui n'est pas porté ou reste provisoire :
 
-- **Type 4** (salle 4, volant) : dessin, battement d'ailes et vol en vague d'après le
-  MSX2 ; tué par le fouet d'après la table des objets (boîte provisoire, direction
-  du fouet non vérifiée, `research/enemy-behavior.md`).
 - **Type 5** : l'objet de mort (`1E`) n'est pas reproduit ; la phase 3 du fouet
   est assimilée au fouet déployé (`vk_whip_phase` 2) et le recul face à une panthère
   assise est provisoire.

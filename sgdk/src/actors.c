@@ -178,6 +178,9 @@ void vk_step_enemies(void)
          * from Simon's place in that pass (C427/C425, whip.c). Type 5: */
         hits += Enemies_whipHitType5(&vk_enemies, vk_whip.x, vk_whip.y,
                                      vk_whip.facing, vk_whip.crouched);
+        /* Type 4 (bats): ROM box of class 2, on the side Simon faces (84A7). */
+        hits += Enemies_whipHitType4(&vk_enemies, vk_whip.x, vk_whip.y,
+                                     vk_whip.facing, vk_whip.crouched);
         /* Stage 2 type 1: ROM box of class 1 (enemies.h). */
         hits += Enemies_whipHitType1Rom(&vk_enemies, vk_whip.x, vk_whip.y,
                                         vk_whip.facing, vk_whip.crouched);

@@ -876,6 +876,9 @@ static void test_fall_to_floor(void)
     CHECK(s.enemy[0].y == 0xA1, "sur le sol : reste a Y 0xA1");
 }
 
+#define T4_OBJ_X 8    /* objet MSX = SAT + 8 en X (enemies.c, ENEMY_OBJ_X) */
+#define T4_OBJ_Y 15   /* type 4 : objet = SAT + 15 en Y (ENEMY_TYPE4_OBJ_Y) */
+
 /* 9. Coup de fouet : tue un ennemi de type 1 ou 4 touche (boite du fouet, coordonnees de jeu),
  * laisse le type 4 et un ennemi hors de portee. */
 static void test_whip_kills_type1(void)
@@ -899,7 +902,41 @@ static void test_whip_kills_type1(void)
     (void)Enemies_spawn(&s, ENEMY_SIDE_RIGHT, ENEMY_TYPE_4, ENEMY_TYPE4_Y, 0);
     s.enemy[0].x = 120;
     killed = Enemies_whipHit(&s, 128, 170, 152, 177);
-    CHECK(killed == 1 && !s.enemy[0].active, "fouet : type 4 touche, mort (table C800, scratchpad/type4)");
+    CHECK(killed == 0 && s.enemy[0].active, "fouet : le type 4 a son propre test (84A7)");
+
+    /* Type 4, boite 84A7 classe 2 : cas de la trace openMSX (stage 2 salle 0, Simon Y 96).
+     * Objet MSX (X, Y) = SAT + (8, 15). Simon x 50 a droite, objet (84, 80) : mort. */
+    s.enemy[0].x = 84 - T4_OBJ_X;
+    s.enemy[0].y = 80 - T4_OBJ_Y;
+    CHECK(Enemies_whipHitType4(&s, 50, 96, 0, 0) == 1 && !s.enemy[0].active, "type 4 : |70 - 84| < 20, mort");
+    /* Meme objet, Simon tourne a gauche : le fouet part de l'autre cote (84D9). */
+    s.enemy[0].active = 1;
+    CHECK(Enemies_whipHitType4(&s, 50, 96, 1, 0) == 0, "type 4 : fouet du cote du regard seulement");
+    /* Simon x 46 a gauche, objet (12, 87) : mort (trace, image 12735). */
+    s.enemy[0].x = 12 - T4_OBJ_X;
+    s.enemy[0].y = 87 - T4_OBJ_Y;
+    CHECK(Enemies_whipHitType4(&s, 46, 96, 1, 0) == 1, "type 4 : fouet a gauche, mort");
+    /* Bornes : |dX| = 20 ou Y = C425 - 18 + 17 : rien ; Y = C425 - 21 et C425 - 2 : touche. */
+    s.enemy[0].active = 1;
+    s.enemy[0].x = 90 - T4_OBJ_X;
+    s.enemy[0].y = 80 - T4_OBJ_Y;
+    CHECK(Enemies_whipHitType4(&s, 50, 96, 0, 0) == 0, "type 4 : |dX| = 20, pas de coup");
+    s.enemy[0].x = 89 - T4_OBJ_X;
+    CHECK(Enemies_whipHitType4(&s, 50, 96, 0, 0) == 1, "type 4 : |dX| = 19, coup");
+    s.enemy[0].active = 1;
+    s.enemy[0].y = 96 - 18 + 17 - T4_OBJ_Y;
+    CHECK(Enemies_whipHitType4(&s, 50, 96, 0, 0) == 0, "type 4 : Y = C425 - 1, pas de coup");
+    s.enemy[0].y = 96 - 18 + 16 - T4_OBJ_Y;
+    CHECK(Enemies_whipHitType4(&s, 50, 96, 0, 0) == 1, "type 4 : Y = C425 - 2, coup");
+    s.enemy[0].active = 1;
+    s.enemy[0].y = 96 - 18 - 3 - T4_OBJ_Y;
+    CHECK(Enemies_whipHitType4(&s, 50, 96, 0, 0) == 1, "type 4 : Y = C425 - 21, coup");
+    s.enemy[0].active = 1;
+    s.enemy[0].y = 96 - 18 - 4 - T4_OBJ_Y;
+    CHECK(Enemies_whipHitType4(&s, 50, 96, 0, 0) == 0, "type 4 : Y = C425 - 22, pas de coup");
+    /* Accroupi (B = 10) : la fenetre descend de 8 px. */
+    s.enemy[0].y = 96 - 10 + 16 - T4_OBJ_Y;
+    CHECK(Enemies_whipHitType4(&s, 50, 96, 0, 1) == 1, "type 4 accroupi : Y = C425 + 6, coup");
 }
 
 /* Type 5 (panthere), research/enemy-behavior.md section Type 5 : creation 21 images apres

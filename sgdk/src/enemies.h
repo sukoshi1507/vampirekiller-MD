@@ -266,7 +266,7 @@ int Enemies_frame(EnemyState *s, EnemySpawnTimer *t, const EnemyRoomVars *v);
  * Escalier et chute depuis le sol : boite debout. */
 int Enemies_touches(const Enemy *e, const EnemyRoomVars *v);
 
-/* Coup de fouet : tue les ennemis (types 1, A, B et 4) dont la boite touche la boite du fouet.
+/* Coup de fouet : tue les ennemis de type 1 sans romBox (tests) dont la boite touche la boite du fouet.
  * La boite du fouet est en coordonnees de jeu, inclusive (vk_whip_bounds). Les ennemis sont
  * en coordonnees d'ecran : x de jeu = x d'ecran + 8.
  * Retourne le nombre d'ennemis tues. Le type 5 a son propre test (Enemies_whipHitType5).
@@ -292,6 +292,14 @@ int Enemies_whipHitType1Rom(EnemyState *s, int simonX, int simonY, int facingLef
  * Fouet de depart (C416 = 0). Un coup tue (points de vie 1, table 60E1). Les gouttes ne sont
  * pas touchables (+E = 0). Retourne le nombre d'hommes-poissons tues. */
 int Enemies_whipHitType2(EnemyState *s, int simonX, int simonY, int facingLeft, int crouched);
+
+/* Fouet contre le type 4 (7DAD, classe 2 de 82CB, 8398 : boite 84A7 avec HL = 1008), a
+ * appeler pendant la phase 3 du fouet : X du fouet = simonX + 20 (regard a droite, C42C = 0)
+ * ou simonX - 20 (84D9), une retenue annule le coup (84B6) ; touche si |X fouet - X| < 20
+ * (L = 08 + 12) et simonY - B - 3 <= Y <= simonY - B + 16 ((C425 - B - Y + 10h) & FF < 14h),
+ * X, Y : objet MSX (SAT + 8, SAT + 15), B = 18 debout, 10 accroupi. Fouet de depart
+ * (C416 = 0). Un coup tue. Trace openMSX : 76 tests, 13 morts, tous conformes. */
+int Enemies_whipHitType4(EnemyState *s, int simonX, int simonY, int facingLeft, int crouched);
 
 /* Avance d'une image les ennemis actifs (mouvement, animation, sortie). */
 void Enemies_update(EnemyState *s);

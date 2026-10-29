@@ -54,7 +54,6 @@
 #define ENEMY_SIMON_HALF_W  8      /* boite de Simon : X-8 a X+15 (sprite 24 px) */
 #define ENEMY_SIMON_RIGHT   16
 #define ENEMY_SIMON_H       31     /* boite de Simon : Y-31 a Y (pieds en Y, provisoire) */
-#define ENEMY_TYPE4_ROW_H   16
 #define ENEMY_TYPE1_ROW_H   32
 /* Type 1 du stage 2 (salle 2), research/enemy-behavior.md section « Type 1 au stage 2 ». */
 #define ENEMY_S2_TYPE1_E      0xA0 /* 9D1B : E = A0 (Y de l'objet = pieds, comme C425) */
@@ -610,14 +609,12 @@ int Enemies_whipHit(EnemyState *s, int left, int top, int right, int bottom)
         Enemy *e = &s->enemy[i];
         int ex, ey, eh;
         if (!e->active || e->exiting || e->type == ENEMY_TYPE_5 || e->romBox ||
-            e->type == ENEMY_TYPE_2 || e->type == ENEMY_TYPE_SPLASH) continue;
+            e->type == ENEMY_TYPE_2 || e->type == ENEMY_TYPE_4 || e->type == ENEMY_TYPE_SPLASH) continue;
         ex = e->x + ENEMY_SCREEN_TO_GAME_X;
         ey = e->y;
-        eh = (e->type == ENEMY_TYPE_4) ? ENEMY_TYPE4_ROW_H : ENEMY_TYPE1_ROW_H;
+        eh = ENEMY_TYPE1_ROW_H;
         if (right < ex || left >= ex + 16 || bottom < ey || top >= ey + eh) continue;
-        /* Un coup suffit pour les types 1 (zombies, observe par le joueur) et 4 (trace :
-         * 12 morts sur la premiere image de fouet utile, scratchpad/type4/whip-kill-type4.md).
-         * Boite du type 4 : 16 x 16 provisoire, bornes a +-1-2 px non fixees. */
+        /* Un coup suffit pour le type 1 (zombies, observe par le joueur). */
         e->active = 0;
         killed++;
     }
@@ -636,6 +633,29 @@ int Enemies_whipHitType5(EnemyState *s, int simonX, int simonY, int facingLeft, 
         if (!e->active || e->type != ENEMY_TYPE_5) continue;
         if (d <= -24 || d >= 24 || e->y < simonY - b - 3 || e->y > simonY - b + 10) continue;
         e->active = 0;         /* points de vie 1 : mort au premier coup (objet 1E non porte) */
+        killed++;
+    }
+    return killed;
+}
+
+int Enemies_whipHitType4(EnemyState *s, int simonX, int simonY, int facingLeft, int crouched)
+{
+    /* 84D9 : X du fouet du cote du regard (C42C) ; une retenue annule le test (84B6). */
+    const int whipX = facingLeft ? simonX - 20 : simonX + 20;
+    const int b = crouched ? 10 : 18;
+    EnemyU8 i;
+    int killed = 0;
+    if (whipX < 0 || whipX > 255) return 0;
+    for (i = 0; i < ENEMY_MAX; i++) {
+        Enemy *e = &s->enemy[i];
+        int d, h;
+        if (!e->active || e->exiting || e->type != ENEMY_TYPE_4) continue;
+        d = whipX - (e->x + ENEMY_OBJ_X);
+        h = (simonY - b - (e->y + ENEMY_TYPE4_OBJ_Y) + 0x10) & 0xFF;
+        if (d <= -20 || d >= 20 || h >= 0x14) continue;
+        /* Points de vie 1 : mort au premier coup (trace : 13 morts en phase 3, chacune
+         * predite par 84A7, research/enemy-behavior.md). L'objet 1E n'est pas porte. */
+        e->active = 0;
         killed++;
     }
     return killed;

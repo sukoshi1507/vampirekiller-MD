@@ -1,0 +1,52 @@
+# (zg) Salle 4 du hall : le fouet tue le type 4 du cote ou Simon regarde (7DAD, classe 2,
+# boite 84A7, HL = 1008 : |X fouet - X| < 20, X fouet = C427 +- 20 selon C42C). De dos,
+# rien. Trace openMSX (research/enemy-behavior.md, « Type 4 : fouet ») : 13 morts, chacune
+# predite par 84A7 avec le cote du regard.
+include boot_to_courtyard.inc
+until front_mode == MODES['INTERIOR'] max 3000 RIGHT
+hold A 3
+hold A+RIGHT 3
+wait 10
+hold A 3
+hold A+RIGHT 3
+wait 10
+hold A 3
+hold A+RIGHT 3
+wait 10
+hold A 3
+hold A+RIGHT 3
+wait 10
+hold A 3
+until game.room == 4 max 10 A+RIGHT
+expect game.room == 4 # salle 4 du hall
+until enemies.type5Timer == 0 max 40 # setRoom
+poke vk_game+0 100
+# Simon invulnerable (C42D) : pas de contact pendant les coups.
+poke vk_enemies+127 255
+until len([e for e in enemies.enemy if e.active and e.type == 2]) > 0 max 200
+set slot [i for i, e in enumerate(enemies.enemy) if e.active and e.type == 2][0]
+expect enemies.enemy[slot].type == 2 and enemies.enemy[slot].dx == -1 # type 4 venant de droite
+# De dos (regard a gauche) quand l'objet (x + 8) est a 20 px devant le fouet droit : rien.
+tap LEFT 2
+expect game.player.facing == 1
+until enemies.enemy[slot].x + 8 <= game.player.x + 36 max 300
+tap B 1
+until whip.timer == 0 max 30
+expect enemies.enemy[slot].active # fouet a gauche, ennemi a droite : vivant
+# Il passe derriere Simon : on le laisse sortir, puis le suivant (de gauche) arrive.
+until not enemies.enemy[slot].active max 300
+poke vk_enemies+127 255
+until len([e for e in enemies.enemy if e.active and e.type == 2]) > 0 max 400
+set slot [i for i, e in enumerate(enemies.enemy) if e.active and e.type == 2][0]
+expect enemies.enemy[slot].dx == 1 # second tir : de gauche
+# Face a lui (regard a gauche), accroupi : il vole bas (Y objet 194 au passage, hors de la
+# fenetre debout C425 - 21 .. C425 - 2) ; accroupi (B = 10) : C425 - 13 .. C425 + 6. Mort.
+tap LEFT 2
+expect game.player.facing == 1
+hold DOWN 2
+until enemies.enemy[slot].x + 8 >= game.player.x - 36 max 300 DOWN
+hold DOWN+B 1
+until not enemies.enemy[slot].active max 30 DOWN
+expect whip.timer == 11 and whip.facing == 1 # tue a l'image du test (7DAD), fouet a gauche
+wait 2
+shot zg_type4_whip
