@@ -1,6 +1,6 @@
 # Liens verticaux HAUT/BAS du hall (stage 1) : déclenchement et arrivée
 
-Statut : **routine de sortie identifiée et tracée ; sorties HAUT 1→5, BAS 5→1, HAUT 3→7, BAS 7→3, GAUCHE 5→4 et DROITE 5→6 mesurées en jeu ; cause exacte du blocage observé par l'utilisateur non reproduite.**
+Statut : **routine de sortie identifiée et tracée ; sorties HAUT 1→5, BAS 5→1, HAUT 3→7, BAS 7→3, GAUCHE 5→4 et DROITE 5→6 mesurées en jeu ; descentes complètes 7→3 et 5→1 depuis le sol tracées et portées (§10, chute de Simon corrigée le 2026-10-29) ; cause exacte du blocage observé par l'utilisateur non reproduite.**
 
 ROM de référence : `Vampire Killer (Japan, Europe) (En).zip` (racine), SHA-256 `99eabaaeb2b6c02220e131043d5a6401d0d8c5f413d89204547adcc04d65e7e2`, vérifié. Adresses CPU Z80 ; quand une adresse est donnée en fenêtre `6000`, elle suppose la banque 1 mappée en `6000-7FFF` (confirmé par les PC des écritures tracées, voir §5).
 
@@ -145,7 +145,7 @@ row y=192 : #######################%########   solide x = 0..183, (x=184..191 no
 | Arrivée BAS | sol sous `X` | `Y = 48`, `X ± 16` seulement en mode 3 |
 | Liens 1↔5 et 3↔7 | présents (`vk_stage1_links`) | présents et confirmés (tables §4) |
 
-Ces écarts ne sont pas corrigés dans ce travail (aucune modification de `sgdk/`, `tests/`, `validation/`, `.claude/`).
+Tableau d'origine. Depuis, le port suit la trace pour les sorties en escalier (arrivée HAUT à `Y = 224` en mode escalier, sortie BAS à `Y >= 225`, voir §10 pour l'état au 2026-10-29). La sortie HAUT hors escalier à `y < 32` (`vk_floor_arrival`) existe encore dans `gameplay.c`.
 
 ## 8. Méthode
 
@@ -173,3 +173,52 @@ Fichiers versionnés : `tools/vertical_links_trace.tcl`, `tools/run_vertical_lin
 7. **Trou du sol** `x = 184..191` en salle 5 : la table statique le déclare non solide, Simon le traverse à pied. Non expliqué.
 8. **Stage 6** (`CE00 = 6`, voir `research/stairs.md` §2.4) : non étudié.
 9. **Mapping de la fenêtre 6000** : déduit (bank 1), cohérent avec tous les PC tracés, mais pas vérifié par un dump de registres de banque en jeu.
+
+## 10. Descente par le sol de la salle du dessus (bug « Simon tombe de la salle 7 à la salle 3 », 2026-10-29)
+
+### 10.1 Symptôme dans le port
+
+Signalé sur BlastEm : en descendant l'escalier de la salle 7 vers la salle 3, Simon tombe pendant la transition. Reproduit au harnais (`scratchpad/bug-stairs-7-3/md-before/trace.csv`) : BAS en (80,192) prend la volée (tuile 3 en (72,192), une seule tuile 12 en (64,200), sur la dernière rangée de la carte). Le port comptait 1 marche, soit 16 px : Simon quittait l'escalier en (64,208), sous le sol, passait en chute (mode 4) jusqu'à `Y = 225`, arrivait en salle 3 à (64,48) en chute, puis tombait sur le sol en (64,64). Même défaut sur 5→1 (tuile 4 en (176,192), tuile 13 en (184,200)) et sur les trois descentes du stage 2 (0→4, 1→5, 2→0) : sonde du port (`vk_game_tick_controls` sur les anciennes sources) Simon sort de l'escalier en `Y = 208` dans les cinq cas.
+
+### 10.2 Comportement MSX (trace openMSX, `tools/run_stair_recoil_trace.py`, `scratchpad/bug-stairs-7-3/msx/`)
+
+Plan `plan2.txt` (run2) : route connue jusqu'à la salle 3, téléportation au pied de la volée (`C427 = 52`, `C425 = 64`, comme `plan-e`), HAUT jusqu'en salle 7, HAUT jusqu'au sol, marche à X 110 puis X 77, BAS tenu, puis HAUT tenu. Plan `plan4.txt` (run4) : même chose pour 1→5 puis 5→1 depuis le sol (175,192).
+
+| Image (run2) | État | Position | Remarque |
+|---|---|---|---|
+| 2807 | BAS | (77,192), `C420 = 0` | |
+| 2809 | entrée `6BEE` | (80,192), `C420 = 3`, `C421 = 1` | X aligné |
+| 2811-2873 | descente, 1 px / 2 images | (79,193) → (48,224), `C42B` 1 → 32 | passe sous le sol sans sortie : `7B88` ne teste rien pour `Y >= 208` |
+| 2875 | sortie BAS `76FF` | (63,48), `C420 = 3`, `C42B = 33` | 47 + 16 (`C42C = 1`) |
+| 2877-2898 | état 9 (`C000 = 9`), salle 3 | (63,48) | |
+| 2899-2929 | descente en salle 3 | (62,49) → (48,63) | |
+| 2931 | sortie `6EF5` (`7B88` solide) | (47,64), `C420 = 0` | puis accroupi (BAS tenu) |
+| 3057-3089 | HAUT : montée | (48,64) → (64,48) | |
+| 3093 | sortie HAUT `76B9`, salle 7 | (49,224), `C420 = 3` | 65 - 16 |
+| 3116-3223 | montée en salle 7 | → (81,192), `C420 = 0` | sonde `7B68` : tuile solide en (X, Y+7) |
+
+Run4 (5→1) : BAS en (175,192) → entrée (176,192), `C421 = 0` ; (208,224) ; salle 1 à **(193,48)** en mode 3 ; descente jusqu'à **(241,96)** ; HAUT : salle 5 à (207,224) puis (175,192). (Run3 et run5 : Simon touché par un ennemi en salle 5, non retenus.)
+
+Conclusion : **la chute n'existe pas sur MSX.** La volée n'a pas de longueur ; seules les sondes `7B88` (descente) et `7B68` (montée) l'arrêtent (`research/stairs.md` §2.3 et §2.5). Simon reste en mode 3 d'une salle à l'autre.
+
+### 10.3 Correction du port
+
+- `vk_stair_enter_top` (`player.c`) : une volée posée sur la dernière rangée de la carte est prolongée jusqu'à `Y = 225`.
+- `vk_stair_tick` : à `Y = 225`, Simon reste sur l'escalier (la sortie de salle le prend en charge) ; le pied d'une glissade descend en diagonale ((207,224) → (208,225), donc salle 1 à X 192 comme la trace `cR`, au lieu de 191).
+- Sortie BAS (`gameplay.c`) : sur l'escalier, `vk_stair_resume` applique `76EB` (X ± 16 selon `C42C`, Y 48, mode 3 conservé) et compte les pas jusqu'au sol avec la sonde `7B88` ; le pas en cours continue comme `C435` (`C42B & 7 ≠ 0`). Hors escalier, seul Y change (76E8) : le port ne remet plus Simon sur une volée après une chute.
+- Sortie HAUT : la glissade de la salle du dessus monte jusqu'à la sonde `7B68` (`vk_stair_climb_steps`) au lieu de 32 px fixes. Identique pour les salles 5 et 7 (32 pas) ; corrige le stage 2 salle 2 (arrivée (81,224) depuis la salle 0), où Simon s'arrêtait en l'air en (113,192) : il monte maintenant jusqu'au sol (145,160).
+
+Résultats du port (identiques à la trace pour le stage 1) :
+
+| Lien | Arrivée | Sol | Retour HAUT | Source |
+|---|---|---|---|---|
+| hall 7 → 3 | (63,48) | (47,64) | salle 7 (49,224) → (81,192) | trace run2 |
+| hall 5 → 1 | (193,48) | (241,96) | salle 5 (207,224) → (175,192) | trace run4 |
+| stage 2, 0 → 4 | (65,48) | (97,80) | salle 0 (79,224) → (47,192) | port seul, non tracé |
+| stage 2, 1 → 5 | (191,48) | (111,128) | salle 1 (177,224) → (209,192) | port seul, non tracé |
+| stage 2, 2 → 0 | (95,48) | (47,96) | salle 2 (81,224) → (145,160) | port seul, non tracé |
+
+Tests : `tests/test_gameplay.c` (7→3, 5→1, retours, stage 2 2→0) ; scénario MD `tests/md_scenarios/z_stairs_vertical_links.txt` (14 assertions, captures `z-salle7-y224`, `z-salle3-arrivee`, `z-salle3-sol`, `z-salle7-sol`, `z-salle1-sol`).
+
+Écart restant : le port garde ses bords de cellule sur `stair_anim` (multiples de 8 depuis le sol), le MSX sur `C42B`. Après la sortie 7→3, touche lâchée, le MSX s'arrête en (56,55) (`C42B = 40`) et le port en (55,56).
+

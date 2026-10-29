@@ -46,7 +46,7 @@ Test : au stage 1 salle 1, `HAUT` à X=36 ne déclenche pas la volée (saut vert
 
 ### 2.3 Sortie (prouvé en partie)
 
-- Sortie haute : `6E44` appelle la sonde de sol `7B88` après 8 pas (`C42B >= 8`). Si un sol solide est trouvé sous les pieds (`x+-5`, `y`), `6EF5` arrête le mode escalier. Simon se pose donc sur le premier sol solide rencontré.
+- Sondes de sortie (relu le 2026-10-29) : après chaque pas, dès que `C42B >= 8`, la **descente** (`6E14`, `6E4B`) appelle `7B88` : tuile solide en `(x+5, y)` puis `(x-5, y)`, jamais pour `y >= D0` (208). La **montée** (`6E84`, `6EBC`) appelle `7B68` : tuile solide en `(x, y+7)`. Si la sonde trouve un sol, `6EF5` arrête le mode escalier. Simon se pose donc sur le premier sol solide rencontré. Il n'y a **pas de longueur de volée** : seules ces sondes terminent l'escalier (voir §2.5).
 - Fin de sortie : `6EF5` efface `C42B`, `C42E`, `C435`, puis saute en `6D3B`, qui remet `C420` et `C421` à 0 et aligne `C425` (Y) sur un multiple de 8 (`AND F8`). Les deux sorties mesurées ont un Y multiple de 8 (128 et 96), ce qui concorde.
 - Mesures : volée A (stage 1 salle 1) arrêtée à **(112,128)** sur le plancher intermédiaire (trace r4, image 2082). Volée B arrêtée à **(176,96)** sur le plancher supérieur (trace r7, image 2190).
 - Sol solide : `7C5E` compare `(tuile - 1) & 255` à une limite par stage. La table commence en `7C78`, indexée par `D000` (stage). Stage 1 : limite 4 (tuiles 1 à 4 solides). Stage 0 : limite 2. Les tuiles 12 et 13 ne sont pas solides.
@@ -55,6 +55,17 @@ Test : au stage 1 salle 1, `HAUT` à X=36 ne déclenche pas la volée (saut vert
 ### 2.4 Cas particulier du stage 6
 
 `7C5E`, `7C8B` et `7CDB` testent `CE00 == 6` et prennent alors un autre chemin (`CE00` est à 0 au stage 1). Non étudié : les escaliers du stage 6 sont à vérifier à part.
+
+### 2.5 Volées qui traversent le bas de la salle (liens verticaux, prouvé par trace)
+
+Les volées des liens verticaux commencent sur le sol d'une salle (tuile 3 ou 4) et continuent sous la carte (tuile 12 ou 13 sur la dernière rangée, `y = 200`). Comme `7B88` ne teste rien pour `y >= 208`, Simon descend jusqu'à `Y = 225` en restant en mode 3, puis la sortie BAS `76EB` le place dans la salle du dessous (X ± 16, Y 48, `C420` toujours 3) et il continue la **même diagonale** jusqu'au sol de cette salle. Trace openMSX du 2026-10-29 (`scratchpad/bug-stairs-7-3/msx/run2` et `run4`, `tools/run_stair_recoil_trace.py`) :
+
+| Lien | Entrée (BAS) | Sous la salle | Arrivée | Sol atteint | Retour (HAUT) |
+|---|---|---|---|---|---|
+| 7 → 3 | X 77 → (80,192), `C421 = 1` | (48,224), `C42B = 32` | (63,48), `C42B = 33`, `C435 = 4` | (47,64), `C42B = 49` | (47,64) → (48,64) → (64,48) → salle 7 (49,224) → (81,192) |
+| 5 → 1 | X 175 → (176,192), `C421 = 0` | (208,224) | (193,48) | (241,96), `C42B = 81` | (241,96) → salle 5 (207,224) → (175,192) |
+
+Le port (`player.c`) garde ses volées comptées en tuiles, mais : une volée posée sur la dernière rangée est prolongée jusqu'à la sortie `Y = 225` (`vk_stair_enter_top`) ; Simon reste sur l'escalier à `Y = 225` ; dans la salle du dessous, `vk_stair_resume` compte les pas jusqu'au sol avec la sonde `7B88` (`vk_grounded`) ; dans la salle du dessus, `vk_stair_climb_steps` compte les pas de montée avec la sonde `7B68` au lieu des 32 px fixes. Voir `research/vertical-links.md` §10.
 
 ## 3. Positions prouvées et prédites
 

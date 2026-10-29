@@ -1,0 +1,80 @@
+# (z) Escaliers des liens verticaux du hall (research/vertical-links.md, section 10).
+# Sur MSX la volee n'a pas de longueur : du sol de la salle 7 (tuile 3), BAS descend
+# jusqu'a Y 225, la sortie 76EB garde C420 = 3 (X + 16, Y 48) et Simon continue la meme
+# diagonale dans la salle 3 jusqu'au sol (trace openMSX : (77,192) -> (80,192) ->
+# (48,224) -> salle 3 (63,48) -> (47,64)). Avant correction, le port quittait l'escalier
+# en (64,208) et Simon tombait jusqu'a la salle 3, puis sur son sol.
+include boot_to_courtyard.inc
+until front_mode == MODES['INTERIOR'] max 3000 RIGHT
+# Changement de salle debug du hall jusqu'a la salle 7 (le premier front est perdu).
+hold A 3
+hold A+RIGHT 3
+wait 10
+hold A 3
+hold A+RIGHT 3
+wait 10
+hold A 3
+hold A+RIGHT 3
+wait 10
+hold A 3
+hold A+RIGHT 3
+wait 10
+hold A 3
+hold A+RIGHT 3
+wait 10
+hold A 3
+hold A+RIGHT 3
+wait 10
+hold A 3
+hold A+RIGHT 3
+wait 10
+hold A 3
+hold A+RIGHT 3
+wait 10
+expect game.room == 7 # salle 7 du hall
+poke vk_game+0 77
+poke vk_game+1 192
+wait 30
+hold DOWN 1
+expect game.player.on_stairs == 1 and game.player.x == 80 and game.player.y == 192 # entree 6BEE, X aligne
+until game.player.y == 224 max 100 DOWN
+expect game.room == 7 and game.player.on_stairs == 1 and game.player.mode == 0 and game.player.x == 48 # sous le sol de la salle, toujours sur l'escalier
+shot z-salle7-y224
+until game.room == 3 max 10 DOWN
+expect game.player.on_stairs == 1 and game.player.mode == 0 # C420 reste 3
+expect game.player.x == 63 and game.player.y == 48 # 47 + 16, Y 48 (trace : (63,48))
+until ram8('room_freeze') == 0 max 40 DOWN
+shot z-salle3-arrivee
+until game.player.on_stairs == 0 max 100 DOWN
+expect game.room == 3 and game.player.x == 47 and game.player.y == 64 and game.player.mode == 0 # sol de la salle 3 (trace : (47,64))
+shot z-salle3-sol
+wait 30
+# Sens inverse : HAUT depuis (47,64) remonte en salle 7 a (49,224), puis jusqu'a son sol.
+until game.room == 7 max 100 UP
+expect game.player.on_stairs == 1 and game.player.x == 49 and game.player.y == 224 # trace : (49,224)
+until game.player.on_stairs == 0 max 200 UP
+expect game.room == 7 and game.player.x == 81 and game.player.y == 192 and game.player.mode == 0 # trace : (81,192)
+shot z-salle7-sol
+# Lien 5 -> 1 : meme defaut et meme correction (tuile 4 du sol de la salle 5).
+hold A 3
+hold A+LEFT 3
+wait 10
+hold A 3
+hold A+LEFT 3
+wait 10
+expect game.room == 5 # salle 5 du hall
+poke vk_game+0 175
+poke vk_game+1 192
+wait 30
+hold DOWN 1
+expect game.player.on_stairs == 1 and game.player.x == 176 # trace : (176,192)
+until game.room == 1 max 100 DOWN
+expect game.player.on_stairs == 1 and game.player.x == 193 and game.player.y == 48 # trace : (193,48)
+until game.player.on_stairs == 0 max 200 DOWN
+expect game.room == 1 and game.player.x == 241 and game.player.y == 96 and game.player.mode == 0 # trace : (241,96)
+shot z-salle1-sol
+wait 30
+until game.room == 5 max 100 UP
+expect game.player.on_stairs == 1 and game.player.x == 207 and game.player.y == 224 # trace : (207,224)
+until game.player.on_stairs == 0 max 200 UP
+expect game.room == 5 and game.player.x == 175 and game.player.y == 192 # trace : (175,192)

@@ -160,8 +160,8 @@ int main(void)
     g.player.on_stairs = 0;
     assert(vk_game_tick_controls(&g, 0, 0, 0, 0) == VK_EVENT_VERTICAL);
     assert(g.room == 1 && g.player.y == 48 && g.player.x == 192);
-    /* From the room 5 glide foot (207,224), BAS drops through Y 225 into room 1
-     * at X 191, the -16 of the MSX exit. */
+    /* From the room 5 glide foot (207,224), BAS steps down the diagonal to (208,225)
+     * and into room 1 at X 192, the -16 of the MSX exit (traced, runs/cR). */
     assert(vk_game_debug_room(&g, 5));
     g.player.x = 207; g.player.y = 224; g.player.on_stairs = 1;
     g.player.stair_dir = 0; g.player.stair_len = 32; g.player.stair_anim = 0;
@@ -171,16 +171,83 @@ int main(void)
         int frames;
         for (frames = 0; frames < 20 && event != VK_EVENT_VERTICAL; frames++)
             event = vk_game_tick_controls(&g, 0, 0, 0, 1);
-        assert(event == VK_EVENT_VERTICAL && g.room == 1 && g.player.x == 191 && g.player.y == 48);
-        /* Room 1 flight C (tile 13) passes (184,40): Simon is put back on the stairs
-         * at progress 48, six cells above its foot, instead of falling. */
+        assert(event == VK_EVENT_VERTICAL && g.room == 1 && g.player.x == 192 && g.player.y == 48);
+        /* C420 stays 3: Simon walks on down the same diagonal to the floor of room 1,
+         * 48 steps below, at (240,96). */
         assert(g.player.on_stairs && g.player.mode == 0 && g.player.stair_dir == 0);
-        assert(g.player.stair_anim == 48 && g.player.stair_len == 72);
-        /* Holding BAS descends the flight to its foot and leaves the stairs there.
-         * The arrival X is 191, one pixel left of the diagonal, so the foot is (239,96). */
+        assert(g.player.stair_anim == 48 && g.player.stair_len == 56);
         for (frames = 0; frames < 200 && g.player.on_stairs; frames++)
             vk_game_tick_controls(&g, 0, 0, 0, 1);
-        assert(!g.player.on_stairs && g.player.x == 239 && g.player.y == 96);
+        assert(!g.player.on_stairs && g.player.x == 240 && g.player.y == 96);
+    }
+    /* BAS from the floors of rooms 7 and 5 (tiles 3 and 4 above a flight that goes on
+     * below the room): Simon walks down to Y 225 without falling, then on the stairs
+     * of the room below to its floor (traced: 7 -> 3 from X 77, 5 -> 1 from X 175,
+     * research/vertical-links.md section 10). */
+    {
+        static const struct { VKByte from, x, to, ax, fx, fy; } walks[2] = {
+            {7, 77, 3, 63, 47, 64}, {5, 175, 1, 193, 241, 96}};
+        int w;
+        for (w = 0; w < 2; w++)
+        {
+            VKEvent event = VK_EVENT_NONE;
+            int frames;
+            assert(vk_game_debug_room(&g, walks[w].from));
+            g.player.x = walks[w].x; g.player.y = 192; g.player.mode = 0;
+            for (frames = 0; frames < 200 && event != VK_EVENT_VERTICAL; frames++)
+            {
+                event = vk_game_tick_controls(&g, 0, 0, 0, 1);
+                assert(event == VK_EVENT_VERTICAL || g.player.on_stairs);
+            }
+            assert(event == VK_EVENT_VERTICAL && g.room == walks[w].to);
+            assert(g.player.on_stairs && g.player.mode == 0);
+            assert(g.player.x == walks[w].ax && g.player.y == 48);
+            for (frames = 0; frames < 200 && g.player.on_stairs; frames++)
+                assert(vk_game_tick_controls(&g, 0, 0, 0, 1) == VK_EVENT_NONE);
+            assert(g.room == walks[w].to && g.player.mode == 0);
+            assert(g.player.x == walks[w].fx && g.player.y == walks[w].fy);
+        }
+        /* Back up from the room 3 floor (47,64): HAUT climbs to room 7 at (49,224),
+         * then to its floor at (81,192) (traced). */
+        {
+            VKEvent event = VK_EVENT_NONE;
+            int frames;
+            assert(vk_game_debug_room(&g, 3));
+            g.player.x = 47; g.player.y = 64; g.player.mode = 0;
+            for (frames = 0; frames < 200 && event != VK_EVENT_VERTICAL; frames++)
+                event = vk_game_tick_controls(&g, 0, 0, 1, 0);
+            assert(event == VK_EVENT_VERTICAL && g.room == 7 && g.player.on_stairs);
+            assert(g.player.x == 49 && g.player.y == 224);
+            for (frames = 0; frames < 200 && g.player.on_stairs; frames++)
+                vk_game_tick_controls(&g, 0, 0, 1, 0);
+            assert(g.room == 7 && g.player.x == 81 && g.player.y == 192 && g.player.mode == 0);
+        }
+        /* Stage 2 room 2 -> room 0 (not traced, same routines): the flight from the
+         * floor at (136..143,160) runs below the room; back up, the climb in room 2
+         * goes on to that floor (probe 7B68) instead of stopping 32 px up, in the air. */
+        {
+            VKGame s2;
+            VKEvent event = VK_EVENT_NONE;
+            int frames;
+            vk_game_begin(&s2);
+            vk_game_enter_stage(&s2, 2);
+            assert(vk_game_debug_room(&s2, 2));
+            s2.player.x = 140; s2.player.y = 160; s2.player.mode = 0;
+            for (frames = 0; frames < 300 && event != VK_EVENT_VERTICAL; frames++)
+                event = vk_game_tick_controls(&s2, 0, 0, 0, 1);
+            assert(event == VK_EVENT_VERTICAL && s2.room == 0 && s2.player.on_stairs);
+            assert(s2.player.x == 95 && s2.player.y == 48);
+            for (frames = 0; frames < 300 && s2.player.on_stairs; frames++)
+                vk_game_tick_controls(&s2, 0, 0, 0, 1);
+            assert(s2.room == 0 && s2.player.x == 47 && s2.player.y == 96);
+            event = VK_EVENT_NONE;
+            for (frames = 0; frames < 300 && event != VK_EVENT_VERTICAL; frames++)
+                event = vk_game_tick_controls(&s2, 0, 0, 1, 0);
+            assert(event == VK_EVENT_VERTICAL && s2.room == 2 && s2.player.x == 81 && s2.player.y == 224);
+            for (frames = 0; frames < 300 && s2.player.on_stairs; frames++)
+                vk_game_tick_controls(&s2, 0, 0, 1, 0);
+            assert(s2.room == 2 && s2.player.x == 145 && s2.player.y == 160 && s2.player.mode == 0);
+        }
     }
     /* Stage 1 room 7: BAS on the tile 3 platform at (168..180, 96) enters the top of
      * the flight, and holding BAS descends it to the foot (144,128), 32 px down-left

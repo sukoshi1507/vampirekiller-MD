@@ -157,7 +157,7 @@ static int vk_stair_enter_top(VKPlayer *p, const VKByte *map)
 {
     const int x = p->x;
     const int y = p->y;
-    int cell_x, dir, steps, i;
+    int cell_x, dir, steps, i, open_bottom = 0;
     if (vk_stair_tile_at(map, x, y) == 3) { cell_x = x & ~7; dir = 1; }
     else if (vk_stair_tile_at(map, x - 8, y) == 3) { cell_x = (x - 8) & ~7; dir = 1; }
     else if (vk_stair_tile_at(map, x, y) == 4) { cell_x = x & ~7; dir = 0; }
@@ -171,12 +171,19 @@ static int vk_stair_enter_top(VKPlayer *p, const VKByte *map)
         if (step_y > 200 || step_x < 0 || step_x > 248) break;
         if (vk_stair_tile_at(map, step_x, step_y) != (dir ? VK_STAIR_RIGHT : VK_STAIR_LEFT)) break;
         steps++;
+        open_bottom = step_y == 200;
     }
     if (steps < 1) return 0;
     p->x = (VKByte)(dir ? cell_x + 8 : cell_x);
     p->y = (VKByte)(y & ~7);
     p->stair_dir = (VKByte)dir;
     p->stair_len = (VKByte)(8 * steps + 8);
+    /* A flight on the last map row goes on below the room (hall rooms 7 and 5, tops
+     * of the links 7 -> 3 and 5 -> 1). The MSX has no flight length: its floor probe
+     * 7B88 finds nothing at Y >= D0, so Simon keeps stepping to Y 225 and the bottom
+     * exit 76FF (traced, 7 -> 3: (80,192) to (48,224), then (63,48) in room 3). The
+     * exit then comes 8 px before the end of the port's flight. */
+    if (open_bottom) p->stair_len = (VKByte)(225 + 8 - p->y);
     p->stair_anim = p->stair_len; /* the progress starts at the top */
     p->stair_glide = 0;
     p->stair_move = 2; /* 6BEE: C435 := the key (BAS), the first cell is descended */
@@ -188,55 +195,44 @@ static int vk_stair_enter_top(VKPlayer *p, const VKByte *map)
     return 1;
 }
 
-/* Resume a flight at an arrival point that has no stair mode, such as a fall
- * through the bottom edge into the room below. The arrival cell is the tile row
- * above the feet, at the column nearest to X - 8. When it is a tile 13 (down
- * right) or tile 12 (down left) flight, Simon stands on it at its progress: the
- * flight runs from its foot along the diagonal, 8 px per cell. Returns 0 when no
- * flight passes the point, and the caller keeps its fall. */
-int vk_stair_resume(VKPlayer *p, const VKByte *map)
+/* Bottom exit of a flight (76EB-76FF): Y := 48, X += 16 when C42C = 1 (facing
+ * left), else X -= 16, and C420 stays 3. The MSX flight has no length: in the room
+ * below Simon walks on along the same diagonal (C421 kept) until the floor probe
+ * 7B88 finds a solid tile under his feet, then 6EF5 leaves the stairs (traced:
+ * 7 -> 3 arrives at (63,48) and lands at (47,64), 5 -> 1 arrives at (193,48) and
+ * lands at (241,96), research/vertical-links.md). stair_anim becomes the number
+ * of steps down to that floor; climbing back meets the up exit (Y < 48) first. */
+void vk_stair_resume(VKPlayer *p, const VKByte *map, VKByte stage)
 {
-    const int cy = ((int)p->y - 8) & ~7;
-    const int cx = ((int)p->x - 4) & ~7;
-    int dir, below, above, i, top;
-    VKByte want;
-    if (vk_stair_tile_at(map, cx, cy) == VK_STAIR_LEFT) dir = 0;
-    else if (vk_stair_tile_at(map, cx, cy) == VK_STAIR_RIGHT) dir = 1;
-    else return 0;
-    want = (VKByte)(dir ? VK_STAIR_RIGHT : VK_STAIR_LEFT);
-    /* Down step is (+8,+8) on a tile 13 flight and (-8,+8) on a tile 12 flight. */
-    below = 0;
-    for (i = 1; i < 24; i++)
-    {
-        const int step_y = cy + 8 * i;
-        if (step_y > 200) break;
-        if (vk_stair_tile_at(map, cx + (dir ? -8 : 8) * i, step_y) != want) break;
-        below++;
-    }
-    above = 0;
-    for (i = 1; i < 24; i++)
-    {
-        const int step_y = cy - 8 * i;
-        if (step_y < 16) break;
-        if (vk_stair_tile_at(map, cx - (dir ? -8 : 8) * i, step_y) != want) break;
-        above++;
-    }
-    /* The arrival cell is the foot + below; the top cell is at foot + below + above. */
-    if (below < 1 || below + above + 1 < VK_STAIR_MIN_STEPS) return 0;
-    top = below + above;
-    if (top > 29) top = 29; /* keeps stair_len within a byte */
-    p->stair_dir = (VKByte)dir;
-    p->stair_len = (VKByte)(8 * (top + 1) + 8);
-    p->stair_anim = (VKByte)(8 * below);
+    const int sx = p->stair_dir ? 1 : -1; /* horizontal sign of a climb */
+    int k;
+    p->x = (VKByte)(p->facing ? p->x + 16 : p->x - 16);
+    p->y = 48;
+    for (k = 1; p->y + k < 225; k++)
+        if (vk_grounded(map, (VKByte)(p->x - sx * k), (VKByte)(p->y + k), stage, 0)) break;
+    p->stair_anim = (VKByte)k;
+    p->stair_len = (VKByte)(k + 8);
     p->stair_glide = 0;
-    p->stair_move = 0;
     p->on_stairs = 1;
     p->mode = 0;
     p->phase = 0;
     p->crouched = 0;
-    p->facing = (VKByte)dir; /* arriving from above, Simon goes down */
-    p->pose = (VKByte)(p->facing ? 3 : 0);
-    return 1;
+}
+
+/* Top exit of a flight (76A4-76B9): Simon arrives at Y 224 below the floor of the
+ * room above and climbs on along the same diagonal. The MSX leaves the stairs when
+ * the probe 7B68 finds a solid tile at (X, Y + 7) after a step (6EF1, C42B >= 8,
+ * always true after a room exit), then 6D3B rounds Y down to the row. Returns the
+ * number of steps to that floor: 32 in hall rooms 5 and 7 (traced, (207,224) ->
+ * (175,192) and (49,224) -> (81,192)). */
+VKByte vk_stair_climb_steps(const VKByte *map, VKByte x, VKByte y, int dir, VKByte stage)
+{
+    const int sx = dir ? 1 : -1;
+    int k;
+    for (k = 1; k < 200 && y - k > 32; k++)
+        if (vk_tile_solid(vk_sample_tile(map, (VKByte)(x + sx * k), (VKByte)(y - k + 7)), stage, 0))
+            break;
+    return (VKByte)k;
 }
 
 /* Climb or descend one pixel on each axis every two frames. stair_anim is the
@@ -288,7 +284,10 @@ static void vk_stair_tick(VKPlayer *p, int direction, int down, int up)
         }
         else if (want_down && p->stair_glide && p->y < 225)
         {
-            /* A glide foot at Y 224 drops through the bottom edge (Y 225). */
+            /* A glide foot at Y 224 steps down through the bottom edge (Y 225) on
+             * the diagonal: room 5 (207,224) -> (208,225), then room 1 at X 192 as
+             * traced (runs/cR). */
+            p->x = (VKByte)((int)p->x - sx);
             p->y++;
             moved = 1;
         }
@@ -298,8 +297,9 @@ static void vk_stair_tick(VKPlayer *p, int direction, int down, int up)
     if (moved && !p->stair_glide)
         p->stair_move = (VKByte)((p->stair_anim & 7) ? (want_up ? 1 : 2) : 0);
     if (p->stair_anim == p->stair_len) p->stair_glide = 0;
-    if (moved && (p->stair_anim == p->stair_len || p->y >= 225 ||
-                  (p->stair_anim == 0 && !p->stair_glide)))
+    /* At Y 225 Simon stays on the stairs: the room exit (gameplay.c) takes him on. */
+    if (moved && p->y < 225 && (p->stair_anim == p->stair_len ||
+                                (p->stair_anim == 0 && !p->stair_glide)))
     { p->on_stairs = 0; p->mode = 0; p->phase = 0; }
     /* Four-step walk cycle, one pose per eight pixels of progress. gameplay.c
      * (vk_stair_pose) replaces it with the stair poses of the ROM in play. */

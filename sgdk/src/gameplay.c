@@ -465,22 +465,20 @@ VKEvent vk_game_tick_controls(VKGame *game, int direction, int jump, int up, int
         const VKByte target = links ? links[game->room].down : VK_ROOM_NONE;
         if (target != VK_ROOM_NONE)
         {
-            /* From an arrival glide, the MSX exit shifts X by 16 (207 -> 192). */
-            if (p->stair_glide) p->x = (VKByte)(p->stair_dir ? p->x + 16 : p->x - 16);
-            p->stair_glide = 0;
             game->room = target;
+            if (p->on_stairs)
+            {
+                /* 76EB: on a flight (C420 = 3) Simon stays on it, X +-16, Y 48, and
+                 * walks on down to the floor of the room below (player.c). The step
+                 * under way goes on as C435 does (traced: C42B 33 at the exit). */
+                vk_stair_resume(p, vk_game_collision(game), vk_game_limit_stage(game));
+                p->stair_move = (VKByte)((game->stair_steps & 7) ? 2 : 0);
+                return VK_EVENT_VERTICAL;
+            }
+            /* 76E8: out of the stairs only Y changes; Simon goes on falling. */
             p->y = 48;
-            p->on_stairs = 0;
-            p->stair_anim = 0;
-            p->stair_move = 0;
             p->mode = 4;
             p->phase = 0;
-            /* A flight of the room below through this point takes Simon on its stairs
-             * instead of the fall (player.c). Otherwise he keeps falling. */
-            {
-                int vk_stair_resume(VKPlayer *player, const VKByte *map);
-                vk_stair_resume(p, vk_game_collision(game));
-            }
             return VK_EVENT_VERTICAL;
         }
         p->y = VK_FALL_Y;
@@ -491,14 +489,15 @@ VKEvent vk_game_tick_controls(VKGame *game, int direction, int jump, int up, int
     }
     /* MSX up exit: on a flight with HAUT at Y < 48 (research/vertical-links.md).
      * Simon lands at X +16 (-16 on a right-up flight), Y 224, and glides back up
-     * the 32 px diagonal to the floor of the room above. */
+     * the diagonal to the floor of the room above (32 px in hall rooms 5 and 7). */
     if (links && p->on_stairs && p->y < 48 && links[game->room].up != VK_ROOM_NONE)
     {
         const int dir = p->stair_dir;
         game->room = links[game->room].up;
         p->x = (VKByte)(dir ? p->x - 16 : p->x + 16);
         p->y = 224;
-        p->stair_len = 32;
+        p->stair_len = vk_stair_climb_steps(vk_game_collision(game), p->x, p->y, dir,
+                                            vk_game_limit_stage(game));
         p->stair_anim = 0;
         p->stair_move = 0;
         p->stair_glide = 1;
