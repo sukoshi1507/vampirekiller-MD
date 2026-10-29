@@ -2,6 +2,11 @@
 # Un objet est pose sous Simon dans le premier emplacement C500 de vk_candles (+6 etat 3 =
 # au sol, +7 X, +8 Y, +9 objet, +10 minuterie FF = permanent, +11 fixe 0) ; +171 = C419.
 # vk_enemies : energie +126, C434 +143, C43A +144, C440 +145.
+# Clignotement de Simon (790C) : palette du sprite 0 (vdpSpriteCache+4, bits 13-14 : PAL2
+# normal, PAL3 silhouette) et pixels rouges (couleur 8 = 020E) autour de Simon ; l'image
+# capturee a une image de retard sur la table de sprites (DMA a la VBlank suivante).
+# Eclair de 05 (7604) : backdrop_color (registre 7, ecrit juste apres la VBlank) et le
+# pixel (2, 2), transparent.
 include boot_to_courtyard.inc
 until front_mode == MODES['INTERIOR'] max 3000 RIGHT
 wait 40                                            # fin de l'etat 9 de la salle 0
@@ -23,6 +28,21 @@ poke vk_candles+9 0x09
 poke vk_candles+6 3
 wait 2
 expect ram8('vk_candles+171') == 0x09 and 0x90 <= ram8('enemy_state+143') <= 0x96
+# 7932 : silhouette couleur 8 une passe sur deux (2 images sur 4).
+set red lambda: len([c for c in colors(game.player.x - 8, game.player.y - 31, game.player.x + 16, game.player.y + 1) if c == (238, 0, 32)]) > 40
+set pal lambda: (ram16('vdpSpriteCache+4') >> 13) & 3
+set a0 (pal(), red())
+wait 1
+set a1 (pal(), red())
+wait 1
+set a2 (pal(), red())
+wait 1
+set a3 (pal(), red())
+wait 1
+set a4 (pal(), red())
+expect [a[0] for a in (a0, a1, a2, a3)] in ([3, 3, 2, 2], [2, 3, 3, 2], [2, 2, 3, 3], [3, 2, 2, 3]) # PAL3 2 images sur 4
+expect [a[1] for a in (a1, a2, a3, a4)] == [a[0] == 3 for a in (a0, a1, a2, a3)] # silhouette rouge a l'image suivante
+expect ram8('simon_flash_color') == 0x08 # 7932 : couleur 8
 until enemies.alive > 0 max 280
 until enemies.alive == 0 max 280
 dump c434
@@ -34,6 +54,186 @@ poke vk_candles+9 0x08
 poke vk_candles+6 3
 wait 2
 expect ram8('vk_candles+171') == 0x08 and ram8('enemy_state+144') > 0x90
+# 7924 : silhouette couleur 0Eh (blanc 0EEE), meme cadence.
+set b0 pal()
+wait 1
+set b1 pal()
+wait 1
+set b2 pal()
+wait 1
+set b3 pal()
+expect [b0, b1, b2, b3] in ([3, 3, 2, 2], [2, 3, 3, 2], [2, 2, 3, 3], [3, 2, 2, 3]) # PAL3 2 images sur 4
+expect ram8('simon_flash_color') == 0x0E # 7924 : couleur 0Eh
 until enemies.alive > 0 max 280
 wait 120
 expect enemies.energy == 18 and game.recoil == 0 # C43A : pas de contact
+# 05 : ennemis detruits, C43E = 18h ; 7604 : bordure 0Eh / 0 toutes les 2 passes (4 images),
+# 24 passes (48 images), fin a 0.
+until enemies.alive > 0 max 280
+poke vk_candles+9 0x05
+poke vk_candles+6 3
+set seq []
+set pix []
+wait 1
+expect ram8('vk_candles+171') == 0x05 and enemies.alive == 0 and enemies.flash == 0x18 # objet 05 pris
+set seq seq + [ram8('backdrop_color')]
+set pix pix + [pixel(2, 2)]
+wait 1
+set seq seq + [ram8('backdrop_color')]
+set pix pix + [pixel(2, 2)]
+wait 1
+set seq seq + [ram8('backdrop_color')]
+set pix pix + [pixel(2, 2)]
+wait 1
+set seq seq + [ram8('backdrop_color')]
+set pix pix + [pixel(2, 2)]
+wait 1
+set seq seq + [ram8('backdrop_color')]
+set pix pix + [pixel(2, 2)]
+wait 1
+set seq seq + [ram8('backdrop_color')]
+set pix pix + [pixel(2, 2)]
+wait 1
+set seq seq + [ram8('backdrop_color')]
+set pix pix + [pixel(2, 2)]
+wait 1
+set seq seq + [ram8('backdrop_color')]
+set pix pix + [pixel(2, 2)]
+wait 1
+set seq seq + [ram8('backdrop_color')]
+set pix pix + [pixel(2, 2)]
+wait 1
+set seq seq + [ram8('backdrop_color')]
+set pix pix + [pixel(2, 2)]
+wait 1
+set seq seq + [ram8('backdrop_color')]
+set pix pix + [pixel(2, 2)]
+wait 1
+set seq seq + [ram8('backdrop_color')]
+set pix pix + [pixel(2, 2)]
+wait 1
+set seq seq + [ram8('backdrop_color')]
+set pix pix + [pixel(2, 2)]
+wait 1
+set seq seq + [ram8('backdrop_color')]
+set pix pix + [pixel(2, 2)]
+wait 1
+set seq seq + [ram8('backdrop_color')]
+set pix pix + [pixel(2, 2)]
+wait 1
+set seq seq + [ram8('backdrop_color')]
+set pix pix + [pixel(2, 2)]
+wait 1
+set seq seq + [ram8('backdrop_color')]
+set pix pix + [pixel(2, 2)]
+wait 1
+set seq seq + [ram8('backdrop_color')]
+set pix pix + [pixel(2, 2)]
+wait 1
+set seq seq + [ram8('backdrop_color')]
+set pix pix + [pixel(2, 2)]
+wait 1
+set seq seq + [ram8('backdrop_color')]
+set pix pix + [pixel(2, 2)]
+wait 1
+set seq seq + [ram8('backdrop_color')]
+set pix pix + [pixel(2, 2)]
+wait 1
+set seq seq + [ram8('backdrop_color')]
+set pix pix + [pixel(2, 2)]
+wait 1
+set seq seq + [ram8('backdrop_color')]
+set pix pix + [pixel(2, 2)]
+wait 1
+set seq seq + [ram8('backdrop_color')]
+set pix pix + [pixel(2, 2)]
+wait 1
+set seq seq + [ram8('backdrop_color')]
+set pix pix + [pixel(2, 2)]
+wait 1
+set seq seq + [ram8('backdrop_color')]
+set pix pix + [pixel(2, 2)]
+wait 1
+set seq seq + [ram8('backdrop_color')]
+set pix pix + [pixel(2, 2)]
+wait 1
+set seq seq + [ram8('backdrop_color')]
+set pix pix + [pixel(2, 2)]
+wait 1
+set seq seq + [ram8('backdrop_color')]
+set pix pix + [pixel(2, 2)]
+wait 1
+set seq seq + [ram8('backdrop_color')]
+set pix pix + [pixel(2, 2)]
+wait 1
+set seq seq + [ram8('backdrop_color')]
+set pix pix + [pixel(2, 2)]
+wait 1
+set seq seq + [ram8('backdrop_color')]
+set pix pix + [pixel(2, 2)]
+wait 1
+set seq seq + [ram8('backdrop_color')]
+set pix pix + [pixel(2, 2)]
+wait 1
+set seq seq + [ram8('backdrop_color')]
+set pix pix + [pixel(2, 2)]
+wait 1
+set seq seq + [ram8('backdrop_color')]
+set pix pix + [pixel(2, 2)]
+wait 1
+set seq seq + [ram8('backdrop_color')]
+set pix pix + [pixel(2, 2)]
+wait 1
+set seq seq + [ram8('backdrop_color')]
+set pix pix + [pixel(2, 2)]
+wait 1
+set seq seq + [ram8('backdrop_color')]
+set pix pix + [pixel(2, 2)]
+wait 1
+set seq seq + [ram8('backdrop_color')]
+set pix pix + [pixel(2, 2)]
+wait 1
+set seq seq + [ram8('backdrop_color')]
+set pix pix + [pixel(2, 2)]
+wait 1
+set seq seq + [ram8('backdrop_color')]
+set pix pix + [pixel(2, 2)]
+wait 1
+set seq seq + [ram8('backdrop_color')]
+set pix pix + [pixel(2, 2)]
+wait 1
+set seq seq + [ram8('backdrop_color')]
+set pix pix + [pixel(2, 2)]
+wait 1
+set seq seq + [ram8('backdrop_color')]
+set pix pix + [pixel(2, 2)]
+wait 1
+set seq seq + [ram8('backdrop_color')]
+set pix pix + [pixel(2, 2)]
+wait 1
+set seq seq + [ram8('backdrop_color')]
+set pix pix + [pixel(2, 2)]
+wait 1
+set seq seq + [ram8('backdrop_color')]
+set pix pix + [pixel(2, 2)]
+wait 1
+set seq seq + [ram8('backdrop_color')]
+set pix pix + [pixel(2, 2)]
+wait 1
+set seq seq + [ram8('backdrop_color')]
+set pix pix + [pixel(2, 2)]
+wait 1
+set seq seq + [ram8('backdrop_color')]
+set pix pix + [pixel(2, 2)]
+wait 1
+set seq seq + [ram8('backdrop_color')]
+set pix pix + [pixel(2, 2)]
+wait 1
+set seq seq + [ram8('backdrop_color')]
+set pix pix + [pixel(2, 2)]
+wait 1
+set runs [seq[i] for i in range(len(seq)) if i == 0 or seq[i] != seq[i - 1]]
+expect seq.count(14) == 24 and runs == [0, 14, 0, 14, 0, 14, 0, 14, 0, 14, 0, 14, 0] # 6 eclairs de 4 images
+expect all(seq[i:i + 4] == [14] * 4 for i in range(len(seq)) if seq[i] == 14 and (i == 0 or seq[i - 1] == 0)) # 4 images chacun
+expect enemies.flash == 0 and enemies.border == 0 and seq[-1] == 0 # fin a 0
+expect [p == (238, 238, 238) for p in pix] == [c == 14 for c in seq] # fond blanc (0EEE) des que le registre 7 change (ecrit apres la VBlank)

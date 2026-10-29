@@ -47,9 +47,20 @@ static const u32 arm_tiles[32] = {
     0,0x0EEE0000UL,0x00EEEE00UL,0x000EEFF0UL,
     0x0000FF00UL,0,0,0
 };
+/* PAL3. Entries 1..3 belong to Simon's one-colour silhouette (790C, see
+ * simon_palette below): Simon's tiles only use indices 1..3 (MSX colours 1, 2 and
+ * their OR 3), so his sprites take PAL3 on the blink passes. The flame and spark
+ * tiles (MSX indices 1, 2, 8, E) are loaded with 1 -> 4 and 2 -> 5 (load_flames). */
+#define SIMON_FLASH_FIRST 1
+#define FLAME_COLOR_1 4
+#define FLAME_COLOR_2 5
 static const u16 attack_palette[16] = {
-    0,0x002A,0x006E,0x00CE,0,0,0,0,0,0,0,0,0,0,0x0CA0,0x0EEE
+    0,0,0,0,0x002A,0x006E,0,0,0,0,0,0,0,0,0x0CA0,0x0EEE
 };
+/* MSX colour shown in PAL3 entries 1..3, 0 when not loaded since the last PAL3 load. */
+static u8 simon_flash_color = 0;
+/* Backdrop colour last written to VDP register 7 (F3EB of 7604). */
+static u8 backdrop_color = 0;
 /* 16x16 training target, deliberately NOT an original ROM asset. */
 static const u32 target_tiles[32] = {
     0,0,0x000FF000UL,0x00F00F00UL,0x0F0000F0UL,0x0F0000F0UL,0xF000000FUL,0xF000000FUL,
@@ -202,6 +213,38 @@ static u16 show_enemy_sprites(u16 tail)
     return count;
 }
 
+/* 790C: while C43A (object 08) or C434 (object 09) runs, every line of Simon's
+ * sprites (D400, the lash included) takes colour 0Eh or 8 without the CC bit on the
+ * passes where bit 0 of C003 is set: a one-colour silhouette, 2 frames out of 4.
+ * The MD sprites switch to PAL3, whose entries 1..3 then hold that colour of the
+ * room palette (PAL2, the MSX palette). Returns the palette of Simon's sprites. */
+static u16 simon_palette(void)
+{
+    const u8 color = (u8)(room_key() ? Enemies_simonColor(&vk_enemies) : 0);
+    if (!color) return PAL2;
+    if (color != simon_flash_color)
+    {
+        /* Sent in the next VBlank with the sprite table (DMA queue). */
+        static u16 rgb[3];
+        rgb[0] = rgb[1] = rgb[2] = PAL_getColor((u16)(PAL2 * 16 + color));
+        PAL_setColors((u16)(PAL3 * 16 + SIMON_FLASH_FIRST), rgb, 3, DMA_QUEUE);
+        simon_flash_color = color;
+    }
+    return PAL3;
+}
+
+/* 7604 (object 05, C43E): BDRCLR F3EB = 0Eh or 0 then CHGCLR. The MD backdrop
+ * (register 7, PAL0 = the room palette) stands for the MSX border colour; it shows
+ * wherever the planes and sprites are transparent. Called right after the VBlank,
+ * so the whole picture changes at once, one frame after the pass, like the sprites. */
+void vk_show_backdrop(void)
+{
+    const u8 color = (u8)(room_key() ? vk_enemies.border : 0);
+    if (color == backdrop_color) return;
+    VDP_setBackgroundColor(color);
+    backdrop_color = color;
+}
+
 void vk_show_player(const VKPlayer *shown)
 {
     /* After a fall Simon is parked at Y FA, whose top rows would still reach the
@@ -213,6 +256,7 @@ void vk_show_player(const VKPlayer *shown)
      * tick C003 is set: 4 frames hidden, 4 shown. C42D drops once a tick too, so
      * its bit 1 gives the same rhythm (PROVISIONAL phase: C003 runs freely). */
     if (vk_enemies.invuln & 2) parked.y = 255;
+    const u16 simon_pal = simon_palette();
     /* Enemy sprites come after the player chain: sprite 6 (or 7 when the target is
      * shown) links to ENEMY_SPRITE_BASE when there are enemies, then the candles and
      * objects of candle_view.c close the chain. */
@@ -230,7 +274,7 @@ void vk_show_player(const VKPlayer *shown)
      * is part of those ROM-derived frames, so no separate lash is overlaid. */
     if (player->pose >= VK_PLAYER_STAIR_POSE && !crouch_mode && !attack_frame)
         VDP_setSpriteFull(0, (s16)player->x - 8, (s16)player->y - 31, SPRITE_SIZE(3, 4),
-            TILE_ATTR_FULL(PAL2, TRUE, FALSE, FALSE, STAIR_TILE_INDEX +
+            TILE_ATTR_FULL(simon_pal, TRUE, FALSE, FALSE, STAIR_TILE_INDEX +
                 (player->pose - VK_PLAYER_STAIR_POSE) * VK_PLAYER_TILES_PER_POSE), 1);
     else if (player->pose >= VK_PLAYER_DEATH_POSE && player->pose < VK_PLAYER_STAIR_POSE)
     {
@@ -238,17 +282,17 @@ void vk_show_player(const VKPlayer *shown)
         const u16 side = (u16)(player->pose - VK_PLAYER_DEATH_POSE);
         VDP_setSpriteFull(0, (s16)player->x + vk_player_death_left[side], (s16)player->y - 15,
             SPRITE_SIZE(4, 2),
-            TILE_ATTR_FULL(PAL2, TRUE, FALSE, FALSE, DEATH_TILE_INDEX + side * VK_PLAYER_DEATH_TILES), 1);
+            TILE_ATTR_FULL(simon_pal, TRUE, FALSE, FALSE, DEATH_TILE_INDEX + side * VK_PLAYER_DEATH_TILES), 1);
     }
     else if (crouch_mode || attack_frame)
         VDP_setSpriteFull(0, -32, -32, SPRITE_SIZE(3, 4),
-            TILE_ATTR_FULL(PAL2, TRUE, FALSE, FALSE,
+            TILE_ATTR_FULL(simon_pal, TRUE, FALSE, FALSE,
                            PLAYER_TILE_INDEX + player->pose * VK_PLAYER_TILES_PER_POSE), 1);
     else
         /* The recoil poses reach one pixel higher (extract_player.py POSE_TOP). */
         VDP_setSpriteFull(0, (s16) player->x - 8,
             (s16) player->y - (player->pose >= VK_PLAYER_RECOIL_POSE ? 32 : 31), SPRITE_SIZE(3, 4),
-            TILE_ATTR_FULL(PAL2, TRUE, FALSE, FALSE,
+            TILE_ATTR_FULL(simon_pal, TRUE, FALSE, FALSE,
                            PLAYER_TILE_INDEX + player->pose * VK_PLAYER_TILES_PER_POSE), 1);
     {
         int left = 0, top = 0, right = 0, bottom = 0;
@@ -317,7 +361,7 @@ void vk_show_player(const VKPlayer *shown)
                 body ? (s16)player->x + origin_x + (s16)i * 32 : -32,
                 body ? (s16)player->y + origin_y : -32,
                 SPRITE_SIZE(4, 4),
-                TILE_ATTR_FULL(PAL2, TRUE, FALSE, flip,
+                TILE_ATTR_FULL(simon_pal, TRUE, FALSE, flip,
                                base + source_half * tiles_per_half),
                 i == 0 ? 6 : (target_visible ? 7 : enemy_link));
         }
@@ -346,6 +390,29 @@ void vk_set_whip_level(int level)
         VDP_loadTileData((const u32 *)vk_whip_level2_tiles, WHIP_LEVEL_TILE_INDEX, WHIP_LEVEL_TILE_COUNT, CPU);
 }
 
+/* Flame and spark tiles with MSX colours 1 and 2 moved to PAL3 entries 4 and 5,
+ * so that entries 1..3 stay free for Simon's silhouette (simon_palette). */
+static void load_flames(void)
+{
+    static u32 frame[VK_FLAME_TILES_PER_FRAME * 8];
+    u16 f, i;
+    for (f = 0; f < VK_FLAME_FRAMES + VK_SPARK_FRAMES; f++)
+    {
+        for (i = 0; i < VK_FLAME_TILES_PER_FRAME * 8; i++)
+        {
+            /* All eight pixels at once: bit k of each nibble in bk. */
+            const u32 row = vk_flame_fx_tiles[f * VK_FLAME_TILES_PER_FRAME * 8 + i];
+            const u32 b0 = row & 0x11111111UL, b1 = (row >> 1) & 0x11111111UL;
+            const u32 high = ((row >> 2) | (row >> 3)) & 0x11111111UL;
+            const u32 is1 = b0 & ~b1 & ~high;     /* 0001 -> 0100 (FLAME_COLOR_1) */
+            const u32 is2 = b1 & ~b0 & ~high;     /* 0010 -> 0101 (FLAME_COLOR_2) */
+            frame[i] = row ^ is1 ^ (is1 << 2) ^ (is2 << 1) ^ is2 ^ (is2 << 2);
+        }
+        VDP_loadTileData(frame, (u16)(FLAME_TILE_INDEX + f * VK_FLAME_TILES_PER_FRAME),
+                         VK_FLAME_TILES_PER_FRAME, CPU);
+    }
+}
+
 void vk_load_whip_graphics(void)
 {
     VDP_loadTileData(whip_tiles, WHIP_TILE_INDEX, 3, CPU);
@@ -354,8 +421,8 @@ void vk_load_whip_graphics(void)
                      VK_ATTACK_FRAME_COUNT * VK_ATTACK_TILES_PER_FRAME, CPU);
     PAL_setPalette(PAL3, attack_palette, CPU);
     VDP_loadTileData(target_tiles, TARGET_TILE_INDEX, 4, CPU);
-    VDP_loadTileData(vk_flame_fx_tiles, FLAME_TILE_INDEX,
-                     (VK_FLAME_FRAMES + VK_SPARK_FRAMES) * VK_FLAME_TILES_PER_FRAME, CPU);
+    load_flames();
+    simon_flash_color = 0;
     VDP_loadTileData((const u32 *)vk_simon_crouch_tiles, CROUCH_TILE_INDEX, VK_CROUCH_TILE_COUNT, CPU);
     vk_whip_reset(&vk_whip);
     vk_whip_set_level(&vk_whip, whip_level_choice);

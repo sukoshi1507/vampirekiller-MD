@@ -193,6 +193,9 @@ void Enemies_init(EnemyState *s)
     s->itemPhase = 0;
     s->contactScore = 0;
     s->itemSound = 0;
+    s->tick = 0;
+    s->flash = 0;
+    s->border = 0;
 }
 
 void Enemies_death(EnemyState *s)
@@ -212,8 +215,9 @@ void Enemies_item(EnemyState *s, EnemyU8 kind, EnemyU8 c431)
         s->armor = ENEMY_ARMOR_HITS;
         break;
     case 0x05:                       /* 8DBB -> 7806 : tous les objets C800 et D700 detruits
-                                      * (9A3A, sans points) ; l'eclair C43E n'est pas porte */
+                                      * (9A3A, sans points) ; 8DC5 : C43E = 18h, eclair */
         for (i = 0; i < ENEMY_MAX; i++) clearEnemy(&s->enemy[i]);
+        s->flash = ENEMY_FLASH_START;
         break;
     case 0x07:                       /* 8DDE : 4605 avec B = 08 */
     case 0x16:                       /* 8E0D : 4605 avec B = 20h */
@@ -940,6 +944,13 @@ int Enemies_frame(EnemyState *s, EnemySpawnTimer *t, const EnemyRoomVars *v)
      * comme C42D (une image sur deux ; phase PROVISOIRE). C43A tombe a 10h : effet 17. */
     s->itemPhase ^= 1;
     if (s->itemPhase == 0) {
+        s->tick++;                   /* C003 (414D) */
+        /* 7604 : tant que C43E != 0, F3EB = 0Eh si le bit 1 de C43E (avant la baisse) est
+         * mis, 0 sinon, puis CHGCLR : 24 passes, 4 images de chaque couleur, fin a 0. */
+        if (s->flash) {
+            s->border = (s->flash & 2) ? ENEMY_FLASH_COLOR : 0;
+            s->flash--;
+        }
         if (s->spawnPause) s->spawnPause--;
         if (s->killTimer) s->killTimer--;
         if (s->guardTimer && --s->guardTimer == ENEMY_GUARD_WARNING) s->itemSound = 0x17;
@@ -951,6 +962,14 @@ int Enemies_frame(EnemyState *s, EnemySpawnTimer *t, const EnemyRoomVars *v)
         if (s->invulnPhase == 0) s->invuln--;
     }
     return hit;
+}
+
+EnemyU8 Enemies_simonColor(const EnemyState *s)
+{
+    if (!(s->tick & 1)) return 0;                          /* 792A / 7938 : RRA de C003 */
+    if (s->guardTimer) return ENEMY_SIMON_GUARD_COLOR;     /* 7924 : C43A */
+    if (s->killTimer) return ENEMY_SIMON_KILL_COLOR;       /* 7932 : C434 */
+    return 0;
 }
 
 int Enemies_sprites(const EnemyState *s, EnemyU8 index, EnemySprite out[ENEMY_SPRITES])

@@ -60,6 +60,8 @@ void vk_load_whip_graphics(void);
 /* Simon, the whip, the hall enemies and the targets of room_view.c, as hardware
  * sprites, then queues the sprite table. */
 void vk_show_player(const VKPlayer *player);
+/* Backdrop colour of object 05's flash (7604, C43E); call it right after the VBlank. */
+void vk_show_backdrop(void);
 /* One gameplay frame of the hall enemies (spawn, move, contact, whip hits, recoil). */
 void vk_step_enemies(void);
 /* "F0".."F4" whip keyframe check at the top right, redrawn on change only. */

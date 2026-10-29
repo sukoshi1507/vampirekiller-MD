@@ -562,6 +562,7 @@ int main(bool hardReset)
             }
         }
         SYS_doVBlankProcess();
+        vk_show_backdrop();
     }
     return 0;
 }
