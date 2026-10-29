@@ -616,6 +616,55 @@ static void test_items(void)
     s.recoil = 0;
     s.invuln = 0;
 
+    /* 790C : silhouette de Simon, 0Eh avec C43A, sinon 8 avec C434, quand le bit 0 de
+     * C003 est mis ; C43A l'emporte. */
+    {
+        EnemyState w;                    /* etat a part : s garde son ennemi pour l'armure */
+        Enemies_init(&w);
+        w.tick = 1;
+        CHECK(Enemies_simonColor(&w) == 0, "790C : sans C43A ni C434, couleurs normales");
+        w.killTimer = 0x40;
+        CHECK(Enemies_simonColor(&w) == ENEMY_SIMON_KILL_COLOR, "7932 : C434 -> couleur 8");
+        w.guardTimer = 0x40;
+        CHECK(Enemies_simonColor(&w) == ENEMY_SIMON_GUARD_COLOR, "7924 : C43A -> couleur 0Eh");
+        w.tick = 2;
+        CHECK(Enemies_simonColor(&w) == 0, "792D : bit 0 de C003 a 0, couleurs normales");
+        {
+            /* Une passe sur deux : 2 images de silhouette, 2 normales. */
+            int on = 0, changes = 0, last = Enemies_simonColor(&w);
+            for (f = 0; f < 40; f++) {
+                int c;
+                (void)Enemies_frame(&w, &t, &v);
+                c = Enemies_simonColor(&w);
+                on += c != 0;
+                changes += c != last;
+                last = c;
+            }
+            CHECK(on == 20 && changes == 20, "790C : 2 images sur 4 (allumees %d, bascules %d)", on, changes);
+        }
+
+        /* 05 : C43E = 18h ; 7604 : F3EB = 0Eh si le bit 1 de C43E est mis avant la baisse.
+         * 24 passes de 2 images : 0, puis 4 images de chaque couleur, fin a 0. */
+        w.enemy[0].active = 1;
+        Enemies_item(&w, 0x05, 0);
+        CHECK(w.flash == ENEMY_FLASH_START && !w.enemy[0].active, "objet 05 : C43E = 18h, ennemis detruits");
+        {
+            static const EnemyU8 expect[24] = { 0, 14, 14, 0, 0, 14, 14, 0, 0, 14, 14, 0,
+                                                0, 14, 14, 0, 0, 14, 14, 0, 0, 14, 14, 0 };
+            int pass = 0, ok = 1;
+            for (f = 0; f < 60; f++) {
+                const EnemyU8 before = w.flash;
+                (void)Enemies_frame(&w, &t, &v);
+                if (w.flash != before) {
+                    if (pass >= 24 || w.border != expect[pass]) ok = 0;
+                    pass++;
+                }
+            }
+            CHECK(ok && pass == 24 && w.flash == 0 && w.border == 0,
+                  "7604 : 24 passes, cadence 0/0Eh par 2 passes, fin a 0 (passes %d)", pass);
+        }
+    }
+
     /* C431 bit 2 (objet 0B) : F0h. */
     Enemies_item(&s, 0x08, 0x04);
     Enemies_item(&s, 0x09, 0x04);

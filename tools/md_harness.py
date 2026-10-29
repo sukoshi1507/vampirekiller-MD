@@ -66,7 +66,7 @@ FRONT_MODES = ['LOGO', 'TITLE', 'CASTLE', 'COURTYARD', 'INTERIOR', 'VIEWER', 'TE
 # Blocs d'ennemis (ENEMY_MAX de enemies.h : les 7 blocs C800..CB00 de la ROM).
 ENEMY_SLOTS = 7
 # Tailles attendues (octets) des globales decodees : garde-fou contre une derive des structures.
-EXPECTED_SIZES = {'player': 15, 'game': 36, 'whip': 6, 'enemy_state': 150,
+EXPECTED_SIZES = {'player': 15, 'game': 36, 'whip': 6, 'enemy_state': 154,
                   'test_target': 18, 'courtyard_flame': 36, 'front_mode': 2, 'health': 6}
 # Noms C actuels des globales partagees (sgdk/src/frontend.h, actors.h) ; les scenarios
 # gardent les noms courts. test_target et courtyard_flame sont statiques (room_view.c).
@@ -319,7 +319,8 @@ class Game_View:
                                 'splashCount': m.rd8(b + 16), 'killTimer': m.rd8(b + 17),
                                 'guardTimer': m.rd8(b + 18), 'spawnPause': m.rd8(b + 19),
                                 'armor': m.rd8(b + 20), 'itemPhase': m.rd8(b + 21),
-                                'contactScore': m.rd8(b + 22), 'itemSound': m.rd8(b + 23)}
+                                'contactScore': m.rd8(b + 22), 'itemSound': m.rd8(b + 23),
+                                'tick': m.rd8(b + 24), 'flash': m.rd8(b + 25), 'border': m.rd8(b + 26)}
         if 'health' in A:
             a = A['health']   # VKHealth (health.h), statique de main.c
             state['health'] = {'lives': m.rd8(a), 'phase': m.rd8(a + 1), 'timer': m.rd16(a + 2),
@@ -382,6 +383,8 @@ class Harness:
         env = {k: ns(v) for k, v in self.state().items()}
         env.update(ram8=lambda a: m.rd8(addr(a)), ram16=lambda a: m.rd16(addr(a)),
                    ram32=lambda a: m.rd32(addr(a)), abs=abs, min=min, max=max, any=any, all=all,
+                   pixel=lambda x, y: m.image().getpixel((x, y)),
+                   colors=lambda x0, y0, x1, y1: list(m.image().crop((x0, y0, x1, y1)).get_flattened_data()),
                    len=len, enumerate=enumerate, range=range, sorted=sorted, MODES={n: i for i, n in enumerate(FRONT_MODES)})
         env.update(self.vars)
         return env
