@@ -20,6 +20,8 @@ void vk_psg_stop(void);         /* 509F with A = 00 */
 void vk_psg_fade(void);         /* 509F with A = FF */
 void vk_psg_pause(void);        /* 509F with A = FD: pause jingle, the rest frozen */
 void vk_psg_resume(void);       /* 509F with A = FE */
+void vk_psg_timer(void);        /* 509F with A = FB (718F, object 0A): music frozen, timed loop */
+void vk_psg_timer_end(void);    /* 509F with A = FC (75FF): the music goes on */
 /* Sound test: any stream on the music voice (FB timed item, FD pause jingle). */
 void vk_psg_play_stream(const VKSoundStream *stream);
 

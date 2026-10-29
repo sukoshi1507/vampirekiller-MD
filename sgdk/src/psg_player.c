@@ -101,3 +101,17 @@ void vk_psg_resume(void)
     vk_psg_core_resume(&vk_psg);
     SYS_enableInts();
 }
+
+void vk_psg_timer(void)
+{
+    SYS_disableInts();
+    vk_psg_core_timer(&vk_psg, &vk_msx_timed_item);
+    SYS_enableInts();
+}
+
+void vk_psg_timer_end(void)
+{
+    SYS_disableInts();
+    vk_psg_core_timer_end(&vk_psg);
+    SYS_enableInts();
+}

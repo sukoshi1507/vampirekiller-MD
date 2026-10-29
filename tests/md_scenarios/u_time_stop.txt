@@ -1,0 +1,48 @@
+# (u) Objet 0A, arret du temps (7116-718F, 75F2, 992F ; research/castle-candles.md 9.8), hall salle 0.
+# L'objet est pose sous Simon dans le premier emplacement C500 de vk_candles (voir t_item_effects) ;
+# coeurs C417 = vk_candles+118, C419 = +171. vk_psg : timed +66 (C098 bit 1), music.cursor +4.
+# MSX : BAS nouvellement presse pendant un saut (C006 bit 1, C420 = 1) ; trace openMSX : D010
+# pendant 178 images (89 passes), ennemis figes, puis FC.
+include boot_to_courtyard.inc
+until front_mode == MODES['INTERIOR'] max 3000 RIGHT
+wait 40                                            # fin de l'etat 9 de la salle 0
+poke vk_game+0 136
+wait 2
+poke vk_candles+118 12                             # 12 coeurs
+poke vk_candles+7 128
+poke vk_candles+8 176
+poke vk_candles+9 0x0A
+poke vk_candles+10 0xFF
+poke vk_candles+11 0
+poke vk_candles+6 3
+wait 2
+expect ram8('vk_candles+6') == 0 and ram8('vk_candles+171') == 0x0A # objet 0A pris
+expect enemies.timeStopItem == 1 and enemies.timeStop == 0 and enemies.frozen == 0 # C701 bit 6 seul
+until enemies.alive > 0 max 400
+wait 6
+# BAS au sol : rien (7136 : C420 doit valoir 1).
+tap DOWN
+expect enemies.frozen == 0 and ram8('vk_candles+118') == 12 # pas au sol
+# Saut (C), puis BAS en l'air : -5 coeurs, C43B, D010, FB.
+tap C
+expect game.player.mode == 1 # en l'air
+hold DOWN 1
+set f0 frame
+expect enemies.frozen == 1 and ram8('vk_candles+118') == 7 # 12 - 5 coeurs
+expect 0x58 <= enemies.timeStop <= 0x5A and ram8('vk_psg+66') == 1 # C43B, FB
+set pos [(e.x, e.y, e.age) for e in enemies.enemy if e.active]
+set cursor ram32('vk_psg+4')
+wait 120
+expect [(e.x, e.y, e.age) for e in enemies.enemy if e.active] == pos # ennemis figes, aucune apparition
+expect ram32('vk_psg+4') == cursor and ram8('vk_psg+66') == 1 # musique gelee, boucle FB
+# Second appui pendant le gel : refuse (715F, C43B != 0).
+until game.player.mode == 0 max 60
+tap C
+hold DOWN 1
+expect ram8('vk_candles+118') == 7 # pas de second arret
+until enemies.frozen == 0 max 120
+expect 176 <= frame - f0 <= 179 # 89 passes (178 images, trace openMSX)
+expect enemies.timeStop == 0 and enemies.timeStopItem == 1 and ram8('vk_psg+66') == 0 # FC
+wait 20
+expect [(e.x, e.y, e.age) for e in enemies.enemy if e.active] != pos # les ennemis repartent
+expect ram32('vk_psg+4') != cursor # la musique reprend

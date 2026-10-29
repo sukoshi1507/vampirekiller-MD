@@ -319,7 +319,7 @@ Les noms des objets (croix, sablier, etc.) et leurs dessins ne sont pas releves 
 **PROVISOIRE** :
 - la flamme `C800` est remplacee par les etincelles de l'effet de flamme, et l'orbe EC par l'objet 07 de la planche ;
 - la cadence de la bougie murale (8 images) n'est pas mesuree ;
-- objets 03-16 : voir 9.8 (03, 05-09, 0C, 0D portes ; 0A, 0F, 10, 11 sans effet) ;
+- objets 03-16 : voir 9.8 (03, 05-0A, 0C, 0D portes ; 0F, 10, 11 sans effet) ;
 - 1B a 1D (dague, hache, croix) ne changent pas l'arme ;
 - les bougies restent eteintes jusqu'au changement de stage (le rechargement du flux de stage n'est pas trace) ;
 - (fait) icone de la cle doree : voir 9.7.
@@ -366,7 +366,7 @@ La cour n'en a pas. Les blocs 0x1F de la salle 7 du hall (+9 = E1), de la salle 
 - Tests : `tests/test_candles.c` (coeur attrape en chute, contenu du coffre non ramasse en chute, cle refusee, icone, attente du coffre, blocs du stage 2, mort) ; scenario `tests/md_scenarios/p_gold_key_chest.txt` (hall salle 2 : prise de la cle, mort avec la cle, icone gardee jusqu'a l'etat 4, retour de la cle et du coffre, ouverture, gros coeur apres 32 images, coeurs 0 -> 5).
 
 **PROVISOIRE / non porte** :
-- effets des contenus 03, 0C, 0D : portes (voir 9.8) ; 0A, 0F, 11 : sans effet (voir 9.8) ;
+- effets des contenus 03, 0A, 0C, 0D : portes (voir 9.8) ; 0F, 11 : sans effet (voir 9.8) ;
 - objet 0x12 (3 cles, icone 0x12) : absent des stages 0-2 ;
 - blocs 0x1F a `+9 & C0 = C0` (`9179`) : le bloc se casse sans rien donner et ne revient pas ;
 - les eclats de briques du bloc (`88C7`, `C5A6`) ne sont pas dessines ;
@@ -386,19 +386,66 @@ La cour n'en a pas. Les blocs 0x1F de la salle 7 du hall (+9 = E1), de la salle 
 - **07 / 16** : `4605` ajoute B a `C415` (energie, max 20h) puis redessine la barre (`45B9`).
 - **05** : `7806` detruit tous les objets `C800` (`9A3A`, sans points) et `D700` ; `928D` met +3 = FF aux objets `C5B5`/`C5C5` ; `C43E` = 18h fait clignoter la couleur de bordure (`7604` : `F3EB` = 0Eh ou 0, `CHGCLR`).
 - **03, armure** (`816C`-`81A8`) : degat = table `81CE` doublee, sauf si `C701` bit 4 et Simon tourne vers l'ennemi (`C427 - X` et `C42C`) : degat de la table, et `C441` - 1 ; a 0, `C701` bit 4 efface et cases du HUD redessinees (`8EE6`). Avec `C701` & 30h, la pose de Simon prend +14h (`761E` : graphismes avec bouclier).
-- **0A** (`C701` bit 6) : `713B` -> `715F` : avec 5 coeurs ou plus, une touche (`C006` bit 1) retire 5 coeurs et lance `C43B` = 5Ah (96h avec `C431` bit 2), `D010` bit 0 (ennemis figes) et le son FB : une arme secondaire qui arrete le temps.
-- **0F** (`C701` bit 7, `C70F` = 3, `C431` bit 6) : `9566` : sur une touche (`C00B` bit 1), `C70F` - 1 (3 usages, puis bit 7 efface) et un affichage `47FE`/`490A` (carte ? non verifie). `C431` bit 6 : aucun lecteur trouve par adresse directe.
+- **0A** (`C701` bit 6) : arret du temps, voir 9.9.
+- **0F** (`C701` bit 7, `C70F` = 3, `C431` bit 6) : `9566` : sur une touche (`C00B` bit 1, F2 d'apres `4BF4`), `C70F` - 1 (3 usages, puis bit 7 efface) et un affichage `47FE`/`490A` (carte ? non verifie). `C431` bit 6 : aucun lecteur trouve par adresse directe.
 - **10, 11** (`C702` bits 6, 7) : lus en `9418` pour choisir `C707` dans la table `9428` (9 entrees de 4 octets) apres `93FF` ; role non compris.
 - **Cases du HUD** (`8EE6`, table `8F19`) : `C701` bits 7 a 3 -> objets 0F (x E8), 0A (D8), 04 et 03 (C8), 1E (B8), en y 12.
 - **Fin de mort** (`70BF`) : `C434`, `C43A`, `C43B`, `C440`, `C441`, `C431`, `C702`, `C700` a 0, `C701` &= 80h.
 
 **Porte** (`sgdk/src/enemies.c` `Enemies_item` / `Enemies_death`, `candles.c` `VK_CANDLE_EVENT_PICK`, `picked` = `C419`, `vk_candles_sound`, `main.c`, `actors.c`) :
-- 07 et 16 (energie), 09 (contact destructeur : points et effet 0D), 08 (aucun contact, effet 17 a 10h), 06 et fouets (`C440`), 05 (ennemis detruits, effet 1B), 03 (armure, 16 coups de face), `C431` bit 2 (F0h), remise a 0 en fin de mort ; son de chaque handler (`8D3E`).
+- 07 et 16 (energie), 09 (contact destructeur : points et effet 0D), 08 (aucun contact, effet 17 a 10h), 06 et fouets (`C440`), 05 (ennemis detruits, effet 1B), 03 (armure, 16 coups de face), 0A (arret du temps, 9.9), `C431` bit 2 (F0h), remise a 0 en fin de mort ; son de chaque handler (`8D3E`).
 - PROVISOIRE : X de l'ennemi pour le cote de l'armure (centre de sa boite pour les types 1 et 4).
 
 **Non porte** :
 - clignotement de Simon (`7918`-`794A`) : Simon partage PAL2 avec les ennemis, une couleur unique demanderait une palette a part ;
 - eclair de bordure de 05 (`C43E`) et `928D` ;
 - cases d'objets du HUD (`8EE6`) et pose au bouclier (`761E`) : graphismes non extraits ;
-- 0A (arret du temps), 0F (affichage a 3 usages), 10/11 (`C707`), `C431` bit 6 : touches et routines non portees ou role non compris ;
+- 0F (affichage a 3 usages), 10/11 (`C707`), `C431` bit 6 : touches et routines non portees ou role non compris ;
 - objet 04 et projectiles `D700` : absents du port.
+
+### 9.9 Objet 0A : arret du temps (code et trace openMSX, 2026-10-29)
+
+**Prise** : `8D94` : `B` = 40h, `8E6D` : `C701 |= 40h`, son 12 (`8D8A`). Aucune minuterie. Le bit n'est pas efface a l'usage : l'objet sert tant que Simon a des coeurs, jusqu'a la fin d'une mort (`70DC` : `C701 &= 80h`). Reprendre 0A pendant un arret ne change rien. 0A existe dans les stages 0-2 dans le coffre du bloc 0x1F (32,160) du stage 2 salle 1 (cle doree necessaire).
+
+**Exclusivite** : aucune. `C701` porte un bit par objet (bit 7 : 0F, 6 : 0A, 5 : 04, 4 : 03, 3 : 1E, 2-1 : cles) ; seuls 03 et 04 s'excluent (`8D98` / `8DA1` effacent le bit de l'autre). `C700` est le compteur de cles dorees, pas une arme. 0A et l'arme 1E (bit 3) coexistent, chacune avec sa case du HUD (`8F19` : 0A en x D8, 1E en x B8) et sa touche (`713B` : bit 3 -> `714D`, bit 6 -> `715F`).
+
+**Touches** (`4BBB`, lu) : `C007` = touches tenues, `C006` = touches nouvellement pressees (`4BB1`-`4BB9`). Bits : 0 HAUT, 1 BAS, 2 GAUCHE, 3 DROITE, 4 ESPACE ou bouton 1 (fouet), 5 HAUT ou bouton 2 (saut, `6B91`). La ligne 6 du clavier donne `C00B` (`4BF4`, `4BA8`) : bit 0 F1 (pause, `5C41`), bit 1 F2 (objet 0F).
+
+**Declenchement** (`6B21` -> `710D` -> `7116`, dans la routine de Simon, sauf si `C5AC` = 2, 3 ou 5) :
+- `7116` : ESPACE nouvellement presse (`C006` bit 4) part vers le fouet et sort : pas d'arme secondaire a l'image d'un coup ;
+- `7136` : `C420` doit valoir 1 (saut, de `6B9B` a l'atterrissage) ;
+- `713B` -> `715F` : `C701` bit 6, `C43B` = 0 (pas de second arret en cours), `C417` >= 5, `C006` bit 1 (BAS nouvellement presse) ;
+- `7170` : `C417` - 5 (BCD), `4566` redessine les coeurs ; `C43B` = 5Ah, 96h avec `C431` bit 2 (objet 0B) ; `718A` : `SET 0,(D010)` ; `718F` : son FB.
+
+**Duree** : seul `75F2` (appele en `6B2D`, a chaque passe de la routine de Simon, une image sur deux, apres `710D`) baisse `C43B` ; a 0, `75FA` efface `D010` bit 0 et `75FF` joue FC. Seuls ecrivains de `C43B` dans toute la ROM (recherche d'octets) : `70CD` (mort), `7187`, `75F8`, plus l'effacement de bloc `63B7` (`C420`-`C46F`, etat 4). Seuls acces a `D010` : `70D3` (mort), `718A`, `75FA`, et les lecteurs `98E5`, `992F`.
+
+**Gel** (banque 2) :
+- `98E5` : avec `D010` != 0, `5EB8` (tous les canaux d'apparition, minuterie `CF10` comprise) n'est pas appele ;
+- `98F9` (objets `C800`) et `9E3E` (projectiles `D700`) : `992F` rend la retenue si `D010` != 0 et `+7E` = 1 ; alors ni `993B` (comportement par type, pose comprise) ni `99B9` (vitesse) ; `99E5` (sortie d'ecran) et le dessin continuent. L'ennemi reste affiche, immobile, sur sa pose ;
+- `+7E` = 1 est pose a la creation (`5FA3` dans `5F35`, `9FB6`) : types 1, 2, 4, 5 figes. Il est remis a 0 par les objets qui ne doivent pas geler : goutte du type 2 (`9C84`), flamme d'un ennemi tue (`9A1A`-`9A33`), et `9B6C`, `9BBF`, `9BD4`, `ACF0`, `B791` (types non portes) ;
+- contact (`7E67`) et fouet ne lisent pas `D010` : un ennemi fige blesse toujours Simon et meurt au fouet.
+
+**Son** : FB (`5276`) met `C098` bit 1 : les voies de musique sont gelees, le melangeur passe a BF (ou 1B avec un effet en cours : la voie C reste a l'effet), les registres de la voie A sont sauves, et la boucle `948B` joue sur la voie A. Les effets continuent sur la voie C. FC (`52C9`) rend melangeur et voie A ; la musique repart ou elle etait. Une requete de musique (`5122`) ou un arret (`5085`) efface aussi `C098` bit 1.
+
+**Mort** : `C43B` continue de baisser pendant l'agonie (`75F2` appele quel que soit `C420`). Le son 00 du jingle de mort (`70A5`) remet `C098` a 0 ; un FC ensuite ne fait que reecrire les registres sauves (non porte). En fin de mort, `70BF` met `C43B` et `D010` a 0 (sans FC) et `C701 &= 80h` retire l'objet.
+
+**Changement de salle** : rien n'efface `C43B` ni `D010` ; l'arret continue dans la salle suivante (pas d'apparition, la panthere creee a l'entree, `61BB` -> `5F35`, est figee). La routine de Simon ne tourne pas pendant l'etat 9 : la minuterie y est suspendue.
+
+**Changement de stage** (lu, non trace pour la porte de la salle 7) : l'etat 4 (`62E6` -> `63B7`) efface `C420`-`C46F`, donc `C43B`, mais ni `D010` ni `C701`. Les ennemis restent figes et sans apparition jusqu'a la prochaine mort ou au prochain arret (qui finit par `75FA`). La table `7777` ne relance pas la musique en entrant au stage 2 : la boucle FB continue aussi. Trace : `63C3` ecrit bien `C43B` = 0 au passage cour -> hall (image 1534 de la trace ci-dessous).
+
+**Trace openMSX** (`tools/run_time_stop_trace.py`, `tools/time_stop_trace_extra.tcl`, sorties dans `scratchpad/`) : plan `hold R` jusqu'au hall salle 0, `poke C701 64`, `poke C417 32` (20 en BCD), `poke C415 32`, saut (`hold U 4`), BAS (`hold D 4`).
+- image 1754 : `7176` `C417` 20 -> 15 (BCD), `7187` `C43B` = 5A, `718E` `D010` = 1, `527B` `C098` = 2 ; `75F8` `C43B` = 59 a la meme image ;
+- `C43B` baisse d'une unite toutes les 2 images ; image 1932 : `75FE` `D010` = 0, `52CE` `C098` = 0 (FC) : 178 images (89 passes) ;
+- deux zombies de type 1 : X, Y et pose (+0B) constants des images 1754 a 1931 ; ils repartent dans la passe de 1932 (la routine de Simon passe avant la boucle des objets). Aucune apparition pendant l'arret ;
+- premiere trace (`hold D` au sol, puis saut et BAS pendant un recul, puis deux sauts) : BAS au sol ou pendant le recul (`C420` = 5) ne declenche rien ; un second BAS pendant l'arret est refuse (`C43B` != 0).
+- non trace : contact d'un ennemi fige, changement de stage pendant l'arret, mort pendant l'arret.
+
+**Porte** (`enemies.c` : `timeStopItem`, `timeStop`, `frozen`, `Enemies_useTimeStop` ; `actors.c` `vk_step_time_stop` ; `psg_core.c` FB/FC ; `main.c`) :
+- touche Mega Drive : BAS nouvellement presse pendant un saut (la touche du MSX2), hors de l'image d'un coup de fouet (B) ; mode de saut du port = `C420` = 1 (`simon_state`) ;
+- 5 coeurs, `C43B` = 5Ah ou 96h, `D010` ; gel des types 1, 2, 4 et 5 (pas de mouvement, d'age ni de pose), canaux d'apparition arretes, goutte libre ; contact et fouet inchanges ;
+- baisse de `C43B` a la passe des minuteries d'objet, avant le mouvement des ennemis ; la prise cale cette passe sur l'image de la prise (les autres minuteries d'objet peuvent glisser d'une image) ; 178 images, comme la trace ;
+- FB : voies de musique coupees et gelees, boucle `vk_msx_timed_item` sur la voie 0 du SN, effets sur la voie 2 et le bruit (les octets de bruit de la boucle sont ignores) ; FC : voies de musique rendues ; une musique ou un arret termine FB ; FC sans FB ne fait rien ;
+- mort : `Enemies_death` efface `C43B`, `D010` et l'objet ; changement de stage : `D010` et l'objet gardes (`main.c`, sortie de stage) ;
+- tests : `tests/test_enemies.c` `test_time_stop`, `tests/test_candles.c` (0A -> `VK_CANDLE_EVENT_PICK`), `tests/test_psg_core.c` (FB/FC), scenario MD `tests/md_scenarios/u_time_stop.txt`.
+
+**Non porte / PROVISOIRE** : la case 0A du HUD (`8EE6`, autre chantier) ; la reecriture des registres sauves par un FC sans FB ; l'arret du temps dans la cour (aucun 0A n'y existe, et le port n'y fait pas tourner les minuteries d'objet).

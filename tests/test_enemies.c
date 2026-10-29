@@ -83,7 +83,7 @@ static void test_timer_intervals(void)
 {
     EnemySpawnTimer t;
     EnemyRoomVars v;
-    EnemyState s;
+    EnemyState s = {0};
     int call, fires[4], nfire = 0;
 
     vars_default(&v);
@@ -111,7 +111,7 @@ static void test_timer_reload_and_difficulty(void)
 {
     EnemySpawnTimer t;
     EnemyRoomVars v;
-    EnemyState s;
+    EnemyState s = {0};
     int call;
 
     vars_default(&v);
@@ -128,7 +128,7 @@ static void test_flag_gate(void)
 {
     EnemySpawnTimer t;
     EnemyRoomVars v;
-    EnemyState s;
+    EnemyState s = {0};
     int call, fired = 0;
     uint8_t before;
 
@@ -153,7 +153,7 @@ static void test_guard_right_refused(void)
 {
     EnemySpawnTimer t;
     EnemyRoomVars v;
-    EnemyState s;
+    EnemyState s = {0};
     int call, fired = 0;
     int idx_before;
 
@@ -175,7 +175,7 @@ static void test_guard_left_refused(void)
 {
     EnemySpawnTimer t;
     EnemyRoomVars v;
-    EnemyState s;
+    EnemyState s = {0};
     int call, fired = 0;
 
     vars_default(&v);
@@ -202,7 +202,7 @@ static void test_side_left(void)
 {
     EnemySpawnTimer t;
     EnemyRoomVars v;
-    EnemyState s;
+    EnemyState s = {0};
     EnemySprite sp[ENEMY_SPRITES];
     int call;
 
@@ -224,7 +224,7 @@ static void test_room1_low_simon(void)
 {
     EnemySpawnTimer t;
     EnemyRoomVars v;
-    EnemyState s;
+    EnemyState s = {0};
     int call;
 
     vars_default(&v);
@@ -241,7 +241,7 @@ static void test_room1_low_simon(void)
 /* 3. Trajectoire E1 : spawn image 908 (observe), trace frames.txt. */
 static void test_e1_trajectory(void)
 {
-    EnemyState s;
+    EnemyState s = {0};
     EnemySprite sp[ENEMY_SPRITES];
     int rf = 0;
     typedef struct { int n; int x; uint8_t bottom; } Expect;
@@ -282,7 +282,7 @@ static void test_e1_trajectory(void)
 /* 3. Trajectoire E2 : spawn image 1012 (observe), avance vers la droite. */
 static void test_e2_trajectory(void)
 {
-    EnemyState s;
+    EnemyState s = {0};
     EnemySprite sp[ENEMY_SPRITES];
     int rf = 0;
     typedef struct { int n; int x; uint8_t bottom; } Expect;
@@ -319,7 +319,7 @@ static void test_e2_trajectory(void)
 /* 4. Limites de la liste d'ennemis et de la visibilite. */
 static void test_spawn_limits(void)
 {
-    EnemyState s;
+    EnemyState s = {0};
     int idx, k;
 
     Enemies_setRoom(&s);
@@ -339,7 +339,7 @@ static void test_spawn_limits(void)
  * image en salle 4, scratchpad/type4/gfx) ; sortie apres X 01 (gauche) et E6 (droite). */
 static void test_type4_motion(void)
 {
-    EnemyState s;
+    EnemyState s = {0};
     EnemySprite sp[ENEMY_SPRITES];
     int i;
     const EnemyU8 T4 = ENEMY_PATTERN_TYPE4;
@@ -389,7 +389,7 @@ static void test_type4_motion(void)
  * puis 168, 168, 168, 328 images (table 9DBB), cote droit puis gauche. */
 static void test_type4_timer(void)
 {
-    EnemyState s;
+    EnemyState s = {0};
     EnemySpawnTimer t;
     EnemyRoomVars v;
     int f;
@@ -489,7 +489,7 @@ static void test_type4_timer(void)
  * vk_game_hit au sol). Ennemi maintenu sur Simon. */
 static void test_contact_recoil_invuln(void)
 {
-    EnemyState s;
+    EnemyState s = {0};
     EnemySpawnTimer t;
     EnemyRoomVars v;
     int f, contacts[8], n = 0, recoil_end = 0;
@@ -526,7 +526,7 @@ static void test_contact_recoil_invuln(void)
  * (tous les ennemis detruits), C431 bit 2 (minuteries F0h), fin de mort (70BF). */
 static int first_spawn_frame(int pause_kind)
 {
-    EnemyState s;
+    EnemyState s = {0};
     EnemySpawnTimer t;
     EnemyRoomVars v;
     int f;
@@ -545,7 +545,7 @@ static int first_spawn_frame(int pause_kind)
 
 static void test_items(void)
 {
-    EnemyState s;
+    EnemyState s = {0};
     EnemySpawnTimer t;
     EnemyRoomVars v;
     int f, hits, sounds17 = 0, frames = 0;
@@ -668,12 +668,92 @@ static void test_spawn_pause(void)
           2 * ENEMY_ITEM_TIMER, normal, paused);
 }
 
+/* 7d. 0A (C701 bit 6) : 715F-718F, 5 coeurs, C43B = 5Ah (96h avec C431 bit 2), D010 bit 0 ;
+ * ennemis figes (992F) et apparitions arretees (98E5) jusqu'a 75F2 (C43B a 0 : D010 efface,
+ * son FC). Trace openMSX (research/castle-candles.md 9.8) : 178 images entre la prise
+ * (C43B = 5A puis 59 dans la meme passe) et l'effacement de D010. */
+static void test_time_stop(void)
+{
+    EnemyState s = {0};
+    EnemySpawnTimer t;
+    EnemyRoomVars v;
+    EnemyU8 hearts = 4;
+    EnemyS16 x;
+    EnemyU16 age;
+    int f, frames, ends = 0, hits;
+
+    vars_default(&v);
+    v.facingLeft = 0;
+    Enemies_init(&s);
+    Enemies_spawnTimerInit(&t);
+    CHECK(!Enemies_useTimeStop(&s, &hearts, 0) && hearts == 4, "0A : sans l'objet, rien");
+    Enemies_item(&s, 0x0A, 0);
+    CHECK(s.timeStopItem && !s.timeStop && !s.frozen, "objet 0A : C701 bit 6, sans minuterie");
+    CHECK(!Enemies_useTimeStop(&s, &hearts, 0) && hearts == 4, "0A : moins de 5 coeurs (7164)");
+    hearts = 12;
+    CHECK(Enemies_useTimeStop(&s, &hearts, 0) && hearts == 7 && s.timeStop == ENEMY_TIME_STOP &&
+          s.frozen, "0A : -5 coeurs, C43B = 5Ah, D010");
+    CHECK(!Enemies_useTimeStop(&s, &hearts, 0) && hearts == 7, "0A : refuse tant que C43B != 0 (715F)");
+
+    /* Un type 1 deja la ne bouge plus et garde sa pose ; aucune apparition ; le contact
+     * reste actif (7E67 ne lit pas D010). */
+    (void)Enemies_spawn(&s, ENEMY_SIDE_RIGHT, ENEMY_TYPE_A, 0xA0, 1);
+    s.enemy[0].age = 20;
+    x = s.enemy[0].x;
+    age = s.enemy[0].age;
+    s.invuln = 0xFF;
+    for (frames = 1; frames < 2 * ENEMY_TIME_STOP - 1; frames++) {
+        (void)Enemies_frame(&s, &t, &v);
+        ends += s.timeStopEnd;
+        CHECK(s.frozen && s.enemy[0].x == x && s.enemy[0].age == age, "D010 : ennemi fige (image %d)", frames);
+        for (f = 1; f < ENEMY_MAX; f++) CHECK(!s.enemy[f].active, "D010 : pas d'apparition");
+    }
+    /* Image 179 : C43B a 0 avant la boucle des objets, l'ennemi repart dans cette passe. */
+    (void)Enemies_frame(&s, &t, &v);
+    ends += s.timeStopEnd;
+    CHECK(!s.frozen && s.timeStopEnd && s.enemy[0].age == age + 1,
+          "C43B : 89 passes (178 images) apres la prise, puis reprise");
+    CHECK(ends == 1 && s.timeStop == 0 && s.timeStopItem, "fin : un FC, l'objet reste (C701 bit 6)");
+    for (f = 0; f < 4; f++) (void)Enemies_frame(&s, &t, &v);
+    CHECK(s.enemy[0].x != x, "fin : l'ennemi repart");
+
+    /* Contact pendant le gel : degat normal. */
+    hearts = 5;
+    CHECK(Enemies_useTimeStop(&s, &hearts, 0x04) && hearts == 0 && s.timeStop == ENEMY_TIME_STOP_LONG,
+          "C431 bit 2 : C43B = 96h");
+    s.invuln = 0;
+    s.enemy[0].x = 126;
+    hits = Enemies_frame(&s, &t, &v);
+    CHECK(hits == 1 && s.energy == ENEMY_ENERGY_MAX - ENEMY_CONTACT_DAMAGE, "D010 : contact actif");
+
+    /* Fin de mort (70BF) : C43B, D010 a 0, C701 &= 80h. */
+    Enemies_death(&s);
+    CHECK(!s.timeStop && !s.frozen && !s.timeStopItem, "70BF : C43B, D010 et C701 bit 6 a 0");
+
+    /* Apparitions : la premiere attend la fin du gel (5EB8 non appele, CF10 arrete). */
+    {
+        const int normal = first_spawn_frame(0);
+        Enemies_init(&s);
+        Enemies_spawnTimerInit(&t);
+        s.invuln = 0xFF;
+        Enemies_item(&s, 0x0A, 0);
+        hearts = 5;
+        (void)Enemies_useTimeStop(&s, &hearts, 0);
+        for (f = 1; f <= 1000; f++) {
+            (void)Enemies_frame(&s, &t, &v);
+            if (s.enemy[0].active || s.enemy[1].active) break;
+        }
+        CHECK(f >= normal + 2 * ENEMY_TIME_STOP - 3 && f <= normal + 2 * ENEMY_TIME_STOP,
+              "D010 : premiere apparition ~180 images plus tard (%d -> %d)", normal, f);
+    }
+}
+
 /* 8. Chute : sans sol sous lui un ennemi descend ; posé sur le sol de la salle (ligne 22 :
  * pieds en Y 192), il s'arrete. Carte synthetique : une seule rangee de tuiles pleines. */
 static void test_fall_to_floor(void)
 {
     static uint8_t map[768];
-    EnemyState s;
+    EnemyState s = {0};
     EnemySpawnTimer t;
     EnemyRoomVars v;
     int i;
@@ -709,7 +789,7 @@ static void test_fall_to_floor(void)
  * laisse le type 4 et un ennemi hors de portee. */
 static void test_whip_kills_type1(void)
 {
-    EnemyState s;
+    EnemyState s = {0};
     int killed;
 
     Enemies_init(&s);
@@ -739,7 +819,7 @@ static void test_type5(void)
     static EnemyU8 map[768];
     static const EnemyU8 jumpY[13] = { 0x7E, 0x7E, 0x7E, 0x7F, 0x81, 0x83, 0x85, 0x89,
                                         0x8D, 0x91, 0x97, 0x9C, 0xA3 };
-    EnemyState s;
+    EnemyState s = {0};
     EnemySpawnTimer t;
     EnemyRoomVars v;
     EnemySprite sp[ENEMY_SPRITES];
@@ -828,7 +908,7 @@ static void test_stage2_type1_spawn(void)
     static const int gapFrames[6] = { 104, 152, 104, 104, 104, 152 };
     EnemySpawnTimer t;
     EnemyRoomVars v;
-    EnemyState s;
+    EnemyState s = {0};
     EnemySprite sp[ENEMY_SPRITES];
     int call, shots = 0, last = 0, room;
 
@@ -887,7 +967,7 @@ static void test_stage2_type1_trajectory(void)
     };
     EnemySpawnTimer t;
     EnemyRoomVars v;
-    EnemyState s;
+    EnemyState s = {0};
     EnemySprite sp[ENEMY_SPRITES];
     int call, age;
     size_t i;
@@ -936,7 +1016,7 @@ static int stage2_contact(int objX, int objY)
 {
     EnemySpawnTimer t;
     EnemyRoomVars v;
-    EnemyState s;
+    EnemyState s = {0};
 
     vars_stage2_room2(&v);
     Enemies_init(&s);
@@ -950,7 +1030,7 @@ static void test_stage2_type1_contact_whip(void)
     static uint8_t map[768];
     EnemySpawnTimer t;
     EnemyRoomVars v;
-    EnemyState s;
+    EnemyState s = {0};
     int i;
 
     /* Contact 8290 classe 1 : |C427 - X| < 10, Y de C425 - 27 a C425 + 22 ; degat 2. */
@@ -1034,7 +1114,7 @@ static int find_type2(const EnemyState *s, int x)
 
 static void test_type2_spawn(void)
 {
-    EnemyState s;
+    EnemyState s = {0};
     EnemySpawnTimer t;
     EnemyRoomVars v;
     int n, k, created[4], c = 0;
@@ -1093,7 +1173,7 @@ static void test_type2_spawn(void)
 
 static void test_type2_trajectory(void)
 {
-    EnemyState s;
+    EnemyState s = {0};
     EnemySpawnTimer t;
     EnemyRoomVars v;
     Enemy *e = &s.enemy[0];
@@ -1123,7 +1203,7 @@ static void test_type2_trajectory(void)
 
 static void test_type2_contact_whip(void)
 {
-    EnemyState s;
+    EnemyState s = {0};
     EnemySpawnTimer t;
     EnemyRoomVars v;
     EnemySprite sp[ENEMY_SPRITES];
@@ -1178,7 +1258,7 @@ static void test_type2_sat_budget(void)
 {
     /* P2 7598 : un homme-poisson (4 entrees SAT) et 4 gouttes (2 chacune) : 12 sur 14, le tir
      * a besoin de 4 entrees, il est perdu ; l'index CF03 avance quand meme. */
-    EnemyState s;
+    EnemyState s = {0};
     EnemySpawnTimer t;
     EnemyRoomVars v;
     int i;
@@ -1293,6 +1373,7 @@ int main(void)
     test_contact_recoil_invuln();
     test_items();
     test_spawn_pause();
+    test_time_stop();
     test_fall_to_floor();
     test_whip_kills_type1();
     test_type5();

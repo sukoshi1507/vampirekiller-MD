@@ -62,6 +62,9 @@ void vk_load_whip_graphics(void);
 void vk_show_player(const VKPlayer *player);
 /* One gameplay frame of the hall enemies (spawn, move, contact, whip hits, recoil). */
 void vk_step_enemies(void);
+/* Object 0A, before vk_step_enemies: DOWN newly pressed in a jump stops the enemies
+ * for 5 hearts (Enemies_useTimeStop) and plays FB. */
+void vk_step_time_stop(int down_pressed, int whip_pressed);
 /* "F0".."F4" whip keyframe check at the top right, redrawn on change only. */
 void vk_draw_attack_frame_label(void);
 
