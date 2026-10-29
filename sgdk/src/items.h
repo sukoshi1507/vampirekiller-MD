@@ -37,6 +37,10 @@ void vk_items_begin(VKItems *items);
  * yet is lost, and 62E6 decodes the stage stream again (5A49): the key is back
  * in its hidden block. */
 void vk_items_new_life(VKItems *items);
+/* A room is loaded (5B1B), or loaded again: a white key revealed but not taken
+ * was a C500 object of the room left, and is gone. Its hidden block is back
+ * (the stream flag is cleared only by the pickup, 8C0B; candles.c). */
+void vk_items_enter_room(VKItems *items);
 /* The white key lies on the floor of the current room (revealed, not taken). */
 int vk_items_key_shown(const VKItems *items, const VKGame *game);
 /* Bar offset in pixels, 0 (closed) to VK_DOOR_LIFT_MAX. */

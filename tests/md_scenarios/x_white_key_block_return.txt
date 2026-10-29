@@ -1,0 +1,70 @@
+# (x) Bloc cache de la cle blanche, hall salle 2 (bougie C490, 01 A0 80 00 03 18).
+# Au coup de fouet, 883E -> 89FD cree la cle (type 83, +6 FF) en (128,160) sans
+# appeler 8874 : le pointeur du drapeau du flux (+7/+8 = E034) passe a la cle
+# (+14/+15) et n'est efface qu'au ramassage (8C0B). Si Simon quitte la salle sans
+# la cle, le bloc revient a l'entree suivante (5B1B recree C490 tant que E034 != 0,
+# research/castle-candles.md 9.10). Avant la correction, le port gardait le bloc
+# casse et redessinait le decor par-dessus la cle : cle invisible.
+# vk_candles : +4 = bougies allumees (bit 1 = le bloc) ; items : +0 cles, +1 prise,
+# +4 revelee. Pixel (137,162) : blanc (238) sur la cle, brun (139) sur le bloc,
+# gris fonce (32) sur le decor nu.
+include boot_to_courtyard.inc
+until front_mode == MODES['INTERIOR'] max 3000 RIGHT
+# Changement de salle debug du hall : A tenu, puis A+DROITE (le premier front est perdu).
+hold A 3
+hold A+RIGHT 3
+wait 10
+hold A 3
+hold A+RIGHT 3
+wait 10
+hold A 3
+hold A+RIGHT 3
+wait 10
+expect game.room == 2 # salle 2 du hall
+expect ram8('vk_candles+4') & 2 # bloc en place
+expect pixel(137, 162)[0] == 139 # briques du bloc
+poke vk_game+0 168
+poke vk_game+1 192
+wait 4
+hold LEFT 1
+hold B 2
+until ram8('items+4') == 1 max 30
+wait 20
+expect (ram8('vk_candles+4') & 2) == 0 # bloc casse
+expect pixel(137, 162)[0] == 238 # cle visible
+shot x-cle-revelee
+# Sortie vers la salle 3 (saut HAUT+DROITE au bord droit), sans prendre la cle.
+poke vk_game+0 230
+wait 2
+until game.room == 3 max 300 UP+RIGHT
+wait 30
+until game.room == 2 max 300 LEFT
+wait 40
+until game.player.x <= 200 max 300 LEFT
+wait 10
+expect ram8('vk_candles+4') & 2 # le bloc est revenu (drapeau E034 encore mis)
+expect ram8('items+4') == 0 and ram8('items') == 0 # cle disparue avec la salle
+expect pixel(137, 162)[0] == 139 # briques redessinees
+shot x-bloc-revenu
+# Second coup : la cle revient ; prise au contact, puis aller-retour en salle 3.
+until game.player.x <= 168 max 120 LEFT
+hold LEFT 1
+hold B 2
+until ram8('items+4') == 1 max 30
+wait 10
+expect pixel(137, 162)[0] == 238 # cle visible
+until ram8('items') & 1 max 200 LEFT
+expect ram8('items+1') == 1 # cle blanche prise (C701 bit 0)
+poke vk_game+0 230
+poke vk_game+1 192
+wait 2
+until game.room == 3 max 300 UP+RIGHT
+wait 30
+until game.room == 2 max 300 LEFT
+wait 40
+until game.player.x <= 200 max 300 LEFT
+wait 10
+expect (ram8('vk_candles+4') & 2) == 0 # 8C0B : le bloc ne revient plus
+expect ram8('items') == 1 and ram8('items+4') == 0 # cle gardee, plus au sol
+expect pixel(137, 162)[0] == 32 # decor nu
+shot x-bloc-ouvert

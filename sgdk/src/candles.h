@@ -123,6 +123,9 @@ void vk_candles_hud(VKCandles *c);
 void vk_candles_item_box(VKCandles *c);
 /* 819E: C441 ran out with the armor (object 03): C701 bit 4 cleared, then 8EE6. */
 void vk_candles_armor_out(VKCandles *c);
+/* 8C0B: the white key of a hidden block was taken (items.c): the stream flag the
+ * key carried is cleared, so the block of the current room does not come back. */
+void vk_candles_white_key_taken(VKCandles *c);
 /* Debug (A+B): every candle of the current room is lit again. */
 void vk_candles_relight(VKCandles *c);
 /* Stage index of vk_candle_first: 0 courtyard, then the castle stage. */

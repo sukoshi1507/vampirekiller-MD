@@ -490,3 +490,21 @@ La cour n'en a pas. Les blocs 0x1F de la salle 7 du hall (+9 = E1), de la salle 
 - tests : `tests/test_enemies.c` `test_time_stop` (`c701` passe en parametre), `tests/test_candles.c` (0A -> `C701` bit 6 et `VK_CANDLE_EVENT_BOX_ITEM`, efface par la mort), `tests/test_psg_core.c` (FB/FC), scenario MD `tests/md_scenarios/u_time_stop.txt` (l'objet lu dans `vk_candles+172`).
 
 **Non porte / PROVISOIRE** : la reecriture des registres sauves par un FC sans FB ; l'arret du temps dans la cour (aucun 0A n'y existe, et le port n'y fait pas tourner les minuteries d'objet).
+
+### 9.10 Cle blanche du bloc cache (salle 2) et bougies de la salle 5 du hall (code, 2026-10-29)
+
+Rapport de jeu (BlastEm) : « en salle 2, la cle qui apparait quand on casse le mur n'apparait pas » et « une des bougies de la salle 5 ne m'a rien donne » (salles numerotees comme l'etiquette debug « ETAPE 1 SALLE n », code Konami).
+
+**Cle blanche, salle 2** (**prouve, code** ; Z80 du decodeur `tools/castle_room_objects.py`) :
+- `87F6` : un bloc d'objet 0x18 saute en `883E` sans passer par `87FA` -> `8874` : le drapeau du flux de stage (`+7/+8` = `E034`, valeur A8) n'est **pas** efface au coup. `883E` -> `89FD` cree la cle (type 83, `+6` = FF) en (X, Y) = (128, 160), sans le + 16 des autres blocs, et recopie le pointeur `E034` en `+14/+15` de la cle (`8A07`). Seul le ramassage l'efface (`8BDF` -> `8C08` -> `8C0B`).
+- Rechargement (`5B1B`) execute avec le decodeur : drapeau `E034` mis, le bloc `C490` (`01 a0 80 00 03 18`) est recree ; `E034` mis a 0, `C490` n'est plus cree (les autres bougies si). La cle de `C500` disparait avec la salle (`5B1B` reecrit `C420`-`C5FF`).
+- Donc sur MSX : casser le bloc puis sortir sans la cle -> au retour le bloc est de nouveau la, un second coup redonne la cle ; apres la prise, le bloc ne revient plus (jusqu'au rechargement du flux : nouvelle vie).
+- **Defaut du port** (reproduit, harnais MD) : le coup mettait le bit `out` du bloc ; au retour, `show_hall_room` dessinait la cle (`vk_item_view_room`) puis `vk_candle_view_room` redessinait le decor du bloc casse par-dessus : mur ouvert, cle invisible (encore ramassable au contact). Sans sortie de salle, la cle s'affichait bien (scenario `f`).
+- **Correction** : `vk_candles_hit` ne met plus `out` pour le bloc 0x18 (comme le coffre d'un bloc 0x1F) ; `vk_candles_white_key_taken` (`8C0B`) le met a la prise (`main.c`, `VK_ITEM_KEY_TAKEN`) ; `vk_items_enter_room` (appele par `show_hall_room`) efface `white_key_revealed` a chaque chargement de salle. Tests : `tests/test_candles.c`, `tests/test_items.c`, scenario MD `x_white_key_block_return` (cle visible au pixel (137,162), sortie vers la salle 3, bloc revenu, second coup, prise, bloc definitivement ouvert).
+- **Non porte** : le bloc 0x18 du stage 2, salle 5 (192,112) : le coup le casse mais `items.c` ne gere que la cle du hall (position et tuiles de la cle prises dans le decor de la salle 2) ; aucune cle n'apparait. A porter avec la porte qu'elle ouvre.
+
+**Salle 5** (decodage `5B1B` : `C470` `01 90 40 00 00 00`, `C480` `01 80 90 00 00 1A`) :
+- bougie (64,144), objet **00** : **fidele, elle ne donne rien**. `898F` : B = 0, pas de flamme `C800` (`8994`) ; `8A37` cree quand meme un objet `C500` de type 01, `+4` = 0, `+5` = 0 (`89B0`), que `8C7E` dessine en flamme rouge (motifs F4/F8 alternes selon `C003` bit 2, couleur 8, images paires) ; apres 16 images (`8A99`), `8AA7` le retire (`8B1B`). Elle n'est touchable qu'en saut (debout au sol y 192 : `C425 - 18 - 144` = 30).
+- bougie (144,128), objet 1A : fouet a chaine (petit coeur si `C416` = 1 deja, `8A29`, cas du fouet pris a la torche de la cour salle 2) ; touchable au sommet d'un saut sous l'escalier (fouet lance a y <= 165).
+- Le port ne creait aucun objet pour 00 : la bougie disparaissait sans rien. Il cree maintenant l'etat `VK_DROP_BURST` (les etincelles tiennent lieu de la flamme F4/F8) pendant 16 images, puis rien (`candles.c`). 35 bougies 00 dans le jeu ; dans les stages 0-2 : hall salles 4 (deux), 5, 7. Tests : `tests/test_candles.c`, scenario MD `y_hall_room5_candles`.
+- PROVISOIRE : le dessin (etincelles au lieu des motifs F4/F8) ; 0x15 suit le meme chemin dans le port, sans l'ennemi de `8AF0[D002]` (aucun 0x15 dans les stages 0-2, D002 = 0 au hall).

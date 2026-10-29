@@ -272,13 +272,34 @@ int vk_candles_hit(VKCandles *c, int i)
         }
         return VK_CANDLE_EVENT_HIT;
     }
+    /* Hidden block with the white key (883E -> 89FD): the key of items.c appears.
+     * As for a chest, 8874 is skipped: the stream flag pointer goes to the key
+     * (+14/+15) and is cleared only when it is taken (8C0B), so the block is back
+     * if Simon leaves the room first (vk_candles_white_key_taken). */
+    if (def->mode == VK_CANDLE_HIDDEN_BLOCK && def->kind == VK_OBJ_WHITE_KEY)
+        return VK_CANDLE_EVENT_HIT | VK_CANDLE_EVENT_WHITE_KEY;
     if (c->stage < VK_CANDLE_STAGES && c->room < VK_CANDLE_ROOMS)
         c->out[c->stage][c->room] |= (VKByte)(1u << i);
-    /* Hidden block with the white key (883E): the key of items.c appears. */
-    if (def->mode == 3 && def->kind == VK_OBJ_WHITE_KEY)
-        return VK_CANDLE_EVENT_HIT | VK_CANDLE_EVENT_WHITE_KEY;
     kind = drop_kind(c, def->kind);
-    /* 0 and 0x15 give nothing here (0x15 is a hidden enemy on the MSX).
+    /* A candle of object 0 or 0x15 (898F): no C800 flame (8996), but 8A37 still
+     * makes a C500 object of type 01 with +5 = 0, drawn as the red flame F4/F8
+     * (8C7E) for 16 frames; then 8AA7 removes it (8B1B): nothing to take. 0x15
+     * would make an enemy of 8AF0[D002] (8AD0), none with D002 = 0 (stages 0-2,
+     * which have no 0x15 candle). The burst stands in for that flame. */
+    if ((kind == 0 || kind == VK_OBJ_NOTHING) && def->mode < 2)
+    {
+        d = free_drop(c);
+        if (!d) return VK_CANDLE_EVENT_HIT;
+        d->state = VK_DROP_BURST;
+        d->x = def->x;
+        d->y = def->y;
+        d->kind = 0;
+        d->timer = 0;
+        d->fixed = 0;
+        d->content = 0;
+        return VK_CANDLE_EVENT_HIT;
+    }
+    /* Blocks of 0 and 0x15 give nothing here.
      * PROVISIONAL: a 0x1F block with +9 & C0 = C0 (9179, object C5B5/C5C5) is not
      * ported and gives nothing. */
     if (kind == 0 || kind == VK_OBJ_NOTHING || def->kind == VK_OBJ_BLOCK_CONTENT ||
@@ -331,6 +352,8 @@ static void step_drop(VKCandles *c, VKDrop *d, const VKByte *map)
     {
         if (++d->timer >= BURST_FRAMES)
         {
+            /* 8AA7: object 0 goes (8B1B). */
+            if (!d->kind) { d->state = VK_DROP_NONE; return; }
             d->state = VK_DROP_FALL;
             d->timer = 0;
             d->catchable = 1;
@@ -381,6 +404,18 @@ static void mark_taken(VKCandles *c, const VKDrop *d)
     if (!d->fixed || c->stage >= VK_CANDLE_STAGES || c->room >= VK_CANDLE_ROOMS) return;
     if (d->fixed & 0x80) c->out[c->stage][c->room] |= (VKByte)(1u << ((d->fixed & 0x7F) - 1));
     else c->taken[c->stage][c->room] |= (VKByte)(1u << (d->fixed - 1));
+}
+
+void vk_candles_white_key_taken(VKCandles *c)
+{
+    int i;
+    if (c->stage >= VK_CANDLE_STAGES || c->room >= VK_CANDLE_ROOMS) return;
+    for (i = 0; i < c->count; i++)
+    {
+        const VKCandleDef *def = vk_candles_def(c, i);
+        if (def->mode == VK_CANDLE_HIDDEN_BLOCK && def->kind == VK_OBJ_WHITE_KEY)
+            c->out[c->stage][c->room] |= (VKByte)(1u << i);
+    }
 }
 
 /* 8D30 and its table 8D3E. Returns the events of the effect. */
