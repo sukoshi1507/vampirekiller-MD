@@ -59,6 +59,10 @@ Ce qui fonctionne dans la ROM Mega Drive :
   un saut coûte 5 cœurs et fige les ennemis 178 images (298 avec l'objet 0B), avec la
   boucle sonore FB du MSX2 et la musique gelée ; durée et gel vérifiés par une trace
   openMSX (`research/castle-candles.md` 9.9).
+- **Case d'objets du HUD et bouclier** : 0F, 0A, 03/04 et 1E s'affichent dans la case
+  du HUD comme sur MSX2 (objet ramassé montré seul, puis case redessinée) ; avec
+  l'armure 03 (ou 04), Simon prend les poses au bouclier de la ROM ; case comparée à
+  une capture openMSX (`research/castle-candles.md` 9.8).
 - **Ajout du port, saut depuis l'escalier** : sur une marche, C fait sauter Simon hors de
   la volée. Le MSX2 ne le permet pas (HAUT, sa touche de saut, y fait monter) ; ce saut
   est gardé comme un plus de jouabilité (`research/stairs.md`).
@@ -76,10 +80,10 @@ Ce qui n'est pas porté ou reste provisoire :
   salle 2 et les hommes-poissons des salles 4 et 5 ne le sont pas. Après une mort, Simon reprend en salle 0
   (x 16, y 96), lieu provisoire. Les liens haut/bas viennent de la table de la ROM,
   sans trace en jeu.
-- **Objets, non portés** : cases d'objets du HUD et pose de Simon au bouclier
-  (armure 03), objet 0A (arrêt du temps), 0F (carte du stage sur F2), 10/11 (prix du
+- **Objets, non portés** : effet de 0F (carte du stage sur F2), 10/11 (prix du
   marchand), le marchand, les armes secondaires, les fouets 1C et 1D (seule la pause
-  des apparitions est portée) et les autres contenus (04, 0E, 12, 1E, points 13/14).
+  des apparitions est portée) et les autres contenus (effet de 04 et de 1E, 0E, 12,
+  points 13/14).
   Les effets portés viennent de la lecture du code, sans trace openMSX dédiée ; la phase
   des minuteries est provisoire (`research/castle-candles.md` 9.8).
 - **Stages 3 et suivants, châteaux, attaques autres que le fouet** : non portés.
