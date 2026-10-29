@@ -23,4 +23,10 @@ extern const signed char vk_player_death_left[2];
 #define VK_PLAYER_STAIR_POSE (VK_PLAYER_DEATH_POSE + 2)
 #define VK_PLAYER_STAIR_POSES 8
 extern const unsigned long vk_player_stair_tiles[8][96];
+/* Shield poses (7618, C701 & 30h while C422 = 0): 0-5 walk and 6-7 jump as
+ * VK_PLAYER_POSES 0-7, 8-15 as the stair poses, 16-17 crouched (right, left). */
+#define VK_PLAYER_SHIELD_POSES 18
+#define VK_PLAYER_SHIELD_STAIR 8
+#define VK_PLAYER_SHIELD_CROUCH 16
+extern const unsigned long vk_player_shield_tiles[18][96];
 #endif

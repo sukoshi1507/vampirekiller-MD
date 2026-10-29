@@ -17,6 +17,9 @@ _Static_assert(ENEMY4_TILE_INDEX + VK_ENEMY4_TILE_COUNT <= HUD_TILE_INDEX,
                "sprite tiles 400.. must end before the HUD tiles");
 _Static_assert(ENEMY5_TILE_INDEX + VK_ENEMY5_TILE_COUNT <= HUD_TILE_INDEX,
                "type 5 tiles must end before the HUD tiles");
+_Static_assert(ENEMY5_TILE_INDEX + VK_ENEMY5_TILE_COUNT <= SHIELD_TILE_INDEX &&
+               SHIELD_TILE_INDEX + VK_PLAYER_TILES_PER_POSE <= HUD_TILE_INDEX,
+               "shield pose tiles between the type 5 tiles and the HUD tiles");
 _Static_assert(ENEMY5_TILE_INDEX + VK_ENEMY2_TILE_COUNT <= HUD_TILE_INDEX,
                "type 2 tiles (loaded in the type 5 block) must end before the HUD tiles");
 
@@ -27,6 +30,8 @@ EnemyState vk_enemies;
 static EnemySpawnTimer enemy_timer;
 static u16 enemy_room_key = 0xFFFF;   /* room_key() while the enemies belong to it, else 0 */
 static int last_attack_frame = -1;
+/* vk_player_shield_tiles pose now at SHIELD_TILE_INDEX, -1 none. */
+static int shield_loaded = -1;
 /* Three animation-friendly tiles: grip, narrow lash and bright tip.
  * These are original placeholder graphics, not ROM-extracted attack frames. */
 static const u32 whip_tiles[24] = {
@@ -121,6 +126,7 @@ void vk_step_enemies(void)
     vk_enemies.recoil = (EnemyU8)vk_game_recoiling(&vk_game);
     /* 7064: the death (C420 = 6) clears C42D: no more blinking. */
     if (vk_game.recoil == VK_RECOIL_DEAD) vk_enemies.invuln = 0;
+    const EnemyU8 armor = vk_enemies.armor;
     if (Enemies_frame(&vk_enemies, &enemy_timer, &vars))
     {
         /* 7EC1: the whip stops (C422 := 0) and Simon is knocked back. */
@@ -128,6 +134,9 @@ void vk_step_enemies(void)
         vk_game_hit(&vk_game, vk_enemies.recoilDir, vk_enemies.energy == 0);
         vk_enemies.recoil = (EnemyU8)vk_game_recoiling(&vk_game);
     }
+    /* 819C: the last armor hit (C441 = 0) clears C701 bit 4 and redraws the
+     * item box (8EE6): the shield goes from the HUD and from Simon. */
+    if (armor && !vk_enemies.armor) vk_candles_armor_out(&vk_candles);
     /* Object 09 (C434): an enemy touched is destroyed, scored as by the whip (81AB),
      * effect 0D (7EBC). Object 08 (C43A): effect 17 when it drops to 10h (75ED). */
     if (vk_enemies.contactScore) vk_hud_add_score((u32)vk_enemies.contactScore * 100);
@@ -202,6 +211,20 @@ static u16 show_enemy_sprites(u16 tail)
     return count;
 }
 
+/* 7618 (end of Simon's routine, 6B36): while C422 = 0 and C701 & 30h (objects
+ * 03, 04), C42E < 14h gets +14h and C42F 00-02 / 0F-11 become 1E-20 / 21-23:
+ * the poses with the shield. The recoil and death pictures do not change
+ * (tools/extract_player.py). Returns the vk_player_shield_tiles pose, or -1. */
+static int shield_pose(const VKPlayer *player, bool crouch_mode, int attack_frame)
+{
+    if (!(vk_candles.c701 & VK_ITEM_SHIELD) || attack_frame || vk_whip.timer) return -1;
+    if (crouch_mode) return VK_PLAYER_SHIELD_CROUCH + (player->facing ? 1 : 0);
+    if (player->pose >= VK_PLAYER_STAIR_POSE)
+        return VK_PLAYER_SHIELD_STAIR + player->pose - VK_PLAYER_STAIR_POSE;
+    if (player->pose < VK_PLAYER_RECOIL_POSE) return player->pose;
+    return -1;
+}
+
 void vk_show_player(const VKPlayer *shown)
 {
     /* After a fall Simon is parked at Y FA, whose top rows would still reach the
@@ -225,10 +248,21 @@ void vk_show_player(const VKPlayer *shown)
     const int crouch_mode = !player->on_stairs && (player->crouched || (attack_frame && vk_whip.crouched));
     const u16 crouch_frame = attack_frame ? (u16)vk_whip_crouch_visual_step(&vk_whip) : 0;
     const u16 crouch_facing = attack_frame ? vk_whip.facing : player->facing;
+    const int shield = shield_pose(player, crouch_mode, attack_frame);
+    if (shield >= 0 && shield != shield_loaded)
+    {
+        VDP_loadTileData((const u32 *)vk_player_shield_tiles[shield], SHIELD_TILE_INDEX,
+                         VK_PLAYER_TILES_PER_POSE, DMA_QUEUE);
+        shield_loaded = shield;
+    }
     /* Standing body on sprite 0. In crouch mode and during any attack the body
      * is the two-half composition drawn on sprites 5 and 6 (below); the lash
      * is part of those ROM-derived frames, so no separate lash is overlaid. */
-    if (player->pose >= VK_PLAYER_STAIR_POSE && !crouch_mode && !attack_frame)
+    if (shield >= 0)
+        /* Shield poses share the 24 x 32 canvas of the normal ones (top y - 31). */
+        VDP_setSpriteFull(0, (s16)player->x - 8, (s16)player->y - 31, SPRITE_SIZE(3, 4),
+            TILE_ATTR_FULL(PAL2, TRUE, FALSE, FALSE, SHIELD_TILE_INDEX), 1);
+    else if (player->pose >= VK_PLAYER_STAIR_POSE && !crouch_mode && !attack_frame)
         VDP_setSpriteFull(0, (s16)player->x - 8, (s16)player->y - 31, SPRITE_SIZE(3, 4),
             TILE_ATTR_FULL(PAL2, TRUE, FALSE, FALSE, STAIR_TILE_INDEX +
                 (player->pose - VK_PLAYER_STAIR_POSE) * VK_PLAYER_TILES_PER_POSE), 1);
@@ -296,7 +330,7 @@ void vk_show_player(const VKPlayer *shown)
     {
         u16 i;
         const u16 facing = (u16)crouch_facing;
-        const bool body = crouch_mode || attack_frame;
+        const bool body = (crouch_mode && shield < 0) || attack_frame;
         const u16 frame_index = attack_frame ? (u16)vk_whip_visual_step(&vk_whip) : 0;
         /* Levels 1 and 2 hold their left-facing standing frames (3..5) as decoded
          * pictures, so they are drawn without flip. Crouch frames stay on level 0. */
@@ -365,6 +399,7 @@ void vk_load_whip_graphics(void)
         VDP_loadTileData((const u32 *)vk_whip_level2_tiles, WHIP_LEVEL_TILE_INDEX, WHIP_LEVEL_TILE_COUNT, CPU);
     vk_hide_targets();
     last_attack_frame = -1;
+    shield_loaded = -1;              /* the scene tiles may have covered the slot */
 }
 
 /* Independent on-screen state check for BlastEm, on the diagnostic rows under

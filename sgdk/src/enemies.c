@@ -211,6 +211,10 @@ void Enemies_item(EnemyState *s, EnemyU8 kind, EnemyU8 c431)
     case 0x03:                       /* 8D98 : C701 bit 4 (bit 5 efface), C441 = 10h */
         s->armor = ENEMY_ARMOR_HITS;
         break;
+    case 0x04:                       /* 8DA1 : C701 bit 4 efface (plus d'armure), bit 5 mis ;
+                                      * C441 = 10h ne sert qu'aux projectiles D700 (8610), non portes */
+        s->armor = 0;
+        break;
     case 0x05:                       /* 8DBB -> 7806 : tous les objets C800 et D700 detruits
                                       * (9A3A, sans points) ; l'eclair C43E n'est pas porte */
         for (i = 0; i < ENEMY_MAX; i++) clearEnemy(&s->enemy[i]);

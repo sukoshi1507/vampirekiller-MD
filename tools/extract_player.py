@@ -42,7 +42,7 @@ def decode_rle(view, address):
     raise ValueError('RLE stream did not terminate')
 
 
-def extract_pose(data, lower, upper, jumping=False, top=30):
+def extract_pose(data, lower, upper, jumping=False, top=30, crouching=False):
     patterns = RomView(data, (0, 11, 12, 13))
     positions = RomView(data, (0, 1, 2, 3))
     pixels = [0] * (24 * 32)
@@ -59,8 +59,10 @@ def extract_pose(data, lower, upper, jumping=False, top=30):
                            'coordinate_cpu': f'{coordinate:04X}'})
         for layer in range(2):
             dy, dx = struct.unpack('bb', positions.read(coordinate + 1 + layer * 2, 2))
-            if jumping and part == 0 and lower in (6, 16):
+            if jumping and part == 0 and lower in (6, 16, 26, 36):
                 dy -= 6  # Original 78B2..78C0, C420 == 1.
+            if crouching and part == 1 and lower in (6, 16, 26, 36):
+                dy += 6  # Original 78C3..78CB, C420 != 1: the upper part goes down.
             for y in range(16):
                 for x in range(16):
                     if not raw[layer * 32 + y + (16 if x >= 8 else 0)] & (128 >> (x & 7)):
@@ -81,6 +83,20 @@ DEATH_POSES = [(9, 5), (19, 20)]
 # down (4,1) then (3,2). A hit on the stairs sets C42F := 2 (6FB4): (4,1) -> (4,2).
 # Order per facing: (4,1), (5,2), (3,2), (4,2); facing left adds 10/15 (765F).
 STAIR_POSES = [(4, 1), (5, 2), (3, 2), (4, 2), (14, 16), (15, 17), (13, 17), (14, 17)]
+
+
+# Shield (7618, C422 = 0 and C701 & 30h, objects 03 and 04): C42E < 14h gets +14h,
+# C42F 00/01/02 -> 1E/1F/20 and 0F/10/11 -> 21/22/23. Lower frames 27-29 and 37-39
+# are the same pictures as 07-09 and 17-19 and C42F 03-05, 12-14 is kept: the
+# recoil and death poses do not change. Order: walk 0-5 and jump 6-7 (POSES 0-7),
+# stairs 8-15 (STAIR_POSES), crouch 16-17 (C420 = 2, C42E 1A/24, upper part + 6).
+SHIELD_LOWER = 20
+SHIELD_UPPER = {0: 30, 1: 31, 2: 32, 15: 33, 16: 34, 17: 35}
+SHIELD_CROUCH = [(6, 0), (16, 15)]
+
+
+def shield_pose(lower, upper):
+    return lower + SHIELD_LOWER, SHIELD_UPPER.get(upper, upper)
 
 
 def extract_wide_pose(data, lower, upper):
@@ -161,6 +177,19 @@ def main():
         records.append({'stair_pose': index, 'lower_frame': lower, 'upper_frame': upper,
                         'top': 30, 'source': sources})
         stair_arrays.append(tile_words(pixels))
+    shield_arrays = []
+    shield_sources = ([(pose, index in JUMP_POSES, False) for index, pose in enumerate(POSES[:8])]
+                      + [(pose, False, False) for pose in STAIR_POSES]
+                      + [(pose, False, True) for pose in SHIELD_CROUCH])
+    for index, ((lower, upper), jumping, crouching) in enumerate(shield_sources):
+        lower, upper = shield_pose(lower, upper)
+        pixels, sources = extract_pose(data, lower, upper, jumping, crouching=crouching)
+        image = Image.new('RGBA', (24, 32))
+        image.putdata([(*colors[p], 255) if p else (0, 0, 0, 0) for p in pixels])
+        image.save(out / f'shield-{index:02d}.png')
+        records.append({'shield_pose': index, 'lower_frame': lower, 'upper_frame': upper,
+                        'jumping': jumping, 'crouching': crouching, 'top': 30, 'source': sources})
+        shield_arrays.append(tile_words(pixels))
     death_words, death_left = [], []
     for index, (lower, upper) in enumerate(DEATH_POSES):
         pixels, left = extract_wide_pose(data, lower, upper)
@@ -210,6 +239,12 @@ extern const signed char vk_player_death_left[2];
 #define VK_PLAYER_STAIR_POSE (VK_PLAYER_DEATH_POSE + 2)
 #define VK_PLAYER_STAIR_POSES {len(STAIR_POSES)}
 extern const unsigned long vk_player_stair_tiles[{len(STAIR_POSES)}][96];
+/* Shield poses (7618, C701 & 30h while C422 = 0): 0-5 walk and 6-7 jump as
+ * VK_PLAYER_POSES 0-7, 8-15 as the stair poses, 16-17 crouched (right, left). */
+#define VK_PLAYER_SHIELD_POSES {len(shield_arrays)}
+#define VK_PLAYER_SHIELD_STAIR 8
+#define VK_PLAYER_SHIELD_CROUCH 16
+extern const unsigned long vk_player_shield_tiles[{len(shield_arrays)}][96];
 #endif
 ''')
     lines = ['/* Generated from the supplied ROM. */', '#include "player_assets.h"',
@@ -230,6 +265,13 @@ extern const unsigned long vk_player_stair_tiles[{len(STAIR_POSES)}][96];
     lines.append(f'const signed char vk_player_death_left[2] = {{{death_left[0]}, {death_left[1]}}};')
     lines.append(f'const unsigned long vk_player_stair_tiles[{len(STAIR_POSES)}][96] = {{')
     for words in stair_arrays:
+        lines.append('    {')
+        lines.extend('        ' + ','.join(f'0x{v:08X}UL' for v in words[i:i + 8]) + ','
+                     for i in range(0, 96, 8))
+        lines.append('    },')
+    lines.append('};')
+    lines.append(f'const unsigned long vk_player_shield_tiles[{len(shield_arrays)}][96] = {{')
+    for words in shield_arrays:
         lines.append('    {')
         lines.extend('        ' + ','.join(f'0x{v:08X}UL' for v in words[i:i + 8]) + ','
                      for i in range(0, 96, 8))

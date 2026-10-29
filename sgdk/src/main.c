@@ -133,7 +133,8 @@ static void step_candles(void)
      * 8DB7), most objects 12 (8D8A), 05: 1B, 08: 16, gold key 14 (8E5D); a chest
      * uses a key: 11 (8F7B). */
     if (events & VK_CANDLE_EVENT_HEARTS) vk_psg_effect(VK_SFX_HEART);
-    if ((events & (VK_CANDLE_EVENT_WEAPON | VK_CANDLE_EVENT_ITEM | VK_CANDLE_EVENT_PICK)) &&
+    if ((events & (VK_CANDLE_EVENT_WEAPON | VK_CANDLE_EVENT_ITEM | VK_CANDLE_EVENT_PICK |
+                   VK_CANDLE_EVENT_BOX_ITEM)) &&
         vk_candles_sound(vk_candles.picked))
         vk_psg_effect(vk_candles_sound(vk_candles.picked));
     if (events & VK_CANDLE_EVENT_GOLD_KEY)
@@ -289,10 +290,12 @@ static void respawn(void)
  * 4513 redraws them as they were. "F5 _ CONTINUE" (4300) needs E600, set by 5C92
  * only with a second Konami cartridge in another slot: not on the Mega Drive.
  * The HUD gold key (8EB4 -> 8EC9 in 4513) is not drawn: the death (70F7) has
- * already set C700 to 0. */
+ * already set C700 to 0; 8EE6 in 4513 draws the item box of C701 &= 80h
+ * (only object 0F can be left). */
 static void show_game_over(void)
 {
     vk_candles_hud(&vk_candles);
+    vk_candles_item_box(&vk_candles);
     hide_sprites();
     VDP_clearTileMapRect(BG_A, 0, 4, 32, 24);
     VDP_clearTileMapRect(BG_B, 0, 0, 32, 28);

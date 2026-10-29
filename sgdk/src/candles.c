@@ -32,6 +32,10 @@ const VKByte vk_hidden_block_tiles[16] = {
     0x01, 0x02, 0x01, 0x02, 0x09, 0x0B, 0x0A, 0x09
 };
 
+const VKByte vk_item_box[5][2] = {
+    { 0xE8, 0x0F }, { 0xD8, 0x0A }, { 0xC8, 0x04 }, { 0xC8, 0x03 }, { 0xB8, 0x1E }
+};
+
 static const VKByte *room_map(const VKGame *game)
 {
     return vk_game_collision(game);
@@ -51,6 +55,9 @@ void vk_candles_begin(VKCandles *c)
     c->hud_key = 0;
     c->c431 = 0;
     c->picked = 0;
+    c->c701 = 0;                     /* 44C6: the RAM is cleared, C5E5/C5E6 too */
+    c->box_items = c->box_pick = 0;
+    c->box_timer_on = c->box_timer = 0;
     for (s = 0; s < VK_CANDLE_STAGES; s++)
         for (r = 0; r < VK_CANDLE_ROOMS; r++)
             c->out[s][r] = c->taken[s][r] = 0;
@@ -69,12 +76,50 @@ void vk_candles_new_life(VKCandles *c, VKByte stage)
     vk_candles_reset_stage(c, stage);
     c->weapon = 0;
     c->gold_keys = 0;
+    c->c701 &= 0x80;                 /* 62D0 -> 70DC */
 }
 
 void vk_candles_death(VKCandles *c)
 {
     c->gold_keys = 0;                /* 70F7 */
     c->c431 = 0;                     /* 70E8 */
+    c->c701 &= 0x80;                 /* 70DC: keys, 0A, 03/04 and 1E are lost, 0F stays */
+}
+
+void vk_candles_item_box(VKCandles *c)
+{
+    /* 8F4A clears the box (B8, 0C, 64 x 16, colour 0), then 8EE9 draws the object
+     * of each bit of C701 from bit 7 (8F05, table 8F19). */
+    c->box_pick = 0;
+    c->box_items = (VKByte)(c->c701 & VK_ITEM_BITS);
+}
+
+void vk_candles_armor_out(VKCandles *c)
+{
+    c->c701 &= (VKByte)~VK_ITEM_BIT_03;      /* 819E: RES 4,(C701) */
+    vk_candles_item_box(c);                  /* 81A4 */
+}
+
+/* 8F23, called by 8D30 before the effect: any object but 01, 17 and up shows
+ * alone in the box (8F4A, then the object C419 at D0, 12), and C5E5 = FF,
+ * C5E6 = 20h start 8F55. */
+static void box_show_pick(VKCandles *c, VKByte kind)
+{
+    if (kind == VK_OBJ_SMALL_HEART || (kind >= VK_OBJ_GOLD_KEY && kind != 0x1E)) return;
+    c->box_timer_on = 1;
+    c->box_timer = VK_ITEM_PICK_TICKS;
+    c->box_items = 0;
+    c->box_pick = kind;
+}
+
+/* 8F55, called by 8A4A at each pass: with C5E5 = FF, C5E6 drops at each pass
+ * whose C003 & 3F is not 0, and 8EE6 draws the box again when it reaches 0.
+ * C5E5 is never cleared: C5E6 goes on from 0 (FF, then down), so 8EE6 runs
+ * again every 256 counted passes. c->clock stands for C003 (PROVISIONAL phase). */
+static void box_step(VKCandles *c)
+{
+    if (!c->box_timer_on || (c->clock & 0x3F) == 0) return;
+    if (--c->box_timer == 0) vk_candles_item_box(c);
 }
 
 void vk_candles_hud(VKCandles *c)
@@ -359,6 +404,7 @@ static int pick(VKCandles *c, VKDrop *d)
     mark_taken(c, d);
     d->state = VK_DROP_NONE;
     c->picked = kind;                /* 8D30: LD (C419),A */
+    box_show_pick(c, kind);          /* 8D33: CALL 8F23 */
     if (kind == VK_OBJ_SMALL_HEART || kind == VK_OBJ_BIG_HEART)
     {
         const int hearts = c->hearts + (kind == VK_OBJ_SMALL_HEART ? 1 : 5);
@@ -388,9 +434,27 @@ static int pick(VKCandles *c, VKDrop *d)
     /* 8D98 (03), 8DBB (05), 8D7C (06), 8DDE (07), 8DCD (08), 8DE5 (09), 8E0D (16):
      * energy, armor, timers and the enemy wipe live in enemies.c (Enemies_item). */
     if (kind == 0x03 || (kind >= 0x05 && kind <= 0x09) || kind == 0x16)
+    {
+        /* 8D98: C701 bit 5 cleared, bit 4 set (8D8F); its icon waits for 8EE6. */
+        if (kind == 0x03) c->c701 = (VKByte)((c->c701 & ~VK_ITEM_BIT_04) | VK_ITEM_BIT_03);
         return VK_CANDLE_EVENT_PICK;
-    /* PROVISIONAL: the other effects (C701/C702 bits of 04, 0A, 0E-12, 1E, points of
-     * 13-14) are not ported; none but 0A, 0F, 10 and 11 is found in stages 0-2. */
+    }
+    /* 8DA1: C701 bit 4 cleared (no more armor, enemies.c), bit 5 set. The D700
+     * projectiles it guards against (8610) are not ported. */
+    if (kind == 0x04)
+    {
+        c->c701 = (VKByte)((c->c701 & ~VK_ITEM_BIT_03) | VK_ITEM_BIT_04);
+        return VK_CANDLE_EVENT_PICK;
+    }
+    /* 8D8D (1E), 8D94 (0A), 8E33 (0F): only the C701 bit here; the effects of 0A
+     * (713B) and 0F (C70F = 3, C431 bit 6, 9566) are elsewhere. */
+    if (kind == 0x1E || kind == 0x0A || kind == 0x0F)
+    {
+        c->c701 |= kind == 0x1E ? VK_ITEM_BIT_1E : kind == 0x0A ? VK_ITEM_BIT_0A : VK_ITEM_BIT_0F;
+        return VK_CANDLE_EVENT_BOX_ITEM;
+    }
+    /* PROVISIONAL: the other effects (C702 bits of 0E, 10, 11, object 12, points of
+     * 13-14) are not ported; none but 10 and 11 is found in stages 0-2. */
     return VK_CANDLE_EVENT_NONE;
 }
 
@@ -425,6 +489,7 @@ int vk_candles_tick(VKCandles *c, VKGame *game, const VKWhip *whip, int *hit_ind
             /* 8899: the tiles saved under the block (E4A0) go back into the map. */
             if (def->mode == VK_CANDLE_HIDDEN_BLOCK) vk_game_room_block(game, def->x, def->y, 0);
         }
+    box_step(c);                     /* 8A4A: CALL 8F55 before the C500 loop */
     for (i = 0; i < VK_DROP_MAX; i++)
     {
         VKDrop *d = &c->drop[i];

@@ -42,6 +42,9 @@
 /* Type 5 layers (rooms 2, 3, 7, patterns 40..BC, sprites of bank 1): after the key and
  * door tiles of item_view.c; pattern N uses ENEMY5_TILE_INDEX + (N - 0x40). */
 #define ENEMY5_TILE_INDEX 760
+/* Shield pose of the moment (7618, 12 tiles), copied from vk_player_shield_tiles when
+ * it changes: after the type 5 block (128 tiles), before the HUD tiles (900). */
+#define SHIELD_TILE_INDEX (ENEMY5_TILE_INDEX + 128)
 #define ENEMY_SPRITE_BASE 9           /* hardware sprites 9.. (0..8 are Simon, whip, target) */
 
 /* Hall enemies (enemies.c). Energy and invulnerability live here across rooms. */

@@ -1,0 +1,66 @@
+# (u) Case d'objets du HUD (8EE6, 8F23, 8F55) et pose au bouclier (7618), hall salle 0.
+# Objet pose sous Simon comme dans t_item_effects (vk_candles +6 etat, +7 X, +8 Y,
+# +9 objet, +10 minuterie, +11 fixe) ; +171 = C419, +172 = C701 (bits 7..3),
+# +173 = objets dessines par 8EE6, +174 = objet seul en D0 (8F2D), +176 = C5E6.
+include boot_to_courtyard.inc
+until front_mode == MODES['INTERIOR'] max 3000 RIGHT
+wait 40
+poke vk_game+0 136
+wait 2
+expect ram8('vk_candles+172') == 0 and ram8('vk_candles+173') == 0 # case vide
+# 03 : C701 bit 4 ; 8F23 montre l'objet seul en D0 pendant 20h passes.
+poke vk_candles+7 128
+poke vk_candles+8 176
+poke vk_candles+9 0x03
+poke vk_candles+10 0xFF
+poke vk_candles+11 0
+poke vk_candles+6 3
+wait 2
+expect ram8('vk_candles+171') == 0x03 and ram8('vk_candles+172') == 0x10 # C701 bit 4
+expect ram8('vk_candles+174') == 0x03 and ram8('vk_candles+173') == 0 # 8F2D : 03 en D0
+expect enemies.energy == 32 # pas d'effet d'energie
+wait 2
+shot u_pick_03
+until ram8('vk_candles+174') == 0 max 40
+expect ram8('vk_candles+173') == 0x10 # 8EE6 : 03 en C8
+wait 2                                             # la table des sprites suit d'une image
+shot u_shield_stand
+# 1E, 0A, 0F : seulement le bit de C701 et l'icone.
+poke vk_candles+9 0x1E
+poke vk_candles+6 3
+wait 2
+expect ram8('vk_candles+172') == 0x18 and ram8('vk_candles+174') == 0x1E
+poke vk_candles+9 0x0A
+poke vk_candles+6 3
+wait 2
+poke vk_candles+9 0x0F
+poke vk_candles+6 3
+wait 2
+expect ram8('vk_candles+172') == 0xD8 and ram8('vk_candles+174') == 0x0F # C701 bits 7, 6, 4, 3
+until ram8('vk_candles+174') == 0 max 40
+expect ram8('vk_candles+173') == 0xD8 # 8EE6 : 1E, 03, 0A, 0F
+wait 2                                             # la table des sprites suit d'une image
+shot u_box_full
+# 05 : 7806 detruit les ennemis (sans toucher a C701), C440 bloque les apparitions.
+poke vk_candles+9 0x05
+poke vk_candles+6 3
+wait 2
+poke enemy_state+145 255
+expect ram8('vk_candles+172') == 0xD8 and enemies.alive == 0 and game.recoil == 0
+# 04 : bit 5 a la place du bit 4 (8DA1), meme case C8, bouclier garde (C701 & 30h).
+poke vk_candles+9 0x04
+poke vk_candles+6 3
+wait 2
+expect ram8('vk_candles+172') == 0xE8
+until ram8('vk_candles+174') == 0 max 40
+expect ram8('vk_candles+173') == 0xE8
+wait 2                                             # la table des sprites suit d'une image
+shot u_box_04
+# Pose au bouclier en marche et accroupi (DOWN tenu).
+hold RIGHT 12
+wait 1
+expect game.recoil == 0 and ram8('vk_candles+172') & 0x30 # C701 & 30h : bouclier
+shot u_shield_walk
+until game.player.crouched max 30 DOWN
+hold DOWN 2                                        # la table des sprites suit d'une image
+shot u_shield_crouch

@@ -1,6 +1,7 @@
 #include "candle_view.h"
 #include "actors.h"
 #include "frontend.h"
+#include "generated/enemy_sprites_md.h"
 #include "generated/object_tiles_md.h"
 #include "generated/rooms.h"
 #include "hud.h"
@@ -19,16 +20,33 @@
 #define GOLD_KEY_TILE_INDEX (BAKED_TILE_INDEX + BAKED_CANDLES * 4)
 #define HUD_GOLD_KEY_X 148
 #define HUD_GOLD_KEY_Y 12
+/* HUD item box (8EE6, 8F2D): at most four 16x16 objects at once (x B8, C8, D8, E8,
+ * or the object just taken alone at D0), sheet objects copied into four slots
+ * of 4 tiles: two after the stair poses, two after the type 4 enemy tiles. */
+#define ITEM_SLOT_TILE_A (STAIR_TILE_INDEX + VK_PLAYER_STAIR_POSES * VK_PLAYER_TILES_PER_POSE)
+#define ITEM_SLOT_TILE_B (ENEMY4_TILE_INDEX + VK_ENEMY4_TILE_COUNT)
+#define ITEM_SLOTS 4
 #define CANDLE_FRAME_TICKS 8          /* PROVISIONAL: the MSX candle cadence is not measured */
 
 _Static_assert(GOLD_KEY_TILE_INDEX + 4 <= MSX_TEXT_TILE_INDEX,
                "candle tiles must end before the text tiles (msx_text.h)");
+_Static_assert(ITEM_SLOT_TILE_A + 2 * 4 <= FLAME_A_CLEAR_TILE_INDEX,
+               "item box slots A before the torch tiles");
+_Static_assert(ITEM_SLOT_TILE_B + 2 * 4 <= 700,   /* KEY_TILE_INDEX of item_view.c */
+               "item box slots B before the key tiles");
 _Static_assert(CROUCH_TILE_INDEX + VK_CROUCH_TILE_COUNT <= 1440,   /* TILE_FONT_INDEX, 1536 - 96 */
                "sprite tiles must end before the SGDK font");
 
 VKCandles vk_candles;
 /* Sheet object whose tiles sit in each drop slot, 0 when none is loaded. */
 static VKByte drop_loaded[VK_DROP_MAX];
+/* Sheet object in each item box slot, 0 when none is loaded. */
+static VKByte item_loaded[ITEM_SLOTS];
+
+static u16 item_slot_tile(u16 slot)
+{
+    return (u16)((slot < 2 ? ITEM_SLOT_TILE_A : ITEM_SLOT_TILE_B) + (slot & 1) * 4);
+}
 
 static void load_object(VKByte object, u16 index)
 {
@@ -94,7 +112,9 @@ void vk_candle_view_room(void)
     load_object(VK_OBJ_CANDLE_FRAME + 1, CANDLE_TILE_INDEX + 4);
     load_object(VK_OBJ_GOLD_KEY, GOLD_KEY_TILE_INDEX);
     for (i = 0; i < VK_DROP_MAX; i++) drop_loaded[i] = 0;
+    for (i = 0; i < ITEM_SLOTS; i++) item_loaded[i] = 0;
     vk_candles_enter(&vk_candles, &vk_game);
+    vk_candles_item_box(&vk_candles);   /* 6316: 8EE6 at each room load */
     for (i = 0; i < vk_candles.count; i++)
     {
         if (!vk_candles_lit(&vk_candles, i)) vk_candle_view_out(i);
@@ -118,6 +138,26 @@ u16 vk_candle_view_sprites(void)
     if (c->hud_key)
         set_sprite(n++, HUD_GOLD_KEY_X, HUD_GOLD_KEY_Y,
                    TILE_ATTR_FULL(PAL0, TRUE, FALSE, FALSE, GOLD_KEY_TILE_INDEX));
+    /* HUD item box: the object just taken (8F2D), or the objects of C701 bits
+     * 7..3 (8EE6), PAL0 sprites over the black box as the gold key. */
+    {
+        u16 slot = 0;
+        for (i = 0; i < 5 && slot < ITEM_SLOTS; i++)
+        {
+            VKByte object, x;
+            if (i == 0 && c->box_pick) { object = c->box_pick; x = VK_ITEM_PICK_X; }
+            else if (c->box_pick || !(c->box_items & (0x80 >> i))) continue;
+            else { x = vk_item_box[i][0]; object = vk_item_box[i][1]; }
+            if (item_loaded[slot] != object)
+            {
+                load_object(object, item_slot_tile(slot));
+                item_loaded[slot] = object;
+            }
+            set_sprite(n++, x, VK_ITEM_BOX_Y,
+                       TILE_ATTR_FULL(PAL0, TRUE, FALSE, FALSE, item_slot_tile(slot)));
+            slot++;
+        }
+    }
     /* Wall candles (mode 0) of the castle; courtyard torches are room_view.c flames
      * and hidden blocks (mode 3) are part of the wall. */
     if (vk_front_mode == FRONT_INTERIOR)
