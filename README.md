@@ -96,7 +96,8 @@ Ce qui n'est pas porté ou reste provisoire :
   Les effets portés viennent de la lecture du code ; le clignotement de Simon (08, 09 et
   après un coup) est calé image par image sur une trace openMSX, les autres minuteries
   sans trace dédiée (`research/castle-candles.md` 9.8).
-- **Stages 3 et suivants, châteaux, attaques autres que le fouet** : non portés.
+- **Stages 3 et suivants, châteaux, attaques autres que le fouet** : non portés (dont le
+  passage secret du stage 12, accroupi puis HAUT, `C420` = 7, `research/enemy-behavior.md`).
 - **Énergie (provisoire)** : lieu de reprise (entrée du hall), commandes bloquées
   pendant la mort : non relevés sur le MSX2. La chute dans le vide tue
   (`vk_health_fall`), avec le cri de Wilhelm ajouté au port.
