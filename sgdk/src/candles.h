@@ -46,6 +46,8 @@ typedef struct {
     VKByte fixed;                    /* fixed object index + 1, or 0x80 | (candle index + 1)
                                       * for the chest of a hidden block, 0 for a drop */
     VKByte content;                  /* chest: object inside (+13) */
+    VKByte catchable;                /* type bit 7 while falling: 82 from a candle,
+                                      * not 02 from a chest (7FE2) */
     unsigned short xfrac;            /* small heart: X in 8.8 (+2, +8) */
     short vx, ax;                    /* small heart: speed (+9, +10) and its change (+11, +12) */
 } VKDrop;

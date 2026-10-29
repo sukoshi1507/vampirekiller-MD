@@ -362,7 +362,8 @@ La cour n'en a pas. Les blocs 0x1F de la salle 7 du hall (+9 = E1), de la salle 
 - objets des blocs caches poses en (X, Y + 16) sans flamme ; coffre d'un bloc 0x1F avec retour du bloc tant qu'il n'est pas ouvert (`fixed = 0x80 | (bougie + 1)`) ;
 - coffre : etat `VK_DROP_WAIT` de 32 images (orbe : l'objet 07 de la planche, comme pour la chute), chute, pose ;
 - icone : `VKCandles.hud_key` = objet que `8EC9` a dessine en dernier, sprite PAL0 en (148, 12) ; mis a jour a la prise, a la derniere cle utilisee, a la nouvelle vie (`respawn`), a la sortie de stage et a la fin de partie (`vk_candles_hud`) ; `vk_candles_death` met `C700` a 0 a l'etat 6 (evenements `REFILL` et `GAME_OVER` de `health.c`).
-- Tests : `tests/test_candles.c` (cle refusee, icone, attente du coffre, blocs du stage 2, mort) ; scenario `tests/md_scenarios/p_gold_key_chest.txt` (hall salle 2 : prise de la cle, mort avec la cle, icone gardee jusqu'a l'etat 4, retour de la cle et du coffre, ouverture, gros coeur apres 32 images, coeurs 0 -> 5).
+- ramassage en chute (`7FE2`, bit 7 du type) : `VKDrop.catchable` (octet de bourrage +7) vaut 1 pour un objet de bougie apres l'etat 1 (type 82), 0 pour le contenu d'un coffre (type 02) ; les objets poses (84) restent ramassables ;
+- Tests : `tests/test_candles.c` (coeur attrape en chute, contenu du coffre non ramasse en chute, cle refusee, icone, attente du coffre, blocs du stage 2, mort) ; scenario `tests/md_scenarios/p_gold_key_chest.txt` (hall salle 2 : prise de la cle, mort avec la cle, icone gardee jusqu'a l'etat 4, retour de la cle et du coffre, ouverture, gros coeur apres 32 images, coeurs 0 -> 5).
 
 **PROVISOIRE / non porte** :
 - effets des contenus 03, 0A, 0C, 0D, 0F, 11 (minuteries, bits `C701`/`C702`) : objets ramassables sans effet, comme pour les bougies ;
@@ -370,5 +371,4 @@ La cour n'en a pas. Les blocs 0x1F de la salle 7 du hall (+9 = E1), de la salle 
 - blocs 0x1F a `+9 & C0 = C0` (`9179`) : le bloc se casse sans rien donner et ne revient pas ;
 - les eclats de briques du bloc (`88C7`, `C5A6`) ne sont pas dessines ;
 - l'orbe `EC` est remplace par l'objet 07 ; coffre et objets poses sont des sprites (le MSX les dessine dans le decor, `8CC1`/`8CE6`) ;
-- le MSX rend ramassables les objets de type 82 (chute depuis une bougie), le port seulement les objets poses ;
 - pas de trace openMSX de la prise de cle ni de l'ouverture du coffre.

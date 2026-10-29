@@ -268,12 +268,18 @@ static void step_drop(VKCandles *c, VKDrop *d, const VKByte *map)
         {
             d->state = d->kind ? VK_DROP_FALL : VK_DROP_NONE;
             d->timer = 0;
+            d->catchable = 0;
         }
         return;
     }
     if (d->state == VK_DROP_BURST)
     {
-        if (++d->timer >= BURST_FRAMES) { d->state = VK_DROP_FALL; d->timer = 0; }
+        if (++d->timer >= BURST_FRAMES)
+        {
+            d->state = VK_DROP_FALL;
+            d->timer = 0;
+            d->catchable = 1;
+        }
         return;
     }
     if (d->state == VK_DROP_FALL)
@@ -392,8 +398,10 @@ int vk_candles_tick(VKCandles *c, VKGame *game, const VKWhip *whip, int *hit_ind
         VKDrop *d = &c->drop[i];
         if (d->state == VK_DROP_NONE) continue;
         step_drop(c, d, map);
-        /* 7FE2: pickups only out of an attack (C422 = 0). */
-        if (d->state == VK_DROP_REST && whip->timer == 0 && touches_drop(&game->player, d))
+        /* 7FE2: pickups only out of an attack (C422 = 0), of the objects whose
+         * type has bit 7 set: on the floor (84), or falling from a candle (82). */
+        if ((d->state == VK_DROP_REST || (d->state == VK_DROP_FALL && d->catchable))
+            && whip->timer == 0 && touches_drop(&game->player, d))
             events |= pick(c, d);
     }
     return events;

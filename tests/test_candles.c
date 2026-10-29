@@ -84,6 +84,20 @@ int main(void)
     assert(vk_candles_tick(&c, &g, &w, &hit) & VK_CANDLE_EVENT_HEARTS);
     assert(c.hearts == 1 && c.drop[0].state == VK_DROP_NONE);
 
+    /* 7FE2: a candle object falls as type 82 (bit 7 set) and is caught in the air. */
+    c.drop[0].state = VK_DROP_BURST;
+    c.drop[0].timer = 0;
+    c.drop[0].x = 64;
+    c.drop[0].y = 144;
+    g.player.x = 100;
+    run(&c, &g, &w, 16);
+    assert(c.drop[0].state == VK_DROP_FALL && c.drop[0].catchable);
+    g.player.x = (VKByte)(c.drop[0].x + 8);
+    g.player.y = (VKByte)(c.drop[0].y + 2 + 20);
+    assert(vk_candles_tick(&c, &g, &w, &hit) & VK_CANDLE_EVENT_HEARTS);
+    assert(c.hearts == 2 && c.drop[0].state == VK_DROP_NONE);
+    c.hearts = 1;
+
     /* A torch put out stays out when Simon comes back. */
     g.room = 1;
     vk_candles_enter(&c, &g);
@@ -166,7 +180,15 @@ int main(void)
     assert(c.drop[1].state == VK_DROP_WAIT);
     run(&c, &g, &w, 1);
     assert(c.drop[1].state == VK_DROP_FALL);
-    run(&c, &g, &w, 20);
+    /* Type 02 while it falls (bit 7 clear): Simon under it does not take it. */
+    g.player.x = 184;
+    for (i = 0; i < 20 && c.drop[1].y < 176; i++)
+    {
+        vk_candles_tick(&c, &g, &w, &hit);
+        assert(c.hearts == 0);
+    }
+    g.player.x = 100;
+    run(&c, &g, &w, 1);
     assert(c.drop[1].state == VK_DROP_REST && c.drop[1].y == 176);
     g.player.x = 184;
     assert(vk_candles_tick(&c, &g, &w, &hit) & VK_CANDLE_EVENT_HEARTS);
