@@ -108,7 +108,7 @@ void vk_step_enemies(void)
     if (vk_whip_active(&vk_whip))
     {
         int left = 0, top = 0, right = 0, bottom = 0;
-        int hits;
+        int hits, fish = 0;
         vk_whip_bounds(&vk_whip, &left, &top, &right, &bottom);
         hits = Enemies_whipHit(&vk_enemies, left, top, right, bottom);
         /* Type 5: only in the MSX whip phase 3 (C422 = 3), taken as the full lash
@@ -121,9 +121,13 @@ void vk_step_enemies(void)
             hits += Enemies_whipHitType1Rom(&vk_enemies, vk_whip.x, vk_whip.y,
                                             vk_whip.facing, vk_whip.crouched);
             /* Stage 2 type 2 (fishman): same phase, ROM box of class 1. */
-            hits += Enemies_whipHitType2(&vk_enemies, vk_whip.x, vk_whip.y,
-                                         vk_whip.facing, vk_whip.crouched);
+            fish = Enemies_whipHitType2(&vk_enemies, vk_whip.x, vk_whip.y,
+                                        vk_whip.facing, vk_whip.crouched);
         }
+        /* 7DF9 -> 81AB: score of the killed enemy, table 81CE in hundreds: types
+         * 1, 4 and 5 give 100, type 2 (fishman) 200. */
+        if (hits || fish) vk_hud_add_score((u32)hits * 100 + (u32)fish * 200);
+        hits += fish;
         /* 7F65 (D700 loop) and 7DD4 (C800 objects): effect 0C on a whip contact. */
         if (hits) vk_psg_effect(VK_SFX_HIT);
     }

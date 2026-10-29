@@ -19,7 +19,6 @@
 #define GOLD_KEY_TILE_INDEX (BAKED_TILE_INDEX + BAKED_CANDLES * 4)
 #define HUD_GOLD_KEY_X 148
 #define HUD_GOLD_KEY_Y 12
-#define HUD_DIGIT_COL 24
 #define CANDLE_FRAME_TICKS 8          /* PROVISIONAL: the MSX candle cadence is not measured */
 
 _Static_assert(GOLD_KEY_TILE_INDEX + 4 <= MSX_TEXT_TILE_INDEX,
@@ -34,16 +33,6 @@ static VKByte drop_loaded[VK_DROP_MAX];
 static void load_object(VKByte object, u16 index)
 {
     VDP_loadTileData(&vk_object_tiles[(object - 1) * 32], index, 4, CPU);
-}
-
-void vk_candle_view_hearts(void)
-{
-    const u16 tens = vk_candles.hearts / 10;
-    const u16 units = vk_candles.hearts % 10;
-    VDP_setTileMapXY(BG_A, TILE_ATTR_FULL(PAL0, TRUE, FALSE, FALSE, DIGIT_TILE_INDEX + tens),
-                     HUD_DIGIT_COL, 0);
-    VDP_setTileMapXY(BG_A, TILE_ATTR_FULL(PAL0, TRUE, FALSE, FALSE, DIGIT_TILE_INDEX + units),
-                     HUD_DIGIT_COL + 1, 0);
 }
 
 /* 4x4 cells of a hidden block of the current castle room (rooms drawn from
@@ -101,7 +90,6 @@ void vk_candle_view_out(int i)
 void vk_candle_view_room(void)
 {
     u16 i;
-    VDP_loadTileData(vk_hud_digit_tiles, DIGIT_TILE_INDEX, 10, CPU);
     load_object(VK_OBJ_CANDLE_FRAME, CANDLE_TILE_INDEX);
     load_object(VK_OBJ_CANDLE_FRAME + 1, CANDLE_TILE_INDEX + 4);
     load_object(VK_OBJ_GOLD_KEY, GOLD_KEY_TILE_INDEX);
@@ -113,7 +101,6 @@ void vk_candle_view_room(void)
         else if (castle_map_room() && vk_candles_def(&vk_candles, i)->mode == VK_CANDLE_HIDDEN_BLOCK)
             draw_hidden_block(vk_candles_def(&vk_candles, i), TRUE);
     }
-    vk_candle_view_hearts();
 }
 
 static void set_sprite(u16 n, s16 x, s16 y, u16 attr)

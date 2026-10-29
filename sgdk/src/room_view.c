@@ -228,11 +228,11 @@ void vk_draw_play_note(void)
 }
 
 /* HUD bars and test note of a play room, drawn last over the scene. */
-static void show_play_overlay(const char *note, bool hud_labels)
+static void show_play_overlay(const char *note)
 {
     play_note = note;
     vk_draw_play_note();
-    vk_hud_show(hud_labels);
+    vk_hud_show();
     vk_hud_update(vk_enemies.energy);
 }
 
@@ -255,7 +255,7 @@ void vk_debug_label_draw(void)
     /* The screen is 32 columns wide (VDP_setScreenWidth256): the longest label,
      * 15 characters, starts at column 16 to end before column 31. */
     VDP_drawText("               ", 16, 0);
-    if (!key) return;
+    if (!key) { vk_hud_show(); return; }   /* the status line comes back */
     if (courtyard)
     {
         yard[11] = (char)('0' + vk_game.room);
@@ -277,7 +277,7 @@ void vk_show_courtyard(u16 room)
     load_actor(3 + room);
     VDP_loadTileData(flame_a_cleared_tiles, FLAME_A_CLEAR_TILE_INDEX, 4, CPU);
     VDP_drawText(room == 2 ? "B FOUET C SAUT DROITE PORTE" : "B FOUET  A+B FLAMME  C SAUT", 2, 27);
-    show_play_overlay("", FALSE);
+    show_play_overlay("");
 }
 
 /* Playable castle room loader (stage 1 hall or stage 2): common VRAM/player
@@ -304,7 +304,7 @@ void vk_show_castle_room(u16 stage, u16 room)
     VDP_drawText(stage == 1 && room == 1 ? "A+HAUT ESCALIER B FOUET" :
         "B FOUET / A+L-R SALLE", 1, 27);
     show_play_overlay(stage == 1 ? "PARCOURS TEST / LIENS NON MSX2" :
-        "ETAPE 2: CHAUVES-SOURIS+ZOMBIE", TRUE);
+        "ETAPE 2: CHAUVES-SOURIS+ZOMBIE");
     vk_show_player(&vk_player);
     vk_front_mode = FRONT_INTERIOR;
 }
@@ -318,6 +318,6 @@ void vk_show_interior(void)
     vk_front_mode = FRONT_INTERIOR;
     load_actor(6);
     VDP_drawText("B FOUET A+B BOUGIES C SAUT", 1, 27);
-    show_play_overlay("HALL: ORIGINAL MSX2 COLLISIONS", FALSE);
+    show_play_overlay("HALL: ORIGINAL MSX2 COLLISIONS");
     vk_front_mode = FRONT_INTERIOR;
 }

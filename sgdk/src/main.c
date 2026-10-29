@@ -75,6 +75,7 @@ static void step_death_jingle(void)
 
 static void new_game(void)
 {
+    vk_hud_score = 0;   /* 44C6 clears C405-C407 */
     vk_game_begin(&vk_game);
     vk_reset_enemies();
     vk_reset_enemy_clock();
@@ -124,7 +125,6 @@ static void step_candles(void)
         items.white_key_revealed = 1;
         vk_item_view_room(&items, &vk_game);
     }
-    if (events & VK_CANDLE_EVENT_HEARTS) vk_candle_view_hearts();
     if (events & VK_CANDLE_EVENT_WEAPON) vk_set_whip_level(vk_candles.weapon);
     /* Pickup effects, returned by the 8D3E handlers to 509F: hearts 0F (8DAF,
      * 8DB7), whip 12 (8D8A), gold key 14 (8E5D); a chest uses a key: 11 (8F7B). */
@@ -212,7 +212,7 @@ static void begin_room_freeze(void)
  * end, and the room comes up, without sprites, near the end as on the MSX (47C7
  * in the last C000 = 9 frame). The freeze counts VBlanks (vtimer), not loop
  * turns, so that it keeps the MSX frame count across the draw. */
-#define ROOM_DRAW_FRAMES 8
+#define ROOM_DRAW_FRAMES 7
 static void room_freeze_step(void)
 {
     static const u16 black[64] = {0};
@@ -254,6 +254,14 @@ static void pause_end(void)
     vk_psg_resume();
 }
 
+/* Top line of the HUD. Stage C411 = D000: 0 in the courtyard (44C6), +1 at each
+ * stage exit (434F). */
+static void hud_status(void)
+{
+    vk_hud_status(vk_hud_score, vk_game.area == VK_AREA_INTERIOR ? vk_game.stage : 0,
+                  vk_candles.hearts, health.lives);
+}
+
 /* State 4 after a lost life: full energy, empty room, provisional restart place. */
 static void respawn(void)
 {
@@ -263,6 +271,7 @@ static void respawn(void)
     vk_candles_new_life(&vk_candles, vk_candles_stage_of(&vk_game));
     vk_candles_hud(&vk_candles);   /* 4237: 4513 draws the HUD again, gold key gone */
     vk_set_whip_level(0);
+    hud_status();   /* 4237: C410 already decremented when 4513 draws the HUD */
     if (vk_game.area == VK_AREA_INTERIOR) show_hall_room(vk_game.room);
     else show_courtyard(vk_game.room);
     /* 4242: C40D = 1 after a lost life, so 794F starts the stage music again. */
@@ -297,7 +306,6 @@ static void step_health(void)
         vk_candles.hearts > VK_HEALTH_HEARTS_AFTER_FALL)
     {
         vk_candles.hearts = VK_HEALTH_HEARTS_AFTER_FALL;
-        vk_candle_view_hearts();
     }
     /* 70BF: the death clears the gold keys (C700) before state 6. */
     if (life == VK_HEALTH_REFILL || life == VK_HEALTH_GAME_OVER) vk_candles_death(&vk_candles);
@@ -310,6 +318,7 @@ static void step_health(void)
         vk_psg_music(VK_MUSIC_GAME_OVER);   /* 42AB, state 6 without lives */
     }
     vk_hud_update(vk_enemies.energy);
+    hud_status();
 }
 int main(bool hardReset)
 {

@@ -30,3 +30,6 @@ shot b-apres-coup
 expect not enemies.enemy[slot].active # ennemi tue par le fouet
 expect enemies.enemy[slot].x + 8 > game.player.x - 48 # tue a portee de fouet, pas sorti de l'ecran
 expect enemies.energy == energy0 # aucun contact
+wait 2
+expect ram32('vk_hud_score') == 100 # 81AB : type 1, 100 points (table 81CE)
+shot b-score

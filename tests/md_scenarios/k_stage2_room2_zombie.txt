@@ -11,7 +11,8 @@ hold A+RIGHT 3
 wait 10
 hold A 3
 hold A+RIGHT 3
-wait 2
+# 10 images : le dessin de la salle (HUD compris) dure plus de 2 images.
+wait 10
 hold A 3
 hold A+RIGHT 3
 # Simon en haut de l'escalier, sur le sol bas (x 145, y 160), comme dans la trace O1.

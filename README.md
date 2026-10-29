@@ -34,6 +34,9 @@ Ce qui fonctionne dans la ROM Mega Drive :
   Délais et compteur de vies (`C410`, 2 en jeu, 3 morts au total) mesurés sur le MSX2
   (`research/player-health.md`). L'écran de fin de partie reprend celui du MSX2
   (écran effacé, « GAME  OVER » à la police MSX).
+- **HUD** : la ligne du haut est celle du MSX2, à la police de la ROM : score (100 points
+  par zombie, chauve-souris ou panthère, 200 par homme-poisson, table `81CE`), stage
+  (00 dans la cour), cœurs et vies ; « PLAYER » et « ENEMY » à leurs positions MSX.
 - **Pause** : START met le jeu en pause avec le son du MSX2 (silence, jingle, puis
   reprise de la musique où elle était) ; A+START retourne au titre (raccourci de debug).
 - **Raccourcis de debug** : C au titre lance une partie au stage 2 ; en jeu, A+GAUCHE ou
@@ -48,7 +51,7 @@ Ce qui n'est pas porté ou reste provisoire :
   MSX2 ; tué par le fouet d'après la table des objets (boîte provisoire, direction
   du fouet non vérifiée, `research/enemy-behavior.md`).
 - **Type 5** : le retard d'affichage d'une mise à jour du MSX, l'objet de mort (`1E`), le
-  score et la boîte de contact accroupi ne sont pas reproduits ; la phase 3 du fouet
+  et la boîte de contact accroupi ne sont pas reproduits ; la phase 3 du fouet
   est assimilée au fouet déployé (`vk_whip_phase` 2) et le recul face à une panthère
   assise est provisoire.
 - **Stage 2** : seules les chauves-souris (salles 0, 1, 3) sont portées ; le type 1 de la
@@ -61,8 +64,8 @@ Ce qui n'est pas porté ou reste provisoire :
   trace openMSX dédiée. Les contenus autres que les cœurs n'ont pas d'effet
   (`research/castle-candles.md` 9.7).
 - **Stages 3 et suivants, châteaux, attaques autres que le fouet** : non portés.
-- **Énergie (provisoire)** : échelle de la barre (2 px par point), lieu de reprise
-  (entrée du hall), commandes bloquées pendant la mort : non relevés sur le MSX2. Les vies (`P-02`), les cœurs et le score du HUD restent figés.
+- **Énergie (provisoire)** : lieu de reprise (entrée du hall), commandes bloquées
+  pendant la mort : non relevés sur le MSX2.
   Pas d'animation de mort ni de clignotement d'invulnérabilité. La chute dans le vide
   ne tue pas.
 - **Provisoires** : vitesse de chute des ennemis, boîte de contact de Simon.

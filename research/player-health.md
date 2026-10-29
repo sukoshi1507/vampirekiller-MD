@@ -111,6 +111,14 @@ Voir 3.4 (run 5). Le chemin « continuer » (`42D3` : `C410=3`, `C405/C407=0`) d
 
 START en partie (Simon vivant ou mourant) : son FD (`51C4`), texte « PAUSE » en (108, 88) sur `BG_B`, jeu figé, seul START est lu ; un second START joue FE (`522D`) et reprend. A+START retourne au titre (raccourci de debug). Scénario `o_pause`.
 
+### 3.8 HUD : ligne du haut et score (lecture du code, port 2026-10-29)
+
+`4513` redessine tout le HUD : textes fixes de `4C00` par `4ACB` (police MSX, page 1, codes = ASCII − 0x10, tiret = code 0x30, cœur = code 0x50) : « SCORE- » (8, 0), « PLAYER » (8, 12), « ENEMY » (8, 20), cœur et tiret (176, 0), « P- » (212, 0), « STAGE- » (108, 0). Valeurs en BCD par `4578` (deux chiffres par octet, 8 px par chiffre) : score `C407..C405` en (56, 0) (`4531`), stage `C411` en (156, 0) (`453B`), cœurs `C417` en (192, 0) (`4566`), vies `C410` en (228, 0) (`456E`). Barres : PLAYER `2 × C415` px en (60, 14), 4 px de haut, couleur 11h (`45D1`) ; ENEMY d'après `C418` (`45E5`).
+
+- `44C6` (nouvelle partie) remet `C405..` à 0, puis `C410 = 3`, `C411 = 0`, `C412 = 1` : la cour affiche STAGE-00. La sortie de stage (`434F`) incrémente `C410` et `C411` (puis l'état 4 décrémente `C410`).
+- Score : seul appelant de l'addition `44EE` (E, D, C = octets BCD ajoutés à `C405`, `C406`, `C407` ; 999999 en cas de retenue ; rien si `C002` bit 7) : `81AB`, à la mort d'un ennemi (`7DF9` fouet, `7E21`, `7EB6`, `8072` arme). Points = premier octet de la table `81CE` indexée par le type − 1, en centaines (type 1 : 100, 2 : 200, 4 : 100, 5 : 100 ; types 11h et 17h : + 30 000 et + 50 000).
+- Port : `hud.c` (`vk_hud_show`, `vk_hud_status`, `vk_hud_add_score`), composition des caractères à n'importe quel X par `msx_text.c`. Le HUD entier est dessiné avec la salle ; la réapparition met les vies à jour avant de dessiner la salle (état 4, `4237`). Scénarios `b` (100 points) et `d` (P-01 à la réapparition).
+
 ## 4. Scénarios et preuves
 
 | Run | Script | Scénario | Preuve obtenue | Données |

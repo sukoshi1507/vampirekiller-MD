@@ -19,6 +19,7 @@ until health.phase == 0 max 100
 expect health.lives == 1 # C410 2 -> 1
 expect game.area == 1 and game.room == 0 and game.player.x == 16 # reapparition (provisoire) a l'entree du hall
 wait 2
+expect ram16('shown_lives') == 1 # P-01 des la reapparition (4237)
 shot d-respawn
 until enemies.alive > 0 max 600
 poke health 0                                      # C410 = 0
