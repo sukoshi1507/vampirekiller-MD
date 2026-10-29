@@ -30,6 +30,12 @@ void vk_player_tick_controls(VKPlayer *player, const VKByte *map, VKByte stage,
 #define VK_JUMP_STEPS_HIGH 21
 void vk_player_tick_jump(VKPlayer *player, const VKByte *map, VKByte stage,
                          int direction, int jump_pressed, int down, int up, int high_jump);
+/* Bottom exit of a flight (76EB): Simon goes on along it in the room below, whose
+ * map is given (room change by the caller). */
+void vk_stair_resume(VKPlayer *player, const VKByte *map, VKByte stage);
+/* Top exit of a flight (76A4): steps from the arrival (X, Y) up the diagonal (dir 1
+ * climbs to the right) to the floor of the room above (probe 7B68). */
+VKByte vk_stair_climb_steps(const VKByte *map, VKByte x, VKByte y, int dir, VKByte stage);
 void vk_player_tick_map(VKPlayer *player, const VKByte *map, VKByte stage,
                         int direction, int jump_pressed);
 
