@@ -502,13 +502,13 @@ int main(bool hardReset)
                         /* Stage 2 room 0. 63B7 (state 4) clears C420-C46F, C43B
                          * included, but neither D010 nor C701: enemies frozen by
                          * object 0A stay frozen until a death (70D3), and 7777
-                         * plays no music for stage 2, so the FB loop goes on. */
+                         * plays no music for stage 2, so the FB loop goes on.
+                         * C701 (vk_candles.c701) is not touched here, and the room
+                         * load below draws its box again (4513 -> 8EE6). */
                         const EnemyU8 frozen = vk_enemies.frozen;
-                        const EnemyU8 time_stop_item = vk_enemies.timeStopItem;
                         vk_game_enter_stage(&vk_game, 2);
                         vk_reset_enemies();
                         vk_enemies.frozen = frozen;
-                        vk_enemies.timeStopItem = time_stop_item;
                         vk_candles_reset_stage(&vk_candles, 2);
                         vk_candles_hud(&vk_candles);   /* state 4 (4237): HUD drawn again */
                         show_hall_room(0);

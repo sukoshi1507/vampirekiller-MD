@@ -61,7 +61,7 @@ typedef enum {
     VK_CANDLE_EVENT_GOLD_KEY = 16,   /* gold key count changed (key taken or chest opened) */
     VK_CANDLE_EVENT_ITEM = 32,       /* C431 changed (objects 0B, 0C, 0D) */
     VK_CANDLE_EVENT_PICK = 64,       /* an object whose effect lives in enemies.c was taken
-                                      * (03-0A, 16, 1A-1D): see picked, Enemies_item */
+                                      * (03-09, 16, 1A-1D): see picked, Enemies_item */
     VK_CANDLE_EVENT_BOX_ITEM = 128   /* C701 bit 3, 6 or 7 set (objects 1E, 0A, 0F) */
 } VKCandleEvent;
 
@@ -75,7 +75,7 @@ typedef enum {
 #define VK_ITEM_SHIELD 0x30          /* 7618: Simon holds the shield while C701 & 30h */
 #define VK_ITEM_BOX_Y 12             /* 8F0F: E = 0C */
 #define VK_ITEM_PICK_X 0xD0          /* 8F3D: the object just taken, at D0 */
-#define VK_ITEM_PICK_TICKS 0x20      /* 8F35: C5E6 */
+#define VK_ITEM_PICK_TICKS 0x20      /* 8F35: C5E6, counted passes of 2 frames */
 /* 8F19: x and object for C701 bit 7 - i, i = 0..4. */
 extern const VKByte vk_item_box[5][2];
 
@@ -93,12 +93,14 @@ typedef struct {
     VKByte hud_key;                  /* object 8EC9 last drew at (148, 12) in the HUD, 0 none */
     VKByte c431;                     /* C431: bits 2, 3, 4 set by objects 0B, 0C, 0D (8DF5-8E03) */
     VKByte picked;                   /* C419: last object taken (8D30), 0 none */
-    VKByte c701;                     /* C701 bits 7..3 (VK_ITEM_BITS): objects 0F, 0A, 04, 03, 1E;
+    VKByte c701;                     /* C701 bits 7..3 (VK_ITEM_BITS): objects 0F, 0A, 04, 03, 1E
+                                      * (the only record of 0A: Enemies_useTimeStop reads it);
                                       * bits 0..2 (keys) live in items.c and gold_keys */
     VKByte box_items;                /* C701 bits 7..3 that 8EE6 last drew in the item box */
     VKByte box_pick;                 /* object 8F2D drew at (D0, 12) in the box, 0 none */
     VKByte box_timer_on;             /* C5E5 = FF: 8F55 counts C5E6 down */
     VKByte box_timer;                /* C5E6 */
+    VKByte box_phase;                /* 8A4A runs at every other frame (state 5 pass): 1 between */
 } VKCandles;
 
 void vk_candles_begin(VKCandles *c);

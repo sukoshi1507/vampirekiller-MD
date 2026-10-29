@@ -741,6 +741,7 @@ static void test_time_stop(void)
     EnemySpawnTimer t;
     EnemyRoomVars v;
     EnemyU8 hearts = 4;
+    EnemyU8 c701 = 0;        /* VKCandles.c701 : seul enregistrement de l'objet 0A */
     EnemyS16 x;
     EnemyU16 age;
     int f, frames, ends = 0, hits;
@@ -749,14 +750,15 @@ static void test_time_stop(void)
     v.facingLeft = 0;
     Enemies_init(&s);
     Enemies_spawnTimerInit(&t);
-    CHECK(!Enemies_useTimeStop(&s, &hearts, 0) && hearts == 4, "0A : sans l'objet, rien");
+    CHECK(!Enemies_useTimeStop(&s, &hearts, 0, 0xBF) && hearts == 4, "0A : sans C701 bit 6, rien");
     Enemies_item(&s, 0x0A, 0);
-    CHECK(s.timeStopItem && !s.timeStop && !s.frozen, "objet 0A : C701 bit 6, sans minuterie");
-    CHECK(!Enemies_useTimeStop(&s, &hearts, 0) && hearts == 4, "0A : moins de 5 coeurs (7164)");
+    CHECK(!s.timeStop && !s.frozen, "objet 0A : sans minuterie (le bit 6 de C701 est dans candles.c)");
+    c701 = ENEMY_TIME_STOP_ITEM;
+    CHECK(!Enemies_useTimeStop(&s, &hearts, 0, c701) && hearts == 4, "0A : moins de 5 coeurs (7164)");
     hearts = 12;
-    CHECK(Enemies_useTimeStop(&s, &hearts, 0) && hearts == 7 && s.timeStop == ENEMY_TIME_STOP &&
+    CHECK(Enemies_useTimeStop(&s, &hearts, 0, c701) && hearts == 7 && s.timeStop == ENEMY_TIME_STOP &&
           s.frozen, "0A : -5 coeurs, C43B = 5Ah, D010");
-    CHECK(!Enemies_useTimeStop(&s, &hearts, 0) && hearts == 7, "0A : refuse tant que C43B != 0 (715F)");
+    CHECK(!Enemies_useTimeStop(&s, &hearts, 0, c701) && hearts == 7, "0A : refuse tant que C43B != 0 (715F)");
 
     /* Un type 1 deja la ne bouge plus et garde sa pose ; aucune apparition ; le contact
      * reste actif (7E67 ne lit pas D010). */
@@ -776,13 +778,13 @@ static void test_time_stop(void)
     ends += s.timeStopEnd;
     CHECK(!s.frozen && s.timeStopEnd && s.enemy[0].age == age + 1,
           "C43B : 89 passes (178 images) apres la prise, puis reprise");
-    CHECK(ends == 1 && s.timeStop == 0 && s.timeStopItem, "fin : un FC, l'objet reste (C701 bit 6)");
+    CHECK(ends == 1 && s.timeStop == 0, "fin : un FC (l'objet reste : C701 n'est pas touche)");
     for (f = 0; f < 4; f++) (void)Enemies_frame(&s, &t, &v);
     CHECK(s.enemy[0].x != x, "fin : l'ennemi repart");
 
     /* Contact pendant le gel : degat normal. */
     hearts = 5;
-    CHECK(Enemies_useTimeStop(&s, &hearts, 0x04) && hearts == 0 && s.timeStop == ENEMY_TIME_STOP_LONG,
+    CHECK(Enemies_useTimeStop(&s, &hearts, 0x04, c701) && hearts == 0 && s.timeStop == ENEMY_TIME_STOP_LONG,
           "C431 bit 2 : C43B = 96h");
     s.invuln = 0;
     s.enemy[0].x = 126;
@@ -791,7 +793,7 @@ static void test_time_stop(void)
 
     /* Fin de mort (70BF) : C43B, D010 a 0, C701 &= 80h. */
     Enemies_death(&s);
-    CHECK(!s.timeStop && !s.frozen && !s.timeStopItem, "70BF : C43B, D010 et C701 bit 6 a 0");
+    CHECK(!s.timeStop && !s.frozen, "70BF : C43B et D010 a 0 (C701 &= 80h : vk_candles_death)");
 
     /* Apparitions : la premiere attend la fin du gel (5EB8 non appele, CF10 arrete). */
     {
@@ -799,9 +801,8 @@ static void test_time_stop(void)
         Enemies_init(&s);
         Enemies_spawnTimerInit(&t);
         s.invuln = 0xFF;
-        Enemies_item(&s, 0x0A, 0);
         hearts = 5;
-        (void)Enemies_useTimeStop(&s, &hearts, 0);
+        (void)Enemies_useTimeStop(&s, &hearts, 0, c701);
         for (f = 1; f <= 1000; f++) {
             (void)Enemies_frame(&s, &t, &v);
             if (s.enemy[0].active || s.enemy[1].active) break;

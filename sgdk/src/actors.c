@@ -22,6 +22,8 @@ _Static_assert(ENEMY5_TILE_INDEX + VK_ENEMY5_TILE_COUNT <= SHIELD_TILE_INDEX &&
                "shield pose tiles between the type 5 tiles and the HUD tiles");
 _Static_assert(ENEMY5_TILE_INDEX + VK_ENEMY2_TILE_COUNT <= HUD_TILE_INDEX,
                "type 2 tiles (loaded in the type 5 block) must end before the HUD tiles");
+_Static_assert(ENEMY_TIME_STOP_ITEM == VK_ITEM_BIT_0A,
+               "object 0A: Enemies_useTimeStop reads the C701 bit 6 of vk_candles.c701");
 
 /* Simon, whip and hall enemies on screen. Their gameplay lives in player.c,
  * whip.c and enemies.c; this module only feeds them and draws the result. */
@@ -110,7 +112,7 @@ void vk_step_time_stop(int down_pressed, int whip_pressed)
 {
     if (whip_pressed || !down_pressed || simon_state() != ENEMY_SIMON_JUMP) return;
     if (!room_key()) return;   /* no 0A in the courtyard, whose frames run no Enemies_frame */
-    if (Enemies_useTimeStop(&vk_enemies, &vk_candles.hearts, vk_candles.c431))
+    if (Enemies_useTimeStop(&vk_enemies, &vk_candles.hearts, vk_candles.c431, vk_candles.c701))
         vk_psg_timer();        /* 718F: FB */
 }
 
