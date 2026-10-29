@@ -90,8 +90,9 @@ Les deux sprites ne sont pas deux types : ce sont deux sens (droite et gauche) d
 |---|---|---|
 | Création | routine `9D97` : `HL = CF06`, `DE = 9DBB` (table `14 14 14 28 14 14 14 28`, périodes 20 et 40), appel de `9CC3` ; puis `9DAB` : `X = F0` si le bit 0 de `CF07` vaut 1, sinon `10` ; `E = C425 - 8` (`9DB2`) ; `JP 5F1D` | lu dans le code ; trace (4 créations) |
 | Y de sprite | `AA` observé pour Simon à `C425 = C0` (donc `E = B8` d'après le code) ; le décalage E vers sprite n'est pas vérifié pour ce type | prouvé (trace) pour `AA` ; déduit pour le décalage |
-| Cadence | 168 images entre les 4 créations (2726, 2894, 3062, 3230) = 8 × 21 | prouvé (trace) ; rechargement 21 déduit (période 20 de `9DBB`, plus 1, et 8 images par tick de `9CC3`) |
-| Côté | alterne droite / gauche à chaque création (bit 0 de `CF07`) | prouvé (4 cas) ; lien avec le bit 0 déduit du code |
+| Cadence | 168 images entre les 4 créations (2726, 2894, 3062, 3230) = 8 × 21 | prouvé (trace) ; rechargement `CF06 := 9DBB[CF07 & 7] + 1` = 21 vu dans `CF06` (trace `scratchpad/fidelity/out1`, 2026-10-29) |
+| Premier tir | `9CA9` met `CF06 = 08` au chargement de salle. `9CC3` décrémente `CF10` (compteur partagé par tous les canaux, jamais remis à zéro hors du début de partie `44C6`) à chaque appel, une passe de l'état 5 sur deux images, et `CF06` seulement quand `CF10 & 3` tombe à 0. Le tir vient au 8e de ces appels : appel `j + 28`, `j` (1 à 4) = rang du premier appel qui amène `CF10` à un multiple de 4, soit **56, 58, 60 ou 62 images après la première passe**. Trace : `CF10` = 206 → tir à +58 (2218 → 2276), 250 → +58 (après une vie perdue, 2749 → 2807), 25 → +56 (3239 → 3295) ; les 56-57 de `research/room-links.md` 9.4 sont le cas `j = 1` | **prouvé** (trace et code) |
+| Côté | `D = F0` si le bit 0 de `CF07` (après l'incrément) vaut 1, sinon `10` : droite, gauche, droite… ; puis `9E16` : Simon à `X < 40` → `D = F0`, Simon à `X ≥ C0` → `D = 10` (pas de refus : `9D97` ignore la retenue) | prouvé (run G : alternance ; trace `out1`, Simon en X 16 : 9 tirs sur 9 à droite) |
 | Mouvement | la SAT suit l'objet une image sur deux : 3 px en X toutes les 2 images (X E5 vers 01 en 154 images) | prouvé (SAT image par image, 8 épisodes, `scratchpad/type4/gfx/out3/sat4.csv`) |
 | Animation | 4 poses de 16 images : vers la gauche 48, 50, 48, 58 ; vers la droite 60, 68, 60, 70 (seconde couche N+4). L'ancienne mesure « N fixe » échantillonnait mal | prouvé (même trace) |
 | Sortie | disparaît à X 01 ou E6 | prouvé |
@@ -174,7 +175,7 @@ Les points 1, 2 et 7 sont résolus dans la section « Type 5 : la panthère ».
 5. **Règle de côté** (`C42C`) pour le type 1 : non relevée.
 6. **Condition du cas `Y = 40`** (type 1, salle 1) : non identifiée.
 7. **Dégâts du type 5 au sol** : non testés (les positions observées sont hors de la zone de Simon).
-8. **Table de spawn de type 4** : la période et les côtés proviennent de la lecture de `9D97` et de quatre créations. La séquence complète (bit 0 de `CF07`, valeurs 20 et 40 de `9DBB`) n'est pas vérifiée au-delà de quatre créations.
+8. ~~Table de spawn de type 4~~ : résolu (§3.3 : premier tir, `CF06`/`CF07`, garde `9E16`, trace `scratchpad/fidelity/out1` ; période longue 328 vue au stage 2).
 9. **Sortie à droite** : la borne de disparition (D8 ou E7) n'est pas fixée.
 
 ---
@@ -329,7 +330,7 @@ Lecture du code (`tools/disasm_rom_window.py`) et trace openMSX `scratchpad/stag
 | Répartition des routines (`993B`, table `9942`) | type 1 `A964`, types 2 et 3 `A310`, type 4 `B0F8`, type 5 `A87D` | ROM |
 | Type 4 : dessin | les 12 couches `48`-`74` en VRAM sont identiques à celles du hall (5 instantanés des salles 0, 4, 2) | trace |
 | Type 4 : Y du spawn | `9D97` : `E = C425 - 8` ; Y SAT au spawn = **C425 - 22** (Simon 96 → 74, Simon 128 → 106 ; hall : 192 → `AA`) | code + trace (20 tirs) |
-| Type 4 : cadence | table `9DBB` = `14 14 14 28 14 14 14 28` : 168, 168, 168 puis 328 images (tirs 6068, 6236, 6404, 6572, 6900, …) ; le premier tir vient 168 images après l'entrée | code + trace |
+| Type 4 : cadence | table `9DBB` = `14 14 14 28 14 14 14 28` : 168, 168, 168 puis 328 images (tirs 6068, 6236, 6404, 6572, 6900, …) ; le premier tir vient 56 à 62 images après la première passe de l'état 5 (§3.3) | code + trace |
 | Type 1 (salle 2) | `9CFC` branche stage 2 : `E = A0`, côté `D = F0`, ou `10` si le bit 1 de `CF01` est mis. C’est le zombie du hall (section « Type 1 au stage 2 ») | code + trace (2026-10-28) |
 | Type 2 (salles 4, 5) | `9D4B` : minuterie `CF02`, périodes `9D8F` (`01 18 18 …`), Y `C8`, X = table `9D87` (`60 D0 30 90 A0 40 60 B0`) selon `CF03 & 7`, décalé de 32 px vers le centre si Simon est à moins de 24 px. Routine `A310` : chute sous gravité `0x80`, posé au sol puis marche vers Simon à ±`0x180` ; sous Y `C0` sans sol, disparaît en créant deux objets `20` (éclaboussures). C'est l'homme-poisson (section « Type 2 au stage 2 ») | code + trace (2026-10-28) |
 
@@ -389,11 +390,11 @@ Lecture du code (`tools/disasm_rom_window.py`) et trace openMSX `scratchpad/stag
 
 ### Reste ouvert
 
-- Le délai du premier tir : 48 images mesurées après l'entrée, 52 dans le port depuis le gel de l'état 9 (20 + 32, `research/room-links.md` section 9.4 ; 32 avant) (valeur initiale de `CF10` et durée du chargement de salle non modélisées) : **PROVISOIRE**, comme au hall.
+- Le délai du premier tir : 48 images mesurées après l'entrée (20 de gel + 28, soit `j = 3` pour `CF00 = 04` : tir à l'appel `j + 12`). Le port garde maintenant `CF10` d'une salle à l'autre (`Enemies_spawnTimerRoom`, remis à 0 seulement en début de partie) : le délai suit la phase de `CF10` comme dans la ROM (déduit du code de `9CC3`, prouvé pour le type 4 ; la phase exacte de la trace `O1` n'est pas reproduite par le scénario `k`).
 - L'entrée SAT provisoire (Y `E1`, 2 images) et le retard d'affichage ne sont pas reproduits : le port montre l'ennemi dès l'âge 0.
 - Objet `1E`, objet tombé `24` (tirage commun `9A3E`), score : non portés.
 - Chute sans sol (`vy += 0x60` par mise à jour, `vx = 0`) : le port garde la chute provisoire du hall (2 px par image). Sans effet dans la salle 2, dont le sol bas est continu pour la sonde à deux points.
-- **Hall** : le type 1 du hall utilise la même routine, mais le port garde son ancien modèle (sortie droite à X 216, masquage une image après la limite, boîtes de sprites). Les bornes `99E5` et la trace de la salle 2 donnent X `E7` et deux images ; le relevé du hall citait déjà `E7` parmi les sorties. Passer les tirs du hall en `romBox` alignerait les deux stages (à faire avec la mise à jour des tests `test_e2_trajectory` et du scénario `c_enemy_contact`).
+- **Hall** (fait le 2026-10-29) : les tirs du hall (`Enemies_spawnTimerTick`) sont marqués `romBox` : sortie `99E5`, contact `8290` et fouet `7DAD` comme au stage 2, à la place de l'ancien modèle (sortie droite à X 216, boîtes de sprites). Trace du hall, salle 0, image par image (`scratchpad/fidelity/out4`, objets `C800`/`C880` et ombre SAT `D638`) : objet en Y `C0` (rang haut SAT `A0`), X SAT `E5` aux deux images qui suivent l'écriture de `C800`, suppression à X objet `06.25` (gauche) et `F1.25` (droite), dernier X SAT `00` (âge 217) ou `E7` (âge 209) dans l'ombre SAT. Le port tient ces positions deux images (âges 217-218 et 209-210), comme au stage 2 : l'ombre `D638` précède la VRAM d'une image (**déduit**, la VRAM du hall n'a pas été relevée image par image). Tests `test_e1_trajectory`, `test_e2_trajectory`, `test_side_left` ; scénario `b_hall_whip_kill` (fouet `84A7`) et `c_enemy_contact` (contact `8290`) inchangés et verts.
 - Fouet de niveau `C416 = 1` (portée 24, demi-largeur 21) : non porté.
 
 ### Fichiers (hors dépôt, `scratchpad/s2t1/` du worktree)
@@ -447,7 +448,7 @@ Lecture du code (`tools/disasm_rom_window.py`) et trace openMSX `scratchpad/stag
 | Point | Port | Statut |
 |---|---|---|
 | Cadence, X, garde, perte faute de SAT | `type2Channel` (compteur d'images `type2Frames`, prochain tir `type2Next`), `newObject` (7 blocs, 14 entrées SAT) | prouvé |
-| Premier tir | `ENEMY_TYPE2_FIRST` = 31 images de jeu après la fin de l'état 9 (51 après `D001`, `research/room-links.md` section 9.4) | mesuré 2 fois ; **PROVISOIRE** (dépend de la phase de `CF10` à l'entrée) |
+| Premier tir | `ENEMY_TYPE2_FIRST` = 31 images de jeu après la fin de l'état 9 (51 après `D001`, `research/room-links.md` section 9.4) | mesuré 2 fois ; **PROVISOIRE** (dépend de la phase de `CF10` à l'entrée : 31 correspond à `CF10 & 3 = 0`). Le canal décrémente bien `CF10` partagé à chaque appel, mais son instant de tir reste fixe |
 | Saut, sol, marche, chute, plongeon | `fishStep`, tests de sol `7B98` sur la carte de collision du port | prouvé (test natif : atterrissage 121, chute 145, plongeon 183 images après l'entrée, comme en 6236, 6260 et 6298) |
 | Gouttes | `splashSpawn`, mise à jour dans `type2Frame` ; ni contact ni fouet | prouvé ; la goutte sans gravité de la mort au fouet n'est pas reproduite |
 | Contact | `touches` : boîte `8378` de la classe 1, Simon debout ; dégât 4 | prouvé debout ; **PROVISOIRE** accroupi et en saut (`C420` non transmis) |

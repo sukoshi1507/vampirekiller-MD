@@ -76,7 +76,7 @@ void vk_step_enemies(void)
     {
         enemy_room_key = key;
         Enemies_setRoom(&vk_enemies);
-        Enemies_spawnTimerInit(&enemy_timer);
+        Enemies_spawnTimerRoom(&enemy_timer);   /* 9CA9: CF10 carries over */
         if (key)
         {
             VDP_loadTileData((const u32 *)vk_enemy_tiles, ENEMY_TILE_INDEX, VK_ENEMY_TILE_COUNT, CPU);
@@ -133,6 +133,11 @@ void vk_reset_enemies(void)
 {
     Enemies_init(&vk_enemies);
     enemy_room_key = 0xFFFF;
+}
+
+void vk_reset_enemy_clock(void)
+{
+    Enemies_spawnTimerInit(&enemy_timer);
 }
 
 /* Enemy layers as hardware sprites from ENEMY_SPRITE_BASE, one 16x16 sprite each,

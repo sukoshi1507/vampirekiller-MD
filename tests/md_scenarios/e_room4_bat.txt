@@ -15,13 +15,30 @@ wait 10
 hold A 3
 hold A+RIGHT 3
 wait 10
+expect game.room == 3 # salle 3 du hall
 hold A 3
-hold A+RIGHT 3
-wait 10
+until game.room == 4 max 10 A+RIGHT
 expect game.room == 4 # salle 4 du hall
-until enemies.alive > 0 max 600
+# Canal 9D97 : CF06 = 8 a l'entree, decremente aux appels de 9CC3 (une image sur deux) qui
+# amenent CF10 a un multiple de 4 ; CF10 (enemy_timer.phase) n'est pas remis a zero par le
+# changement de salle. Tir attendu au c4-ieme de ces appels. Les ennemis passent a la salle 4
+# (setRoom) ; la premiere passe, et le premier appel de 9CC3, viennent a l image suivante.
+until enemies.type5Timer == 0 max 40 # setRoom (la salle 3 garde 1 apres sa panthere)
+set f0 frame
+# Simon invulnerable (C42D) : un contact coute ici une image de jeu au port (image longue), hors sujet.
+poke vk_enemies+127 255
+set ph ram8('enemy_timer')
+set c4 enemies.type4Count
+expect enemies.alive == 0 and enemies.type4Shots == 0 and c4 == 8 and enemies.parity == 0 # salle chargee, premiere passe a l image suivante
+set calls [i for i in range(1, 40) if len([k for k in range(1, i + 1) if (ph - k) % 4 == 0]) == c4][0]
+set first f0 + 1 + 2 * (calls - 1)
+expect 56 <= first - f0 - 1 <= 62 # 56 a 62 images apres la premiere passe (trace : 56, 58, 58)
+until enemies.alive > 0 max 70
+expect frame == first # premier tir a l'appel calcule depuis CF10
 set slot [i for i, e in enumerate(enemies.enemy) if e.active][0]
 expect enemies.enemy[slot].type == 2 # ENEMY_TYPE_4
+expect enemies.enemy[slot].dx == -1 and enemies.type4Shots == 1 # premier tir a droite (bit 0 de CF07 = 1)
+expect enemies.type4Count == 21 # recharge : 9DBB[0] + 1
 set x0 enemies.enemy[slot].x
 set age0 enemies.enemy[slot].age
 until enemies.enemy[slot].age == 20 max 40
@@ -30,3 +47,6 @@ expect enemies.enemy[slot].y == 179 # courbe kType4Y, pas 10
 expect abs(enemies.enemy[slot].x - x0) == 30 # 3 px toutes les 2 images
 until enemies.enemy[slot].age == 84 max 80
 expect enemies.enemy[slot].y == 158 # haut de la courbe
+# Second tir 168 images (4 x 21 appels de 9CC3) apres le premier.
+until enemies.type4Shots == 2 max 200
+expect frame == first + 168 # 8 x 21 images

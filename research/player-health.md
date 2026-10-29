@@ -192,8 +192,15 @@ Méthode : la recherche statique des références aux octets candidats (`scratch
 - poses de la ROM (`tools/extract_player.py`, poses 8 à 11) : 07/03 (poussé à gauche, Simon tourné à droite), 17/18 (poussé à droite), puis 08/04 et 18/19 au sol. Ces poses montent un pixel plus haut que les autres et sont dessinées en y − 32.
 - Vérifié : la chute de l'arc retombe au sol après 22 pas, soit 44 px, comme la trace (X 136 → 92) ; tests `test_gameplay.c` et scénario `c_enemy_contact`.
 
+**Coup reçu sur un escalier (prouvé, trace du 2026-10-29)** : `scratchpad/fidelity/out3` (hall salle 1, volée A, Simon arrêté sur les marches, points d'arrêt `6FAF` et `6FBC`, `C420`/`C42B`/`C42E`/`C42F` par image). Cinq coups avec de l'énergie (images 2106, 2362, 2564, 2820, 3028, `C42B` = 8 ou 16) passent par `6FAF` : `C420 = 5` pendant une passe (2 images, 2105-2106), puis `C420 = 3` ; X, Y et `C42B` inchangés, `C42D = 5A`, son 13 ; la montée reprend ensuite normalement. Un coup à énergie nulle sur l'escalier (3852, `C415` 2 → 0) passe par `6FBC` : recul ordinaire, Simon quitte l'escalier (64,176) et l'arc le pose au sol en (8,192).
+
+**Porté** (`vk_game_hit`, état `VK_RECOIL_STAIRS`) : sur un escalier avec de l'énergie, 2 images sans contrôle ni pas d'escalier (et sans contact, `vk_game_recoiling`), Simon reste sur sa marche ; à énergie nulle, `on_stairs := 0` et recul ordinaire. Test `test_gameplay.c` (volée A de la salle 1).
+
+**PROVISOIRE** (escalier) : la pose `C42F := 2` (+15 à gauche, `765F`) n'est pas portée, les poses d'escalier du port n'étant pas celles du MSX ; dans les cinq coups tracés, `C42F` valait déjà 2 (pose de repos `05/02`).
+
+**Écart relevé, non corrigé ici** : dans la trace du coup à énergie nulle, l'arc de `707D` avance d'un pas toutes les 2 images (une passe de l'état 5 : Y 176 → 161 en 16 images, 8 pas), alors que le port (`vk_recoil_tick`) fait un pas par image.
+
 **PROVISOIRE** :
 - avec une salle voisine du côté de la poussée, le port borne X à 8 / 248 et ne change pas de salle pendant le recul ; le comportement MSX au bord n'est pas tracé ;
 - le pas de 2,5 px (`C431` bit 3) et la plateforme mobile (`C439`) ne sont pas portés ;
-- coup reçu sur un escalier (`C420 := 3`, `765F`) : le port garde Simon sur l'escalier sans réaction ;
 - le son 0x13 du coup n'est pas joué par ce module (branchement du son à part).

@@ -10,7 +10,8 @@
  *   - Minuterie type 1 et garde de spawn : code Z80 (9CC3, 9CE6, 9CFC, 9E16), verifie en trace.
  *   - Cote de spawn = type (A a droite, B a gauche) : research/enemy-behavior.md section 6.3.
  *   - Mouvement type 1 : trajectoire mesuree (research/enemy-spawn.md, frames.txt).
- *   - Type 4 : cadence 168 images et mouvement 1,5 px/image mesures (enemy-behavior 3.3).
+ *   - Type 4 : canal 9D97 (minuterie 9CC3 partagee, CF06 = 8 a l'entree, table 9DBB, garde 9E16),
+ *     trace (enemy-behavior 3.3) ; mouvement 1,5 px/image mesure.
  *   - Type 5 (panthere) : liste ROM 0x1C674, routines A85C/A87D/99B9/99E5, contact 8290
  *     et fouet 7DAD lus dans le code et suivis en trace (enemy-behavior, section Type 5).
  *   - Type 2 (homme-poisson, stage 2 salles 4 et 5) : 9D4B/9CC3, A2E0/A310, gouttes
@@ -35,8 +36,8 @@ typedef short EnemyS16;
 #define ENEMY_ENERGY_MAX 0x20       /* C415 : energie de Simon au depart (research/player-health.md) */
 #define ENEMY_CONTACT_DAMAGE 2      /* -2 par contact (observe) */
 #define ENEMY_INVULN_START 0x5A     /* C42D : decremente une fois sur deux images, fenetre mesuree 180 images */
-#define ENEMY_TYPE4_PERIOD 168      /* 8 x 21 images entre deux tirs (table 9DBB : 14 -> 21 x 8) */
-#define ENEMY_TYPE4_PERIOD_LONG 328 /* un tir sur quatre : 28 -> 41 x 8 (mesure au stage 2) */
+#define ENEMY_TYPE4_COUNT 8         /* CF06 a l'entree (9CA9, table 9CBB) : premier tir au 8e appel de
+                                       9CC3 ou CF10 & 3 = 0, soit 56 a 62 images (phase de CF10) */
 #define ENEMY_TYPE4_Y 0xAA          /* Y SAT du type 4 au spawn dans le hall (Simon au sol, Y C0), puis courbe kType4Y */
 #define ENEMY_TYPE4_Y_FROM_SIMON 22 /* Y SAT au spawn = C425 - 22 (9D97 : E = C425 - 8 ; mesure stage 2 et hall) */
 #define ENEMY_PATTERN_TYPE4 0x80    /* bit des motifs du type 4 (tuiles vk_enemy4_tiles) */
@@ -87,7 +88,7 @@ typedef struct {
     EnemyU8 state;           /* type 5 : 0 assise, 1 course, 2 saut ou chute */
     EnemyU8 anim;            /* type 5 : compteur d'animation +C, 1 a 12 */
     EnemyU8 pose;            /* type 5 : pose +B, 3F a 46 */
-    EnemyU8 romBox;          /* type 1 du stage 2 : sortie, contact et fouet de la ROM (99E5, 8290, 7DAD) */
+    EnemyU8 romBox;          /* type 1 (hall et stage 2) : sortie, contact et fouet de la ROM (99E5, 8290, 7DAD) */
 } Enemy;
 
 /* Une entree SAT produite pour l'affichage. */
@@ -107,10 +108,10 @@ typedef struct {
     EnemyU8 recoil;          /* C420 = 5 : recul en cours (gameplay.c), contact coupe */
     EnemyS8 recoilDir;       /* sens du recul = sens de l'ennemi touche */
     EnemyU8 parity;          /* 9CC3 est appele une image sur deux */
-    EnemyU16 type4Frames;    /* images depuis le dernier tir de type 4 */
-    EnemyU8 type4Side;       /* prochain cote de type 4 : 0 droite, 1 gauche */
+    EnemyU16 type4Count;     /* CF06 : compte a rebours du canal type 4 (decremente tous les 4 appels de 9CC3) */
+    EnemyU8 type4Side;       /* cote du dernier tir de type 4 apres la garde 9E16 : 0 droite, 1 gauche */
     EnemyU8 type5Timer;      /* images depuis l'entree dans la salle, jusqu'a la creation du type 5 */
-    EnemyU8 type4Shots;      /* tirs de type 4 depuis l'entree (CF06 : periode longue un tir sur quatre) */
+    EnemyU8 type4Shots;      /* CF07 : tirs de type 4 depuis l'entree (index de la table 9DBB) */
     EnemyU8 type2Shots;      /* CF03 : tirs de type 2 depuis l'entree (index des tables 9D87 et 9D8F) */
     EnemyU16 type2Frames;    /* images depuis l'entree dans la salle (canal du type 2) */
     EnemyU16 type2Next;      /* valeur de type2Frames du prochain tir de type 2 */
@@ -135,7 +136,8 @@ extern const EnemyU8 kEnemySpawnPeriod[8];
 /* Nombre d'entrees SAT d'un ennemi de type 1 : ROM 6058 (table 6057 + 1), valeur 4. */
 #define ENEMY_TYPE1_SAT_COUNT 4
 
-/* Etat de la minuterie du canal type 1 (adresses MSX : CF10, CF00, CF01). */
+/* Etat de la minuterie du canal type 1 (adresses MSX : CF10, CF00, CF01). CF10 est partage
+ * par tous les canaux (types 1, 2 et 4) et n'est remis a 0 qu'en debut de partie (44C6). */
 typedef struct {
     EnemyU8 phase;           /* CF10 : compteur partage, decremente a chaque appel de 9CC3 */
     EnemyU8 counter;         /* CF00 : compte a rebours, decremente tous les 4 appels */
@@ -159,8 +161,13 @@ void Enemies_setRoom(EnemyState *s);
 /* Debut de partie : energie pleine, aucune invulnerabilite ni recul, salle vide. */
 void Enemies_init(EnemyState *s);
 
-/* Etat initial de la minuterie : CF00=04, CF01=00 (ROM 9CBB, ecrit par 9CA9 appele en 6324). */
+/* Debut de partie : CF10 = 0 (44C6 efface C405-E000, trace : 0 a la premiere salle du hall),
+ * puis Enemies_spawnTimerRoom. */
 void Enemies_spawnTimerInit(EnemySpawnTimer *t);
+
+/* Chargement de salle (9CA9, appele en 6324) : CF00 = 04, CF01 = 00 (table 9CBB). CF10 garde sa
+ * valeur d'une salle a l'autre et apres une vie perdue (trace : jamais reecrit hors de 9CC3). */
+void Enemies_spawnTimerRoom(EnemySpawnTimer *t);
 
 /* Un appel de 9CC3/9CE6 (une fois toutes les 2 images).
  * Retourne 1 si un ennemi a ete cree, 0 sinon (minuterie, drapeau, garde, plein).
@@ -169,7 +176,7 @@ void Enemies_spawnTimerInit(EnemySpawnTimer *t);
 int Enemies_spawnTimerTick(EnemySpawnTimer *t, const EnemyRoomVars *v, EnemyState *s);
 
 /* Une image de jeu complete : recul de Simon, mouvement, spawns (type 1 une image sur deux,
- * type 4 tous les ENEMY_TYPE4_PERIOD images en salle 4, type 5 une fois par visite des
+ * type 4 par le canal 9D97 (meme minuterie, CF06/CF07), type 5 une fois par visite des
  * salles 2, 3 et 7), contact, invulnerabilite.
  * *pushX reçoit le deplacement de Simon de cette image (px, signe) ; 0 hors recul.
  * Retourne 1 si un contact a ete compte cette image (energie -2, -6 pour le type 5), 0 sinon. */

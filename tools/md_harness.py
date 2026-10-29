@@ -288,7 +288,7 @@ class Game_View:
                              'entrance_step': m.rd8(a + 22), 'entrance_timer': m.rd8(a + 23),
                              'recoil': m.rd8(a + 24), 'recoil_count': m.rd8(a + 25),
                              'recoil_land': m.rd8(a + 26), 'recoil_dir': s8(m.rd8(a + 27)),
-                             'ground_fall': m.rd8(a + 28)}
+                             'ground_fall': m.rd8(a + 28), 'jump_step': m.rd8(a + 29)}
         if 'player' in A:
             state['player'] = self.player_at(A['player'])
         if 'whip' in A:
@@ -310,7 +310,7 @@ class Game_View:
             state['enemies'] = {'enemy': enemies, 'alive': sum(1 for e in enemies if e['active']),
                                 'energy': m.rd8(b), 'invuln': m.rd8(b + 1), 'invulnPhase': m.rd8(b + 2),
                                 'recoil': m.rd8(b + 3), 'recoilDir': s8(m.rd8(b + 4)),
-                                'parity': m.rd8(b + 5), 'type4Frames': m.rd16(b + 6),
+                                'parity': m.rd8(b + 5), 'type4Count': m.rd16(b + 6),
                                 'type4Side': m.rd8(b + 8), 'type5Timer': m.rd8(b + 9),
                                 'type4Shots': m.rd8(b + 10), 'type2Shots': m.rd8(b + 11),
                                 'type2Frames': m.rd16(b + 12), 'type2Next': m.rd16(b + 14),

@@ -46,6 +46,9 @@ extern EnemyState vk_enemies;
 /* New game or new life: Enemies_init (full energy, no invulnerability or
  * recoil) and a rebuild of the room's enemies on the next step. */
 void vk_reset_enemies(void);
+/* New game (44C6 clears the RAM): the spawn clock CF10 shared by the enemy channels
+ * restarts at 0. It is kept across rooms, lost lives and stages. */
+void vk_reset_enemy_clock(void);
 /* Whip level picked up (C416); levels without an asset are ignored. */
 void vk_set_whip_level(int level);
 /* Loads the whip, attack, crouch, target and flame tiles and resets the whip. */
