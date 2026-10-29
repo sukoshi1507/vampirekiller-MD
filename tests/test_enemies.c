@@ -74,6 +74,7 @@ static void vars_default(EnemyRoomVars *v)
     v->simonY = 0xC0;
     v->sideFlag = 0;
     v->difficulty = 0;
+    v->armorOn = 0;
     v->simonState = ENEMY_SIMON_GROUND;
     v->map = 0;
 }
@@ -401,6 +402,7 @@ static void test_type4_timer(void)
     v.simonY = 0xC0;   /* au sol du hall : spawn en Y SAT 0xAA (C425 - 22) */
     v.sideFlag = 0;
     v.difficulty = 0;
+    v.armorOn = 0;
     v.simonState = ENEMY_SIMON_GROUND;
     Enemies_init(&s);
     Enemies_spawnTimerInit(&t);
@@ -500,6 +502,7 @@ static void test_contact_recoil_invuln(void)
     v.simonY = 192;
     v.sideFlag = 0;
     v.difficulty = 0;
+    v.armorOn = 0;
     v.simonState = ENEMY_SIMON_GROUND;
     v.map = 0;
     Enemies_init(&s);
@@ -556,6 +559,7 @@ static void test_items(void)
     v.simonY = 192;
     v.sideFlag = 0;
     v.difficulty = 0;
+    v.armorOn = 0;
     v.map = 0;
     v.facingLeft = 0;
     v.simonState = ENEMY_SIMON_GROUND;
@@ -696,6 +700,7 @@ static void test_items(void)
     /* 03 : de face, degat 1 au lieu de 2 (C441 - 1) ; de dos, 2. Ennemi a droite. */
     Enemies_item(&s, 0x03, 0);
     CHECK(s.armor == ENEMY_ARMOR_HITS, "objet 03 : C441 = 10h");
+    v.armorOn = 1;                   /* C701 bit 4 */
     s.energy = ENEMY_ENERGY_MAX;
     s.enemy[0].active = 1;
     s.enemy[0].x = 126;
@@ -716,10 +721,24 @@ static void test_items(void)
         (void)Enemies_frame(&s, &t, &v);
     }
     CHECK(s.armor == 0, "armure : 16 coups de face");
-    /* 04 (8DA1) efface C701 bit 4 : plus d'armure. */
+    /* Changement de stage (63B7) : C441 = 0, C701 bit 4 garde. Le coup de face suivant
+     * est reduit et passe C441 a FFh (819B) : l'armure tient encore 255 coups. */
+    s.recoil = 0;
+    s.invuln = 0;
+    s.energy = ENEMY_ENERGY_MAX;
+    s.enemy[0].x = 126;
+    CHECK(Enemies_frame(&s, &t, &v) == 1 && s.energy == ENEMY_ENERGY_MAX - ENEMY_CONTACT_DAMAGE / 2 &&
+          s.armor == 0xFF, "armure apres changement de stage : C441 0 -> FFh, degat reduit");
+    /* 04 (8DA1) efface C701 bit 4 : plus d'armure ; C441 = 10h (8DA8) sans effet. */
     Enemies_item(&s, 0x03, 0);
     Enemies_item(&s, 0x04, 0);
-    CHECK(s.armor == 0, "objet 04 : C701 bit 4 efface");
+    v.armorOn = 0;
+    s.recoil = 0;
+    s.invuln = 0;
+    s.energy = ENEMY_ENERGY_MAX;
+    s.enemy[0].x = 126;
+    CHECK(Enemies_frame(&s, &t, &v) == 1 && s.energy == ENEMY_ENERGY_MAX - ENEMY_CONTACT_DAMAGE &&
+          s.armor == ENEMY_ARMOR_HITS, "objet 04 : C701 bit 4 efface, degat double");
 
     /* 05 : 7806, tous les ennemis detruits. */
     (void)Enemies_spawn(&s, ENEMY_SIDE_RIGHT, ENEMY_TYPE_A, 0xA0, 1);
@@ -836,6 +855,7 @@ static void test_fall_to_floor(void)
     v.simonY = 0x40;
     v.sideFlag = 0;
     v.difficulty = 0;
+    v.armorOn = 0;
     v.simonState = ENEMY_SIMON_GROUND;
     v.map = map;
     Enemies_init(&s);
@@ -966,6 +986,7 @@ static void vars_stage2_room2(EnemyRoomVars *v)
     v->simonY = 160;
     v->sideFlag = 0;
     v->difficulty = 0;
+    v->armorOn = 0;
     v->simonState = ENEMY_SIMON_GROUND;
     v->map = 0;
 }

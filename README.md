@@ -35,7 +35,10 @@ Ce qui fonctionne dans la ROM Mega Drive :
   apparitions 300 images ; 05 détruit les ennemis présents, le fond s'éclaire en blanc
   6 fois ; 03, armure : dégâts de face divisés par deux pendant 16 coups ; 0B, 0C, 0D
   (bits de `C431`) : minuteries portées à 480 images, recul rapide de 2,5 px, saut
-  haut. Minuteries, armure et bits de `C431` sont remis à 0 à la fin d'une mort.
+  haut. Minuteries, armure et bits de `C431` sont remis à 0 à la fin d'une mort. Au
+  changement de stage, le compteur d'armure (`C441`) passe à 0 mais l'armure reste : le
+  coup de face suivant le fait boucler à FFh, comme sur MSX2 (trace openMSX) ; l'énergie
+  est gardée.
 - **Stage 2 (jouable, chauves-souris seules)** : six salles avec les collisions et les liens
   de la ROM (`tools/build_stage_maps_md.py`) ; arrivée en salle 0 à x 16, y 96, comme
   sur le MSX2.

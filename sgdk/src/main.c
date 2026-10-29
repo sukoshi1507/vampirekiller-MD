@@ -507,11 +507,16 @@ int main(bool hardReset)
                          * object 0A stay frozen until a death (70D3), and 7777
                          * plays no music for stage 2, so the FB loop goes on.
                          * C701 (vk_candles.c701) is not touched here, and the room
-                         * load below draws its box again (4513 -> 8EE6). */
+                         * load below draws its box again (4513 -> 8EE6). C441 goes to 0
+                         * with the block while C701 bit 4 stays: the armor holds and its
+                         * next frontal hit wraps C441 to FF (819B). C415, below the block,
+                         * keeps Simon's energy (trace, research/castle-candles.md 9.8). */
                         const EnemyU8 frozen = vk_enemies.frozen;
+                        const EnemyU8 energy = vk_enemies.energy;
                         vk_game_enter_stage(&vk_game, 2);
                         vk_reset_enemies();
                         vk_enemies.frozen = frozen;
+                        vk_enemies.energy = energy;
                         vk_candles_reset_stage(&vk_candles, 2);
                         vk_candles_hud(&vk_candles);   /* state 4 (4237): HUD drawn again */
                         show_hall_room(0);

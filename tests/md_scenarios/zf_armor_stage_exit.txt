@@ -1,0 +1,58 @@
+# (zf) Armure (objet 03) au changement de stage : 63B7 efface C420-C46F, donc C441, mais
+# ni C701 ni C415. Le coup de face suivant passe C441 de 0 a FFh (819B) et reste reduit.
+# Trace openMSX (research/castle-candles.md 9.8) : C701 = 10h, C441 = 3 avant la porte ;
+# 63C3 ecrit C441 = 0 ; chauve-souris de la salle 0 du stage 2 : 819B ecrit FF, FE, ...,
+# C415 - 1 a chaque coup, bouclier garde.
+# enemy_state+126 = C415, +146 = C441 ; vk_candles+172 = C701.
+include boot_to_courtyard.inc
+until front_mode == MODES['INTERIOR'] max 3000 RIGHT
+# Salle 7 du hall par le changement de salle debug (A tenu, puis A+DROITE).
+hold A 3
+hold A+RIGHT 3
+wait 10
+hold A 3
+hold A+RIGHT 3
+wait 10
+hold A 3
+hold A+RIGHT 3
+wait 10
+hold A 3
+hold A+RIGHT 3
+wait 10
+hold A 3
+hold A+RIGHT 3
+wait 10
+hold A 3
+hold A+RIGHT 3
+wait 10
+hold A 3
+hold A+RIGHT 3
+wait 10
+hold A 3
+hold A+RIGHT 3
+wait 10
+expect game.room == 7 # salle 7 du hall
+until enemies.enemy[0].active max 40
+poke enemy_state+0 0
+wait 30
+# Cle blanche (C701 bit 0) et armure 03 (C701 bit 4) avec 3 coups (C441), energie 20.
+poke items+0 1
+poke items+1 1
+poke vk_candles+172 0x11
+poke enemy_state+146 3
+poke enemy_state+126 20
+poke vk_game+0 200
+poke vk_game+1 96
+wait 4
+until game.stage == 2 max 400 RIGHT
+expect game.room == 0 and game.player.x == 16
+expect ram8('enemy_state+146') == 0 # 63C3 : C441 = 0
+expect ram8('vk_candles+172') & 0x10 # C701 bit 4 garde
+expect enemies.energy == 20 # C415 hors du bloc 63B7 : energie gardee
+# Chauve-souris venant de droite, Simon regarde a droite : coup de face.
+until enemies.energy < 20 max 1500
+expect game.player.facing == 0
+expect enemies.energy == 19 and ram8('enemy_state+146') == 0xFF # 819B : 0 -> FFh, degat 1
+expect ram8('vk_candles+172') & 0x10 # bouclier garde
+wait 2
+shot zf_armor_wrap

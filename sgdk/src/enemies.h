@@ -121,7 +121,8 @@ typedef struct {
     EnemyU8 killTimer;       /* C434 (objet 09) : un contact detruit l'ennemi, sans degat */
     EnemyU8 guardTimer;      /* C43A (objet 08) : aucun contact */
     EnemyU8 spawnPause;      /* C440 (objet 06, fouets 1A-1D) : canaux d'apparition arretes (5EB8) */
-    EnemyU8 armor;           /* C441 avec C701 bit 4 (objet 03) : coups de face encore reduits de moitie */
+    EnemyU8 armor;           /* C441 : coups de face restants de l'armure (C701 bit 4, EnemyRoomVars.armorOn) ;
+                              * 0 apres un changement de stage (63B7), le coup suivant passe a FFh (819B) */
     EnemyU8 itemPhase;       /* les minuteries ci-dessus ne baissent qu'une image sur deux */
     EnemyU8 contactScore;    /* image courante : points (centaines) des ennemis detruits par C434 (81AB) */
     EnemyU8 itemSound;       /* image courante : effet a jouer (0D destruction par C434, 17 C43A a 10h), 0 sinon */
@@ -176,6 +177,7 @@ typedef struct {
     const EnemyU8 *map;      /* carte de collision de la salle (sol pour la chute) ; NULL = pas de chute */
     EnemyU8 simonState;      /* C420, lu par la boite de contact 847A : ENEMY_SIMON_* */
     EnemyU8 facingLeft;      /* C42C : Simon regarde a gauche (armure de l'objet 03, 8179) */
+    EnemyU8 armorOn;         /* C701 bit 4 (objet 03, tenu par candles.c) : armure portee (8179) */
 } EnemyRoomVars;
 
 /* Valeurs de C420 qui comptent pour la boite de contact 847A (banque 2). 847A ne distingue

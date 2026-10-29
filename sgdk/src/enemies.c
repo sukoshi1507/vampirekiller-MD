@@ -235,9 +235,9 @@ void Enemies_item(EnemyState *s, EnemyU8 kind, EnemyU8 c431)
     case 0x03:                       /* 8D98 : C701 bit 4 (bit 5 efface), C441 = 10h */
         s->armor = ENEMY_ARMOR_HITS;
         break;
-    case 0x04:                       /* 8DA1 : C701 bit 4 efface (plus d'armure), bit 5 mis ;
-                                      * C441 = 10h ne sert qu'aux projectiles D700 (8610), non portes */
-        s->armor = 0;
+    case 0x04:                       /* 8DA1 : C701 bit 4 efface (plus d'armure, candles.c), bit 5 mis ;
+                                      * C441 = 10h (8DA8) ne sert qu'aux projectiles D700 (8610), non portes */
+        s->armor = ENEMY_ARMOR_HITS;
         break;
     case 0x05:                       /* 8DBB -> 7806 : tous les objets C800 et D700 detruits
                                       * (9A3A, sans points) ; 8DC5 : C43E = 18h, eclair */
@@ -967,13 +967,15 @@ int Enemies_frame(EnemyState *s, EnemySpawnTimer *t, const EnemyRoomVars *v)
             }
             /* 8179 : avec C701 bit 4 (objet 03) et Simon tourne vers l'ennemi
              * (C427 - X et C42C), le degat n'est pas double et C441 baisse. X de
-             * l'ennemi : centre de sa boite (PROVISOIRE pour les types 1 et 4). */
-            if (s->armor) {
+             * l'ennemi : centre de sa boite (PROVISOIRE pour les types 1 et 4). Seul le
+             * bit 4 compte : C441 a 0 (stage change, 63B7) passe a FFh au coup suivant
+             * (819B DEC, 819C JR NZ), l'armure tient alors 256 coups (trace, castle-candles.md 9.8). */
+            if (v->armorOn) {
                 const int ex = (e->type == ENEMY_TYPE_5 || e->type == ENEMY_TYPE_2) ? e->x :
                                e->romBox ? e->x + ENEMY_OBJ_X : e->x + 8;
                 if ((v->simonX < ex) != (v->facingLeft != 0)) {
                     damage = (EnemyU8)(damage / 2);
-                    s->armor--;              /* 819B ; a 0, 819E efface C701 bit 4 */
+                    s->armor--;              /* 819B ; a 0, 819E efface C701 bit 4 (actors.c) */
                 }
             }
             s->energy = (s->energy > damage) ? (EnemyU8)(s->energy - damage) : 0;
