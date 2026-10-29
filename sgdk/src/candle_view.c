@@ -150,7 +150,9 @@ u16 vk_candle_view_sprites(void)
             else { x = vk_item_box[i][0]; object = vk_item_box[i][1]; }
             if (item_loaded[slot] != object)
             {
-                load_object(object, item_slot_tile(slot));
+                /* Queued with the sprite table (VBlank DMA): a CPU load would show the
+                 * new object for one frame at the slot's previous place. */
+                VDP_loadTileData(&vk_object_tiles[(object - 1) * 32], item_slot_tile(slot), 4, DMA_QUEUE);
                 item_loaded[slot] = object;
             }
             set_sprite(n++, x, VK_ITEM_BOX_Y,

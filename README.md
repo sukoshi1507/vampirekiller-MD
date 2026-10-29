@@ -60,9 +60,10 @@ Ce qui fonctionne dans la ROM Mega Drive :
   boucle sonore FB du MSX2 et la musique gelée ; durée et gel vérifiés par une trace
   openMSX (`research/castle-candles.md` 9.9).
 - **Case d'objets du HUD et bouclier** : 0F, 0A, 03/04 et 1E s'affichent dans la case
-  du HUD comme sur MSX2 (objet ramassé montré seul, puis case redessinée) ; avec
-  l'armure 03 (ou 04), Simon prend les poses au bouclier de la ROM ; case comparée à
-  une capture openMSX (`research/castle-candles.md` 9.8).
+  du HUD comme sur MSX2 (objet ramassé montré seul 64 ou 66 images, puis case
+  redessinée, cadence mesurée par une trace openMSX) ; avec l'armure 03 (ou 04), Simon
+  prend les poses au bouclier de la ROM ; case comparée à une capture openMSX
+  (`research/castle-candles.md` 9.8).
 - **Ajout du port, saut depuis l'escalier** : sur une marche, C fait sauter Simon hors de
   la volée. Le MSX2 ne le permet pas (HAUT, sa touche de saut, y fait monter) ; ce saut
   est gardé comme un plus de jouabilité (`research/stairs.md`).

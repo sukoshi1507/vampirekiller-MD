@@ -236,7 +236,7 @@ int main(void)
             { 0x08, VK_CANDLE_EVENT_PICK, 0x16 }, { 0x09, VK_CANDLE_EVENT_PICK, 0x12 },
             { 0x16, VK_CANDLE_EVENT_PICK, 0x12 },
             { 0x1C, VK_CANDLE_EVENT_PICK | VK_CANDLE_EVENT_WEAPON, 0x12 },
-            { 0x0A, VK_CANDLE_EVENT_BOX_ITEM | VK_CANDLE_EVENT_PICK, 0x12 }, { 0x0F, VK_CANDLE_EVENT_BOX_ITEM, 0x12 },
+            { 0x0A, VK_CANDLE_EVENT_BOX_ITEM, 0x12 }, { 0x0F, VK_CANDLE_EVENT_BOX_ITEM, 0x12 },
             { 0x10, 0, 0x12 }, { 0x11, 0, 0x12 } };
         unsigned n;
         for (n = 0; n < sizeof kPick / sizeof kPick[0]; n++)
@@ -297,10 +297,39 @@ int main(void)
         c.drop[0].fixed = 0; c.drop[0].timer = 0xFF; c.drop[0].x = 64; c.drop[0].y = 176;
         vk_candles_tick(&c, &g, &w, &hit);
         assert(c.c701 == (VK_ITEM_BIT_03 | VK_ITEM_BIT_0A | VK_ITEM_BIT_0F | VK_ITEM_BIT_1E));
-        /* 8F55: 32 counted passes (C003 & 3F != 0), then 8EE6 draws C701 bits 7..3. */
+        /* 8F55: 32 counted passes of 2 frames (C003 & 3F != 0), then 8EE6 draws
+         * C701 bits 7..3. openMSX trace: 33 passes (66 frames) when C003 crosses a
+         * multiple of 40h, else 32 (64 frames). */
         while (c.box_pick) { vk_candles_tick(&c, &g, &w, &hit); ticks++; }
-        assert(ticks >= VK_ITEM_PICK_TICKS && ticks <= VK_ITEM_PICK_TICKS + 1);
+        assert(ticks == 2 * VK_ITEM_PICK_TICKS || ticks == 2 * VK_ITEM_PICK_TICKS + 2);
         assert(c.box_items == c.c701 && c.box_timer == 0 && c.box_timer_on);
+        {
+            /* Same pickup with the skipped pass (C003 = clock / 2 = 40h) inside the 32. */
+            const VKByte items = c.c701;
+            int skip;
+            for (skip = 0; skip < 2; skip++)
+            {
+                c.clock = (VKByte)(skip ? 0x80 - 8 : 0x80 + 2);
+                c.drop[0].state = VK_DROP_REST; c.drop[0].kind = 0x02;
+                c.drop[0].fixed = 0; c.drop[0].timer = 0xFF; c.drop[0].x = 64; c.drop[0].y = 176;
+                vk_candles_tick(&c, &g, &w, &hit);
+                assert(c.box_pick == 0x02 && c.box_items == 0);
+                for (ticks = 1; c.box_pick; ticks++)
+                {
+                    vk_candles_tick(&c, &g, &w, &hit);
+                    /* 8F55 only in the passes, 2 frames apart from the pickup. */
+                    if (ticks == 1) assert(c.box_timer == VK_ITEM_PICK_TICKS);
+                    if (ticks == 2 && !skip) assert(c.box_timer == VK_ITEM_PICK_TICKS - 1);
+                }
+                assert(ticks - 1 == 2 * VK_ITEM_PICK_TICKS + 2 * skip && c.box_items == items);
+            }
+            /* C5E5 stays FF: 8EE6 again after 256 counted passes (no change on screen). */
+            c.box_items = 0;
+            for (ticks = 0; ticks < 2 * 255; ticks++) vk_candles_tick(&c, &g, &w, &hit);
+            assert(c.box_items == 0 && c.box_timer_on);
+            for (ticks = 0; ticks < 2 * 0x100 && !c.box_items; ticks++) vk_candles_tick(&c, &g, &w, &hit);
+            assert(c.box_items == items && c.box_timer == 0);
+        }
         /* 819E: the armor used up clears bit 4 and redraws the box. */
         vk_candles_armor_out(&c);
         assert(c.c701 == (VK_ITEM_BIT_0A | VK_ITEM_BIT_0F | VK_ITEM_BIT_1E) && c.box_items == c.c701);

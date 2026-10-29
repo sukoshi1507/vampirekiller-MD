@@ -206,13 +206,13 @@ void Enemies_death(EnemyState *s)
     s->timeStop = 0;                 /* 70CD */
     s->spawnPause = 0;               /* 70D0 */
     s->frozen = 0;                   /* 70D3 : D010 a 0, sans son FC */
-    s->armor = 0;                    /* 70DC (C701 bit 4) et 70EE (C441) */
-    s->timeStopItem = 0;             /* 70DC : C701 &= 80h efface le bit 6 */
+    s->armor = 0;                    /* 70DC (C701 bit 4) et 70EE (C441) ; C701 &= 80h
+                                      * (objet 0A compris) : vk_candles_death */
 }
 
-int Enemies_useTimeStop(EnemyState *s, EnemyU8 *hearts, EnemyU8 c431)
+int Enemies_useTimeStop(EnemyState *s, EnemyU8 *hearts, EnemyU8 c431, EnemyU8 c701)
 {
-    if (!s->timeStopItem) return 0;                     /* 713B : C701 bit 6 */
+    if (!(c701 & ENEMY_TIME_STOP_ITEM)) return 0;       /* 713B : C701 bit 6 */
     if (s->timeStop) return 0;                          /* 715F : C43B != 0 */
     if (*hearts < ENEMY_TIME_STOP_HEARTS) return 0;     /* 7164 : C417 < 5 */
     *hearts = (EnemyU8)(*hearts - ENEMY_TIME_STOP_HEARTS);  /* 7170-7179, puis 4566 (HUD) */
@@ -251,7 +251,7 @@ void Enemies_item(EnemyState *s, EnemyU8 kind, EnemyU8 c431)
         break;
     case 0x08: s->guardTimer = timer; break;    /* 8DCD */
     case 0x09: s->killTimer = timer; break;     /* 8DE5 */
-    case 0x0A: s->timeStopItem = 1; break;      /* 8D94 : C701 |= 40h, sans minuterie */
+    /* 0A (8D94 : C701 |= 40h, sans minuterie) : seulement le bit de C701 (candles.c). */
     case 0x06:                       /* 8D7C */
     case 0x1A: case 0x1B: case 0x1C: case 0x1D: /* 8D70 -> 8D7C */
         s->spawnPause = timer;

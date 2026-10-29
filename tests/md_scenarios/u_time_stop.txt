@@ -17,7 +17,7 @@ poke vk_candles+11 0
 poke vk_candles+6 3
 wait 2
 expect ram8('vk_candles+6') == 0 and ram8('vk_candles+171') == 0x0A # objet 0A pris
-expect enemies.timeStopItem == 1 and enemies.timeStop == 0 and enemies.frozen == 0 # C701 bit 6 seul
+expect ram8('vk_candles+172') & 0x40 and enemies.timeStop == 0 and enemies.frozen == 0 # C701 bit 6 seul
 until enemies.alive > 0 max 400
 wait 6
 # BAS au sol : rien (7136 : C420 doit valoir 1).
@@ -42,7 +42,7 @@ hold DOWN 1
 expect ram8('vk_candles+118') == 7 # pas de second arret
 until enemies.frozen == 0 max 120
 expect 176 <= frame - f0 <= 179 # 89 passes (178 images, trace openMSX)
-expect enemies.timeStop == 0 and enemies.timeStopItem == 1 and ram8('vk_psg+66') == 0 # FC
+expect enemies.timeStop == 0 and ram8('vk_candles+172') & 0x40 and ram8('vk_psg+66') == 0 # FC, l'objet reste
 wait 20
 expect [(e.x, e.y, e.age) for e in enemies.enemy if e.active] != pos # les ennemis repartent
 expect ram32('vk_psg+4') != cursor # la musique reprend

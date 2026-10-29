@@ -57,7 +57,7 @@ void vk_candles_begin(VKCandles *c)
     c->picked = 0;
     c->c701 = 0;                     /* 44C6: the RAM is cleared, C5E5/C5E6 too */
     c->box_items = c->box_pick = 0;
-    c->box_timer_on = c->box_timer = 0;
+    c->box_timer_on = c->box_timer = c->box_phase = 0;
     for (s = 0; s < VK_CANDLE_STAGES; s++)
         for (r = 0; r < VK_CANDLE_ROOMS; r++)
             c->out[s][r] = c->taken[s][r] = 0;
@@ -108,17 +108,24 @@ static void box_show_pick(VKCandles *c, VKByte kind)
     if (kind == VK_OBJ_SMALL_HEART || (kind >= VK_OBJ_GOLD_KEY && kind != 0x1E)) return;
     c->box_timer_on = 1;
     c->box_timer = VK_ITEM_PICK_TICKS;
+    c->box_phase = 0;                /* the pickup pass (88D8 after 8A4A): next pass in 2 frames */
     c->box_items = 0;
     c->box_pick = kind;
 }
 
-/* 8F55, called by 8A4A at each pass: with C5E5 = FF, C5E6 drops at each pass
- * whose C003 & 3F is not 0, and 8EE6 draws the box again when it reaches 0.
- * C5E5 is never cleared: C5E6 goes on from 0 (FF, then down), so 8EE6 runs
- * again every 256 counted passes. c->clock stands for C003 (PROVISIONAL phase). */
+/* 8F55, called by 8A4A (5C77) at each pass of state 5, one every 2 frames: with
+ * C5E5 = FF, C5E6 drops at each pass whose C003 & 3F is not 0, and 8EE6 draws the
+ * box again when it reaches 0. C5E5 is never cleared: C5E6 goes on from 0 (FF,
+ * then down), so 8EE6 runs again every 256 counted passes (same objects drawn).
+ * openMSX trace (research/castle-candles.md 9.8): object alone from the frame after
+ * the pickup, 8EE6 33 passes (66 frames) later when C003 crossed a multiple of 40h,
+ * again 260 passes (519 frames) later. The passes are counted from the pickup
+ * (box_phase); c->clock / 2 stands for C003 (PROVISIONAL phase of the skipped pass). */
 static void box_step(VKCandles *c)
 {
-    if (!c->box_timer_on || (c->clock & 0x3F) == 0) return;
+    if (!c->box_timer_on) return;
+    c->box_phase ^= 1;
+    if (c->box_phase || ((c->clock >> 1) & 0x3F) == 0) return;
     if (--c->box_timer == 0) vk_candles_item_box(c);
 }
 
@@ -446,12 +453,12 @@ static int pick(VKCandles *c, VKDrop *d)
         c->c701 = (VKByte)((c->c701 & ~VK_ITEM_BIT_03) | VK_ITEM_BIT_04);
         return VK_CANDLE_EVENT_PICK;
     }
-    /* 8D94 (0A): C701 bit 6; the time stop (713B) lives in enemies.c
-     * (Enemies_item, Enemies_useTimeStop). */
+    /* 8D94 (0A): C701 bit 6, the only record of the object: the time stop (713B)
+     * reads it through Enemies_useTimeStop (actors.c vk_step_time_stop). */
     if (kind == 0x0A)
     {
         c->c701 |= VK_ITEM_BIT_0A;
-        return VK_CANDLE_EVENT_BOX_ITEM | VK_CANDLE_EVENT_PICK;
+        return VK_CANDLE_EVENT_BOX_ITEM;
     }
     /* 8D8D (1E), 8E33 (0F): only the C701 bit here; the effect of 0F (C70F = 3,
      * C431 bit 6, 9566) is not ported. */
