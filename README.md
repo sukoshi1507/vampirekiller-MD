@@ -44,6 +44,9 @@ Ce qui fonctionne dans la ROM Mega Drive :
 - **Son** : musiques et effets MSX2 émulés depuis le pilote de la ROM sur le PSG
   (`research/audio-driver.md`). Ajout du port : le cri de Wilhelm (CC0) quand Simon
   tombe dans un trou ou dans l'eau.
+- **Ajout du port, saut depuis l'escalier** : sur une marche, C fait sauter Simon hors de
+  la volée. Le MSX2 ne le permet pas (HAUT, sa touche de saut, y fait monter) ; ce saut
+  est gardé comme un plus de jouabilité (`research/stairs.md`).
 
 Ce qui n'est pas porté ou reste provisoire :
 
