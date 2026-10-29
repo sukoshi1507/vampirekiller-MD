@@ -116,6 +116,7 @@ void vk_step_enemies(void)
     vars.difficulty = 0;
     vars.map = vk_game_collision(&vk_game);   /* floor for falling enemies */
     vars.simonState = simon_state();          /* C420 for the contact box 847A */
+    vars.facingLeft = vk_game.player.facing;  /* C42C: armor of object 03 (8179) */
     /* C420 = 5 while Simon is knocked back: no enemy contact (7EF4). */
     vk_enemies.recoil = (EnemyU8)vk_game_recoiling(&vk_game);
     /* 7064: the death (C420 = 6) clears C42D: no more blinking. */
@@ -127,6 +128,10 @@ void vk_step_enemies(void)
         vk_game_hit(&vk_game, vk_enemies.recoilDir, vk_enemies.energy == 0);
         vk_enemies.recoil = (EnemyU8)vk_game_recoiling(&vk_game);
     }
+    /* Object 09 (C434): an enemy touched is destroyed, scored as by the whip (81AB),
+     * effect 0D (7EBC). Object 08 (C43A): effect 17 when it drops to 10h (75ED). */
+    if (vk_enemies.contactScore) vk_hud_add_score((u32)vk_enemies.contactScore * 100);
+    if (vk_enemies.itemSound) vk_psg_effect(vk_enemies.itemSound);
     if (vk_whip_active(&vk_whip))
     {
         int left = 0, top = 0, right = 0, bottom = 0;

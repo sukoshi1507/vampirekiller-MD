@@ -1,0 +1,39 @@
+# (t) Effets d'objets ramasses (table 8D3E, research/castle-candles.md 9.8), hall salle 0.
+# Un objet est pose sous Simon dans le premier emplacement C500 de vk_candles (+6 etat 3 =
+# au sol, +7 X, +8 Y, +9 objet, +10 minuterie FF = permanent, +11 fixe 0) ; +171 = C419.
+# vk_enemies : energie +126, C434 +143, C43A +144, C440 +145.
+include boot_to_courtyard.inc
+until front_mode == MODES['INTERIOR'] max 3000 RIGHT
+wait 40                                            # fin de l'etat 9 de la salle 0
+poke vk_game+0 136
+wait 2
+# 07 : 4605 avec B = 08, energie + 8.
+poke enemy_state+126 10
+poke vk_candles+7 128
+poke vk_candles+8 176
+poke vk_candles+9 0x07
+poke vk_candles+10 0xFF
+poke vk_candles+11 0
+poke vk_candles+6 3
+wait 2
+expect ram8('vk_candles+6') == 0 and ram8('vk_candles+171') == 0x07 # objet 07 pris
+expect enemies.energy == 18 # 10 + 8
+# 09 : C434 = 96h ; un ennemi qui touche Simon est detruit, sans degat ni recul.
+poke vk_candles+9 0x09
+poke vk_candles+6 3
+wait 2
+expect ram8('vk_candles+171') == 0x09 and 0x90 <= ram8('enemy_state+143') <= 0x96
+until enemies.alive > 0 max 280
+until enemies.alive == 0 max 280
+dump c434
+expect ram8('enemy_state+143') > 0 # C434 courait encore
+expect enemies.energy == 18 and game.recoil == 0 and enemies.invuln == 0 # contact sans degat
+# 08 : C43A = 96h, aucun contact (C434 epuise d'abord).
+until ram8('enemy_state+143') == 0 max 300
+poke vk_candles+9 0x08
+poke vk_candles+6 3
+wait 2
+expect ram8('vk_candles+171') == 0x08 and ram8('enemy_state+144') > 0x90
+until enemies.alive > 0 max 280
+wait 120
+expect enemies.energy == 18 and game.recoil == 0 # C43A : pas de contact
