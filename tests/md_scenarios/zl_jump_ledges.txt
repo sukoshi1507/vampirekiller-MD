@@ -1,0 +1,45 @@
+# (zl) Sauts sous les rebords, salle 0 du stage 2 (raccourci C au titre). Trace openMSX
+# (research/jump-compare.md section 8) : la sonde de depart 7B78 (tuile en X, Y - 44)
+# bloque le saut en (128, 192) ; en (110, 192) la tete passe dans le rebord y 144 et Simon
+# retombe a 192 ; en (127, 192) et (159, 128) la sonde de sol x +- 5 touche un rebord au
+# sommet : 6D13 (C428 >= 9) puis 6D3B (Y &= F8), Simon se pose a 160 / 96 au pas 9.
+until front_mode == MODES['TITLE'] max 2000
+wait 10
+tap C
+wait 30
+expect game.stage == 2 and game.room == 0
+poke vk_enemies+127 255
+# Depart bloque par 7B78 : tuile solide en (128, 148).
+poke vk_game+0 128
+poke vk_game+1 192
+wait 20
+tap C 1
+expect game.player.mode == 0 and game.player.y == 192 # pas de saut
+# Tete dans le rebord, retour au sol : sommet 160, puis 192 au pas 19.
+poke vk_enemies+127 255
+poke vk_game+0 110
+wait 20
+tap C 1
+until game.player.y == 160 max 30
+until game.player.mode == 0 max 40
+expect game.player.y == 192 # retour au sol
+# Rebord sous le pied droit (x + 5 = 132) au sommet : pose a 160, jamais 161.
+poke vk_enemies+127 255
+poke vk_game+0 127
+wait 20
+tap C 1
+until game.player.mode == 1 max 4
+until game.player.mode == 0 max 40
+expect game.player.y == 160 # pose sur le rebord au pas 9
+wait 30
+expect game.player.mode == 0 and game.player.y == 160
+# Depuis la plateforme y 128, x 159 : pose sur le rebord y 96 (x + 5 = 164).
+poke vk_enemies+127 255
+poke vk_game+0 159
+poke vk_game+1 128
+wait 20
+tap C 1
+until game.player.mode == 1 max 4
+until game.player.mode == 0 max 40
+expect game.player.y == 96 # pose sur le rebord au pas 9
+shot zl_jump_ledges

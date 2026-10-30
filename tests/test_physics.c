@@ -27,6 +27,24 @@ int main(void)
         vk_player_tick_map(&p,map,1,0,0);
         assert(p.y>= (12*8+16+30));
     }
+    /* Rising past a ledge (6D13: floor test from step 9, 6D3B: Y &= F8): hall room 4,
+     * ledge x 0-31 at y 160, Simon at (34, 192): the probe x - 5 is on the ledge at
+     * the apex, he lands at 160 on step 9 (openMSX trace), never 1 px into it. */
+    memset(map,0,sizeof(map)); row(22);
+    for(i=0;i<4;i++) map[18*32+i]=1;
+    start(&p,192); p.x=34;
+    vk_player_tick_map(&p,map,1,0,1);
+    for(i=0;i<19 && p.mode==1;i++) vk_player_tick_map(&p,map,1,0,0);
+    assert(p.mode==1 && p.y==161 && p.phase==8);
+    vk_player_tick_map(&p,map,1,0,0);
+    assert(p.mode==0 && p.y==160);
+    for(i=0;i<40;i++) vk_player_tick_map(&p,map,1,0,0);
+    assert(p.mode==0 && p.y==160);
+    /* Same jump at x 60, head under the ledge row only: back on the floor at 192. */
+    start(&p,192); p.x=60;
+    vk_player_tick_map(&p,map,1,0,1);
+    for(i=0;i<60;i++) vk_player_tick_map(&p,map,1,0,0);
+    assert(p.mode==0 && p.y==192);
     /* Falling quickly must not pass through a thin floor. */
     memset(map,0,sizeof(map)); row(18);
     start(&p,100); p.mode=4; p.phase=3;

@@ -140,10 +140,10 @@ Cause dans le code MD (lecture de `sgdk/src/player.c`, `vk_player_tick_controls`
 | Point | MSX2 | MD | Statut |
 |---|---|---|---|
 | Déclenchement | front de UP (`C006` bit 5, `6B90`), touche UP | front de BUTTON_C (`input.c`), touche C | prouvé (MSX) ; le choix de touche est une décision de portage |
-| Blocage au départ | `6B97` appelle `7B78` (tuile à X, Y-44) ; si solide, `RET C` : pas de saut | porté (`vk_jump_blocked`, 2026-10-29) | lu dans le code (sens de la retenue déduit de `7C5E`) ; non tracé |
+| Blocage au départ | `6B97` appelle `7B78` (tuile à X, Y-44) ; si solide, `RET C` : pas de saut | porté (`vk_jump_blocked`, 2026-10-29) | **prouvé** (trace du 2026-10-30, §8 : 8 départs bloqués, mêmes points que le port) |
 | Plafond en l'air | aucun : `6CE7` ajoute la table à `C425` sans sonde (trace K4 du stage 2, salle 5 : 176 → 144 sous le rebord y 112, `door-room7.md` §18) | le plafond inventé à `Y - 30` est retiré (2026-10-29) | prouvé (trace) |
 | Décalage de départ | pas au tick suivant : `C420` posé au tick 177, premier pas au tick 179 (4 images après l'appui) | premier pas à la première image (k = 1) | prouvé (trace) ; cause précise inconnue |
-| Atterrissage | sonde de sol seulement si `C428 >= 9` (`6D13`, `CP 9`) ; sinon le saut continue | atterrissage testé seulement en descente | lu dans le code ; équivalent sur sol plat |
+| Atterrissage | sonde de sol `7B88` dès `C428 >= 9` (`6D13`, `CP 9`), aussi au dernier pixel de montée et au sommet ; posé : `C425 &= F8` (`6D3B`) | porté (2026-10-30) : même test au pas 9 et suivants, `Y &= F8` | **prouvé** (trace, §8) ; avant : test en descente seulement, Simon se posait 1 px dans le rebord, 6 images plus tard |
 | Table de saut | `C431` bit 4 = 0 : table `6D95` (19 valeurs) ; bit 4 = 1 : table `6D94` (21 valeurs) | les deux tables (`vk_jump_deltas`, `vk_jump_deltas_high`, `vk_player_tick_jump`) | prouvé pour le cas testé (`C431` = 0) ; la seconde table est lue dans le code, non tracée |
 | Horizontal en l'air | 2 px par tick, dans la même routine que le pas vertical (`6D61`/`6D67` appellent la marche puis `6CE7`) | 1 px par image | prouvé (trace) ; même vitesse moyenne |
 
@@ -186,8 +186,23 @@ Cadencer la trajectoire de saut sur un tick de 30 Hz, comme le MSX2, sans touche
 - Table à 21 entrées (`6D94`, `C431` bit 4) : non tracée. **Lu dans le code et porté** (2026-10-29) : `6CE7` prend `BC = 6D94`, `D = 15h` ; valeurs `-6,-6,-6,-5,-5,0,-4,-3,-2,-1,0,0,1,2,3,4,5,5,6,6,6` (somme nulle), soit un sommet à 38 px au lieu de 32 et un retour au sol de départ au pas 21. Le test de `6D1C` (`C428 - 2 >= 13h`) ne dépend pas de la table : avec `6D94`, un saut qui retombe à sa hauteur de départ arrive au pas 21, donc `CFF0 = 1` et l'effet 07 joue (le saut normal arrive au pas 19, sans 07). Porté : `gameplay.c` lève `VK_EVENT_LAND` pour un atterrissage en mode 1 au pas >= 21 (`VK_JUMP_THUD_STEP`). Non porté : `6D6D` décale aussi X de `(C428 - 13h) * 8 / 256` px quand `C420` vaut 2 ou 3 (ce cas n'est pas identifié ; en saut `C420 = 1` et `6D73` sort tout de suite).
 - Appui UP en l'air (`C420` = 1) : non testé.
 - Arrêt de la marche à X = 14 en `turn_jump` : cause non identifiée.
-- Blocage au départ par plafond (`7B78`) : lu dans le code, porté, non tracé. Le plafond en l'air du port (`Y - 30`) n'existait pas sur MSX : retiré (trace K4 du stage 2).
+- Blocage au départ par plafond (`7B78`) : tracé (§8). Le plafond en l'air du port (`Y - 30`) n'existait pas sur MSX : retiré (trace K4 du stage 2).
 - Le sol plat de la simulation (Y = 176) ne reproduit pas la salle réelle du portage (sol à 192 dans `vk_player_room`) : la trajectoire verticale est indépendante du sol, mais pas les atterrissages sur une marche.
+
+## 8. Sauts sous les plafonds et les rebords (trace du 2026-10-30)
+
+Méthode : `tools/run_vertical_links_trace.py`, plans qui posent Simon (`poke C427`, `C425`, `C42D` = FF) puis tapent HAUT, 60 images par essai ; hall salles 1, 2, 3, 4 et 7 (chemins `s0..s3`, `r1_to_r0`, `r0_to_r3`, `r3_to_r2`, `plan3` vers la salle 4, `p6` vers la salle 7), stage 2 salle 0 (sortie forcée de `door-room7.md` §4). Points choisis par un balayage des cartes du port (départ bloqué par `7B78`, tête qui traverse un rebord, pieds qui passent un rebord en montée). Cartes `D100` relevées (snap) en hall salle 2 et stage 2 salle 0 : elles diffèrent des tables statiques seulement par les blocs cachés de bougie (`86CA`, clé de la salle 2 en (128, 160) ; blocs de la salle 0 du stage 2), que le port écrit aussi dans sa carte de salle. La cour n'a aucun plafond (cartes ouvertes) : rien à y tracer de plus que §2. Comparaison : simulation native de `player.c` sur la même carte, alignée sur le premier pas (le premier pas MSX vient 5 ou 6 images après l'appui selon la parité du tick 30 Hz, le port à 4 images ; écart déjà noté en §3). Données hors dépôt : `scratchpad/short-checks/jump/` (`out_hall`, `out_r4`, `out_s2`, `out_map*`).
+
+| Cas | Points (salle : X, Y) | MSX | Port avant | Port après |
+|---|---|---|---|---|
+| Départ bloqué (`7B78`) | hall 2 : 128, 140, 159 (Y 192), 93 (176) ; hall 4 : 34 (176), 34 (112) ; stage 2 salle 0 : 128 (192), 160, 200 (128) — 9 essais | pas de saut, `C420` reste 0 | identique | identique |
+| Tête dans un rebord, retour au sol | hall 1 : 104, 130 (192) ; hall 2 : 75 ; hall 3 : 60 (128), 60, 150 (192) ; hall 4 : 60 (192), 110 (128) ; hall 7 : 99, 100, 160 (128), 110, 127, 128 (192) ; stage 2 : 110 (192) — 15 essais | 19 pas, sol de départ au pas 19 | identique image par image | identique |
+| Pieds sur un rebord au sommet | hall 1 : 163, 164 (128) ; hall 2 : 90 (128), 91, 93, 95, 160 (192) ; hall 4 : 32, 34, 36 (192), 34 (128) ; stage 2 : 99, 100, 159 (128), 127 (192) — 15 essais | pas 9 : Y = sommet (160, 96), `7B88` trouve le sol, `C425 &= F8`, `C420` = 0 | sommet tenu 6 images puis pose 1 px dans le rebord (161, 97) au pas 12 | **identique au MSX** |
+| Pose en descente sur un rebord plus haut | stage 2 : 155, 157 (80) → 64 — 2 essais | pose au premier Y sur le sol | identique | identique |
+
+41 essais sur 41 identiques après correction (les 2 essais restants partaient d'une position invalide, Simon en chute avant l'appui). Correction : `vk_player_tick_jump` (`player.c`) ajoute le pas entier (au plus 6 px) et teste le sol dès le pas 9 (`6D13`), y compris en montée ; posé, `Y &= F8` (`6D3B`). Tests : `test_physics.c` (rebord du hall salle 4), scénario MD `zl_jump_ledges` (stage 2 salle 0 : départ bloqué, retour au sol, pose à 160 et à 96).
+
+Reste différent (hors de ce relevé) : au-delà du pas 19 le MSX continue le saut (+6 par tick) alors que le port passe en chute (mode 4, `vk_fall_deltas`) ; seul le compteur de l'effet 07 en tient compte (`gameplay.c`). Le garde-fou du port en haut d'écran (Y < 32, fin du saut) n'existe pas sur MSX ; aucun point du hall ni du stage 2 ne l'atteint depuis un sol jouable.
 
 ## 7. Reproduction
 

@@ -31,6 +31,9 @@ Ce qui fonctionne dans la ROM Mega Drive :
   qui se lève, Simon qui sort seul) et mène au stage suivant (trace openMSX pour les
   deux stages, `research/door-room7.md` 16 et 18). Au stage 2, le bloc se touche par un
   saut depuis le bloc immergé : comme sur MSX2, le saut n'a pas de plafond en l'air.
+  Sauts sous les plafonds et rebords du hall et du stage 2 comparés à openMSX image par
+  image (`research/jump-compare.md` §8) : départ bloqué par la sonde `7B78`, et pose sur un
+  rebord atteint au sommet dès le pas 9 (`6D13`, `Y &= F8`), comme sur MSX2.
 - **Fin du stage 2 (provisoire, ajout du port)** : le stage 3 n'est pas porté ; la porte
   de la salle 1 mène à un écran « FIN DU STAGE 2 / SUITE NON PORTEE » (HUD en STAGE-03),
   puis au titre après 378 images, comme après un GAME OVER.

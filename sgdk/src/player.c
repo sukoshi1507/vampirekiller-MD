@@ -373,7 +373,24 @@ void vk_player_tick_jump(VKPlayer *p, const VKByte *map, VKByte stage,
             if (next_phase > steps) next_phase = steps;
             p->phase = next_phase;
             vertical = deltas[next_phase - 1];
-            hit = vk_move_vertical(p, map, stage, vertical);
+            /* 6D4D adds the whole delta to C425 (at most 6 px, no tunnelling). */
+            if (vertical < 0) hit = vk_move_vertical(p, map, stage, vertical);
+            else
+            {
+                const int next = (int)p->y + vertical;
+                p->y = (VKByte)(next >= 225 ? 225 : next);
+                hit = 0;
+            }
+            /* 6D13: from step 9 on (C428 >= 9, the last rising pixel), 7B88 tests the
+             * floor at the new Y, also while still rising or at the apex; on a floor,
+             * 6D3B: C425 &= F8 and the jump ends. Simon rising past a ledge lands on
+             * it at the apex instead of 1 px into it (openMSX, research/jump-compare.md
+             * section 8: hall room 4 (34,192) -> 160, stage 2 room 0 (127,192) -> 160). */
+            if (hit != -1 && p->phase >= 9 && vk_grounded(map, p->x, p->y, stage, 0))
+            {
+                p->y &= 0xF8;
+                hit = 1;
+            }
             if (hit == -1 || hit == 1 || p->phase >= steps)
             {
                 if (hit == 1) { p->mode = 0; p->phase = 0; }
