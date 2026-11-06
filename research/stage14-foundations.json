@@ -1,0 +1,812 @@
+{
+  "stage": 14,
+  "status": "ROM_raw_static_NOT_playable",
+  "rom_sha256": "99eabaaeb2b6c02220e131043d5a6401d0d8c5f413d89204547adcc04d65e7e2",
+  "room_count": 8,
+  "navigation_pointer_cpu": "0xBACD",
+  "links": [
+    {
+      "UP": 3,
+      "DOWN": null,
+      "LEFT": null,
+      "RIGHT": null
+    },
+    {
+      "UP": null,
+      "DOWN": null,
+      "LEFT": 2,
+      "RIGHT": null
+    },
+    {
+      "UP": null,
+      "DOWN": 5,
+      "LEFT": null,
+      "RIGHT": 1
+    },
+    {
+      "UP": null,
+      "DOWN": 0,
+      "LEFT": 4,
+      "RIGHT": null
+    },
+    {
+      "UP": null,
+      "DOWN": 1,
+      "LEFT": 5,
+      "RIGHT": 3
+    },
+    {
+      "UP": null,
+      "DOWN": null,
+      "LEFT": 6,
+      "RIGHT": 4
+    },
+    {
+      "UP": null,
+      "DOWN": null,
+      "LEFT": 7,
+      "RIGHT": 5
+    },
+    {
+      "UP": null,
+      "DOWN": null,
+      "LEFT": null,
+      "RIGHT": 6
+    }
+  ],
+  "asymmetries": [
+    "s14 r2 DOWN->5 but r5 UP->None",
+    "s14 r4 DOWN->1 but r1 UP->None"
+  ],
+  "rooms": [
+    {
+      "room": 0,
+      "map_cpu": "755B",
+      "map_file_offset": "1755B",
+      "map_sha256": "6934001d43074fb478740ccd6466e205ca5ca47ba3e91bf7be33e58b34b83828",
+      "graphics_sha256": "ed2bd3b5ad74efe052cb081c04cd59f3945700c8563f56c34c618e5b96e3a6dd",
+      "palette_rgb333": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          7,
+          5,
+          4
+        ],
+        [
+          1,
+          1,
+          1
+        ],
+        [
+          6,
+          2,
+          3
+        ],
+        [
+          2,
+          3,
+          3
+        ],
+        [
+          6,
+          5,
+          3
+        ],
+        [
+          4,
+          3,
+          0
+        ],
+        [
+          6,
+          3,
+          1
+        ],
+        [
+          7,
+          0,
+          1
+        ],
+        [
+          5,
+          1,
+          2
+        ],
+        [
+          4,
+          3,
+          1
+        ],
+        [
+          3,
+          3,
+          3
+        ],
+        [
+          5,
+          5,
+          5
+        ],
+        [
+          2,
+          2,
+          2
+        ],
+        [
+          7,
+          7,
+          7
+        ],
+        [
+          0,
+          0,
+          7
+        ]
+      ]
+    },
+    {
+      "room": 1,
+      "map_cpu": "758B",
+      "map_file_offset": "1758B",
+      "map_sha256": "9b0816dff551779dccf29a2634097ac613fee6aed74e94e733591cf9e698ccc7",
+      "graphics_sha256": "ed2bd3b5ad74efe052cb081c04cd59f3945700c8563f56c34c618e5b96e3a6dd",
+      "palette_rgb333": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          7,
+          5,
+          4
+        ],
+        [
+          1,
+          1,
+          1
+        ],
+        [
+          6,
+          2,
+          3
+        ],
+        [
+          2,
+          3,
+          3
+        ],
+        [
+          6,
+          5,
+          3
+        ],
+        [
+          4,
+          3,
+          0
+        ],
+        [
+          6,
+          3,
+          1
+        ],
+        [
+          7,
+          0,
+          1
+        ],
+        [
+          5,
+          1,
+          2
+        ],
+        [
+          4,
+          3,
+          1
+        ],
+        [
+          3,
+          3,
+          3
+        ],
+        [
+          5,
+          5,
+          5
+        ],
+        [
+          2,
+          2,
+          2
+        ],
+        [
+          7,
+          7,
+          7
+        ],
+        [
+          0,
+          0,
+          7
+        ]
+      ]
+    },
+    {
+      "room": 2,
+      "map_cpu": "75BB",
+      "map_file_offset": "175BB",
+      "map_sha256": "e727a334f7178b8046ed7a3af9201ee60ee579ec2c7a82cc96382e89328b1d3a",
+      "graphics_sha256": "ed2bd3b5ad74efe052cb081c04cd59f3945700c8563f56c34c618e5b96e3a6dd",
+      "palette_rgb333": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          7,
+          5,
+          4
+        ],
+        [
+          1,
+          1,
+          1
+        ],
+        [
+          6,
+          2,
+          3
+        ],
+        [
+          2,
+          3,
+          3
+        ],
+        [
+          6,
+          5,
+          3
+        ],
+        [
+          4,
+          3,
+          0
+        ],
+        [
+          6,
+          3,
+          1
+        ],
+        [
+          7,
+          0,
+          1
+        ],
+        [
+          5,
+          1,
+          2
+        ],
+        [
+          4,
+          3,
+          1
+        ],
+        [
+          3,
+          3,
+          3
+        ],
+        [
+          5,
+          5,
+          5
+        ],
+        [
+          2,
+          2,
+          2
+        ],
+        [
+          7,
+          7,
+          7
+        ],
+        [
+          0,
+          0,
+          7
+        ]
+      ]
+    },
+    {
+      "room": 3,
+      "map_cpu": "75EB",
+      "map_file_offset": "175EB",
+      "map_sha256": "7502d3ef341c80247c81e78d4bfdfdc55ffb215e94d9b15312408abeaff119e4",
+      "graphics_sha256": "ed2bd3b5ad74efe052cb081c04cd59f3945700c8563f56c34c618e5b96e3a6dd",
+      "palette_rgb333": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          7,
+          5,
+          4
+        ],
+        [
+          1,
+          1,
+          1
+        ],
+        [
+          6,
+          2,
+          3
+        ],
+        [
+          2,
+          3,
+          3
+        ],
+        [
+          7,
+          1,
+          2
+        ],
+        [
+          4,
+          3,
+          0
+        ],
+        [
+          7,
+          5,
+          6
+        ],
+        [
+          7,
+          0,
+          1
+        ],
+        [
+          5,
+          1,
+          2
+        ],
+        [
+          4,
+          3,
+          1
+        ],
+        [
+          3,
+          3,
+          3
+        ],
+        [
+          5,
+          5,
+          5
+        ],
+        [
+          2,
+          2,
+          2
+        ],
+        [
+          7,
+          7,
+          7
+        ],
+        [
+          0,
+          0,
+          7
+        ]
+      ]
+    },
+    {
+      "room": 4,
+      "map_cpu": "761B",
+      "map_file_offset": "1761B",
+      "map_sha256": "fa81a49a8410d38931b6c0a58e25ab76f084e7ef52a264918b6fa7c1b0b61275",
+      "graphics_sha256": "ed2bd3b5ad74efe052cb081c04cd59f3945700c8563f56c34c618e5b96e3a6dd",
+      "palette_rgb333": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          7,
+          5,
+          4
+        ],
+        [
+          1,
+          1,
+          1
+        ],
+        [
+          6,
+          2,
+          3
+        ],
+        [
+          2,
+          3,
+          3
+        ],
+        [
+          6,
+          5,
+          3
+        ],
+        [
+          4,
+          3,
+          0
+        ],
+        [
+          6,
+          3,
+          1
+        ],
+        [
+          7,
+          0,
+          1
+        ],
+        [
+          5,
+          1,
+          2
+        ],
+        [
+          4,
+          3,
+          1
+        ],
+        [
+          3,
+          3,
+          3
+        ],
+        [
+          5,
+          5,
+          5
+        ],
+        [
+          2,
+          2,
+          2
+        ],
+        [
+          7,
+          7,
+          7
+        ],
+        [
+          0,
+          0,
+          7
+        ]
+      ]
+    },
+    {
+      "room": 5,
+      "map_cpu": "764B",
+      "map_file_offset": "1764B",
+      "map_sha256": "8e1169a2a5b417b435a87303571cdf61ea727149ec7ff99e0141739c3bd18e67",
+      "graphics_sha256": "ed2bd3b5ad74efe052cb081c04cd59f3945700c8563f56c34c618e5b96e3a6dd",
+      "palette_rgb333": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          7,
+          5,
+          4
+        ],
+        [
+          1,
+          1,
+          1
+        ],
+        [
+          6,
+          2,
+          3
+        ],
+        [
+          2,
+          3,
+          3
+        ],
+        [
+          6,
+          5,
+          3
+        ],
+        [
+          4,
+          3,
+          0
+        ],
+        [
+          6,
+          3,
+          1
+        ],
+        [
+          7,
+          0,
+          1
+        ],
+        [
+          5,
+          1,
+          2
+        ],
+        [
+          4,
+          3,
+          1
+        ],
+        [
+          3,
+          3,
+          3
+        ],
+        [
+          5,
+          5,
+          5
+        ],
+        [
+          2,
+          2,
+          2
+        ],
+        [
+          7,
+          7,
+          7
+        ],
+        [
+          0,
+          0,
+          7
+        ]
+      ]
+    },
+    {
+      "room": 6,
+      "map_cpu": "767B",
+      "map_file_offset": "1767B",
+      "map_sha256": "dc44b21b357eee99ffae5ba08baaad97d67ac89178ab3cfd749ac2db11f92ca9",
+      "graphics_sha256": "ed2bd3b5ad74efe052cb081c04cd59f3945700c8563f56c34c618e5b96e3a6dd",
+      "palette_rgb333": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          7,
+          5,
+          4
+        ],
+        [
+          1,
+          1,
+          1
+        ],
+        [
+          6,
+          2,
+          3
+        ],
+        [
+          2,
+          3,
+          3
+        ],
+        [
+          6,
+          5,
+          3
+        ],
+        [
+          4,
+          3,
+          0
+        ],
+        [
+          6,
+          3,
+          1
+        ],
+        [
+          7,
+          0,
+          1
+        ],
+        [
+          5,
+          1,
+          2
+        ],
+        [
+          4,
+          3,
+          1
+        ],
+        [
+          3,
+          3,
+          3
+        ],
+        [
+          5,
+          5,
+          5
+        ],
+        [
+          2,
+          2,
+          2
+        ],
+        [
+          7,
+          7,
+          7
+        ],
+        [
+          0,
+          0,
+          7
+        ]
+      ]
+    },
+    {
+      "room": 7,
+      "map_cpu": "76AB",
+      "map_file_offset": "176AB",
+      "map_sha256": "68a67fae8dc44f2855e0bbc36a529a9adf95f9e2a942dfa7c9737bea0a1c810a",
+      "graphics_sha256": "ed2bd3b5ad74efe052cb081c04cd59f3945700c8563f56c34c618e5b96e3a6dd",
+      "palette_rgb333": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          7,
+          5,
+          4
+        ],
+        [
+          1,
+          1,
+          1
+        ],
+        [
+          6,
+          2,
+          3
+        ],
+        [
+          2,
+          3,
+          3
+        ],
+        [
+          6,
+          5,
+          3
+        ],
+        [
+          4,
+          3,
+          0
+        ],
+        [
+          6,
+          3,
+          1
+        ],
+        [
+          7,
+          0,
+          1
+        ],
+        [
+          5,
+          1,
+          2
+        ],
+        [
+          4,
+          3,
+          1
+        ],
+        [
+          3,
+          3,
+          3
+        ],
+        [
+          5,
+          5,
+          5
+        ],
+        [
+          2,
+          2,
+          2
+        ],
+        [
+          7,
+          7,
+          7
+        ],
+        [
+          0,
+          0,
+          7
+        ]
+      ]
+    }
+  ],
+  "spawn_flags": {
+    "pointer_table_file_offset": "0x1C5C2",
+    "pointer_cpu": "0x8636",
+    "data_file_offset": "0x1C636",
+    "bytes": [
+      128,
+      128,
+      128,
+      128,
+      128,
+      128,
+      128,
+      128
+    ],
+    "note": "Channel flags do not specify enemy type or count"
+  },
+  "door": {
+    "offset": "0x1BB8B",
+    "raw_hex": "87800c",
+    "flags": 135,
+    "room": 7,
+    "y": 128,
+    "x": 12,
+    "scope": "door table entry only, not key/opening rules"
+  },
+  "stage_group": {
+    "offset": "0x01E78",
+    "value": 4
+  },
+  "limitations": [
+    "Z80 4F83 collision maps not executed",
+    "Z80 5A49/5B1B objects and key not extracted",
+    "Z80 6154 fixed enemy list not executed",
+    "Enemy behavior and audio not ported",
+    "No SGDK gameplay integration",
+    "No compiled Mega Drive runtime verification"
+  ]
+}

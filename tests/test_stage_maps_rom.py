@@ -1,4 +1,4 @@
-"""Stages 10-12: C maps against the original Z80 routine 4F83, C links against the ROM table B9D3."""
+"""Stages 10-16: C maps against the original Z80 routine 4F83, C links against the ROM table B9D3."""
 import importlib.util
 import sys
 import unittest
@@ -11,12 +11,12 @@ from probe import reference_rom  # noqa: E402
 
 @unittest.skipUnless(importlib.util.find_spec('z80'), 'z80==1.2.0 is not installed')
 @unittest.skipUnless(reference_rom().exists(), 'reference ROM is missing')
-class Stages10To12RomTests(unittest.TestCase):
+class StageMapsRomTests(unittest.TestCase):
     def test_maps_and_links_match_rom(self):
         from probe import load_rom
-        import verify_stages_10_12_maps as verify
+        import verify_stage_maps_rom as verify
         report = verify.check(load_rom(reference_rom()))
-        self.assertEqual({s: n for s, (n, _) in report.items()}, {10: 9, 11: 6, 12: 12})
+        self.assertEqual({s: n for s, (n, _) in report.items()}, {10: 9, 11: 6, 12: 12, 13: 12, 14: 8, 15: 10, 16: 10})
         for stage, (_, problems) in report.items():
             self.assertEqual(problems, [], f'stage {stage}')
 

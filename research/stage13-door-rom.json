@@ -1,0 +1,12 @@
+{
+  "stage": 13,
+  "file_offset": "0x1BB88",
+  "raw_hex": "88800c",
+  "flags": 136,
+  "room": 8,
+  "y": 128,
+  "x": 12,
+  "source": "ROM table described in tools/extract_stage_exits.py",
+  "crosscheck_stages": 11,
+  "scope": "raw door coordinates only; Z80 BB37, key and opening NOT validated"
+}
