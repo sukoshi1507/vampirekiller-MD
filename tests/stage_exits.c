@@ -8,7 +8,7 @@
 int main(void)
 {
     int stage;
-    for (stage=1; stage<=10; ++stage) {
+    for (stage=1; stage<=11; ++stage) {
         VKGame g={0}; VKItems it; VKCandles c;
         const VKStageItems *s=&kStageItems[stage-1];
         int t,found=0,oldx;
@@ -62,7 +62,7 @@ int main(void)
     {
         int stage, room, count = 0;
         VKGame g = {0};
-        for (stage = 1; stage <= 10; stage++) {
+        for (stage = 1; stage <= 11; stage++) {
             for (room = 0; room < vk_stage_room_count(stage); room++) {
                 assert(vk_game_debug_start(&g, stage, room));
                 assert(g.area == VK_AREA_INTERIOR && g.stage == stage && g.room == room);
@@ -73,9 +73,9 @@ int main(void)
             assert(g.stage == stage && g.room == vk_stage_room_count(stage)-1);
         }
         assert(!vk_game_debug_start(&g, 0, 0));
-        assert(!vk_game_debug_start(&g, 11, 0));
+        assert(!vk_game_debug_start(&g, 12, 0));
         assert(!vk_game_debug_start(&g, 18, 0));
-        assert(g.stage == 10 && g.room == 8);
+        assert(g.stage == 11 && g.room == 5);
         printf("Debug selection: %d playable rooms and invalid selections PASS\n", count);
     }
     return 0;

@@ -4,7 +4,7 @@
 #include "room_manager.h"
 #include "items.h"
 #include "generated/stage_exits.h"
-static const unsigned char expected[11][9][4] = {
+static const unsigned char expected[12][9][4] = {
     {{255,255,255,1},{255,255,0,2},{255,255,1,255}},
     {{255,255,3,1},{5,255,0,2},{255,255,1,3},{7,255,2,0},{255,255,255,5},{255,1,4,6},{255,255,5,7},{255,3,6,255}},
     {{2,4,255,1},{255,5,0,255},{255,0,3,3},{255,255,2,2},{0,255,255,5},{1,255,4,255}},
@@ -16,11 +16,12 @@ static const unsigned char expected[11][9][4] = {
     {{255,255,255,1},{255,255,0,2},{5,255,1,255},{255,255,255,4},{255,7,3,255},{255,2,255,6},{255,3,5,7},{255,4,6,255}},
     {{255,255,255,1},{255,255,0,2},{255,255,1,3},{255,255,2,4},{255,255,3,5},{6,8,4,255},{255,5,255,255},{255,255,255,255},{5,255,7,255}},
     {{255,255,5,1},{6,255,0,2},{255,255,1,3},{255,255,2,4},{255,255,3,5},{8,255,4,0},{255,1,7,7},{255,255,6,6},{255,5,255,255}},
+    {{255,255,255,1},{255,255,0,2},{255,255,1,3},{255,255,2,4},{255,255,3,5},{255,255,4,255}},
 };
 int main(void) {
  int st,room,dir,checks=0,edges=0;
  int spawns=0, stair_mounts=0, stair_crossings=0;
- for(st=1;st<=10;st++) for(room=0;room<vk_stage_room_count(st);room++) {
+ for(st=1;st<=11;st++) for(room=0;room<vk_stage_room_count(st);room++) {
   const VKRoomLink *links=vk_stage_links(st);
   assert(links[room].up==expected[st][room][0]);
   assert(links[room].down==expected[st][room][1]);
@@ -45,7 +46,7 @@ int main(void) {
   }
  }
  /* Test every debug arrival for two seconds with no input. */
- for(st=1;st<=10;st++) for(room=0;room<vk_stage_room_count(st);room++) {
+ for(st=1;st<=11;st++) for(room=0;room<vk_stage_room_count(st);room++) {
   VKGame g={0};int frame,x,y;
   assert(vk_game_debug_start(&g,st,room));vk_game_room_map(&g);
   assert(!vk_wall(vk_game_collision(&g),g.player.x,g.player.y,1,0,st,0));
@@ -75,7 +76,7 @@ int main(void) {
  printf("73 rooms: %d directional entries checked, %d directed passages exercised PASS\n",checks,edges);
  /* Approach the ten level exits using the actual maps and movement controller,
   * then run the full opening and advance to the next stage. */
- for(st=1;st<=10;st++) {
+ for(st=1;st<=11;st++) {
   VKGame g={0};VKItems it;const VKStageItems *s=&kStageItems[st-1];int n,exit=0;
   vk_game_debug_start(&g,st,s->door_room);vk_game_room_map(&g);
   g.player.x=s->door_x<128?32:228;g.player.y=s->door_y+48;
@@ -88,12 +89,12 @@ int main(void) {
    if(vk_items_tick(&it,&g)==VK_ITEM_STAGE_EXIT){exit=1;break;}
   }
   assert(exit);
-  if(st<10) {
+  if(st<11) {
    vk_game_enter_stage(&g,st+1);vk_items_enter_stage(&it);vk_game_room_map(&g);
    assert(g.stage==st+1&&g.room==0&&it.door==VK_DOOR_CLOSED);
    assert(g.player.x==kStageEntries[st].x&&g.player.y==kStageEntries[st].y);
   }
-  printf("Stage %d: approach and exit PASS%s\n",st,st==10?" (title dispatch remains in main)":"; next stage loaded");
+  printf("Stage %d: approach and exit PASS%s\n",st,st==11?" (title dispatch remains in main)":"; next stage loaded");
  }
  return 0;
 }

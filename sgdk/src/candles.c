@@ -53,7 +53,7 @@ void vk_candles_begin(VKCandles *c)
 {
     int s, r;
     c->stage = c->room = 0xFF;
-    c->first = c->count = 0;
+    c->spare = c->count = 0;
     c->lit = 0;
     c->clock = 0;
     for (r = 0; r < VK_DROP_MAX; r++) c->drop[r].state = VK_DROP_NONE;
@@ -72,14 +72,14 @@ void vk_candles_begin(VKCandles *c)
     c->c702 = 0;
     for (s = 0; s < VK_CANDLE_STAGES; s++)
         for (r = 0; r < VK_CANDLE_ROOMS; r++)
-            c->out[s][r] = c->taken[s][r] = 0;
+            VK_CANDLE_OUT(c, s, r) = VK_CANDLE_TAKEN(c, s, r) = 0;
 }
 
 void vk_candles_reset_stage(VKCandles *c, VKByte stage)
 {
     int r;
     if (stage >= VK_CANDLE_STAGES) return;
-    for (r = 0; r < VK_CANDLE_ROOMS; r++) c->out[stage][r] = c->taken[stage][r] = 0;
+    for (r = 0; r < VK_CANDLE_ROOMS; r++) VK_CANDLE_OUT(c, stage, r) = VK_CANDLE_TAKEN(c, stage, r) = 0;
     c->stage = c->room = 0xFF;
 }
 
@@ -173,7 +173,7 @@ void vk_candles_weapon_lost(VKCandles *c)
 void vk_candles_relight(VKCandles *c)
 {
     c->lit = (VKByte)((1u << c->count) - 1);
-    if (c->stage < VK_CANDLE_STAGES && c->room < VK_CANDLE_ROOMS) c->out[c->stage][c->room] = 0;
+    if (c->stage < VK_CANDLE_STAGES && c->room < VK_CANDLE_ROOMS) VK_CANDLE_OUT(c, c->stage, c->room) = 0;
     c->stage = c->room = 0xFF;   /* the next vk_candles_enter writes the blocks again */
 }
 
@@ -200,12 +200,11 @@ void vk_candles_enter(VKCandles *c, const VKGame *game)
     for (i = 0; i < VK_DROP_MAX; i++) c->drop[i].state = VK_DROP_NONE;
     if (stage >= VK_CANDLE_STAGES || game->room >= VK_CANDLE_ROOMS)
     {
-        c->first = c->count = c->lit = 0;
+        c->spare = c->count = c->lit = 0;
         return;
     }
-    c->first = vk_candle_first[stage][game->room];
-    c->count = (VKByte)(vk_candle_first[stage][game->room + 1] - c->first);
-    c->lit = (VKByte)(((1u << c->count) - 1) & ~c->out[stage][game->room]);
+    c->count = (VKByte)(vk_candle_first[stage][game->room + 1] - vk_candle_first[stage][game->room]);
+    c->lit = (VKByte)(((1u << c->count) - 1) & ~VK_CANDLE_OUT(c, stage, game->room));
     /* 873A then 86CA: each hidden block still there is written into the room map
      * (display and collision). PROVISIONAL: the MSX does it 16 frames after the
      * room is entered (fishman runs), here at once. */
@@ -220,7 +219,7 @@ void vk_candles_enter(VKCandles *c, const VKGame *game)
         const int bit = i - vk_fixed_object_first[stage][game->room];
         const VKCandleDef *def = &vk_fixed_object_defs[i];
         VKDrop *d;
-        if (c->taken[stage][game->room] & (1u << bit)) continue;
+        if (VK_CANDLE_TAKEN(c, stage, game->room) & (1u << bit)) continue;
         d = free_drop(c);
         if (!d) break;
         d->state = VK_DROP_REST;
@@ -235,7 +234,7 @@ void vk_candles_enter(VKCandles *c, const VKGame *game)
 
 const VKCandleDef *vk_candles_def(const VKCandles *c, int i)
 {
-    return &vk_candle_defs[c->first + i];
+    return &vk_candle_defs[vk_candle_first[c->stage][c->room] + i];
 }
 
 int vk_candles_lit(const VKCandles *c, int i)
@@ -318,7 +317,7 @@ int vk_candles_hit(VKCandles *c, int i)
     if (def->mode == VK_CANDLE_HIDDEN_BLOCK && def->kind == VK_OBJ_BLOCK_CONTENT)
         return VK_CANDLE_EVENT_HIT | VK_CANDLE_EVENT_WALL;
     if (c->stage < VK_CANDLE_STAGES && c->room < VK_CANDLE_ROOMS)
-        c->out[c->stage][c->room] |= (VKByte)(1u << i);
+        VK_CANDLE_OUT(c, c->stage, c->room) |= (VKByte)(1u << i);
     kind = drop_kind(c, def->kind);
     /* A candle of object 0 or 0x15 (898F): no C800 flame (8996), but 8A37 still
      * makes a C500 object of type 01 with +5 = 0, drawn as the red flame F4/F8
@@ -594,8 +593,8 @@ static int touches_drop(const VKPlayer *p, const VKDrop *d)
 static void mark_taken(VKCandles *c, const VKDrop *d)
 {
     if (!d->fixed || c->stage >= VK_CANDLE_STAGES || c->room >= VK_CANDLE_ROOMS) return;
-    if (d->fixed & 0x80) c->out[c->stage][c->room] |= (VKByte)(1u << ((d->fixed & 0x7F) - 1));
-    else c->taken[c->stage][c->room] |= (VKByte)(1u << (d->fixed - 1));
+    if (d->fixed & 0x80) VK_CANDLE_OUT(c, c->stage, c->room) |= (VKByte)(1u << ((d->fixed & 0x7F) - 1));
+    else VK_CANDLE_TAKEN(c, c->stage, c->room) |= (VKByte)(1u << (d->fixed - 1));
 }
 
 void vk_candles_white_key_taken(VKCandles *c)
@@ -606,7 +605,7 @@ void vk_candles_white_key_taken(VKCandles *c)
     {
         const VKCandleDef *def = vk_candles_def(c, i);
         if (def->mode == VK_CANDLE_HIDDEN_BLOCK && def->kind == VK_OBJ_WHITE_KEY)
-            c->out[c->stage][c->room] |= (VKByte)(1u << i);
+            VK_CANDLE_OUT(c, c->stage, c->room) |= (VKByte)(1u << i);
     }
 }
 
@@ -644,7 +643,7 @@ static int pick(VKCandles *c, VKDrop *d)
 void vk_candles_block_gone(VKCandles *c, int i)
 {
     if (c->stage < VK_CANDLE_STAGES && c->room < VK_CANDLE_ROOMS && i >= 0 && i < c->count)
-        c->out[c->stage][c->room] |= (VKByte)(1u << i);
+        VK_CANDLE_OUT(c, c->stage, c->room) |= (VKByte)(1u << i);
 }
 
 int vk_candles_give(VKCandles *c, VKByte kind)

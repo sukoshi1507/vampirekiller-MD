@@ -1,0 +1,45 @@
+# (zzn) Stage 11 : parcours des 6 salles, entree (16, 176), cle blanche cachee dans le bloc (96, 80) de la salle 1, cle dorée (128, 64), porte (236, 128) de la salle 5,
+# sortie vers le stage 12 (non porte). Valeurs des traces openMSX du stage 11 (research/stage11-level.md).
+include zzm_enter11.inc
+poke Enemies_god 1
+wait 20
+expect game.room == 0 and game.player.x == 16 and game.player.y == 176
+expect ram8('vk_platforms') == 0 # aucune plateforme mobile (table 906C : stages 5 et 10 seulement)
+shot zzn-salle0
+include zzb_next.inc
+until game.stage == 11 and game.room == 1 max 200
+wait 10
+# Bloc de la bougie 01 50 60 00 03 18 : le coup de fouet depuis (92, 112) le casse (trace K : coup a 873, cle 84 50 60 00 18 en (96, 80), prise a 884).
+poke vk_game+0 92
+poke vk_game+1 112
+poke vk_game+2 0
+wait 4
+expect ram8('items') & 1 == 0
+hold B 2
+set tw frame
+until ram8('items') & 1 == 1 max 40
+set dk frame - tw
+expect 12 <= dk <= 15 # coup de fouet -> cle prise (MSX : son 05 a 870, son 14 a 884 : 14 images)
+shot zzn-cle
+include zzb_next.inc
+until game.stage == 11 and game.room == 2 max 200
+include zzb_next.inc
+until game.stage == 11 and game.room == 3 max 200
+include zzb_next.inc
+until game.stage == 11 and game.room == 4 max 200
+include zzb_next.inc
+until game.stage == 11 and game.room == 5 max 200
+wait 10
+shot zzn-salle5
+until game.player.mode == 0 max 100
+poke items 1 # la selection de salle recommence une partie : la cle est reposee
+poke vk_game+0 200
+poke vk_game+1 176
+poke vk_game+2 0
+wait 4
+expect ram8('items+2') == 0 # porte fermee
+until ram8('items+2') == 1 max 400 RIGHT
+expect ram8('items') == 0 # cle consommee a l'ouverture
+shot zzn-porte
+# Sortie : le stage 12 n'est pas porte (trace KD : son 1A a 1153, D000 = 12 a 1322, Simon en (16, 176) au stage 12 salle 0) : retour au titre.
+until front_mode == MODES['TITLE'] max 1200 RIGHT

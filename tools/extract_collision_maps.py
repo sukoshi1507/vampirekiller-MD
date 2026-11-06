@@ -15,7 +15,7 @@ body=re.search(r'vk_collision_limits\[19\] = \{(.*?)\};',limits,re.S).group(1)
 values=[int(v,0) for v in re.findall(r'0x[0-9a-fA-F]+|\b\d+\b',body)]
 assert values==list(data[0x3c78:0x3c78+19]), 'Solid-tile limits differ from ROM'
 print('19 solid-tile limits match ROM 7C78')
-for stage in range(1,11):
+for stage in range(1,12):
     path=ROOT/'sgdk/src/generated'/('stage1_collision.c' if stage==1 else f'stage{stage}_maps.c')
     text=path.read_text();match=re.search(r'(const VKByte vk_stage\d+_collision\[[^;]+?= \{)(.*?)(\n\};)',text,re.S);assert match
     old=[[int(v) for v in re.findall(r'\b\d+\b',row)] for row in re.findall(r'\{([^{}]+)\}',match[2])]

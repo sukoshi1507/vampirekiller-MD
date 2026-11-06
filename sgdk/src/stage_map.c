@@ -54,7 +54,7 @@ static void draw_room(VKByte *tiles, const VKCandles *c, VKByte stage, VKByte ro
     for (i = 0; i < vk_candle_first[stage][room + 1] - vk_candle_first[stage][room]; i++)
     {
         const VKCandleDef *def = &vk_candle_defs[vk_candle_first[stage][room] + i];
-        if (def->mode != VK_CANDLE_HIDDEN_BLOCK || (c->out[stage][room] & (1u << i))) continue;
+        if (def->mode != VK_CANDLE_HIDDEN_BLOCK || (VK_CANDLE_OUT(c, stage, room) & (1u << i))) continue;
         for (row = 0; row < BLOCK_CELLS; row++)
             for (col = 0; col < BLOCK_CELLS; col++)
             {

@@ -13,7 +13,7 @@
 
 #define VK_CANDLE_MAX 8
 #define VK_DROP_MAX 8                /* C500-C570 */
-#define VK_CANDLE_STAGES 11
+#define VK_CANDLE_STAGES 12   /* stages 0 (courtyard) to 11 */
 #define VK_CANDLE_ROOMS 9
 
 #define VK_OBJ_SMALL_HEART 0x01
@@ -85,15 +85,16 @@ extern const VKByte vk_item_box[5][2];
 
 typedef struct {
     VKByte stage, room;              /* room the candles belong to, 0xFF before the first */
-    VKByte first, count;             /* vk_candle_defs[first .. first + count) */
+    VKByte spare;                    /* was first: the index passes 255 at the stage 11, vk_candles_def reads vk_candle_first */
+    VKByte count;                    /* vk_candle_defs[vk_candle_first[stage][room] .. + count) */
     VKByte lit;                      /* bit i: candle i of the room still there */
     VKByte clock;
     VKDrop drop[VK_DROP_MAX];
     VKByte hearts;                   /* C417 (decimal here, BCD on the MSX), max 99 */
     VKByte gold_keys;                /* C700 */
     VKByte weapon;                   /* C416 */
-    VKByte out[VK_CANDLE_STAGES][VK_CANDLE_ROOMS];    /* candles hit, per room */
-    VKByte taken[VK_CANDLE_STAGES][VK_CANDLE_ROOMS];  /* fixed objects picked up */
+    VKByte out[11][VK_CANDLE_ROOMS];    /* candles hit, per room */
+    VKByte taken[11][VK_CANDLE_ROOMS];  /* fixed objects picked up */
     VKByte hud_key;                  /* object 8EC9 last drew at (148, 12) in the HUD, 0 none */
     VKByte c431;                     /* C431: bits 2, 3, 4 set by objects 0B, 0C, 0D (8DF5-8E03) */
     VKByte picked;                   /* C419: last object taken (8D30), 0 none */
@@ -112,7 +113,12 @@ typedef struct {
                                       * prices (9418); 0 at the end of a death (70F4) */
     VKByte ghost_x, ghost_y, ghost_pending;         /* C500 +2, +1 of the flame of an object 15 that just went out (8AD0) */
     VKByte triple_key;               /* C701 bit 2: the object 12 gave three keys (8E79), HUD icon 12 */
+    VKByte out11[VK_CANDLE_ROOMS];   /* out and taken of the stage 11, after the other fields so that the offsets read by the MD scenarios stay */
+    VKByte taken11[VK_CANDLE_ROOMS];
 } VKCandles;
+/* out[stage][room] and taken[stage][room], the stage 11 rows being out11 and taken11. */
+#define VK_CANDLE_OUT(c, s, r) (*((s) < 11 ? &(c)->out[s][r] : &(c)->out11[r]))
+#define VK_CANDLE_TAKEN(c, s, r) (*((s) < 11 ? &(c)->taken[s][r] : &(c)->taken11[r]))
 
 void vk_candles_begin(VKCandles *c);
 /* Entering a stage again (a new stage start): every candle and fixed object of

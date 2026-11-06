@@ -444,7 +444,7 @@ static void stage_select_clear(void)
 }
 static void jump_to_stage(u16 stage, u16 room)
 {
-    if (stage < 1 || stage > 10 || room >= vk_stage_room_count((VKByte)stage)) return;
+    if (stage < 1 || stage > 11 || room >= vk_stage_room_count((VKByte)stage)) return;
     /* Full fresh game, then the selected playable room. */
     stage_select_clear();
     pause_end();
@@ -569,8 +569,8 @@ int main(bool hardReset)
             {
                 if (stage_select)
                 {
-                    if (pressed & BUTTON_UP) { selected_stage = selected_stage == 1 ? 10 : selected_stage - 1; selected_room = 0; stage_select_draw(); }
-                    else if (pressed & BUTTON_DOWN) { selected_stage = selected_stage == 10 ? 1 : selected_stage + 1; selected_room = 0; stage_select_draw(); }
+                    if (pressed & BUTTON_UP) { selected_stage = selected_stage == 1 ? 11 : selected_stage - 1; selected_room = 0; stage_select_draw(); }
+                    else if (pressed & BUTTON_DOWN) { selected_stage = selected_stage == 11 ? 1 : selected_stage + 1; selected_room = 0; stage_select_draw(); }
                     else if (pressed & BUTTON_LEFT) { selected_room = selected_room ? selected_room - 1 : vk_stage_room_count((VKByte)selected_stage) - 1; stage_select_draw(); }
                     else if (pressed & BUTTON_RIGHT) { selected_room = (selected_room + 1) % vk_stage_room_count((VKByte)selected_stage); stage_select_draw(); }
                     else if (pressed & BUTTON_B) { jump_to_stage(selected_stage, selected_room); }
@@ -579,7 +579,7 @@ int main(bool hardReset)
                 }
                 else if (vk_konami_step(pressed))
                 {
-                    selected_stage = vk_game.stage >= 1 && vk_game.stage <= 10 ? vk_game.stage : 1;
+                    selected_stage = vk_game.stage >= 1 && vk_game.stage <= 11 ? vk_game.stage : 1;
                     selected_room = vk_game.area == VK_AREA_INTERIOR && vk_game.room < vk_stage_room_count((VKByte)selected_stage) ? vk_game.room : 0;
                     stage_select = TRUE;
                     Enemies_god = 1;
@@ -700,9 +700,9 @@ int main(bool hardReset)
                     items.attacking = vk_whip.timer != 0;   /* C422, 7FE2 */
                     const VKItemEvent item = vk_items_tick(&items, &vk_game);
                     vk_player = vk_game.player;
-                    if (item == VK_ITEM_STAGE_EXIT && vk_game.stage >= 10)
+                    if (item == VK_ITEM_STAGE_EXIT && vk_game.stage >= 11)
                     {
-                        /* Never enter undefined stage 11. Until the final game
+                        /* Never enter undefined stage 12 (research/stage11-level.md). Until the final game
                          * ending is ported, return safely to the title. */
                         vk_show_title();
                         SYS_doVBlankProcess();
@@ -796,7 +796,7 @@ int main(bool hardReset)
         {
             if (pressed & BUTTON_B)
             {
-                if (stage <= 10 && room < vk_stage_room_count((VKByte)stage))
+                if (stage <= 11 && room < vk_stage_room_count((VKByte)stage))
                     jump_to_stage(stage, room);
                 else VDP_drawText("SALLE NON JOUABLE - VISUEL", 2, 2);
             }

@@ -46,7 +46,7 @@
 
 EnemyU8 Enemies_roomFlags(EnemyU8 stage, EnemyU8 room)
 {
-    return stage <= 10 && room < vk_enemy_room_count[stage] ? vk_enemy_room_flags[stage][room] : 0;
+    return stage <= 11 && room < vk_enemy_room_count[stage] ? vk_enemy_room_flags[stage][room] : 0;
 }
 
 
@@ -1704,7 +1704,7 @@ int Enemies_frame(EnemyState *s, EnemySpawnTimer *t, const EnemyRoomVars *v)
 
     /* Type 5 : une panthere par visite des salles 2, 3 et 7, a la premiere image de jeu apres
      * l'etat 9 (62F5 recopie la liste a chaque chargement de salle et la cree en 61BB). */
-    if (v->stage >= 1 && v->stage <= 10 && v->room < vk_enemy_room_count[v->stage] &&
+    if (v->stage >= 1 && v->stage <= 11 && v->room < vk_enemy_room_count[v->stage] &&
         s->type5Timer < ENEMY_TYPE5_DELAY) {
         if (++s->type5Timer == ENEMY_TYPE5_DELAY) {
             EnemyU8 slot;

@@ -75,5 +75,8 @@ expect ram8('items+2') == 0 # porte fermee
 until ram8('items+2') == 1 max 400 RIGHT
 expect ram8('items') == 0 # cle consommee a l'ouverture
 shot zzm-porte
-# Le port ne montre pas le stage 11 (non porte) : retour au titre.
-until front_mode == MODES['TITLE'] max 1200 RIGHT
+# Sortie de la salle 8 : stage 11 salle 0, Simon en (16, 176) (trace K4 : D000 11 a 1390, Simon en (16, 176) a 1410).
+until game.stage == 11 max 1200 RIGHT
+wait 4
+expect game.room == 0 and game.player.x == 16 and game.player.y == 176
+shot zzm-stage11-entree

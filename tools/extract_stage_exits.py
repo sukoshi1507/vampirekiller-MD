@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Extract exits, keys and entry poses for MD stages 1-10 from the supplied ROM.
+"""Extract exits, keys and entry poses for MD stages 1-11 from the supplied ROM.
 Requires z80==1.2.0. No ROM is distributed with the project.
 """
 import json
@@ -7,10 +7,10 @@ from pathlib import Path
 from probe import load_rom
 from castle_room_objects import decode_room, make_machine, call
 
-ROOMS = [3,9,6,6,6,6,6,9,8,9,9]
+ROOMS = [3,9,6,6,6,6,6,9,8,9,9,6]
 def extract(data):
     result=[]
-    for stage in range(1,11):
+    for stage in range(1,12):
         keys=[]
         for room in range(ROOMS[stage]):
             decoded=decode_room(data,stage,room)
@@ -39,10 +39,10 @@ def generate(data,root):
     rows=extract(data)
     h='/* Generated from the reference ROM by extract_stage_exits.py. */\n#ifndef VK_STAGE_EXITS_H\n#define VK_STAGE_EXITS_H\n#include "../player.h"\n'
     h+='typedef struct { VKByte key_room,key_x,key_y,key_hidden,door_room,door_x,door_y; } VKStageItems;\n'
-    h+='static const VKStageItems kStageItems[10] = {\n'
+    h+='static const VKStageItems kStageItems[11] = {\n'
     for r in rows:
         k,d=r['key'],r['door'];h+='    { '+', '.join(map(str,[k['room'],k['x'],k['y'],k['hidden'],d['room'],d['x'],d['y']]))+' }, /* stage '+str(r['stage'])+' */\n'
-    h+='};\ntypedef struct { VKByte x,y,facing; } VKStageEntry;\nstatic const VKStageEntry kStageEntries[10] = {\n'
+    h+='};\ntypedef struct { VKByte x,y,facing; } VKStageEntry;\nstatic const VKStageEntry kStageEntries[11] = {\n'
     for r in rows:h+='    { '+', '.join(map(str,r['entry'].values()))+' },\n'
     h+='};\n#endif\n'
     (root/'sgdk/src/generated/stage_exits.h').write_text(h)

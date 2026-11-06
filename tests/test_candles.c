@@ -624,5 +624,30 @@ int main(void)
         for (r = 0; r < 9; r++) assert(vk_wall_items[10][r][0] != 0x15 && vk_wall_items[10][r][1] != 0x15);
     }
 
+    /* Stage 11 (research/stage11-level.md): 25 candles and hidden blocks (the white key in the block (96, 80) of the room 1), one golden key (17) in the room 1,
+     * the items 0E and 16 of the wall slots of the rooms 1 and 3, four candles of object 15 (rooms 0 and 5: the object 1B). */
+    {
+        static const int candles[6] = { 3, 7, 3, 7, 3, 2 };
+        int r, n15 = 0;
+        for (r = 0; r < 6; r++) assert(vk_candle_first[11][r + 1] - vk_candle_first[11][r] == candles[r]);
+        assert(vk_candle_first[11][0] == 250 && vk_candle_first[11][6] == 275);
+        assert(vk_fixed_object_first[11][0] == 70 && vk_fixed_object_first[11][1] == 70 && vk_fixed_object_first[11][2] == 71 && vk_fixed_object_first[11][6] == 71);
+        assert(vk_fixed_object_defs[70].kind == 0x17 && vk_fixed_object_defs[70].x == 128 && vk_fixed_object_defs[70].y == 64);
+        assert(vk_candle_defs[vk_candle_first[11][1]].kind == 0x18 && vk_candle_defs[vk_candle_first[11][1]].mode == 3 &&
+               vk_candle_defs[vk_candle_first[11][1]].x == 96 && vk_candle_defs[vk_candle_first[11][1]].y == 80);
+        assert(vk_wall_items[11][1][0] == 0x0E && vk_wall_items[11][3][0] == 0x16);
+        for (r = vk_candle_first[11][0]; r < vk_candle_first[11][6]; r++) n15 += vk_candle_defs[r].kind == 0x15;
+        assert(n15 == 4);
+        /* the out and taken flags of the stage 11 live in the two rows added at the end of VKCandles */
+        {
+            VKCandles c2;
+            vk_candles_begin(&c2);
+            VK_CANDLE_OUT(&c2, 11, 1) = 5; VK_CANDLE_TAKEN(&c2, 11, 1) = 1;
+            assert(c2.out11[1] == 5 && c2.taken11[1] == 1 && c2.out[10][1] == 0);
+            vk_candles_reset_stage(&c2, 11);
+            assert(c2.out11[1] == 0 && c2.taken11[1] == 0);
+        }
+    }
+
     return 0;
 }

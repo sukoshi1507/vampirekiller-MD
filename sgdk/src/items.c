@@ -15,7 +15,7 @@
 
 static const VKStageItems *stage_items(const VKGame *game)
 {
-    if (game->area != VK_AREA_INTERIOR || game->stage < 1 || game->stage > 10) return 0;
+    if (game->area != VK_AREA_INTERIOR || game->stage < 1 || game->stage > 11) return 0;
     return &kStageItems[game->stage - 1];
 }
 

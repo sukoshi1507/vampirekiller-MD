@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Rebuild stages 1-10 room links by executing the original B99A Z80 routine.
+"""Rebuild stages 1-11 room links by executing the original B99A Z80 routine.
 Usage: python tools/extract_room_links.py ROM [--write]
 Requires z80==1.2.0. One-way links in the ROM are preserved.
 """
@@ -8,7 +8,7 @@ from pathlib import Path
 from castle_room_objects import make_machine,call
 from probe import load_rom
 ROOT=Path(__file__).resolve().parents[1]
-COUNTS=[3,8,6,6,6,6,6,9,8,9,9]
+COUNTS=[3,8,6,6,6,6,6,9,8,9,9,6]
 def extract(data):
     result=[]
     for stage,n in enumerate(COUNTS):
@@ -29,7 +29,7 @@ def extract(data):
 def main():
     p=argparse.ArgumentParser(description=__doc__);p.add_argument('rom',type=Path);p.add_argument('--write',action='store_true');a=p.parse_args()
     links=extract(load_rom(a.rom));changes={}
-    for stage in range(1,11):
+    for stage in range(1,12):
         file=ROOT/('sgdk/src/room_manager.c' if stage==1 else f'sgdk/src/generated/stage{stage}_maps.c')
         s=file.read_text();pattern=rf'(const VKRoomLink vk_stage{stage}_links\[(?:VK_STAGE{stage}_ROOM_COUNT|\d+)\] = \{{)(.*?)(\n\}};)'
         match=re.search(pattern,s,re.S);assert match

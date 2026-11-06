@@ -9,7 +9,7 @@ static int always_touch(const void *ctx,int slot,int x,int y,int h,int l)
 
 int main(void) {
  int st,room,i,frame,panthers=0,flies=0;
- for(st=1;st<=10;st++) for(room=0;room<vk_stage_room_count(st);room++) {
+ for(st=1;st<=11;st++) for(room=0;room<vk_stage_room_count(st);room++) {
   EnemyState s;EnemySpawnTimer t;EnemyRoomVars v={0};VKGame g={0};int expected=0,actual=0,seen4=0;
   assert(vk_game_debug_start(&g,st,room));vk_game_room_map(&g);
   Enemies_init(&s);Enemies_spawnTimerInit(&t);

@@ -3,7 +3,7 @@
 #define VK_STAGE_EXITS_H
 #include "../player.h"
 typedef struct { VKByte key_room,key_x,key_y,key_hidden,door_room,door_x,door_y; } VKStageItems;
-static const VKStageItems kStageItems[10] = {
+static const VKStageItems kStageItems[11] = {
     { 2, 128, 160, 1, 7, 236, 48 }, /* stage 1 */
     { 5, 192, 112, 1, 1, 236, 48 }, /* stage 2 */
     { 2, 160, 160, 1, 4, 236, 128 }, /* stage 3 */
@@ -14,9 +14,10 @@ static const VKStageItems kStageItems[10] = {
     { 7, 32, 64, 0, 7, 236, 64 }, /* stage 8 */
     { 8, 208, 96, 0, 8, 12, 128 }, /* stage 9 */
     { 0, 48, 48, 0, 8, 236, 128 }, /* stage 10 */
+    { 1, 96, 80, 1, 5, 236, 128 }, /* stage 11 */
 };
 typedef struct { VKByte x,y,facing; } VKStageEntry;
-static const VKStageEntry kStageEntries[10] = {
+static const VKStageEntry kStageEntries[11] = {
     { 16, 192, 0 },
     { 16, 96, 0 },
     { 16, 96, 0 },
@@ -27,5 +28,6 @@ static const VKStageEntry kStageEntries[10] = {
     { 16, 144, 0 },
     { 16, 112, 0 },
     { 32, 144, 0 },
+    { 16, 176, 0 },
 };
 #endif
