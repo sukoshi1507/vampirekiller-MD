@@ -37,8 +37,28 @@ Table de routines `9942` : les types 02, 03 et 21h ont la même routine `A310` (
 
 - Dégâts de contact 4 (`81CE` : paire 02 02 doublée), 200 points, 2 points de vie (`60E1`), boîte 5 x 18h (classe 1 de `82CB`) : lus dans la ROM, identiques au type 02 ; non mesurés sur le stage 10
   (les traces de coffres montrent des coups à Simon mais leur énergie n'a pas été relevée). Fouet à deux coups, armes lancées, temps arrêté : mêmes chemins que les objets du stage 4 (`hasHp`), non rejoués.
-- Sons : 08 (saut), 07 (atterrissage), 09 (plongeon) de `A4E8` non joués (le type 02 du stage 2 non plus) ; aucun son au tir.
+- Sons : la version initiale ne jouait pas 08 (saut), 07 (atterrissage), 09 (plongeon) de `A4E8` ; les trois points d’appel Z80 ont ensuite été raccordés au PSG dans la reprise du stage 10, avec tests natifs. La cadence sonore en émulation Mega Drive et en trace openMSX reste à comparer. Aucun son au tir dans la routine documentée.
 - Octet `+12` hérité de l'occupant précédent du bloc (pas effacé par `5F1D`) : le port garde ses octets d'une salle à l'autre (`s8x`, `f3`), comme le MSX, pas leur valeur exacte.
 - Cadence : le type 03 est avancé dans la passe de sa création (comme sur le MSX), l'objet 21h une passe après (trace : 21h une image) ; décalage d'une image non comparé.
 - Chauve-souris : positions suivantes et courbe non comparées au stage 10 (seule la création l'est).
 - Échantillons VRAM : cases du bloc d'ennemis chargées à l'entrée de la salle ; les images de la trace montrent un pixel de jitter en X (-6 à -9) non reproduit.
+
+## Reprise du 06/11/2026 — verrouillage de la première chauve-souris
+
+- Ajout de `test_stage10_bat_first_sat` dans `tests/test_enemies.c` : salle 0, canal `9D97`, objet `04`, apparition SAT `(229,122)` et motifs `48/4C` (observations de la trace R décrites ci-dessus). Vérification négative du canal `9D97` en salle 1 (drapeaux `85A6`).
+- Exécution ciblée du test natif des ennemis : `Enemies tests: PASS`.
+- Aucun changement à la trajectoire du type 04, aux graphismes ni au son à cette étape. Les mesures de trajectoire existantes concernent le hall/stage 2 ; elles ne sont **pas** une trace du stage 10.
+- La suite d'audit native complète a été interrompue par la limite de temps de l'environnement après le contrôle du stage 10 ; elle ne peut pas être considérée comme entièrement validée sur cette reprise. Une capture openMSX SAT image par image de la salle 0 du stage 10 est nécessaire pour conclure sur la trajectoire et sa cadence.
+
+## Reprise complémentaire du 06/11/2026 — contrôle de périmètre et audit strict
+
+- Le test `test_stage10_bat_first_sat` couvre maintenant les **salles 1 à 8** pour l'absence du canal `9D97` : table `85A6` documentée plus haut, salle 0 seule avec bit 3. La position initiale et les motifs de la salle 0 restent testés séparément. Aucun changement au mouvement de la chauve-souris, faute de trace SAT complète du stage 10.
+- `tests/run_stage10_native.sh` rassemble les contrôles natifs ciblés (plateformes, ennemis, bougies, poissons ROM et sorties) et s'arrête immédiatement en cas d'échec. Exécution locale : PASS pour les cinq ensembles de tests ; poissons : 45 vecteurs, 9 958 passes, 26 tirs. Ce contrôle ne remplace pas une ROM MD lancée dans l'émulateur.
+- `tests/audit_run_native.sh` utilisait `set -u` et pouvait poursuivre jusqu'au message « PASS » final malgré le retour en erreur d'un test. Il utilise maintenant `set -eu` ; l'exécution s'arrête avec statut 1 sur `test_health.c` lignes 131-132 (deuxième contact à l'image 181). Il s'agit d'une anomalie transversale non attribuée au stage 10, à confronter avec une trace ROM avant toute correction comportementale.
+
+## Reprise interactions — 06/11/2026
+
+- Tests ajoutés à `tests/test_fish3.c` (`test_stage10_interactions`) : contact du type 03/21h (classe 1, 4 points d'énergie, recul et invulnérabilité), fouet cuir (2 coups), fouet à chaîne (1 coup), armes par les chemins `8048`/`8066` (dague 1 et hache 4), et arrêt du temps sur un 21h fixe pendant 12 images. Vérification des scores de 200 points et de la restitution du bloc lors de la flamme de mort.
+- **Provenance des attentes : lecture des tables et routines Z80**, non traces openMSX des actions en salle 10. Ce sont des tests de conformité des chemins communs, pas des mesures image-par-image du stage 10. Ne pas qualifier ces scénarios de validation ROM exécutée tant qu'une trace d'action MSX2 n'est pas disponible.
+- Exécution de `tests/run_stage10_native.sh` : 5 ensembles PASS ; `test_fish3.c` conserve les 45 vecteurs / 9 958 passes de déplacement et tir confrontés à l'émulateur Z80.
+- Aucune constante comportementale ni nouvelle mécanique ajoutée au moteur. La trajectoire SAT complète de la chauve-souris, les cadences audio et la fidélité des interactions en conditions réelles openMSX restent ouvertes.

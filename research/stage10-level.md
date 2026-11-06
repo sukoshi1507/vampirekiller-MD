@@ -33,3 +33,9 @@ de `research/chests-stage1-9.md` avec `D002` = 3).
 - **Objet 1B** (D002 = 3, routine `B4EA`) : **inatteignable** au stage 10. Les 9 salles ont 26 bougies ou blocs et 2 blocs d'objet, aucun de type 15 (octets `+5` lus dans 5A49 + 5B1B et dans `DE00`) ; `898F` ne crée l'objet
   que pour une bougie 15. Aucun 1B n'a pu être tracé ; pas de code. Test natif : aucune bougie 15, aucun objet mural 15 au stage 10.
 - Ennemis du stage 10 (types 3 et 21h de la routine `A310`, chauve-souris du canal `9D97` en salle 0) et objet 0Eh : voir `stage10-enemies.md`.
+
+## Contrôle complémentaire gameplay / salles (2026-11-06)
+
+`tests/test_stage10_rooms.c`, appelé par `tests/run_stage10_native.sh`, verrouille les neuf entrées de la table des liens de salles extraite du MSX2, les 18 tentatives de sortie gauche/droite (passage ou blocage), le maintien de Y/mode/phase et les gardes de franchissement (seuil X et escaliers). Il contrôle les 26 bougies/blocs, les six objets fixes (coordonnées, type et contenu), les deux objets de blocs, les quatre plateformes (y compris l'extrémité X=191 et le retournement), et les coordonnées d'entrée, de clé et de porte des tables ROM.
+
+Résultat de la suite native ciblée : tous les tests ont réussi. **Aucune correction de gameplay n'a été appliquée** : les valeurs déjà intégrées concordent avec les références et scénarios conservés. Ces tests reprennent les données ROM extraites et protègent contre les régressions, mais ne remplacent pas une exécution du parcours dans Genesis Plus GX ni une nouvelle trace openMSX. La comparaison d'images et le timing réel de la traversée des neuf salles restent à valider dans les émulateurs.

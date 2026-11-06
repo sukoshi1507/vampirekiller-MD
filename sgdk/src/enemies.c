@@ -208,6 +208,7 @@ void Enemies_init(EnemyState *s)
     s->itemPhase = 0;
     s->contactScore = 0;
     s->itemSound = 0;
+    s->fishSoundCount = 0;
     s->tick = 0;
     s->silhouette = 0;
     s->hidden = 0;
@@ -1649,6 +1650,7 @@ int Enemies_frame(EnemyState *s, EnemySpawnTimer *t, const EnemyRoomVars *v)
     EnemyU8 i;
     int hit = 0;
 
+    s->fishSoundCount = 0; /* une nouvelle image, les requêtes précédentes ont été consommées */
     fleaBase = v->stage == 9 ? 0xA4 : 0x80;
     fireballCell = v->stage == 11 ? 0x9C : 0x60;
     ghostCell = Enemies_ghostCell(v->stage);

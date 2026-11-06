@@ -48,7 +48,7 @@ static int runVector(const Fish3Vector *v, int *fires)
     EnemyState s;
     EnemyRoomVars r;
     VKGame g = { 0 };
-    int p, k, bad = 0, seenFire = 0;
+    int p, k, bad = 0, seenFire = 0, lands = 0, dives = 0;
     const int span = v->hi - v->lo;
     r = roomVars(&g, 10, v->room, v->lo, v->sy);
     Enemies_init(&s);
@@ -57,12 +57,25 @@ static int runVector(const Fish3Vector *v, int *fires)
     else fish3SpawnFixed(&s, (EnemyU8)v->x, (EnemyU8)v->y);
     k = findFish(&s);
     assert(k >= 0 && s.enemy[k].x == v->x && s.enemy[k].y == v->y);
+    /* A2F9 : seules les créations par A2E0 (type 03) déclenchent 08. */
+    if (v->type == 3) assert(s.fishSoundCount == 1 && s.fishSounds[0] == 0x08);
+    else assert(s.fishSoundCount == 0);
     for (p = 0; p < v->passes; p++) {
         const int *row = &fish3_rows[(v->first + p) * 13];
         const int tt = span ? (p * v->step) % (2 * span) : 0;
         const Enemy *e = &s.enemy[k];
+        const int wasAir = e->active && e->state == 0;
+        s.fishSoundCount = 0; /* horloge des appels A4E8 de cette passe */
         r.simonX = (EnemyU8)(v->lo + (tt > span ? 2 * span - tt : tt));
         fish3Step(&s, &s.enemy[k], &r);
+        if (s.fishSoundCount) {
+            assert(s.fishSoundCount == 1);
+            if (s.fishSounds[0] == 0x07) {
+                assert(wasAir && e->active && e->state == 1); lands++;
+            } else if (s.fishSounds[0] == 0x09) {
+                assert(wasAir && findFish(&s) < 0); dives++;
+            } else assert(!"son absent des appels A4E8 du stage 10");
+        }
         if (!row[9] != !(e->active && e->type == ENEMY_TYPE_FISH3)) {   /* a dive frees the block, the drops take it (as in the emulator) */
             if (bad < 3) printf("type %02X room %d X %d pass %d : ROM alive %d, port alive %d (state %d, Y %d)\n", v->type, v->room, v->x, p, row[9], e->active, e->state, e->y);
             bad++;
@@ -88,6 +101,7 @@ static int runVector(const Fish3Vector *v, int *fires)
         }
         if (!row[9]) break;
     }
+    (void)lands; (void)dives; /* compteurs vérifiés par les assert ci-dessus (GCC 16 : -Wunused-but-set-variable) */
     return bad;
 }
 
@@ -101,8 +115,86 @@ static const int kTrace[][8] = {
     { 2, 45, 0x00, 0xFE80, 0x0F, 0, 0x15, 0 },
 };
 
+/* Stage 10 interactions: ROM tables 81CE/60E1/82CB and common Z80 paths
+ * 7DAD (whip), 8048/8066 (thrown weapons), 717C/992F (time stop).
+ * These are code-derived assertions, NOT new openMSX contact/weapon traces. */
+static int fish3AlwaysTouch(const void *ctx, int slot, int x, int y, int h, int l)
+{
+    (void)ctx;
+    assert(x == 100 && y == 112 && h == 0x18 && l == 5);
+    return slot == 0;
+}
+
+static void test_stage10_interactions(void)
+{
+    EnemyState s;
+    EnemyRoomVars r;
+    EnemySpawnTimer t;
+    EnemyU8 hearts;
+    int k, hits, slot, score;
+    memset(&r, 0, sizeof r);
+    memset(&t, 0, sizeof t);
+    r.stage = 10; r.room = 6; r.simonX = 100; r.simonY = 112;
+    Enemies_god = 0;
+
+    /* 81CE : contact 4, class 1 (5 x 18h), invulnerability and recoil. */
+    Enemies_init(&s);
+    fish3SpawnFixed(&s, 100, 112);
+    k = findFish(&s);
+    assert(k >= 0 && Enemies_touches(&s.enemy[k], &r));
+    s.frozen = 1; /* hold position so only the contact path is exercised */
+    assert(Enemies_frame(&s, &t, &r) == 1);
+    assert(s.energy == ENEMY_ENERGY_MAX - 4 && s.recoil && s.invuln == ENEMY_INVULN_START);
+    assert(Enemies_frame(&s, &t, &r) == 0 && s.energy == ENEMY_ENERGY_MAX - 4);
+
+    /* 60E1 : two HP; 7DE6 : bare whip -1 HP, rearm 999F, chain -2 HP. */
+    Enemies_init(&s);
+    fish3SpawnFixed(&s, 100, 112);
+    k = findFish(&s);
+    assert(Enemies_whipHitStage4(&s, 80, 130, 0, 0, 0, &hits) == 0 && hits == 1);
+    assert(s.enemy[k].active && (s.enemy[k].extraPhase & ENEMY_T6_HP_MASK) == 1);
+    Enemies_rearm(&s);
+    assert(Enemies_whipHitStage4(&s, 80, 130, 0, 0, 0, &hits) == 1 && hits == 1);
+    assert(s.enemy[k].type != ENEMY_TYPE_FISH3 && Enemies_killScore == 2);
+    Enemies_init(&s);
+    fish3SpawnFixed(&s, 100, 112);
+    k = findFish(&s);
+    assert(Enemies_whipHitStage4(&s, 76, 130, 0, 0, 1, &hits) == 1 && hits == 1);
+    assert(s.enemy[k].type != ENEMY_TYPE_FISH3 && Enemies_killScore == 2);
+
+    /* 8048 : knife 1 point, axe 4 points; shot slot 0, 8066/8083. */
+    Enemies_init(&s);
+    fish3SpawnFixed(&s, 100, 112);
+    k = findFish(&s);
+    Enemies_shotPower[0] = 1;
+    assert(Enemies_shotHit(&s, fish3AlwaysTouch, NULL, &slot, &score) && slot == 0 && score == 0);
+    assert(s.enemy[k].active && (s.enemy[k].extraPhase & ENEMY_T6_HP_MASK) == 1);
+    Enemies_rearm(&s);
+    Enemies_shotPower[0] = 4;
+    assert(Enemies_shotHit(&s, fish3AlwaysTouch, NULL, &slot, &score) && slot == 0 && score == 2);
+    assert(s.enemy[k].type != ENEMY_TYPE_FISH3);
+
+    /* 717C/992F : while frozen the fixed type 21h cannot advance. */
+    Enemies_init(&s);
+    fish3SpawnFixed(&s, 100, 112);
+    k = findFish(&s);
+    r.simonX = 0; r.simonY = 0; /* no contact */
+    hearts = 8;
+    assert(Enemies_useTimeStop(&s, &hearts, 0, ENEMY_TIME_STOP_ITEM));
+    assert(hearts == 3 && s.frozen);
+    { Enemy saved = s.enemy[k];
+      int i;
+      for (i = 0; i < 12; i++) (void)Enemies_frame(&s, &t, &r);
+      assert(s.enemy[k].active && s.enemy[k].x == saved.x && s.enemy[k].y == saved.y &&
+             s.enemy[k].pose == saved.pose && s.enemy[k].state == saved.state);
+    }
+    Enemies_shotPower[0] = 1; /* restore the knife power for following ROM vectors */
+    Enemies_god = 1;
+}
+
 int main(void)
 {
+    test_stage10_interactions();
     EnemyState s;
     EnemyRoomVars r;
     VKGame g = { 0 };

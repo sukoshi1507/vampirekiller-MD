@@ -387,6 +387,52 @@ static void test_type4_motion(void)
     CHECK(!s.enemy[0].active, "type 4 gauche : inactif a l'age 148 (image 3013)");
 }
 
+/* Stage 10 salle 0 : trace R, premiere chauve-souris SAT (229,122).
+ * Ne valide PAS la trajectoire suivante : aucune serie SAT stage 10 n'est conservee.
+ * Canal 9D97 / type 04, identique au canal deja mesure aux stages 1 et 2. */
+static void test_stage10_bat_first_sat(void)
+{
+    EnemyState s;
+    EnemySpawnTimer t;
+    EnemyRoomVars v;
+    EnemySprite sp[ENEMY_SPRITES];
+    int f, slot = -1, k;
+    vars_default(&v);
+    v.stage = 10;
+    v.room = 0;
+    v.simonX = 0x7A;
+    v.simonY = 144; /* trace : premier SAT Y 122 = C425 - 22 */
+    Enemies_init(&s);
+    Enemies_spawnTimerInit(&t);
+    s.invuln = 0xFF;
+    for (f = 0; f < 200 && slot < 0; f++) {
+        (void)Enemies_frame(&s, &t, &v);
+        for (k = 0; k < ENEMY_MAX; k++)
+            if (s.enemy[k].active && s.enemy[k].type == ENEMY_TYPE_4) { slot = k; break; }
+    }
+    CHECK(slot >= 0, "stage 10 salle 0 : canal 9D97 cree un objet type 04");
+    if (slot >= 0) {
+        CHECK(s.enemy[slot].x == 229 && s.enemy[slot].y == 122,
+              "stage 10 salle 0 : SAT premiere apparition (229,122), lu dans trace R");
+        CHECK(Enemies_sprites(&s, slot, sp) == ENEMY_TYPE4_SPRITES &&
+              sp[0].x == 229 && sp[0].y == 122 &&
+              sp[0].pattern == (ENEMY_PATTERN_TYPE4 | 0x48) &&
+              sp[1].pattern == (ENEMY_PATTERN_TYPE4 | 0x4C),
+              "stage 10 salle 0 : deux couches SAT 48/4C au spawn");
+    }
+    /* 85A6 : bit 3 absent de toutes les salles 1 a 8, pas seulement la 1.
+     * Ce test porte sur le canal de creation, pas sur les objets independants. */
+    for (int room = 1; room <= 8; room++) {
+        Enemies_init(&s);
+        Enemies_spawnTimerInit(&t);
+        v.room = (EnemyU8)room;
+        for (f = 0; f < 100; f++) (void)Enemies_frame(&s, &t, &v);
+        for (k = 0; k < ENEMY_MAX; k++)
+            CHECK(!s.enemy[k].active || s.enemy[k].type != ENEMY_TYPE_4,
+                  "stage 10 salles 1-8 : canal 9D97 absent (85A6)");
+    }
+}
+
 /* 6. Type 4 par Enemies_frame (canal 9D97) : CF06 = 8 a l'entree, decremente quand CF10 & 3
  * tombe a 0 (un appel toutes les 2 images) ; avec CF10 = 0, premier tir a l'appel 32 (image 63),
  * puis 168, 168, 168, 328 images (table 9DBB), cote droit puis gauche. */
@@ -1631,6 +1677,7 @@ int main(void)
     test_spawn_limits();
     test_type4_motion();
     test_type4_timer();
+    test_stage10_bat_first_sat();
     test_contact_recoil_invuln();
     test_items();
     test_blink_phase();

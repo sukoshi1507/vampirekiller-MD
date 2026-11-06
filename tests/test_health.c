@@ -105,7 +105,9 @@ static void test_contact_to_death(void)
 {
     EnemyState s;
     EnemySpawnTimer t;
-    EnemyRoomVars v;
+    /* Initialiser les champs optionnels (dont armorOn) : une valeur indeterminee
+     * active l'armure et transforme le degat ROM de 2 en degat de 1. */
+    EnemyRoomVars v = {0};
     VKHealth h;
     int f, died = 0;
     v.stage = 1;
@@ -126,6 +128,9 @@ static void test_contact_to_death(void)
         s.enemy[0].exiting = 0;
         if (f == 28) s.recoil = 0;     /* fin du recul au sol (gameplay.c, 27 images) */
         (void)Enemies_frame(&s, &t, &v);
+        if (f == 1) CHECK(s.energy == 2, "premier contact : 4 -> 2 (obtenu %d)", s.energy);
+        if (f == 180) CHECK(s.energy == 2 && s.invuln == 0,
+                            "image 180 : fin de la fenetre invulnerable, sans deuxieme degat");
         if (vk_health_tick(&h, s.energy) == VK_HEALTH_DIED) died = f;
     }
     CHECK(died == 181, "deuxieme contact (image 181, apres l'invulnerabilite) : mort (obtenu %d)", died);

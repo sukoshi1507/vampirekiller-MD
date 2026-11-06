@@ -27,6 +27,15 @@ static void fish3Reset(void)
         f3[i].c13 = f3[i].c14 = f3[i].c15 = f3[i].c19 = f3[i].c1b = f3[i].c1c = f3[i].c1d = 0;
 }
 
+/* La ROM émet A4E8 avec A=08 à A2F9, A=07 à A34D, A=09 à A386.
+ * Enregistrer les appels, sans produire un son depuis la logique pure. Le pilote
+ * effectue lui-même l'arbitrage de priorité (509F, C096). */
+static void fish3Sound(EnemyState *s, EnemyU8 id)
+{
+    if (s->fishSoundCount < ENEMY_MAX)
+        s->fishSounds[s->fishSoundCount++] = id;
+}
+
 #define FISH3_HP 2                 /* 60E1[3] */
 #define FISH3_FIRE_SPEED 3         /* A4A1 : vx 300h */
 
@@ -71,6 +80,7 @@ static void fish3Spawn(EnemyState *s, EnemyU8 x, const EnemyRoomVars *v)
     f->c19 = 1;
     splashSpawn(s, x, ENEMY_TYPE2_Y);
     splashSpawn(s, x, ENEMY_TYPE2_Y);
+    fish3Sound(s, 0x08); /* A2F9 : saut hors de l’eau */
 }
 
 /* A2C7 : an object 21h of the fixed list : state 1, not mobile, +1B = 1, +10 = 2, +11 = 10h, +13 = 8, +15 = 1 (A366). The pose is set by A3AC. */
@@ -116,6 +126,7 @@ static void fish3Air(EnemyState *s, Enemy *e, S8Ext *q, Fish3Ext *f, const Enemy
         e->state = 1;
         f->c13 = 8;
         e->vy = 0;
+        fish3Sound(s, 0x07); /* A34D : atterrissage */
         return;
     }
     if (e->y >= ENEMY_TYPE2_WATER) {                                     /* A380 : dives, two drops */
@@ -123,6 +134,7 @@ static void fish3Air(EnemyState *s, Enemy *e, S8Ext *q, Fish3Ext *f, const Enemy
         e->active = 0;
         splashSpawn(s, x, y);
         splashSpawn(s, x, y);
+        fish3Sound(s, 0x09); /* A386 : plongeon */
     }
 }
 

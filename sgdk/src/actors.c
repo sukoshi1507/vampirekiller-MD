@@ -549,6 +549,11 @@ void vk_step_enemies(void)
      * effect 0D (7EBC). Object 08 (C43A): effect 17 when it drops to 10h (75ED). */
     if (vk_enemies.contactScore) vk_hud_add_score((u32)vk_enemies.contactScore * 100);
     if (vk_enemies.itemSound) vk_psg_effect(vk_enemies.itemSound);
+    /* A2F9/A34D/A386 du stage 10 : événements des hommes-poissons dans l’ordre Z80. */
+    {
+        EnemyU8 n;
+        for (n = 0; n < vk_enemies.fishSoundCount; n++) vk_psg_effect(vk_enemies.fishSounds[n]);
+    }
     /* 75FA-7601: C43B ran out, D010 bit 0 cleared, FC gives the music back. */
     if (vk_enemies.timeStopEnd) vk_psg_timer_end();
     if (vk_whip_active(&vk_whip))
