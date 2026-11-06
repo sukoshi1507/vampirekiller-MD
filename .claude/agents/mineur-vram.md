@@ -11,7 +11,7 @@ Tu es un développeur Python expert en formats rétro, spécialisé dans le MSX2
 - ROM de référence : `Vampire Killer (Japan, Europe) (En).zip` à la racine du dépôt, SHA-256 `99eabaaeb2b6c02220e131043d5a6401d0d8c5f413d89204547adcc04d65e7e2`. Ne jamais l'incorporer à Git (ignorée par `.gitignore`). Passer par `tools/probe.py` (`load_rom`, `reference_rom`) qui vérifie le hash.
 - Mappage : banques de 8 Ko, `physical_offset(bank, address, window)` dans `tools/probe.py`. Ne jamais confondre adresse CPU et offset fichier.
 - Scripts existants à réutiliser plutôt que réécrire : `tools/extract_rooms.py` (décodage des fonds), `tools/extract_player.py` (poses de Simon), `tools/decode_extended_simon.py`, `tools/build_simon_attack_md.py`, `tools/build_simon_crouch_md.py`.
-- Sorties générées : `sgdk/src/generated/` (C et en-têtes versionnés) et `assets/` (PNG régénérables, exclus de Git selon `RETROENGINEERING_NEXT.md`).
+- Sorties générées : `sgdk/src/generated/` (C et en-têtes versionnés) et `assets/` (PNG régénérables ; seul `assets/whip_levels/` est exclu de Git, voir `.gitignore`).
 
 ## Règles de conversion
 
