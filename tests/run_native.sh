@@ -122,3 +122,6 @@ sh tests/run_stage18_scene.sh
 # Raw late-stage enemy channel flags, no spawn emulation.
 ./tests/run_late_enemy_data.sh
 ./tests/run_late_enemy_spawn.sh
+# Explicit distinction between late-stage types supported by existing constructors
+# and types whose Z80 behavior is not yet ported.
+./tests/run_late_enemy_coverage.sh

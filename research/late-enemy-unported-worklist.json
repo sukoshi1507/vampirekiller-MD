@@ -1,0 +1,818 @@
+{
+  "rom_sha256": "99eabaaeb2b6c02220e131043d5a6401d0d8c5f413d89204547adcc04d65e7e2",
+  "source_routine": "6154",
+  "dispatch_table": "9942",
+  "implemented_existing": 46,
+  "unsupported": 47,
+  "per_stage": {
+    "12": 0,
+    "13": 9,
+    "14": 15,
+    "15": 10,
+    "16": 6,
+    "17": 4,
+    "18": 3
+  },
+  "records": [
+    {
+      "stage": 13,
+      "room": 0,
+      "slot": 1,
+      "raw": [
+        9,
+        92,
+        0,
+        2
+      ],
+      "type": "09",
+      "handler_cpu": "AF5F",
+      "x": 192,
+      "y": 80,
+      "identifier": 2,
+      "status": "NON_PORTE"
+    },
+    {
+      "stage": 13,
+      "room": 4,
+      "slot": 1,
+      "raw": [
+        9,
+        178,
+        0,
+        18
+      ],
+      "type": "09",
+      "handler_cpu": "AF5F",
+      "x": 32,
+      "y": 176,
+      "identifier": 18,
+      "status": "NON_PORTE"
+    },
+    {
+      "stage": 13,
+      "room": 8,
+      "slot": 0,
+      "raw": [
+        9,
+        91,
+        0,
+        33
+      ],
+      "type": "09",
+      "handler_cpu": "AF5F",
+      "x": 176,
+      "y": 80,
+      "identifier": 33,
+      "status": "NON_PORTE"
+    },
+    {
+      "stage": 13,
+      "room": 8,
+      "slot": 1,
+      "raw": [
+        9,
+        116,
+        0,
+        34
+      ],
+      "type": "09",
+      "handler_cpu": "AF5F",
+      "x": 64,
+      "y": 112,
+      "identifier": 34,
+      "status": "NON_PORTE"
+    },
+    {
+      "stage": 13,
+      "room": 8,
+      "slot": 2,
+      "raw": [
+        9,
+        186,
+        0,
+        35
+      ],
+      "type": "09",
+      "handler_cpu": "AF5F",
+      "x": 160,
+      "y": 176,
+      "identifier": 35,
+      "status": "NON_PORTE"
+    },
+    {
+      "stage": 13,
+      "room": 9,
+      "slot": 0,
+      "raw": [
+        9,
+        85,
+        0,
+        37
+      ],
+      "type": "09",
+      "handler_cpu": "AF5F",
+      "x": 80,
+      "y": 80,
+      "identifier": 37,
+      "status": "NON_PORTE"
+    },
+    {
+      "stage": 13,
+      "room": 9,
+      "slot": 1,
+      "raw": [
+        9,
+        124,
+        0,
+        38
+      ],
+      "type": "09",
+      "handler_cpu": "AF5F",
+      "x": 192,
+      "y": 112,
+      "identifier": 38,
+      "status": "NON_PORTE"
+    },
+    {
+      "stage": 13,
+      "room": 9,
+      "slot": 2,
+      "raw": [
+        9,
+        180,
+        0,
+        39
+      ],
+      "type": "09",
+      "handler_cpu": "AF5F",
+      "x": 64,
+      "y": 176,
+      "identifier": 39,
+      "status": "NON_PORTE"
+    },
+    {
+      "stage": 13,
+      "room": 9,
+      "slot": 3,
+      "raw": [
+        9,
+        183,
+        0,
+        40
+      ],
+      "type": "09",
+      "handler_cpu": "AF5F",
+      "x": 112,
+      "y": 176,
+      "identifier": 40,
+      "status": "NON_PORTE"
+    },
+    {
+      "stage": 14,
+      "room": 0,
+      "slot": 0,
+      "raw": [
+        16,
+        124,
+        0,
+        65
+      ],
+      "type": "10",
+      "handler_cpu": "ADF8",
+      "x": 192,
+      "y": 112,
+      "identifier": 65,
+      "status": "NON_PORTE"
+    },
+    {
+      "stage": 14,
+      "room": 1,
+      "slot": 0,
+      "raw": [
+        16,
+        114,
+        0,
+        69
+      ],
+      "type": "10",
+      "handler_cpu": "ADF8",
+      "x": 32,
+      "y": 112,
+      "identifier": 69,
+      "status": "NON_PORTE"
+    },
+    {
+      "stage": 14,
+      "room": 1,
+      "slot": 1,
+      "raw": [
+        16,
+        186,
+        0,
+        70
+      ],
+      "type": "10",
+      "handler_cpu": "ADF8",
+      "x": 160,
+      "y": 176,
+      "identifier": 70,
+      "status": "NON_PORTE"
+    },
+    {
+      "stage": 14,
+      "room": 2,
+      "slot": 0,
+      "raw": [
+        16,
+        185,
+        0,
+        73
+      ],
+      "type": "10",
+      "handler_cpu": "ADF8",
+      "x": 144,
+      "y": 176,
+      "identifier": 73,
+      "status": "NON_PORTE"
+    },
+    {
+      "stage": 14,
+      "room": 3,
+      "slot": 0,
+      "raw": [
+        9,
+        86,
+        0,
+        77
+      ],
+      "type": "09",
+      "handler_cpu": "AF5F",
+      "x": 96,
+      "y": 80,
+      "identifier": 77,
+      "status": "NON_PORTE"
+    },
+    {
+      "stage": 14,
+      "room": 3,
+      "slot": 1,
+      "raw": [
+        9,
+        92,
+        0,
+        78
+      ],
+      "type": "09",
+      "handler_cpu": "AF5F",
+      "x": 192,
+      "y": 80,
+      "identifier": 78,
+      "status": "NON_PORTE"
+    },
+    {
+      "stage": 14,
+      "room": 3,
+      "slot": 2,
+      "raw": [
+        9,
+        178,
+        0,
+        79
+      ],
+      "type": "09",
+      "handler_cpu": "AF5F",
+      "x": 32,
+      "y": 176,
+      "identifier": 79,
+      "status": "NON_PORTE"
+    },
+    {
+      "stage": 14,
+      "room": 3,
+      "slot": 3,
+      "raw": [
+        9,
+        186,
+        0,
+        80
+      ],
+      "type": "09",
+      "handler_cpu": "AF5F",
+      "x": 160,
+      "y": 176,
+      "identifier": 80,
+      "status": "NON_PORTE"
+    },
+    {
+      "stage": 14,
+      "room": 4,
+      "slot": 0,
+      "raw": [
+        16,
+        89,
+        0,
+        81
+      ],
+      "type": "10",
+      "handler_cpu": "ADF8",
+      "x": 144,
+      "y": 80,
+      "identifier": 81,
+      "status": "NON_PORTE"
+    },
+    {
+      "stage": 14,
+      "room": 4,
+      "slot": 1,
+      "raw": [
+        16,
+        180,
+        0,
+        82
+      ],
+      "type": "10",
+      "handler_cpu": "ADF8",
+      "x": 64,
+      "y": 176,
+      "identifier": 82,
+      "status": "NON_PORTE"
+    },
+    {
+      "stage": 14,
+      "room": 5,
+      "slot": 0,
+      "raw": [
+        16,
+        186,
+        0,
+        85
+      ],
+      "type": "10",
+      "handler_cpu": "ADF8",
+      "x": 160,
+      "y": 176,
+      "identifier": 85,
+      "status": "NON_PORTE"
+    },
+    {
+      "stage": 14,
+      "room": 6,
+      "slot": 0,
+      "raw": [
+        16,
+        116,
+        0,
+        89
+      ],
+      "type": "10",
+      "handler_cpu": "ADF8",
+      "x": 64,
+      "y": 112,
+      "identifier": 89,
+      "status": "NON_PORTE"
+    },
+    {
+      "stage": 14,
+      "room": 6,
+      "slot": 1,
+      "raw": [
+        16,
+        188,
+        0,
+        90
+      ],
+      "type": "10",
+      "handler_cpu": "ADF8",
+      "x": 192,
+      "y": 176,
+      "identifier": 90,
+      "status": "NON_PORTE"
+    },
+    {
+      "stage": 14,
+      "room": 7,
+      "slot": 0,
+      "raw": [
+        16,
+        88,
+        0,
+        93
+      ],
+      "type": "10",
+      "handler_cpu": "ADF8",
+      "x": 128,
+      "y": 80,
+      "identifier": 93,
+      "status": "NON_PORTE"
+    },
+    {
+      "stage": 14,
+      "room": 7,
+      "slot": 1,
+      "raw": [
+        16,
+        189,
+        0,
+        94
+      ],
+      "type": "10",
+      "handler_cpu": "ADF8",
+      "x": 208,
+      "y": 176,
+      "identifier": 94,
+      "status": "NON_PORTE"
+    },
+    {
+      "stage": 15,
+      "room": 1,
+      "slot": 0,
+      "raw": [
+        16,
+        88,
+        0,
+        133
+      ],
+      "type": "10",
+      "handler_cpu": "ADF8",
+      "x": 128,
+      "y": 80,
+      "identifier": 133,
+      "status": "NON_PORTE"
+    },
+    {
+      "stage": 15,
+      "room": 1,
+      "slot": 1,
+      "raw": [
+        16,
+        181,
+        0,
+        134
+      ],
+      "type": "10",
+      "handler_cpu": "ADF8",
+      "x": 80,
+      "y": 176,
+      "identifier": 134,
+      "status": "NON_PORTE"
+    },
+    {
+      "stage": 15,
+      "room": 2,
+      "slot": 0,
+      "raw": [
+        16,
+        85,
+        0,
+        137
+      ],
+      "type": "10",
+      "handler_cpu": "ADF8",
+      "x": 80,
+      "y": 80,
+      "identifier": 137,
+      "status": "NON_PORTE"
+    },
+    {
+      "stage": 15,
+      "room": 2,
+      "slot": 1,
+      "raw": [
+        16,
+        181,
+        0,
+        138
+      ],
+      "type": "10",
+      "handler_cpu": "ADF8",
+      "x": 80,
+      "y": 176,
+      "identifier": 138,
+      "status": "NON_PORTE"
+    },
+    {
+      "stage": 15,
+      "room": 3,
+      "slot": 0,
+      "raw": [
+        16,
+        188,
+        0,
+        141
+      ],
+      "type": "10",
+      "handler_cpu": "ADF8",
+      "x": 192,
+      "y": 176,
+      "identifier": 141,
+      "status": "NON_PORTE"
+    },
+    {
+      "stage": 15,
+      "room": 4,
+      "slot": 0,
+      "raw": [
+        16,
+        121,
+        0,
+        145
+      ],
+      "type": "10",
+      "handler_cpu": "ADF8",
+      "x": 144,
+      "y": 112,
+      "identifier": 145,
+      "status": "NON_PORTE"
+    },
+    {
+      "stage": 15,
+      "room": 4,
+      "slot": 1,
+      "raw": [
+        16,
+        182,
+        0,
+        146
+      ],
+      "type": "10",
+      "handler_cpu": "ADF8",
+      "x": 96,
+      "y": 176,
+      "identifier": 146,
+      "status": "NON_PORTE"
+    },
+    {
+      "stage": 15,
+      "room": 6,
+      "slot": 0,
+      "raw": [
+        16,
+        186,
+        0,
+        153
+      ],
+      "type": "10",
+      "handler_cpu": "ADF8",
+      "x": 160,
+      "y": 176,
+      "identifier": 153,
+      "status": "NON_PORTE"
+    },
+    {
+      "stage": 15,
+      "room": 7,
+      "slot": 0,
+      "raw": [
+        16,
+        186,
+        0,
+        157
+      ],
+      "type": "10",
+      "handler_cpu": "ADF8",
+      "x": 160,
+      "y": 176,
+      "identifier": 157,
+      "status": "NON_PORTE"
+    },
+    {
+      "stage": 15,
+      "room": 8,
+      "slot": 0,
+      "raw": [
+        16,
+        186,
+        0,
+        161
+      ],
+      "type": "10",
+      "handler_cpu": "ADF8",
+      "x": 160,
+      "y": 176,
+      "identifier": 161,
+      "status": "NON_PORTE"
+    },
+    {
+      "stage": 16,
+      "room": 1,
+      "slot": 0,
+      "raw": [
+        18,
+        184,
+        0,
+        5
+      ],
+      "type": "12",
+      "handler_cpu": "BE70",
+      "x": 128,
+      "y": 176,
+      "identifier": 5,
+      "status": "NON_PORTE"
+    },
+    {
+      "stage": 16,
+      "room": 2,
+      "slot": 0,
+      "raw": [
+        18,
+        151,
+        0,
+        9
+      ],
+      "type": "12",
+      "handler_cpu": "BE70",
+      "x": 112,
+      "y": 144,
+      "identifier": 9,
+      "status": "NON_PORTE"
+    },
+    {
+      "stage": 16,
+      "room": 3,
+      "slot": 0,
+      "raw": [
+        18,
+        152,
+        0,
+        13
+      ],
+      "type": "12",
+      "handler_cpu": "BE70",
+      "x": 128,
+      "y": 144,
+      "identifier": 13,
+      "status": "NON_PORTE"
+    },
+    {
+      "stage": 16,
+      "room": 4,
+      "slot": 0,
+      "raw": [
+        18,
+        186,
+        0,
+        17
+      ],
+      "type": "12",
+      "handler_cpu": "BE70",
+      "x": 160,
+      "y": 176,
+      "identifier": 17,
+      "status": "NON_PORTE"
+    },
+    {
+      "stage": 16,
+      "room": 7,
+      "slot": 0,
+      "raw": [
+        18,
+        86,
+        0,
+        29
+      ],
+      "type": "12",
+      "handler_cpu": "BE70",
+      "x": 96,
+      "y": 80,
+      "identifier": 29,
+      "status": "NON_PORTE"
+    },
+    {
+      "stage": 16,
+      "room": 8,
+      "slot": 0,
+      "raw": [
+        18,
+        88,
+        0,
+        33
+      ],
+      "type": "12",
+      "handler_cpu": "BE70",
+      "x": 128,
+      "y": 80,
+      "identifier": 33,
+      "status": "NON_PORTE"
+    },
+    {
+      "stage": 17,
+      "room": 3,
+      "slot": 0,
+      "raw": [
+        16,
+        118,
+        0,
+        77
+      ],
+      "type": "10",
+      "handler_cpu": "ADF8",
+      "x": 96,
+      "y": 112,
+      "identifier": 77,
+      "status": "NON_PORTE"
+    },
+    {
+      "stage": 17,
+      "room": 4,
+      "slot": 0,
+      "raw": [
+        16,
+        91,
+        0,
+        81
+      ],
+      "type": "10",
+      "handler_cpu": "ADF8",
+      "x": 176,
+      "y": 80,
+      "identifier": 81,
+      "status": "NON_PORTE"
+    },
+    {
+      "stage": 17,
+      "room": 4,
+      "slot": 1,
+      "raw": [
+        16,
+        186,
+        0,
+        82
+      ],
+      "type": "10",
+      "handler_cpu": "ADF8",
+      "x": 160,
+      "y": 176,
+      "identifier": 82,
+      "status": "NON_PORTE"
+    },
+    {
+      "stage": 17,
+      "room": 5,
+      "slot": 0,
+      "raw": [
+        16,
+        83,
+        0,
+        85
+      ],
+      "type": "10",
+      "handler_cpu": "ADF8",
+      "x": 48,
+      "y": 80,
+      "identifier": 85,
+      "status": "NON_PORTE"
+    },
+    {
+      "stage": 18,
+      "room": 1,
+      "slot": 0,
+      "raw": [
+        16,
+        86,
+        0,
+        133
+      ],
+      "type": "10",
+      "handler_cpu": "ADF8",
+      "x": 96,
+      "y": 80,
+      "identifier": 133,
+      "status": "NON_PORTE"
+    },
+    {
+      "stage": 18,
+      "room": 2,
+      "slot": 0,
+      "raw": [
+        16,
+        149,
+        0,
+        137
+      ],
+      "type": "10",
+      "handler_cpu": "ADF8",
+      "x": 80,
+      "y": 144,
+      "identifier": 137,
+      "status": "NON_PORTE"
+    },
+    {
+      "stage": 18,
+      "room": 8,
+      "slot": 0,
+      "raw": [
+        16,
+        182,
+        0,
+        161
+      ],
+      "type": "10",
+      "handler_cpu": "ADF8",
+      "x": 96,
+      "y": 176,
+      "identifier": 161,
+      "status": "NON_PORTE"
+    }
+  ],
+  "note": "Positions and dispatch proven by ROM; no behavior inferred or implemented."
+}

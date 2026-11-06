@@ -1,0 +1,40 @@
+{
+  "original_rom_sha256": "99eabaaeb2b6c02220e131043d5a6401d0d8c5f413d89204547adcc04d65e7e2",
+  "dispatch_cpu_address": "9942",
+  "bank_file_offset": "4000",
+  "routines": [
+    {
+      "type": "09",
+      "cpu_entry": "AF5F",
+      "cpu_range_end_exclusive": "B090",
+      "bytes_in_audit_window": 305,
+      "sha256": "0e1e2d45066768970c074f1ea661cff6530af2224aebef5876bee6ee13f9f607",
+      "entry_bytes": "dd 7e 01 cd 6b 40 6b af be af 35 b0 dd 35 11 28",
+      "implemented_in_mega_drive": false
+    },
+    {
+      "type": "10",
+      "cpu_entry": "ADF8",
+      "cpu_range_end_exclusive": "AF5F",
+      "bytes_in_audit_window": 359,
+      "sha256": "87248507503abc8bac9bb5f82c1469601e375e31a0ffdcb717334ff0d5349f82",
+      "entry_bytes": "dd cb 01 46 20 38 dd 56 05 dd 5e 03 cd 98 7b 38",
+      "implemented_in_mega_drive": false
+    },
+    {
+      "type": "12",
+      "cpu_entry": "BE70",
+      "cpu_range_end_exclusive": "BF4A",
+      "bytes_in_audit_window": 218,
+      "sha256": "060f554e3f7061bea47e06a557ca7bdccc3cc1dd811c6989cf6c3286bb9e4f7b",
+      "entry_bytes": "dd 34 14 dd 34 0c dd 7e 0c e6 08 3e 4e 28 01 3c",
+      "implemented_in_mega_drive": false
+    }
+  ],
+  "limitations": [
+    "Static hash audit only, not CPU execution",
+    "Ranges are windows for auditing, not proven function extents",
+    "BE70 is shared with an earlier boss; stage-16 creation and initialization unverified",
+    "AF5F and ADF8 reference terrain/collision and internal object fields"
+  ]
+}
