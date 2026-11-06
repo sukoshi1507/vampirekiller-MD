@@ -128,12 +128,12 @@ Ce qui n'est pas porté ou reste provisoire :
   remplacé par un compteur d'images (provisoire).
 - **Stages 3 à 10** : ni boss, ni le fondu `7763` avant leur porte, ni les ennemis de type
   6, 10, 11, 12, 13, 31 et 33 et des canaux 04, 10 et 20 ; objets limités aux clés.
-- **Stages 12 à 16** : seules les données ROM sont extraites et vérifiées (cartes statiques,
-  liens, passages secrets du stage 12, drapeaux de canaux, porte du stage 13 ;
-  `research/stage12-foundations.md` à `research/stage16-foundations.md`). Non jouables :
+- **Stages 12 à 18** : seules les données ROM sont extraites et vérifiées (cartes statiques,
+  liens, passages secrets du stage 12, drapeaux de canaux, portes ;
+  `research/stage12-foundations.md` à `research/stage16-foundations.md`,
+  `research/stages17-18-foundations.md`). Non jouables : Dracula, la fin,
   collisions, objets, ennemis et passages secrets (accroupi puis HAUT, `C420` = 7,
   `research/enemy-behavior.md`) restent à porter ; aucune transition n'est activée.
-- **Stages 17 et 18** : non portés.
 - **Énergie (provisoire)** : commandes bloquées pendant la mort : non relevées sur le
   MSX2. Le lieu de reprise suit la table `641F` (salle 0 ; cour (16,176), hall (16,192),
   stage 2 (16,96)), tracé au stage 2 (`research/player-health.md`). La chute dans le vide tue
@@ -202,7 +202,7 @@ Tests Python (certains lisent la ROM de référence) :
 scratchpad/venv/bin/python -m unittest discover -s tests -p 'test_*.py'
 ```
 
-Contrôle des cartes des stages 10 à 16 contre la ROM, indépendant des générateurs : la
+Contrôle des cartes des stages 10 à 18 contre la ROM, indépendant des générateurs : la
 routine Z80 originale `4F83` reconstruit chaque salle, comparée octet par octet aux tableaux C,
 et les liens sont comparés à la table ROM `B9D3` (`tests/test_stage_maps_rom.py` le lance aussi) :
 

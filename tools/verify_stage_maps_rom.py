@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Compare the C maps and links of stages 10-16 with the MSX2 ROM, independently of the generators.
+"""Compare the C maps and links of stages 10-18 with the MSX2 ROM, independently of the generators.
 
 Maps: output of the original Z80 routine 4F83 (verify_z80_maps.execute_map, CPU + mapper harness)
-against vk_stage10_collision, vk_stage11_collision and vk_stage12..16_tiles. Links: ROM table B9D3
-(decode_room_links.decode) against vk_stage10_links, vk_stage11_links and vk_stage12..16_raw_links.
+against vk_stage10_collision, vk_stage11_collision and vk_stage12..18_tiles. Links: ROM table B9D3
+(decode_room_links.decode) against vk_stage10_links, vk_stage11_links and vk_stage12..18_raw_links.
 Not covered: graphics taken from openMSX snapshots, objects, enemies, gameplay.
 Usage: python3 tools/verify_stage_maps_rom.py [ROM_OR_ZIP]   (default: VK_ROM_PATH, else the ZIP at the root)
 Requires z80==1.2.0. Exit code 1 on any mismatch.
@@ -22,7 +22,7 @@ GENERATED = ROOT / 'sgdk/src/generated'
 STAGES = (
     (10, 'stage10_maps.c', 'vk_stage10_collision', 'vk_stage10_links'),
     (11, 'stage11_maps.c', 'vk_stage11_collision', 'vk_stage11_links'),
-) + tuple((s, f'stage{s}_foundations.c', f'vk_stage{s}_tiles', f'vk_stage{s}_raw_links') for s in range(12, 17))
+) + tuple((s, f'stage{s}_foundations.c', f'vk_stage{s}_tiles', f'vk_stage{s}_raw_links') for s in range(12, 19))
 
 
 def _array_body(text, name):

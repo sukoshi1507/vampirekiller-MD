@@ -1,4 +1,4 @@
-"""Stages 10-16: C maps against the original Z80 routine 4F83, C links against the ROM table B9D3."""
+"""Stages 10-18: C maps against the original Z80 routine 4F83, C links against the ROM table B9D3."""
 import importlib.util
 import sys
 import unittest
@@ -16,7 +16,7 @@ class StageMapsRomTests(unittest.TestCase):
         from probe import load_rom
         import verify_stage_maps_rom as verify
         report = verify.check(load_rom(reference_rom()))
-        self.assertEqual({s: n for s, (n, _) in report.items()}, {10: 9, 11: 6, 12: 12, 13: 12, 14: 8, 15: 10, 16: 10})
+        self.assertEqual({s: n for s, (n, _) in report.items()}, {10: 9, 11: 6, 12: 12, 13: 12, 14: 8, 15: 10, 16: 10, 17: 12, 18: 10})
         for stage, (_, problems) in report.items():
             self.assertEqual(problems, [], f'stage {stage}')
 
