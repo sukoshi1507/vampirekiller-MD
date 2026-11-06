@@ -1,0 +1,67 @@
+# (zzi) Stage 4 salle 0 : la bougie (128, 64) d'objet 15 libere l'objet 1A (research/stage9-candle-object.md, section 1A).
+# Trace openMSX (scratchpad/obj1a, o_4_0_128_64 ; Simon (116, 96) debout, fouet) : bougie eteinte, flamme C500 de 30 passes, objet 1A cree
+# en (128, 80) (pose 9F, base de la salle), 8 passes d'attente (etat 0, +E = 0), chute Y 82, 84, 86, 89, 92, 95, 99, pose au sol en Y 96
+# (etat 2, 30 passes), puis marche (etat 3). Contact : energie 32 -> 28. Fouet accroupi : mort, +100 points (000000 -> 000100). Fouet debout :
+# manque.
+include zy_enter4.inc
+poke Enemies_god 1
+wait 60
+expect game.stage == 4 and game.room == 0
+expect ram8('vk_candles+4') & 4 # bougie (128, 64) allumee
+poke vk_game+0 116
+poke vk_game+1 96
+poke vk_game+2 0
+wait 4
+hold B 1
+until (ram8('vk_candles+4') & 4) == 0 max 12
+set f0 frame
+until any(enemies.enemy[k].active and enemies.enemy[k].type == 15 for k in range(7)) max 60
+set f1 frame
+expect f1 - f0 == 31 # flamme de 30 passes (30 -> 31 images)
+set g [k for k in range(7) if enemies.enemy[k].active and enemies.enemy[k].type == 15][0]
+expect (enemies.enemy[g].x, enemies.enemy[g].y, enemies.enemy[g].state, enemies.enemy[g].pose) == (128, 80, 0, 0x9F)
+shot zzi-bougie-eteinte
+# Huit passes d'attente, puis la chute.
+until enemies.enemy[g].state == 1 max 30
+expect frame - f1 == 15
+expect enemies.enemy[g].y == 82
+wait 2
+expect enemies.enemy[g].y == 84
+wait 2
+expect enemies.enemy[g].y == 86
+wait 2
+expect enemies.enemy[g].y == 89
+wait 2
+expect enemies.enemy[g].y == 92
+wait 2
+expect enemies.enemy[g].y == 95
+wait 2
+expect enemies.enemy[g].y == 99
+wait 2
+expect enemies.enemy[g].state == 2 and enemies.enemy[g].y == 96 and enemies.enemy[g].x == 128
+shot zzi-pose
+# Fouet debout (a droite de l'objet, face a la gauche) : passe au-dessus, l'objet vit.
+set s0 ram32('vk_hud_score')
+poke vk_game+0 140
+poke vk_game+1 96
+poke vk_game+2 1
+wait 4
+hold B 1
+wait 20
+expect enemies.enemy[g].active
+expect ram32('vk_hud_score') == s0
+# Contact (energie 32 -> 28) : Simon sur l'objet des l'etat 1.
+poke Enemies_god 0
+poke vk_game+0 128
+poke vk_game+1 96
+wait 4
+expect enemies.energy == 28
+# Fouet accroupi, apres le recul : l'objet marche vers Simon (X 103 contre Simon 84), meme etage ; le fouet vers la droite le touche : mort, 100 points.
+wait 60
+until game.player.mode == 0 max 100
+poke vk_game+2 0
+set s0 ram32('vk_hud_score')
+hold DOWN 2
+hold DOWN+B 1
+until not enemies.enemy[g].active max 40 DOWN
+expect ram32('vk_hud_score') == s0 + 100

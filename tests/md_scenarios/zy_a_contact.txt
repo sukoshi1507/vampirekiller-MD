@@ -1,0 +1,62 @@
+# (zy_a) Stage 4/5 : contact de Simon avec les objets 06 et 08 (research/stage4-enemies.md, section Verifications).
+# MSX : 7E67 (gardes C42D, C43A, C420 >= 5 ; drapeaux +E bit 1), 8290 (boite classe 1 pour 06, 2 pour 08), 7EC1 (C420 := 5,
+# C43C := 1 si le bit 7 de +A de l'objet est nul : recul dans le sens de la vitesse X de l'objet), 816C (degat
+# 81CE x 2 = 4 ; armure C701 bit 4 et Simon tourne vers l'objet : degat 2, C441 - 1), C42D := 5A (87 a +5 images en trace).
+include zy_enter4.inc
+# Etat de l'objet 0 : 06 en (106, 192), vitesse X +160h (vers la droite). Simon en (100, 192), tourne a droite.
+poke vk_game+0 100
+poke vk_game+1 192
+poke vk_enemies+4 106 16
+poke vk_enemies+6 192
+poke vk_enemies+12 352 16
+poke vk_enemies+14 1
+wait 4
+expect enemies.energy == 28 and enemies.invuln > 0x50 # 32 -> 28 : 81CE (2) doublee, C42D = 5A
+expect enemies.enemy[0].active == 1 and enemies.enemy[0].type == 6 # un objet 06 ne meurt pas au contact
+expect enemies.recoilDir == 1 # 7ED1 : vitesse X positive -> C43C = 1 -> Simon repousse vers la droite
+wait 40
+expect game.player.x > 100 # recul a droite
+# Pendant l'invulnerabilite aucun second degat (7E6D).
+expect enemies.energy == 28
+# --- Armure (C701 bit 4, C441) : Simon tourne vers l'objet -> degat 2, C441 - 1.
+until game.recoil == 0 and enemies.invuln == 0 max 400
+poke vk_candles+322 0x10
+poke vk_enemies+146 0x10
+poke vk_game+0 100
+poke vk_game+1 192
+poke vk_game+2 0
+poke vk_enemies+4 106 16
+poke vk_enemies+6 192
+poke vk_enemies+12 352 16
+poke vk_enemies+14 1
+set e0 enemies.energy
+wait 4
+expect enemies.energy == e0 - 2 # 816C : degat 2 sans doublement
+expect ram8('vk_enemies+146') == 0x0F # C441 - 1
+# --- Armure, Simon dos a l'objet : degat plein (4), C441 inchange.
+until game.recoil == 0 and enemies.invuln == 0 max 400
+poke vk_game+0 100
+poke vk_game+1 192
+poke vk_game+2 1
+poke vk_enemies+4 106 16
+poke vk_enemies+6 192
+poke vk_enemies+12 352 16
+poke vk_enemies+14 1
+set e1 enemies.energy
+wait 4
+expect enemies.energy == e1 - 4 # dos tourne : degat double
+expect ram8('vk_enemies+146') == 0x0F # pas de decompte
+# --- Objet 08 (type du port 7), meme boite que la classe 2 (L = 8, H = 10h) : degat 4, recul dans le sens de +A.
+until game.recoil == 0 and enemies.invuln == 0 max 400
+poke vk_candles+322 0
+poke vk_game+0 100
+poke vk_game+1 192
+poke vk_game+2 0
+poke vk_enemies+2 7
+poke vk_enemies+7 255
+poke vk_enemies+4 106 16
+poke vk_enemies+6 184
+set e2 enemies.energy
+wait 4
+expect enemies.energy == e2 - 4 # 81CE (2) doublee, sans armure
+expect enemies.recoilDir == -1 # 08 qui va vers la gauche (+A negatif)

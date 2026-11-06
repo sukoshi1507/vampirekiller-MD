@@ -1,0 +1,206 @@
+{
+  "all_passed": true,
+  "md_rom_sha256": "b64a49f4168a0d251a91b730a834f95c922032362ef12d31ccaaabac9c9a00b4",
+  "flow": [
+    "logo",
+    "title",
+    "animated castle scene",
+    "courtyard 0",
+    "courtyard 1",
+    "courtyard 2",
+    "castle interior"
+  ],
+  "pixel_comparisons": [
+    "title_except_controller_prompt",
+    "castle_frame_3",
+    "castle_frame_63",
+    "castle_frame_243",
+    "scene_3_with_player",
+    "scene_5_with_player",
+    "scene_6_with_player",
+    "konami_logo"
+  ],
+  "castle_matches": [
+    {
+      "md_timer": 3,
+      "original_frame": 3
+    },
+    {
+      "md_timer": 63,
+      "original_frame": 63
+    },
+    {
+      "md_timer": 243,
+      "original_frame": 243
+    }
+  ],
+  "states": {
+    "0": {
+      "front_timer": 0,
+      "front_mode": 1,
+      "courtyard_room": 0,
+      "player": {
+        "x": 0,
+        "y": 0,
+        "facing": 0,
+        "mode": 0,
+        "phase": 0,
+        "clock": 0,
+        "pose": 0
+      }
+    },
+    "1": {
+      "front_timer": 3,
+      "front_mode": 2,
+      "courtyard_room": 0,
+      "player": {
+        "x": 0,
+        "y": 0,
+        "facing": 0,
+        "mode": 0,
+        "phase": 0,
+        "clock": 0,
+        "pose": 0
+      }
+    },
+    "2": {
+      "front_timer": 63,
+      "front_mode": 2,
+      "courtyard_room": 0,
+      "player": {
+        "x": 0,
+        "y": 0,
+        "facing": 0,
+        "mode": 0,
+        "phase": 0,
+        "clock": 0,
+        "pose": 0
+      }
+    },
+    "3": {
+      "front_timer": 243,
+      "front_mode": 2,
+      "courtyard_room": 0,
+      "player": {
+        "x": 0,
+        "y": 0,
+        "facing": 0,
+        "mode": 0,
+        "phase": 0,
+        "clock": 0,
+        "pose": 0
+      }
+    },
+    "4": {
+      "front_timer": 320,
+      "front_mode": 3,
+      "courtyard_room": 0,
+      "player": {
+        "x": 16,
+        "y": 176,
+        "facing": 0,
+        "mode": 0,
+        "phase": 0,
+        "clock": 22,
+        "pose": 0
+      }
+    },
+    "5": {
+      "front_timer": 320,
+      "front_mode": 3,
+      "courtyard_room": 1,
+      "player": {
+        "x": 16,
+        "y": 176,
+        "facing": 0,
+        "mode": 0,
+        "phase": 0,
+        "clock": 3,
+        "pose": 2
+      }
+    },
+    "6": {
+      "front_timer": 320,
+      "front_mode": 3,
+      "courtyard_room": 2,
+      "player": {
+        "x": 14,
+        "y": 176,
+        "facing": 0,
+        "mode": 0,
+        "phase": 0,
+        "clock": 2,
+        "pose": 2
+      }
+    },
+    "7": {
+      "front_timer": 320,
+      "front_mode": 3,
+      "courtyard_room": 2,
+      "player": {
+        "x": 234,
+        "y": 176,
+        "facing": 0,
+        "mode": 0,
+        "phase": 0,
+        "clock": 112,
+        "pose": 2
+      }
+    },
+    "8": {
+      "front_timer": 320,
+      "front_mode": 3,
+      "courtyard_room": 2,
+      "player": {
+        "x": 234,
+        "y": 176,
+        "facing": 0,
+        "mode": 0,
+        "phase": 0,
+        "clock": 117,
+        "pose": 0
+      }
+    },
+    "9": {
+      "front_timer": 320,
+      "front_mode": 4,
+      "courtyard_room": 2,
+      "player": {
+        "x": 16,
+        "y": 192,
+        "facing": 0,
+        "mode": 0,
+        "phase": 0,
+        "clock": 3,
+        "pose": 0
+      }
+    },
+    "10": {
+      "front_timer": 320,
+      "front_mode": 4,
+      "courtyard_room": 2,
+      "player": {
+        "x": 16,
+        "y": 192,
+        "facing": 0,
+        "mode": 0,
+        "phase": 0,
+        "clock": 13,
+        "pose": 0
+      }
+    }
+  },
+  "reference_scope": "Original Z80 palette and command routines executed through VDP ports; synchronous drawing, not full MSX emulation.",
+  "graphics_regressions": [
+    "HMMV register side effects",
+    "blue title frame index 15",
+    "black frame perforation",
+    "VDP palette matches VRAM mirror"
+  ],
+  "limits": [
+    "silent",
+    "no enemies/attack",
+    "static courtyard flames",
+    "simplified door activation"
+  ]
+}

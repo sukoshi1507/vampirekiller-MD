@@ -1,0 +1,36 @@
+# Carte du stage, objet 0F (research/stage-map.md) : A seul l'ouvre, A la ferme, la salle revient ;
+# le troisieme usage retire l'objet (9566, 9578) en montrant encore la carte. C70F en +329.
+include boot_to_courtyard.inc
+set room0 pixel(30, 60)
+tap A
+wait 3
+expect pixel(30, 60) == room0 # sans 0F, A n'ouvre rien
+shot zp-salle
+poke vk_candles+322 0x80
+poke vk_candles+329 3
+tap A
+wait 40
+shot zp-carte
+expect pixel(150, 22) != pixel(30, 60) # la case du HUD garde son fond
+expect pixel(30, 60) == pixel(225, 60) and pixel(30, 60) != pixel(10, 60) and pixel(30, 60) != room0 # panneau, x 24..231
+set x0 game.player.x
+hold RIGHT 20
+expect game.player.x == x0 # jeu fige
+tap A
+wait 40
+shot zp-retour
+expect pixel(30, 60) == room0 # la salle est revenue
+tap A
+wait 40
+tap A
+wait 40
+expect ram8('vk_candles+329') == 1 and ram8('vk_candles+322') == 0x80
+tap A
+wait 40
+expect ram8('vk_candles+329') == 0 and ram8('vk_candles+322') == 0 # 0F retire
+expect pixel(30, 60) == pixel(225, 60) and pixel(30, 60) != pixel(10, 60) and pixel(30, 60) != room0 # 3e carte encore montree
+tap A
+wait 40
+tap A
+wait 40
+expect pixel(30, 60) == room0 # plus d'objet, plus de carte

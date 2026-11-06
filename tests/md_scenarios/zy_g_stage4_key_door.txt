@@ -1,0 +1,29 @@
+# (zy_g) Stage 4 : cle blanche (bloc cache de la salle 0, (32, 64)), porte de la salle 3 en (12, 48) cote gauche, sortie vers le stage 5.
+# Donnees extraites de la ROM (research/stages-1-10/MSX2_EXITS_VERIFICATION.md : 5A49/5B1B, BB37) ; le deroulement est celui de f_key_door.
+include zy_enter4.inc
+poke Enemies_god 1
+poke vk_game+0 52
+poke vk_game+1 96
+poke vk_game+2 1
+wait 4
+expect ram8('items+4') == 0 and ram8('items') == 0 # cle cachee dans le bloc (32, 64)
+hold B 2
+wait 20
+until ram8('items') & 1 max 200 LEFT
+expect ram8('items+4') == 1 and ram8('items') == 1 # bloc brise par le fouet, cle blanche prise (C701 bit 0)
+poke vk_game+20 2
+hold A 3
+hold A+RIGHT 3
+until game.room == 3 max 200
+wait 10
+poke vk_game+0 34
+poke vk_game+1 96
+poke vk_game+2 1
+wait 4
+expect ram8('items+2') == 0 # porte fermee
+until ram8('items+2') == 1 max 160 LEFT
+expect ram8('items') == 0 and game.player.x < 34 # cle consommee a l'ouverture (porte de gauche)
+until game.stage == 5 max 400 LEFT
+wait 30
+expect game.stage == 5 and game.room == 0 and game.player.x == 232 and game.player.y == 96 # entree du stage 5 (232, 96)
+expect ram8('items+2') == 0 # la porte du stage 5 est fermee

@@ -1,0 +1,141 @@
+# (zv) Stage 5 : objets 06 et 08, plateformes mobiles (research/stage5-enemies.md). Entree par le selecteur.
+# Positions X de la trace openMSX, Simon immobile en (232, 96), a partir de l'apparition des objets 06.
+until front_mode == MODES['TITLE'] max 2000
+wait 10
+tap C
+wait 40
+tap START
+wait 10
+tap UP
+tap UP
+tap DOWN
+tap DOWN
+tap LEFT
+tap RIGHT
+tap LEFT
+tap RIGHT
+tap B
+tap A
+wait 4
+tap A
+expect ram8('Enemies_god') == 0
+tap DOWN
+tap DOWN
+tap DOWN
+tap RIGHT
+tap RIGHT
+tap RIGHT
+tap B
+until enemies.alive == 2 max 200
+expect game.stage == 5 and game.room == 3
+poke vk_game+0 232
+poke vk_game+1 96
+wait 60
+expect [enemies.enemy[k].x for k in range(7) if enemies.enemy[k].active] == [168, 168]
+wait 60
+expect [enemies.enemy[k].x for k in range(7) if enemies.enemy[k].active] == [143, 127]
+wait 60
+expect [enemies.enemy[k].x for k in range(7) if enemies.enemy[k].active] == [184, 121]
+wait 60
+expect [enemies.enemy[k].x for k in range(7) if enemies.enemy[k].active] == [157, 113]
+wait 60
+expect [enemies.enemy[k].x for k in range(7) if enemies.enemy[k].active] == [154, 154]
+wait 60
+expect [enemies.enemy[k].x for k in range(7) if enemies.enemy[k].active] == [173, 173]
+shot zv-salle3
+# Salle 1, plateforme : table 906C, un premier pas au chargement (6398), puis un pas par passe de 2 images.
+# Le god mode (touche A du selecteur) ecarte les objets 08, comme le C42D poke de la trace.
+poke Enemies_god 1
+hold A 3
+hold A+LEFT 3
+# Salle 2 : un objet 06 (table fixe), memes positions que la trace.
+until game.room == 2 and enemies.alive == 1 max 200
+poke vk_game+0 232
+poke vk_game+1 96
+wait 60
+expect [enemies.enemy[k].x for k in range(7) if enemies.enemy[k].active] == [121]
+wait 60
+expect [enemies.enemy[k].x for k in range(7) if enemies.enemy[k].active] == [137]
+wait 60
+expect [enemies.enemy[k].x for k in range(7) if enemies.enemy[k].active] == [96]
+wait 60
+expect [enemies.enemy[k].x for k in range(7) if enemies.enemy[k].active] == [124]
+wait 60
+expect [enemies.enemy[k].x for k in range(7) if enemies.enemy[k].active] == [135]
+wait 60
+expect [enemies.enemy[k].x for k in range(7) if enemies.enemy[k].active] == [93]
+wait 60
+expect [enemies.enemy[k].x for k in range(7) if enemies.enemy[k].active] == [104]
+wait 60
+expect [enemies.enemy[k].x for k in range(7) if enemies.enemy[k].active] == [146]
+hold A 3
+hold A+LEFT 3
+until game.room == 1 and ram8('vk_platforms') == 1 max 200
+expect ram8('vk_platforms+1') == 0x5F
+set start ram8('vk_platforms+2')
+wait 2
+expect ram8('vk_platforms+2') == start + 1
+# Simon pose au-dessus : atterrit a Y 96 (6F6A, masque F8) et suit la plateforme, demi-tours compris.
+poke vk_game+0 112
+poke vk_game+1 80
+poke vk_game+3 4
+until game.player.mode == 0 max 60
+expect game.player.y == 96
+wait 2
+set gap game.player.x - ram8('vk_platforms+2')
+until ram8('vk_platforms+2') == 159 max 200
+expect game.player.x - ram8('vk_platforms+2') == gap
+# A chaque demi-tour la plateforme ne bouge pas mais Simon suit le nouveau sens (90B8 puis 6BAF) : l'ecart
+# perd 1 vers la gauche, comme dans la trace (5 a droite, 4 a gauche).
+wait 4
+expect game.player.x - ram8('vk_platforms+2') == gap - 1
+until ram8('vk_platforms+2') == 96 max 200
+expect game.player.x - ram8('vk_platforms+2') == gap - 1 and game.player.y == 96
+wait 6
+expect ram8('vk_platforms+2') >= 96 and ram8('vk_platforms+2') <= 99
+expect game.player.x - ram8('vk_platforms+2') == gap
+shot zv-plateforme
+# Saut depuis le bord avant : X fixe en l'air, la plateforme le rattrape, il retombe a Y 96 (trace, 6D2B).
+poke vk_game+0 129
+hold C 2
+until game.player.mode != 0 max 20
+until game.player.mode == 0 max 80
+expect game.player.y == 96 and game.player.x == 129
+wait 4
+expect game.player.x - ram8('vk_platforms+2') < 30 and game.player.x > 129
+# Marche hors de la plateforme : chute (6B5B).
+until game.player.mode != 0 max 120 RIGHT
+expect game.player.mode == 4
+hold - 8
+expect game.player.y > 96
+# Salle 4 : deux plateformes de longueurs differentes (906C), bords de la trace.
+until game.player.mode == 0 max 200
+tap START
+wait 10
+tap UP
+tap UP
+tap DOWN
+tap DOWN
+tap LEFT
+tap RIGHT
+tap LEFT
+tap RIGHT
+tap B
+tap A
+wait 4
+tap RIGHT
+tap RIGHT
+tap RIGHT
+tap B
+until game.room == 4 and ram8('vk_platforms+7') == 2 max 200
+poke Enemies_god 1
+expect ram8('vk_platforms+2') == 0x21 and ram8('vk_platforms+9') == 0xB7
+until ram8('vk_platforms+2') == 79 max 200
+wait 4
+expect ram8('vk_platforms+2') == 79 or ram8('vk_platforms+2') == 78
+until ram8('vk_platforms+9') == 129 max 200
+wait 4
+expect ram8('vk_platforms+9') == 129 or ram8('vk_platforms+9') == 130
+until any(enemies.enemy[k].active and enemies.enemy[k].type == 7 for k in range(7)) max 400
+wait 8
+shot zv-salle4

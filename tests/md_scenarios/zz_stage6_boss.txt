@@ -1,0 +1,95 @@
+# (zz) Boss du stage 6, objet 13h (research/stage6-boss.md). Porte de la salle 4 -> salle 5, apparition, premiere boule, coups
+# et contacts, mort, orbe, passage au stage 7. vk_boss : +3 vivant, +8 Y, +10 X, +21 C418, +25 CE0B, +28 orbe, +33 Y orbe,
+# +34 CE14, +35 CE11, +36 boule 0 (+38 Y, +40 X, +42 vy, +44 vx), +56 type (1 = stage 6). Valeurs de la trace openMSX
+# scratchpad/stage6boss/out/A (Simon immobile en (246, 160)) : objet en (90h, 90h) a l'image 1230, premiere boule a la passe 60.
+include zy_enter6.inc
+wait 30
+poke items+0 1
+poke items+1 1
+poke vk_game+20 4
+poke vk_game+0 34
+poke vk_game+1 128
+poke vk_game+2 1
+wait 4
+until game.room == 5 max 400 LEFT
+expect game.player.x == 246 and game.player.y == 128 # trace : (246, 128), puis chute a 160
+until game.player.y == 160 max 100
+expect ram8('vk_boss') == 1 and ram8('vk_boss+56') == 1 and ram8('vk_boss+3') == 0
+expect pixel(140, 125) != (0, 0, 0) # le buste (128, 112) est encore la
+set t0 frame
+until ram8('vk_boss+3') == 1 max 400
+set t1 frame
+expect 220 <= t1 - t0 <= 250 # CE02 = 78h passes (trace : 242 images apres CE01 = 1, plus le rechargement de la salle)
+expect ram16('vk_boss+8') == 0x9030 and ram16('vk_boss+10') == 0x90F8 # trace 1230 : Y 9030h, X 90F8h
+wait 2
+expect ram16('vk_boss+8') == 0x9080 and ram16('vk_boss+10') == 0x91F0 # trace 1232
+wait 2
+expect ram16('vk_boss+8') == 0x90F0 and ram16('vk_boss+10') == 0x92E8 # trace 1234
+shot zz-apparition
+# Premiere boule : 60 passes apres la creation, depuis (X, Y - 16) de l'objet, visee A0E5 (vy 200, vx 1000 contre Simon (246, 160)).
+until ram8('vk_boss+36') == 1 max 400
+set t2 frame
+expect ram16('vk_boss+38') == 0x82C8 and ram16('vk_boss+40') == 0xCCE8 # trace 1348 : Y 82C8h, X CCE8h
+expect ram16('vk_boss+42') == 200 and ram16('vk_boss+44') == 1000
+expect pixel(140, 125) == (0, 0, 0) # buste efface (HMMV), loin de l'objet
+wait 2
+shot zz-boule
+# Contact de la boule : energie 32 -> 31 (trace : image 1348 -> 1364).
+until enemies.energy == 31 max 60
+expect 12 <= frame - t2 <= 20
+until enemies.invuln == 0 max 300
+# Coup de fouet : -8 sur la barre ENEMY (trace B : 128 -> 120 ...), objet a portee (boite 83F2).
+expect ram8('vk_boss+21') == 0x80
+poke vk_boss+8 160
+poke vk_boss+10 222
+wait 1
+tap B
+wait 20
+expect ram8('vk_boss+21') == 0x78
+expect pixel(119, 24) != pixel(120, 24) # barre ENEMY : 60 px
+shot zz-coup
+until enemies.invuln == 0 max 300
+# Contact du corps : degat 4 (trace B : 32 -> 28).
+set e0 enemies.energy
+poke vk_boss+8 160
+poke vk_boss+10 244
+wait 2
+expect enemies.energy == e0 - 4 and enemies.invuln > 0
+poke vk_boss+8 64
+poke vk_boss+10 32
+until enemies.invuln == 0 max 300
+# Dernier coup : disparition, effet, orbe en (78h, 40h) qui tombe a B0h (trace D : 2424).
+poke vk_boss+36 0
+poke vk_boss+46 0
+poke vk_boss+21 8
+poke vk_boss+8 160
+poke vk_boss+10 222
+wait 1
+tap B
+until ram8('vk_boss+21') == 0 max 20
+expect ram8('vk_boss+3') == 0
+set t3 frame
+until ram8('vk_boss+28') == 1 max 200
+expect 120 <= frame - t3 <= 130 # trace D : 1897 -> 2021
+shot zz-mort
+poke vk_game+0 108
+poke vk_game+1 176
+set t4 frame
+until ram8('vk_boss+34') == 1 max 500
+expect ram8('vk_boss+33') == 0xB0 and 400 <= frame - t4 <= 410 # trace D : orbe creee 2021, au sol 2424
+shot zz-orbe
+until ram8('vk_boss+35') == 1 max 10
+set e1 enemies.energy
+until enemies.energy == 32 max 700
+expect e1 < 32
+set t5 frame
+# Transition de l'etat 8 (4324, 47B9) : Simon et les sprites partent, ecran noir, 28 images de la sortie
+# (C409, 2897) au chargement du stage 7 (2925).
+until all(pixel(x, y) == (0, 0, 0) for x in range(0, 256, 16) for y in range(0, 224, 16)) max 700
+set tb frame
+until game.stage == 7 max 700
+expect frame - tb == 26 # noir vu 2 images apres la sortie, stage 28 images apres
+wait 10
+expect game.room == 0 and game.player.x == 232 and game.player.y == 176 # trace D : stage 7 (232, 176)
+expect ram8('vk_boss') == 0
+shot zz-stage7

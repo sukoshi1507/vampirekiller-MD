@@ -1,0 +1,73 @@
+# (zy_c) Armes secondaires sur l'objet 06 (4 PV), stage 4. MSX : 801E (C450 et C460), 8048 (degat par type : dague 1, hache 4,
+# croix 2, eau 2), 8080 (la dague est detruite par 74EC ; les autres traversent), 8083 (RES 0,+E : une touche, jusqu'a 999F),
+# 999F au lancer (7286), au demi-tour de la hache ou de la croix (7356, 7370) et a l'eau (7422, une passe sur deux selon C003 bit 2).
+# L'objet 06 est immobile ici (vitesse X 0, drapeau +11 pose) en (140, 192) ; Simon en (100, 192) tourne a droite.
+include zy_enter4.inc
+poke Enemies_god 1
+poke vk_candles+118 20
+set s0 ram32('vk_hud_score')
+# Dague (C416 = 2) : 1 degat, la dague disparait.
+poke vk_candles+120 2
+poke vk_whip+5 2
+include zy_revive06.inc
+include zy_place06s.inc
+hold B 2
+until enemies.enemy[0].extraPhase & 15 < 4 max 120
+wait 4
+expect (enemies.enemy[0].extraPhase & 15) == 3 and enemies.enemy[0].active == 1 # 4 - 1
+expect ram8('vk_weapons+0') == 0 and ram8('vk_weapons+9') == 0 # 74EC : la dague est liberee
+expect ram32('vk_hud_score') == s0
+wait 60
+expect (enemies.enemy[0].extraPhase & 15) == 3 # une seule touche
+# Hache (C416 = 3) : 4 degats, mort en une touche, 200 points.
+poke vk_candles+120 3
+poke vk_whip+5 3
+include zy_revive06.inc
+include zy_place06s.inc
+hold B 2
+until enemies.enemy[0].active == 0 max 120
+expect ram32('vk_hud_score') == s0 + 200
+wait 90
+# Croix (C416 = 4) : 2 degats a l'aller, 2 au retour apres 999F au demi-tour : mort au retour.
+poke vk_candles+120 4
+poke vk_whip+5 4
+include zy_revive06.inc
+include zy_place06s.inc
+hold B 2
+until (enemies.enemy[0].extraPhase & 15) == 2 max 120
+set hitx ram8('vk_weapons+5')
+expect hitx > 100 and hitx < 160 # touche a l'aller
+wait 10
+expect enemies.enemy[0].active == 1 and (enemies.enemy[0].extraPhase & 15) == 2 # pas de seconde touche avant le demi-tour
+until enemies.enemy[0].active == 0 max 200
+set deadx ram8('vk_weapons+5')
+expect deadx > 100 and deadx < 160 and ram8('vk_weapons+5') < hitx + 60 # mort au retour (apres le demi-tour)
+# Eau benite (C701 bit 3, 5 coeurs, saut puis DROITE) : 2 degats par touche ; 7422 rearme (999F) une passe sur deux (C003 bit 2)
+# pendant les 24 passes de la flamme : l'objet 06 (4 PV) pose sous la flamme (160, 192) meurt avant la fin de la flamme.
+wait 60
+poke vk_candles+322 8
+poke vk_candles+118 20
+poke vk_candles+120 0
+poke vk_whip+5 0
+include zy_revive06.inc
+include zy_place06s.inc
+poke vk_enemies+4 160 16
+poke vk_game+0 100
+poke vk_game+1 192
+hold C 3
+wait 6
+hold RIGHT 2
+until ram8('vk_weapons+9') == 3 max 120
+expect game.player.y == 192 and enemies.enemy[0].active == 1 # la flamme brule, l'objet vit encore (2 PV au plus)
+until enemies.enemy[0].active == 0 max 60
+expect ram8('vk_weapons+9') == 3 # mort pendant la flamme
+# Objet 08 (1 PV) : toute arme le tue en une touche (8048 : PV - degat <= 0 -> 81AB, 9A3E), 200 points.
+wait 60
+poke vk_candles+120 2
+poke vk_whip+5 2
+include zy_place08.inc
+poke vk_enemies+4 130 16
+set s8 ram32('vk_hud_score')
+hold B 2
+until enemies.enemy[0].active == 0 max 80
+expect ram32('vk_hud_score') == s8 + 200 # dague contre 08

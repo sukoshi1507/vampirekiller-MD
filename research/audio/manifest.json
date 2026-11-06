@@ -1,0 +1,79 @@
+{
+  "rom": {"name": "Vampire Killer (Japan, Europe) (En).zip", "sha256": "99eabaaeb2b6c02220e131043d5a6401d0d8c5f413d89204547adcc04d65e7e2", "mapper": "Konami non-SCC, banques de 8 Ko (6000/8000/A000)"},
+  "emulator": {"name": "openMSX 21.0 (build local)", "machine": "C-BIOS_MSX2", "extensions": "aucune pour la capture principale (FM-PAC absent)"},
+  "assets": [
+    {
+      "file": "psg_ay_msx_long1_150s.vgm",
+      "kind": "trace PSG brute (AY-3-8910, commande VGM 0xA0)",
+      "source": "openMSX vgm_rec PSG, session 150 s, impulsions ESPACE (ligne 8, colonne 1) toutes les 2 s entre 14 s et 60 s, puis toutes les 5 s",
+      "ay_writes": 28542,
+      "registers_seen": [0,1,2,3,4,5,6,7,8,9,10],
+      "clock_ay_hz": 1789773,
+      "duration_s": 149.903,
+      "timing": "attentes VGM de 735 échantillons par image (60 Hz nominal du recorder), non mesurées",
+      "cross_check": "écritures BIOS GIWRTE journalisées : 33320 dont 4782 vers R15 (exclues du VGM) => 28538 attendues ; 28542 trouvées (écart 4, non expliqué)",
+      "status": "decoded",
+      "status_note": "capture de l'exécution réelle de la ROM en émulation ; non comparée au matériel ni à BlastEm"
+    },
+    {
+      "file": "psg_sn76489_candidate.vgm",
+      "kind": "VGM SN76489 (commande 0x50), conversion AY vers SN",
+      "source": "tools/convert_psg_vgm.py sur psg_ay_msx_long1_150s.vgm",
+      "clock_sn_hz": 3579545,
+      "sn_event_times": 10584,
+      "conversion_stats": {"tone_noise_mix": 101, "sn_tone_writes": 1577, "sn_volume_writes": 9686, "tone_clipped": 410, "sn_noise_writes": 1, "envelope_writes": 0},
+      "status": "candidate",
+      "status_note": "volumes et bruit approximés ; 410 écritures de ton bornées à N=1023 ; pas de rendu audio de référence comparé"
+    },
+    {
+      "file": "psg_sn76489_candidate.xgm",
+      "kind": "XGM2 (SGDK xgm2tool.jar -s)",
+      "source": "psg_sn76489_candidate.vgm",
+      "header": "XGM2",
+      "size_bytes": 12804,
+      "status": "candidate",
+      "status_note": "produit et lisible par xgm2tool ; lecture par le pilote XGM2 sur Mega Drive non testée"
+    },
+    {
+      "file": "long1-bios-giwrte.csv.gz",
+      "kind": "journal des appels BIOS GIWRTE (0093) : temps, image, registre (A), valeur (E), appelant",
+      "status": "decoded"
+    },
+    {
+      "file": "long1-game-state.csv",
+      "kind": "transitions de C000/C001 (index de la routine 414D) avec C422/C42E",
+      "status": "decoded"
+    },
+    {
+      "file": "scan-row8-game-state.csv",
+      "kind": "transitions d'état pendant le balayage des colonnes de la ligne 8 (touche 8,c aux 10, 13, 16 ... s)",
+      "status": "decoded"
+    }
+  ],
+  "driver_routines": [
+    {"name": "VBLANK -> pilote son", "cpu": "4028", "bank": "00 (fixe)", "file_offset": "0x0028", "status": "decoded", "note": "routine documentée dans research/z80-vdp-io-analysis.md ; appelle 8964"},
+    {"name": "mise à jour son par image", "cpu": "8964", "bank": "0E (8000-9FFF)", "file_offset": "0x1C964", "status": "decoded", "note": "lit C097 (masque mixeur), appelle 0093 avec R7"},
+    {"name": "appel GIWRTE R7 (mixeur)", "cpu": "896A", "bank": "0E", "file_offset": "0x1C96A", "status": "decoded", "note": "8745 appels sur 150 s : une fois par image mesurée"},
+    {"name": "volume canal A (R8)", "cpu": "89AA", "bank": "0E", "file_offset": "0x1C9AA", "status": "decoded", "note": "appelle 89C6 puis JP (HL) : dispatch par pointeur de canal (C010..C016)"},
+    {"name": "volume canal B (R9)", "cpu": "89B3", "bank": "0E", "file_offset": "0x1C9B3", "status": "decoded", "note": "idem"},
+    {"name": "volume canal C (R10)", "cpu": "89BC", "bank": "0E", "file_offset": "0x1C9BC", "status": "decoded", "note": "idem"},
+    {"name": "ton fin (R0/R2/R4)", "cpu": "8A03", "bank": "0E", "file_offset": "0x1CA03", "status": "decoded", "note": "R=2*canal ; valeur E = octet bas ; saute ensuite à 0093 avec D"},
+    {"name": "ton grossier (R1/R3/R5)", "cpu": "8B3C", "bank": "0E", "file_offset": "0x1CB3C", "status": "decoded", "note": "écrit R(2*canal+1)"},
+    {"name": "volume (R8/R9/R10) par canal", "cpu": "8B4D", "bank": "0E", "file_offset": "0x1CB4D", "status": "decoded", "note": ""},
+    {"name": "bruit R6", "cpu": "8CD9", "bank": "0E", "file_offset": "0x1CCD9", "status": "decoded", "note": "891 écritures ; souvent associé à des rafales de volume"},
+    {"name": "volume C / rafales", "cpu": "8D06", "bank": "0E", "file_offset": "0x1CD06", "status": "decoded", "note": "R10 seulement"},
+    {"name": "volume C / rafales", "cpu": "8D64", "bank": "0E", "file_offset": "0x1CD64", "status": "decoded", "note": "R10 seulement"},
+    {"name": "R5 (ton grossier C) rafales", "cpu": "8ABD", "bank": "0E", "file_offset": "0x1CABD", "status": "decoded", "note": ""},
+    {"name": "R5 (ton grossier C) rafales", "cpu": "8CA0", "bank": "0E", "file_offset": "0x1CCA0", "status": "decoded", "note": ""},
+    {"name": "R7 (mixeur) variantes", "cpu": "8D53", "bank": "0E", "file_offset": "0x1CD53", "status": "decoded", "note": ""},
+    {"name": "R7 (mixeur) variantes", "cpu": "8D48", "bank": "0E", "file_offset": "0x1CD48", "status": "decoded", "note": ""},
+    {"name": "remise à zéro R10", "cpu": "403B", "bank": "00 (fixe)", "file_offset": "0x003B", "status": "decoded", "note": "32 appels ; coïncide avec les impulsions ESPACE (changement d'état)"},
+    {"name": "R15 = 0x8F chaque image", "cpu": "4BBF", "bank": "00 (fixe)", "file_offset": "0x0BBF", "status": "decoded", "note": "4782 écritures ; rôle non identifié (non musical)"}
+  ],
+  "unverified": [
+    "Rôle de chaque routine (musique, effet sonore, pause) : déduit des registres touchés et des instants, non prouvé.",
+    "Déclencheurs précis (saut, fouet, dégâts, ramassage) : non identifiés ; la seule corrélation établie est ESPACE -> transition d'état et musique.",
+    "Fréquence réelle d'images : 8745 appels à 4028 sur 150 s (58,3 Hz), contre 60 Hz supposés par le recorder.",
+    "Enveloppe AY, plages de volume et bornage des tons : aucune comparaison audio avec la référence."
+  ]
+}

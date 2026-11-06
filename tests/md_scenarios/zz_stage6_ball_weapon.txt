@@ -1,0 +1,45 @@
+# (zz) Armes lancees contre la boule du boss du stage 6 (7F79 -> 8258 -> 8348 -> 84F0, HL = 0606 ; trace openMSX par appel force de la routine : touche si |dX| <= 11,
+# dague -6..5 en Y, autres armes -6..11 ; research/boss-boxes.md). Meme debut que zz_stage6_ball_box.
+include zy_enter6.inc
+wait 30
+poke items+0 1
+poke items+1 1
+poke vk_game+20 4
+poke vk_game+0 34
+poke vk_game+1 128
+poke vk_game+2 1
+wait 4
+until game.room == 5 max 400 LEFT
+until game.player.y == 160 max 100
+until ram8('vk_boss+3') == 1 max 400
+until ram8('vk_boss+36') == 1 max 400
+until enemies.energy == 31 max 60
+until enemies.invuln == 0 max 300
+# Boule immobile en (150, 100) ; dague (etat 2, dx = dy = 0) a |dX| 12 : rien ; a |dX| 11 : la boule disparait, la dague aussi.
+poke vk_boss+36 1
+poke vk_boss+42 0
+poke vk_boss+43 0
+poke vk_boss+44 0
+poke vk_boss+45 0
+poke vk_boss+38 150
+poke vk_boss+39 0
+poke vk_boss+40 100
+poke vk_boss+41 0
+poke vk_weapons+0 2
+poke vk_weapons+1 2
+poke vk_weapons+2 0
+poke vk_weapons+3 0
+poke vk_weapons+4 150
+poke vk_weapons+5 112
+wait 4
+expect ram8('vk_boss+36') == 1
+poke vk_weapons+0 2
+poke vk_weapons+1 2
+poke vk_weapons+2 0
+poke vk_weapons+3 0
+poke vk_weapons+4 150
+poke vk_weapons+5 111
+poke vk_boss+36 1
+wait 4
+expect ram8('vk_boss+36') == 0
+expect ram8('vk_weapons+1') == 0

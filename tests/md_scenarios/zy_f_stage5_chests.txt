@@ -1,0 +1,35 @@
+# (zy_f) Stage 5, salle 3 : coffres fixes (176, 80) contenu 13 et (176, 144) contenu 1E (decodes de la ROM, 5A49/5B1B).
+# MSX : 8E42 (objet 13 : DE = 5000h, CALL 44EC, effet 10), 8E4B (objet 14 : 1000h), 8D8D (1E : C701 bit 3, case du HUD).
+# La cle est posee par poke (C700 = 1) : les cles du stage 5 sont dans les salles 1 et 4 (voir zy_e pour la prise d'une cle).
+include zy_enter5.inc
+poke Enemies_god 1
+wait 10
+expect ram8('vk_candles+6') == 3 and ram8('vk_candles+9') == 25 and ram8('vk_candles+12') == 0x13 # coffre (176, 80)
+expect ram8('vk_candles+20') == 3 and ram8('vk_candles+23') == 25 and ram8('vk_candles+26') == 0x1E # coffre (176, 144)
+set s0 ram32('vk_hud_score')
+poke vk_candles+119 1
+poke vk_game+0 200
+poke vk_game+1 96
+wait 4
+until ram8('vk_candles+119') == 0 max 120 LEFT
+expect ram8('vk_candles+6') == 4 and ram8('vk_candles+9') == 0x13 # le contenu attend 32 passes (64 images)
+until ram8('vk_candles+6') == 3 max 200 LEFT
+wait 4
+poke vk_game+0 200
+wait 4
+until ram8('vk_candles+6') == 0 max 60 LEFT
+expect ram32('vk_hud_score') == s0 + 5000 # 8E42 : 5000 points
+expect ram8('vk_candles+6') == 0
+# Second coffre, contenu 1E (eau benite) : C701 bit 3.
+poke vk_candles+119 1
+poke vk_game+0 196
+poke vk_game+1 160
+wait 4
+until ram8('vk_candles+119') == 0 max 120 LEFT
+until ram8('vk_candles+20') == 3 max 200 LEFT
+wait 4
+poke vk_game+0 196
+wait 4
+until ram8('vk_candles+20') == 0 max 60 LEFT
+expect (ram8('vk_candles+322') & 0x08) == 0x08 # C701 bit 3
+expect ram32('vk_hud_score') == s0 + 5000 # 1E : pas de points

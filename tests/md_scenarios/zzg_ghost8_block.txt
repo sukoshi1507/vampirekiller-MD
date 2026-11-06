@@ -1,0 +1,17 @@
+# (zzg) Stage 8 salle 0 : le bloc (96, 112) d'objet 15 libere aussi l'objet 1C (research/stage9-candle-object.md).
+# Trace openMSX (scratchpad/o1c/b80) : Simon (96, 144) debout, bloc touche, flamme C500 en (96, 128) pendant 31 images
+# (925 -> 956), objet 1C cree en (96, 144) (16 px sous la flamme), pose au sol (etat 2 a 972), marche vers Simon (1036).
+include zzb_enter8.inc
+poke Enemies_god 1
+wait 60
+poke vk_game+0 96
+poke vk_game+1 144
+poke vk_game+2 0
+wait 4
+hold B 1
+until any(enemies.enemy[k].active and enemies.enemy[k].type == 15 for k in range(7)) max 60
+set g [k for k in range(7) if enemies.enemy[k].active and enemies.enemy[k].type == 15][0]
+expect (enemies.enemy[g].x, enemies.enemy[g].y, enemies.enemy[g].state, enemies.enemy[g].pose) == (96, 144, 0, 0x9F)
+until enemies.enemy[g].state == 2 max 60
+expect enemies.enemy[g].y == 144 and enemies.enemy[g].x == 96
+shot zzg-bloc

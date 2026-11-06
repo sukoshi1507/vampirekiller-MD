@@ -1,0 +1,55 @@
+# (zzk) Stage 6 salle 1 : la bougie (96, 32) d'objet 15 libere l'objet 1A (research/stage9-candle-object.md, section 1A), pose 9B.
+# Trace openMSX (scratchpad/obj1a, o_6_1_96_32 ; Simon (84, 64) debout, fouet) : flamme de 30 passes, objet 1A cree en (96, 48) (pose 9B, base de
+# la salle), 8 passes d'attente, chute Y 50, 52, 54, 57, 60, 63, 67, pose au sol en Y 64 (etat 2). Contact : energie 32 -> 28. Fouet accroupi :
+# mort, +100 points.
+include zy_enter6.inc
+include zzb_next.inc
+until game.stage == 6 and game.room == 1 max 200
+poke Enemies_god 1
+wait 60
+expect ram8('vk_candles+4') & 2 # bougie (96, 32) allumee
+poke vk_game+0 84
+poke vk_game+1 64
+poke vk_game+2 0
+wait 4
+hold B 1
+until (ram8('vk_candles+4') & 2) == 0 max 12
+set f0 frame
+until any(enemies.enemy[k].active and enemies.enemy[k].type == 15 for k in range(7)) max 60
+set f1 frame
+expect f1 - f0 == 31 # flamme de 30 passes
+set g [k for k in range(7) if enemies.enemy[k].active and enemies.enemy[k].type == 15][0]
+expect (enemies.enemy[g].x, enemies.enemy[g].y, enemies.enemy[g].state, enemies.enemy[g].pose) == (96, 48, 0, 0x9B)
+shot zzk-bougie-eteinte
+until enemies.enemy[g].state == 1 max 30
+expect frame - f1 == 15
+expect enemies.enemy[g].y == 50
+wait 2
+expect enemies.enemy[g].y == 52
+wait 2
+expect enemies.enemy[g].y == 54
+wait 2
+expect enemies.enemy[g].y == 57
+wait 2
+expect enemies.enemy[g].y == 60
+wait 2
+expect enemies.enemy[g].y == 63
+wait 2
+expect enemies.enemy[g].y == 67
+wait 2
+expect enemies.enemy[g].state == 2 and enemies.enemy[g].y == 64 and enemies.enemy[g].x == 96
+shot zzk-pose
+# Contact (energie 32 -> 28), puis fouet accroupi vers l'objet qui marche : mort, 100 points.
+poke Enemies_god 0
+poke vk_game+0 96
+poke vk_game+1 64
+wait 4
+expect enemies.energy == 28
+wait 60
+until game.player.mode == 0 max 100
+poke vk_game+2 1
+set s0 ram32('vk_hud_score')
+hold DOWN 2
+hold DOWN+B 1
+until not enemies.enemy[g].active max 40 DOWN
+expect ram32('vk_hud_score') == s0 + 100

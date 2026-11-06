@@ -1,0 +1,127 @@
+{
+  "rom_sha256": "99eabaaeb2b6c02220e131043d5a6401d0d8c5f413d89204547adcc04d65e7e2",
+  "selector_roles": {
+    "lower": "C42E -> table A281 and positions 7985",
+    "upper": "C42F -> table A2D1 and positions 79D5"
+  },
+  "warning": "Pattern matches are candidate instruction sites; they require control-flow confirmation. No frame timings are established.",
+  "direct_write_candidates": [
+    {
+      "selector": "lower",
+      "target_ram": "C42E",
+      "operation": "LD (nn),HL",
+      "bank": 1,
+      "rom_offset": "02CBC",
+      "cpu_address_default": "6CBC",
+      "nearby_hex": "03 11 02 02 2a 2e c4 19 22 2e c4 c9 3a 21 c4 cd"
+    },
+    {
+      "selector": "lower",
+      "target_ram": "C42E",
+      "operation": "LD (nn),A",
+      "bank": 1,
+      "rom_offset": "02F19",
+      "cpu_address_default": "6F19",
+      "nearby_hex": "ed 44 3c 47 3a 2e c4 80 32 2e c4 3a 2f c4 81 32"
+    },
+    {
+      "selector": "lower",
+      "target_ram": "C42E",
+      "operation": "LD (nn),A",
+      "bank": 1,
+      "rom_offset": "02F32",
+      "cpu_address_default": "6F32",
+      "nearby_hex": "01 4f 3c 47 3a 2e c4 80 32 2e c4 3a 2f c4 81 32"
+    },
+    {
+      "selector": "lower",
+      "target_ram": "C42E",
+      "operation": "LD (nn),BC [ED43]",
+      "bank": 1,
+      "rom_offset": "03076",
+      "cpu_address_default": "7076",
+      "nearby_hex": "3e 06 32 20 c4 01 09 05 ed 43 2e c4 c3 5f 76 fd fd"
+    },
+    {
+      "selector": "lower",
+      "target_ram": "C42E",
+      "operation": "LD (nn),A",
+      "bank": 1,
+      "rom_offset": "03209",
+      "cpu_address_default": "7209",
+      "nearby_hex": "fe 02 3e 00 20 02 3e 06 32 2e c4 3a 36 c4 fe 02"
+    },
+    {
+      "selector": "lower",
+      "target_ram": "C42E",
+      "operation": "LD (nn),HL",
+      "bank": 1,
+      "rom_offset": "03677",
+      "cpu_address_default": "7677",
+      "nearby_hex": "7c fe 0f 30 03 c6 0f 67 22 2e c4 c9 3a 20 c4 fe"
+    },
+    {
+      "selector": "lower",
+      "target_ram": "C42E",
+      "operation": "LD (nn),BC [ED43]",
+      "bank": 1,
+      "rom_offset": "0379A",
+      "cpu_address_default": "779A",
+      "nearby_hex": "3a 20 c4 a7 c0 01 00 00 ed 43 2e c4 cd 5f 76 3a 2c"
+    },
+    {
+      "selector": "upper",
+      "target_ram": "C42F",
+      "operation": "LD (nn),A",
+      "bank": 1,
+      "rom_offset": "02F20",
+      "cpu_address_default": "6F20",
+      "nearby_hex": "80 32 2e c4 3a 2f c4 81 32 2f c4 c9 3a 2b c4 1f"
+    },
+    {
+      "selector": "upper",
+      "target_ram": "C42F",
+      "operation": "LD (nn),A",
+      "bank": 1,
+      "rom_offset": "02F39",
+      "cpu_address_default": "6F39",
+      "nearby_hex": "80 32 2e c4 3a 2f c4 81 32 2f c4 c9 3a 39 c4 a7"
+    },
+    {
+      "selector": "upper",
+      "target_ram": "C42F",
+      "operation": "LD (nn),A",
+      "bank": 1,
+      "rom_offset": "02FB6",
+      "cpu_address_default": "6FB6",
+      "nearby_hex": "0d 3e 03 32 20 c4 3e 02 32 2f c4 c3 5f 76 3a 3c"
+    },
+    {
+      "selector": "upper",
+      "target_ram": "C42F",
+      "operation": "LD (nn),A",
+      "bank": 1,
+      "rom_offset": "0321D",
+      "cpu_address_default": "721D",
+      "nearby_hex": "c4 3d 3e 06 20 02 3e 09 32 2f c4 cd 5f 76 3e 05"
+    },
+    {
+      "selector": "upper",
+      "target_ram": "C42F",
+      "operation": "LD (nn),A",
+      "bank": 1,
+      "rom_offset": "0322F",
+      "cpu_address_default": "722F",
+      "nearby_hex": "50 18 11 cd 93 55 3e 0c 32 2f c4 cd 5f 76 18 04"
+    },
+    {
+      "selector": "upper",
+      "target_ram": "C42F",
+      "operation": "LD (nn),A",
+      "bank": 1,
+      "rom_offset": "03280",
+      "cpu_address_default": "7280",
+      "nearby_hex": "fe 03 3e 00 20 02 3e 02 32 2f c4 c3 5f 76 cd 9f"
+    }
+  ]
+}

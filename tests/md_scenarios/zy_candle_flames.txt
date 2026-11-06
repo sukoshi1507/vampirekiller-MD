@@ -1,0 +1,100 @@
+# (zy) Dessin des flammes des bougies et blocs (research/candle-flames.md, traces openMSX), salle 5 du hall : trois flammes posees dans la
+# RAM du port (vk_candles + 6 + 14 i : etat, x, y, objet, minuteur T), une par type de flamme MSX, vues aux images cles. L'ecran montre l'etat
+# de l'image precedente (le minuteur lu est T, les sprites dessines sont ceux de T - 1).
+#  A (40, 64) objet 00/15 : C500 type 01, absente jusqu'a T - 1 = 4, motif F4 4 images, F8 8, F4 8..., couleur 8 (rouge de la salle).
+#  B (100, 64) objet 01 : C800 type 1E, comme la flamme de mort : F4 puis F8 (une ligne plus bas) a T - 1 = 6, 14, 22, 30.
+#  C (160, 64) objet 02..1D : C800 type 26, motif EC (rond), une ligne plus bas, couleurs 0E, 01, 08, 01 toutes les 2 images (0E jusqu'a T - 1 = 5).
+include boot_to_courtyard.inc
+until front_mode == MODES['INTERIOR'] max 3000 RIGHT
+hold A 3
+hold A+RIGHT 3
+wait 10
+hold A 3
+hold A+RIGHT 3
+wait 10
+hold A 3
+hold A+RIGHT 3
+wait 10
+hold A 3
+hold A+RIGHT 3
+wait 10
+hold A 3
+hold A+RIGHT 3
+wait 10
+hold A 3
+hold A+RIGHT 3
+wait 10
+expect game.room == 5 # salle 5 du hall
+wait 30
+poke enemy_state+0 0
+poke vk_candles+76 1
+poke vk_candles+77 40
+poke vk_candles+78 64
+poke vk_candles+79 0
+poke vk_candles+80 0
+poke vk_candles+90 1
+poke vk_candles+91 100
+poke vk_candles+92 64
+poke vk_candles+93 1
+poke vk_candles+94 0
+poke vk_candles+104 1
+poke vk_candles+105 160
+poke vk_candles+106 64
+poke vk_candles+107 2
+poke vk_candles+108 0
+until ram8("vk_candles+108") == 3 max 60
+expect pixel(43,72) == (65, 68, 65) # T=3 A cachee, B en F4, C blanc 0E
+expect pixel(103,72) == (238, 0, 32)
+expect pixel(102,65) == (0, 0, 0)
+expect pixel(168,73) == (238, 238, 238)
+until ram8("vk_candles+108") == 5 max 60
+expect pixel(43,72) == (238, 0, 32) # T=5 A en F4
+expect pixel(42,64) == (238, 238, 238)
+expect pixel(103,72) == (238, 0, 32)
+expect pixel(102,65) == (0, 0, 0)
+expect pixel(168,73) == (238, 238, 238)
+until ram8("vk_candles+108") == 7 max 60
+expect pixel(43,72) == (238, 0, 32) # T=7 B en F8, C 01
+expect pixel(42,64) == (238, 238, 238)
+expect pixel(103,72) == (238, 0, 32)
+expect pixel(102,65) == (238, 0, 32)
+expect pixel(168,73) == (238, 170, 139)
+until ram8("vk_candles+108") == 9 max 60
+expect pixel(43,72) == (238, 0, 32) # T=9 A en F8, C 08
+expect pixel(42,64) == (238, 0, 32)
+expect pixel(103,72) == (238, 0, 32)
+expect pixel(102,65) == (238, 0, 32)
+expect pixel(168,73) == (238, 0, 32)
+until ram8("vk_candles+108") == 11 max 60
+expect pixel(43,72) == (238, 0, 32) # T=11 C 01
+expect pixel(42,64) == (238, 0, 32)
+expect pixel(103,72) == (238, 0, 32)
+expect pixel(102,65) == (238, 0, 32)
+expect pixel(168,73) == (238, 170, 139)
+until ram8("vk_candles+108") == 13 max 60
+expect pixel(43,72) == (238, 0, 32) # T=13 C 0E
+expect pixel(42,64) == (238, 0, 32)
+expect pixel(103,72) == (238, 0, 32)
+expect pixel(102,65) == (238, 0, 32)
+expect pixel(168,73) == (238, 238, 238)
+until ram8("vk_candles+108") == 17 max 60
+expect pixel(43,72) == (238, 0, 32) # T=17 A en F4 (T - 1 = 16), C 08
+expect pixel(42,64) == (238, 238, 238)
+expect pixel(103,72) == (238, 0, 32)
+expect pixel(102,65) == (0, 0, 0)
+expect pixel(168,73) == (238, 0, 32)
+until ram8("vk_candles+108") == 21 max 60
+expect pixel(43,72) == (238, 0, 32) # T=21 C 0E
+expect pixel(42,64) == (238, 238, 238)
+expect pixel(103,72) == (238, 0, 32)
+expect pixel(102,65) == (0, 0, 0)
+expect pixel(168,73) == (238, 238, 238)
+until ram8("vk_candles+108") == 25 max 60
+expect pixel(43,72) == (238, 0, 32) # T=25 A en F8 (T - 1 = 24), B en F8, C 08
+expect pixel(42,64) == (238, 0, 32)
+expect pixel(103,72) == (238, 0, 32)
+expect pixel(102,65) == (238, 0, 32)
+expect pixel(168,73) == (238, 0, 32)
+until ram8("vk_candles+108") == 33 max 60
+expect pixel(43,72) == (65, 68, 65) # T=33 A eteinte (retiree a T = 32), C 08
+expect pixel(168,73) == (238, 0, 32)

@@ -1,0 +1,105 @@
+#!/usr/bin/env python3
+"""End-to-end MD checks: movement, jump/landing, facing and sprite composition."""
+import argparse
+import hashlib
+import json
+from pathlib import Path
+import re
+from PIL import ImageChops
+from probe import load_rom, ROOT
+from extract_rooms import decode_room, render
+from extract_player import extract_pose, POSES
+from run_headless import run
+from verify_viewer import gx_rgb565
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('core', type=Path)
+    parser.add_argument('source_rom', type=Path)
+    parser.add_argument('md_rom', type=Path)
+    parser.add_argument('symbols', type=Path)
+    parser.add_argument('--out', type=Path, default=ROOT / 'validation',
+                        help='dossier des captures et du rapport (defaut : validation/)')
+    args = parser.parse_args()
+    match = re.search(r'^([0-9a-fA-F]+)\s+[bB]\s+player$', args.symbols.read_text(), re.M)
+    if not match:
+        raise ValueError('player RAM symbol not found')
+    address = int(match[1], 16) & 65535
+    target = re.search(r'^([0-9a-fA-F]+)\s+[bB]\s+test_target$', args.symbols.read_text(), re.M)
+    target_address = int(target[1], 16) & 65535 if target else None
+    images, states = {}, {}
+    out = args.out
+    out.mkdir(parents=True, exist_ok=True)
+
+    def memory(raw, step):
+        # Genesis Plus GX stores 68k work RAM in host word order on little-endian hosts.
+        values = [raw[(address + i) ^ 1] for i in range(7)]
+        states[step] = dict(zip(('x', 'y', 'facing', 'mode', 'phase', 'clock', 'pose'), values))
+        if target_address is not None:
+            # VKTarget: int x, int y (32-bit big-endian words, byte-swapped in GPGX RAM).
+            word = lambda a: int.from_bytes(bytes(raw[(a + i) ^ 1] for i in range(4)), 'big', signed=True)
+            states[step]['target'] = (word(target_address), word(target_address + 4))
+
+    def image(frame, step):
+        images[step] = frame
+
+    # Libretro controls: B=0, C=8, right=7, left=6.
+    # The jump is paced at 30 Hz (jump_frames, player.c): Simon lands 29 frames after
+    # step 6, so step 7 waits 40 frames (25 was enough for the old 60 Hz arc).
+    script = [([0], 5), ([], 5), ([7], 30), ([], 5), ([8], 5), ([], 7),
+              ([], 40), ([6], 10), ([], 5)]
+    run(args.core, args.md_rom, out / 'md-player-left.png', script=script,
+        memory_observer=memory, observe=image, startup=[([1], 5), ([], 5)])
+    assert (states[2]['x'], states[2]['y']) == (16, 192)
+    assert (states[4]['x'], states[4]['y']) == (46, 192)
+    assert states[6]['mode'] == 1 and states[6]['y'] < 192
+    assert (states[7]['x'], states[7]['y'], states[7]['mode']) == (46, 192, 0)
+    assert (states[9]['x'], states[9]['y'], states[9]['facing']) == (36, 192, 1)
+    data = load_rom(args.source_rom)
+    record, graphics, tilemap = decode_room(data, 1, 0)
+    palette = [gx_rgb565(c) for c in record['palette_rgb333']]
+    background = render(graphics, tilemap, record['palette_rgb333'], palette)
+    comparisons = []
+    for step in (2, 4, 6, 7, 9):
+        state = states[step]
+        pose = state['pose']
+        pixels, _ = extract_pose(data, *POSES[pose], pose >= 6)
+        expected = background.copy()
+        own = set()
+        for yy in range(32):
+            for xx in range(24):
+                color = pixels[yy * 24 + xx]
+                x, y = state['x'] - 8 + xx, state['y'] - 31 + yy - 32
+                if color and 0 <= x < 256 and 0 <= y < 176:
+                    expected.putpixel((x, y), palette[color])
+                    own.add((x, y))
+        diff = ImageChops.difference(expected, images[step].crop((0, 32, 256, 208)))
+        # The training target (sprite 7) is not composed here; its position is read
+        # from RAM (test_target, set by reset_training_target), fallback player + (48, -24).
+        # Simon's own pixels are still compared inside that box.
+        target_x, target_y = states[2].get('target', (states[2]['x'] + 48, states[2]['y'] - 24))
+        target_y -= 32
+        zero = (0,) * len(diff.getbands())
+        for yy in range(target_y, target_y + 16):
+            for xx in range(target_x, target_x + 16):
+                if (xx, yy) not in own:
+                    diff.putpixel((xx, yy), zero)
+        if diff.getbbox():
+            diff.save(out / f'player-difference-{step}.png')
+            raise AssertionError(f'Sprite pixels do not match ROM masks at step {step}')
+        comparisons.append({'step': step, 'pose': pose, 'pixels_equal': True})
+    images[2].save(out / 'md-player-idle.png')
+    images[6].save(out / 'md-player-jump.png')
+    images[9].save(out / 'md-player-left.png')
+    report = {'all_passed': True, 'md_rom_sha256': hashlib.sha256(args.md_rom.read_bytes()).hexdigest(),
+              'movement': {'right_30_frames_px': 30, 'left_10_frames_px': 10},
+              'jump_left_ground': True, 'landing_y': 192, 'left_facing_verified': True,
+              'sprite_pixel_comparisons': comparisons, 'observed_states': states,
+              'scope': 'First-room movement prototype; full original state machine not ported.'}
+    (out / 'play-mode-checks.json').write_text(json.dumps(report, indent=2) + '\n')
+    print(json.dumps({k: v for k, v in report.items() if k != 'observed_states'}, indent=2))
+
+
+if __name__ == '__main__':
+    main()

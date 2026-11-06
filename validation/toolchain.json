@@ -1,0 +1,13 @@
+{
+  "sgdk_version": "2.11",
+  "gcc_version": "13.1.0 (marsdev v1.0.0-rc1)",
+  "pillow_version": "12.3.0",
+  "z80dis_version": "1.0.6",
+  "dependencies": {
+    ".tools/sgdk211.7z": "5cc704b7e3a15183c33e721a1d7f84c067cf78808754556d03bb14764df51437",
+    ".tools/marsdev.tar.xz": "f3efa32bd378d9d0b1e68afcd34d3649930bd378a5014addce0bdef92452e395",
+    ".tools/genesis-plus-gx.tar.gz": "e70c97b8f0e8f2c509cf1f276e419da81665487c755dea88ce447627bc9ea781",
+    ".tools/gpgx/genesis_plus_gx_libretro.so": "0f4b6a2948aefbf4788f9759607e9ca001289e591bbace93855443e12f3b05cf"
+  },
+  "z80_version": "1.2.0"
+}

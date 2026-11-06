@@ -1,0 +1,782 @@
+{
+  "core": "Genesis Plus GX (libretro), RGB565",
+  "source_rom_sha256": "99eabaaeb2b6c02220e131043d5a6401d0d8c5f413d89204547adcc04d65e7e2",
+  "md_rom_sha256": "b64a49f4168a0d251a91b730a834f95c922032362ef12d31ccaaabac9c9a00b4",
+  "md_rom_size": 524288,
+  "header_checksum": "A03A",
+  "checksum_format": "SGDK XOR16",
+  "sgdk_xor_over_rom": 0,
+  "sega_sum16_for_reference": "9C78",
+  "all_backgrounds_equal": true,
+  "backgrounds_checked": 152,
+  "pixels_per_background": 45056,
+  "navigation": {
+    "next_room": true,
+    "next_stage": true,
+    "reset": true,
+    "atlas_toggle": true
+  },
+  "scope": "MD viewer vs static extraction; original MSX execution not checked.",
+  "rooms": [
+    {
+      "stage": 1,
+      "room": 0,
+      "pixels_equal": true
+    },
+    {
+      "stage": 1,
+      "room": 1,
+      "pixels_equal": true
+    },
+    {
+      "stage": 1,
+      "room": 2,
+      "pixels_equal": true
+    },
+    {
+      "stage": 1,
+      "room": 3,
+      "pixels_equal": true
+    },
+    {
+      "stage": 1,
+      "room": 4,
+      "pixels_equal": true
+    },
+    {
+      "stage": 1,
+      "room": 5,
+      "pixels_equal": true
+    },
+    {
+      "stage": 1,
+      "room": 6,
+      "pixels_equal": true
+    },
+    {
+      "stage": 1,
+      "room": 7,
+      "pixels_equal": true
+    },
+    {
+      "stage": 2,
+      "room": 0,
+      "pixels_equal": true
+    },
+    {
+      "stage": 2,
+      "room": 1,
+      "pixels_equal": true
+    },
+    {
+      "stage": 2,
+      "room": 2,
+      "pixels_equal": true
+    },
+    {
+      "stage": 2,
+      "room": 3,
+      "pixels_equal": true
+    },
+    {
+      "stage": 2,
+      "room": 4,
+      "pixels_equal": true
+    },
+    {
+      "stage": 2,
+      "room": 5,
+      "pixels_equal": true
+    },
+    {
+      "stage": 3,
+      "room": 0,
+      "pixels_equal": true
+    },
+    {
+      "stage": 3,
+      "room": 1,
+      "pixels_equal": true
+    },
+    {
+      "stage": 3,
+      "room": 2,
+      "pixels_equal": true
+    },
+    {
+      "stage": 3,
+      "room": 3,
+      "pixels_equal": true
+    },
+    {
+      "stage": 3,
+      "room": 4,
+      "pixels_equal": true
+    },
+    {
+      "stage": 3,
+      "room": 5,
+      "pixels_equal": true
+    },
+    {
+      "stage": 4,
+      "room": 0,
+      "pixels_equal": true
+    },
+    {
+      "stage": 4,
+      "room": 1,
+      "pixels_equal": true
+    },
+    {
+      "stage": 4,
+      "room": 2,
+      "pixels_equal": true
+    },
+    {
+      "stage": 4,
+      "room": 3,
+      "pixels_equal": true
+    },
+    {
+      "stage": 4,
+      "room": 4,
+      "pixels_equal": true
+    },
+    {
+      "stage": 4,
+      "room": 5,
+      "pixels_equal": true
+    },
+    {
+      "stage": 5,
+      "room": 0,
+      "pixels_equal": true
+    },
+    {
+      "stage": 5,
+      "room": 1,
+      "pixels_equal": true
+    },
+    {
+      "stage": 5,
+      "room": 2,
+      "pixels_equal": true
+    },
+    {
+      "stage": 5,
+      "room": 3,
+      "pixels_equal": true
+    },
+    {
+      "stage": 5,
+      "room": 4,
+      "pixels_equal": true
+    },
+    {
+      "stage": 5,
+      "room": 5,
+      "pixels_equal": true
+    },
+    {
+      "stage": 6,
+      "room": 0,
+      "pixels_equal": true
+    },
+    {
+      "stage": 6,
+      "room": 1,
+      "pixels_equal": true
+    },
+    {
+      "stage": 6,
+      "room": 2,
+      "pixels_equal": true
+    },
+    {
+      "stage": 6,
+      "room": 3,
+      "pixels_equal": true
+    },
+    {
+      "stage": 6,
+      "room": 4,
+      "pixels_equal": true
+    },
+    {
+      "stage": 6,
+      "room": 5,
+      "pixels_equal": true
+    },
+    {
+      "stage": 7,
+      "room": 0,
+      "pixels_equal": true
+    },
+    {
+      "stage": 7,
+      "room": 1,
+      "pixels_equal": true
+    },
+    {
+      "stage": 7,
+      "room": 2,
+      "pixels_equal": true
+    },
+    {
+      "stage": 7,
+      "room": 3,
+      "pixels_equal": true
+    },
+    {
+      "stage": 7,
+      "room": 4,
+      "pixels_equal": true
+    },
+    {
+      "stage": 7,
+      "room": 5,
+      "pixels_equal": true
+    },
+    {
+      "stage": 7,
+      "room": 6,
+      "pixels_equal": true
+    },
+    {
+      "stage": 7,
+      "room": 7,
+      "pixels_equal": true
+    },
+    {
+      "stage": 7,
+      "room": 8,
+      "pixels_equal": true
+    },
+    {
+      "stage": 8,
+      "room": 0,
+      "pixels_equal": true
+    },
+    {
+      "stage": 8,
+      "room": 1,
+      "pixels_equal": true
+    },
+    {
+      "stage": 8,
+      "room": 2,
+      "pixels_equal": true
+    },
+    {
+      "stage": 8,
+      "room": 3,
+      "pixels_equal": true
+    },
+    {
+      "stage": 8,
+      "room": 4,
+      "pixels_equal": true
+    },
+    {
+      "stage": 8,
+      "room": 5,
+      "pixels_equal": true
+    },
+    {
+      "stage": 8,
+      "room": 6,
+      "pixels_equal": true
+    },
+    {
+      "stage": 8,
+      "room": 7,
+      "pixels_equal": true
+    },
+    {
+      "stage": 9,
+      "room": 0,
+      "pixels_equal": true
+    },
+    {
+      "stage": 9,
+      "room": 1,
+      "pixels_equal": true
+    },
+    {
+      "stage": 9,
+      "room": 2,
+      "pixels_equal": true
+    },
+    {
+      "stage": 9,
+      "room": 3,
+      "pixels_equal": true
+    },
+    {
+      "stage": 9,
+      "room": 4,
+      "pixels_equal": true
+    },
+    {
+      "stage": 9,
+      "room": 5,
+      "pixels_equal": true
+    },
+    {
+      "stage": 9,
+      "room": 6,
+      "pixels_equal": true
+    },
+    {
+      "stage": 9,
+      "room": 7,
+      "pixels_equal": true
+    },
+    {
+      "stage": 9,
+      "room": 8,
+      "pixels_equal": true
+    },
+    {
+      "stage": 10,
+      "room": 0,
+      "pixels_equal": true
+    },
+    {
+      "stage": 10,
+      "room": 1,
+      "pixels_equal": true
+    },
+    {
+      "stage": 10,
+      "room": 2,
+      "pixels_equal": true
+    },
+    {
+      "stage": 10,
+      "room": 3,
+      "pixels_equal": true
+    },
+    {
+      "stage": 10,
+      "room": 4,
+      "pixels_equal": true
+    },
+    {
+      "stage": 10,
+      "room": 5,
+      "pixels_equal": true
+    },
+    {
+      "stage": 10,
+      "room": 6,
+      "pixels_equal": true
+    },
+    {
+      "stage": 10,
+      "room": 7,
+      "pixels_equal": true
+    },
+    {
+      "stage": 10,
+      "room": 8,
+      "pixels_equal": true
+    },
+    {
+      "stage": 11,
+      "room": 0,
+      "pixels_equal": true
+    },
+    {
+      "stage": 11,
+      "room": 1,
+      "pixels_equal": true
+    },
+    {
+      "stage": 11,
+      "room": 2,
+      "pixels_equal": true
+    },
+    {
+      "stage": 11,
+      "room": 3,
+      "pixels_equal": true
+    },
+    {
+      "stage": 11,
+      "room": 4,
+      "pixels_equal": true
+    },
+    {
+      "stage": 11,
+      "room": 5,
+      "pixels_equal": true
+    },
+    {
+      "stage": 12,
+      "room": 0,
+      "pixels_equal": true
+    },
+    {
+      "stage": 12,
+      "room": 1,
+      "pixels_equal": true
+    },
+    {
+      "stage": 12,
+      "room": 2,
+      "pixels_equal": true
+    },
+    {
+      "stage": 12,
+      "room": 3,
+      "pixels_equal": true
+    },
+    {
+      "stage": 12,
+      "room": 4,
+      "pixels_equal": true
+    },
+    {
+      "stage": 12,
+      "room": 5,
+      "pixels_equal": true
+    },
+    {
+      "stage": 12,
+      "room": 6,
+      "pixels_equal": true
+    },
+    {
+      "stage": 12,
+      "room": 7,
+      "pixels_equal": true
+    },
+    {
+      "stage": 12,
+      "room": 8,
+      "pixels_equal": true
+    },
+    {
+      "stage": 12,
+      "room": 9,
+      "pixels_equal": true
+    },
+    {
+      "stage": 12,
+      "room": 10,
+      "pixels_equal": true
+    },
+    {
+      "stage": 12,
+      "room": 11,
+      "pixels_equal": true
+    },
+    {
+      "stage": 13,
+      "room": 0,
+      "pixels_equal": true
+    },
+    {
+      "stage": 13,
+      "room": 1,
+      "pixels_equal": true
+    },
+    {
+      "stage": 13,
+      "room": 2,
+      "pixels_equal": true
+    },
+    {
+      "stage": 13,
+      "room": 3,
+      "pixels_equal": true
+    },
+    {
+      "stage": 13,
+      "room": 4,
+      "pixels_equal": true
+    },
+    {
+      "stage": 13,
+      "room": 5,
+      "pixels_equal": true
+    },
+    {
+      "stage": 13,
+      "room": 6,
+      "pixels_equal": true
+    },
+    {
+      "stage": 13,
+      "room": 7,
+      "pixels_equal": true
+    },
+    {
+      "stage": 13,
+      "room": 8,
+      "pixels_equal": true
+    },
+    {
+      "stage": 13,
+      "room": 9,
+      "pixels_equal": true
+    },
+    {
+      "stage": 13,
+      "room": 10,
+      "pixels_equal": true
+    },
+    {
+      "stage": 13,
+      "room": 11,
+      "pixels_equal": true
+    },
+    {
+      "stage": 14,
+      "room": 0,
+      "pixels_equal": true
+    },
+    {
+      "stage": 14,
+      "room": 1,
+      "pixels_equal": true
+    },
+    {
+      "stage": 14,
+      "room": 2,
+      "pixels_equal": true
+    },
+    {
+      "stage": 14,
+      "room": 3,
+      "pixels_equal": true
+    },
+    {
+      "stage": 14,
+      "room": 4,
+      "pixels_equal": true
+    },
+    {
+      "stage": 14,
+      "room": 5,
+      "pixels_equal": true
+    },
+    {
+      "stage": 14,
+      "room": 6,
+      "pixels_equal": true
+    },
+    {
+      "stage": 14,
+      "room": 7,
+      "pixels_equal": true
+    },
+    {
+      "stage": 15,
+      "room": 0,
+      "pixels_equal": true
+    },
+    {
+      "stage": 15,
+      "room": 1,
+      "pixels_equal": true
+    },
+    {
+      "stage": 15,
+      "room": 2,
+      "pixels_equal": true
+    },
+    {
+      "stage": 15,
+      "room": 3,
+      "pixels_equal": true
+    },
+    {
+      "stage": 15,
+      "room": 4,
+      "pixels_equal": true
+    },
+    {
+      "stage": 15,
+      "room": 5,
+      "pixels_equal": true
+    },
+    {
+      "stage": 15,
+      "room": 6,
+      "pixels_equal": true
+    },
+    {
+      "stage": 15,
+      "room": 7,
+      "pixels_equal": true
+    },
+    {
+      "stage": 15,
+      "room": 8,
+      "pixels_equal": true
+    },
+    {
+      "stage": 15,
+      "room": 9,
+      "pixels_equal": true
+    },
+    {
+      "stage": 16,
+      "room": 0,
+      "pixels_equal": true
+    },
+    {
+      "stage": 16,
+      "room": 1,
+      "pixels_equal": true
+    },
+    {
+      "stage": 16,
+      "room": 2,
+      "pixels_equal": true
+    },
+    {
+      "stage": 16,
+      "room": 3,
+      "pixels_equal": true
+    },
+    {
+      "stage": 16,
+      "room": 4,
+      "pixels_equal": true
+    },
+    {
+      "stage": 16,
+      "room": 5,
+      "pixels_equal": true
+    },
+    {
+      "stage": 16,
+      "room": 6,
+      "pixels_equal": true
+    },
+    {
+      "stage": 16,
+      "room": 7,
+      "pixels_equal": true
+    },
+    {
+      "stage": 16,
+      "room": 8,
+      "pixels_equal": true
+    },
+    {
+      "stage": 16,
+      "room": 9,
+      "pixels_equal": true
+    },
+    {
+      "stage": 17,
+      "room": 0,
+      "pixels_equal": true
+    },
+    {
+      "stage": 17,
+      "room": 1,
+      "pixels_equal": true
+    },
+    {
+      "stage": 17,
+      "room": 2,
+      "pixels_equal": true
+    },
+    {
+      "stage": 17,
+      "room": 3,
+      "pixels_equal": true
+    },
+    {
+      "stage": 17,
+      "room": 4,
+      "pixels_equal": true
+    },
+    {
+      "stage": 17,
+      "room": 5,
+      "pixels_equal": true
+    },
+    {
+      "stage": 17,
+      "room": 6,
+      "pixels_equal": true
+    },
+    {
+      "stage": 17,
+      "room": 7,
+      "pixels_equal": true
+    },
+    {
+      "stage": 17,
+      "room": 8,
+      "pixels_equal": true
+    },
+    {
+      "stage": 17,
+      "room": 9,
+      "pixels_equal": true
+    },
+    {
+      "stage": 17,
+      "room": 10,
+      "pixels_equal": true
+    },
+    {
+      "stage": 17,
+      "room": 11,
+      "pixels_equal": true
+    },
+    {
+      "stage": 18,
+      "room": 0,
+      "pixels_equal": true
+    },
+    {
+      "stage": 18,
+      "room": 1,
+      "pixels_equal": true
+    },
+    {
+      "stage": 18,
+      "room": 2,
+      "pixels_equal": true
+    },
+    {
+      "stage": 18,
+      "room": 3,
+      "pixels_equal": true
+    },
+    {
+      "stage": 18,
+      "room": 4,
+      "pixels_equal": true
+    },
+    {
+      "stage": 18,
+      "room": 5,
+      "pixels_equal": true
+    },
+    {
+      "stage": 18,
+      "room": 6,
+      "pixels_equal": true
+    },
+    {
+      "stage": 18,
+      "room": 7,
+      "pixels_equal": true
+    },
+    {
+      "stage": 18,
+      "room": 8,
+      "pixels_equal": true
+    }
+  ]
+}

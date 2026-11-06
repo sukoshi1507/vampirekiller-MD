@@ -1,0 +1,1289 @@
+# (zzl) Boites de contact des ennemis, aux limites (1 px dedans / 1 px dehors) : statue 0A immobile (144, 144), classe 1 de 82CB (H 18h, L 5),
+# salle 6 du stage 8. Valeurs de la trace openMSX par re-execution de 8500 (arme lancee), 84A7 (fouet), 847A (contact) : research/enemy-boxes.md.
+#   arme lancee : |X arme - X objet| < L + 6 et 0 <= Y arme - E objet + H < H + 6 (dague) ou H + 12 (hache, croix) ;
+#   deuxieme emplacement C460 : 8500 laisse L + 6 (et H + 6 ou 12 si l'emplacement C450 a passe le test de X) dans HL, que le second appel reprend.
+#   fouet : |X + 20 - X objet| < L + 12 (X - 20 a gauche) et B - H <= Y - E < B + 4 (B = 18 debout, 10 accroupi) ;
+#   contact : |dX| < L + 5 et 2 - H <= Y - E < 2 + 1Ah (debout), 2 + 12h (accroupi).
+include zzb_enter8.inc
+poke Enemies_god 1
+wait 60
+include zzb_next.inc
+until game.stage == 8 and game.room == 1 max 200
+include zzb_next.inc
+until game.stage == 8 and game.room == 2 max 200
+include zzb_next.inc
+until game.stage == 8 and game.room == 3 max 200
+include zzb_next.inc
+until game.stage == 8 and game.room == 4 max 200
+include zzb_next.inc
+until game.stage == 8 and game.room == 5 max 200
+include zzb_next.inc
+until game.stage == 8 and game.room == 6 max 200
+until any(enemies.enemy[k].active and enemies.enemy[k].type == 9 for k in range(7)) max 100
+wait 10
+until game.player.mode == 0 max 300
+# dague, bord gauche : X 134 (dX -10) touche
+poke vk_weapons+0 0
+poke vk_weapons+1 0
+poke vk_weapons+4 224
+poke vk_weapons+5 0
+poke vk_weapons+9 0
+poke vk_weapons+10 0
+poke vk_weapons+13 224
+poke vk_weapons+14 0
+poke vk_enemies+0 1
+poke vk_enemies+1 0
+poke vk_enemies+2 9
+poke vk_enemies+3 8
+poke vk_enemies+4 144 16
+poke vk_enemies+6 144
+poke vk_enemies+18 0
+poke vk_enemies+36 0
+poke vk_enemies+54 0
+poke vk_enemies+72 0
+poke vk_enemies+90 0
+poke vk_enemies+108 0
+poke vk_weapons+0 2
+poke vk_weapons+1 2
+poke vk_weapons+2 0
+poke vk_weapons+3 5
+poke vk_weapons+4 130
+poke vk_weapons+5 129
+poke vk_weapons+6 32
+poke vk_weapons+7 0
+poke vk_weapons+8 0
+until ram8('vk_weapons+5') != 129 max 8
+expect (ram8('vk_enemies+3') & 15) == 7 and (ram8('vk_enemies+3') & 128) == 128
+# dague, X 133 (dX -11) ne touche pas
+poke vk_weapons+0 0
+poke vk_weapons+1 0
+poke vk_weapons+4 224
+poke vk_weapons+5 0
+poke vk_weapons+9 0
+poke vk_weapons+10 0
+poke vk_weapons+13 224
+poke vk_weapons+14 0
+poke vk_enemies+0 1
+poke vk_enemies+1 0
+poke vk_enemies+2 9
+poke vk_enemies+3 8
+poke vk_enemies+4 144 16
+poke vk_enemies+6 144
+poke vk_enemies+18 0
+poke vk_enemies+36 0
+poke vk_enemies+54 0
+poke vk_enemies+72 0
+poke vk_enemies+90 0
+poke vk_enemies+108 0
+poke vk_weapons+0 2
+poke vk_weapons+1 2
+poke vk_weapons+2 0
+poke vk_weapons+3 5
+poke vk_weapons+4 130
+poke vk_weapons+5 128
+poke vk_weapons+6 32
+poke vk_weapons+7 0
+poke vk_weapons+8 0
+until ram8('vk_weapons+5') != 128 max 8
+expect (ram8('vk_enemies+3') & 15) == 8 and (ram8('vk_enemies+3') & 128) == 0
+# dague, bord droit : X 154 (dX +10) touche
+poke vk_weapons+0 0
+poke vk_weapons+1 0
+poke vk_weapons+4 224
+poke vk_weapons+5 0
+poke vk_weapons+9 0
+poke vk_weapons+10 0
+poke vk_weapons+13 224
+poke vk_weapons+14 0
+poke vk_enemies+0 1
+poke vk_enemies+1 0
+poke vk_enemies+2 9
+poke vk_enemies+3 8
+poke vk_enemies+4 144 16
+poke vk_enemies+6 144
+poke vk_enemies+18 0
+poke vk_enemies+36 0
+poke vk_enemies+54 0
+poke vk_enemies+72 0
+poke vk_enemies+90 0
+poke vk_enemies+108 0
+poke vk_weapons+0 2
+poke vk_weapons+1 2
+poke vk_weapons+2 0
+poke vk_weapons+3 5
+poke vk_weapons+4 130
+poke vk_weapons+5 149
+poke vk_weapons+6 32
+poke vk_weapons+7 0
+poke vk_weapons+8 0
+until ram8('vk_weapons+5') != 149 max 8
+expect (ram8('vk_enemies+3') & 15) == 7 and (ram8('vk_enemies+3') & 128) == 128
+# dague, X 155 (dX +11) ne touche pas
+poke vk_weapons+0 0
+poke vk_weapons+1 0
+poke vk_weapons+4 224
+poke vk_weapons+5 0
+poke vk_weapons+9 0
+poke vk_weapons+10 0
+poke vk_weapons+13 224
+poke vk_weapons+14 0
+poke vk_enemies+0 1
+poke vk_enemies+1 0
+poke vk_enemies+2 9
+poke vk_enemies+3 8
+poke vk_enemies+4 144 16
+poke vk_enemies+6 144
+poke vk_enemies+18 0
+poke vk_enemies+36 0
+poke vk_enemies+54 0
+poke vk_enemies+72 0
+poke vk_enemies+90 0
+poke vk_enemies+108 0
+poke vk_weapons+0 2
+poke vk_weapons+1 2
+poke vk_weapons+2 0
+poke vk_weapons+3 5
+poke vk_weapons+4 130
+poke vk_weapons+5 150
+poke vk_weapons+6 32
+poke vk_weapons+7 0
+poke vk_weapons+8 0
+until ram8('vk_weapons+5') != 150 max 8
+expect (ram8('vk_enemies+3') & 15) == 8 and (ram8('vk_enemies+3') & 128) == 0
+# dague, bord haut : Y 120 (Y - E = -24) touche
+poke vk_weapons+0 0
+poke vk_weapons+1 0
+poke vk_weapons+4 224
+poke vk_weapons+5 0
+poke vk_weapons+9 0
+poke vk_weapons+10 0
+poke vk_weapons+13 224
+poke vk_weapons+14 0
+poke vk_enemies+0 1
+poke vk_enemies+1 0
+poke vk_enemies+2 9
+poke vk_enemies+3 8
+poke vk_enemies+4 144 16
+poke vk_enemies+6 144
+poke vk_enemies+18 0
+poke vk_enemies+36 0
+poke vk_enemies+54 0
+poke vk_enemies+72 0
+poke vk_enemies+90 0
+poke vk_enemies+108 0
+poke vk_weapons+0 2
+poke vk_weapons+1 2
+poke vk_weapons+2 0
+poke vk_weapons+3 5
+poke vk_weapons+4 120
+poke vk_weapons+5 139
+poke vk_weapons+6 32
+poke vk_weapons+7 0
+poke vk_weapons+8 0
+until ram8('vk_weapons+5') != 139 max 8
+expect (ram8('vk_enemies+3') & 15) == 7 and (ram8('vk_enemies+3') & 128) == 128
+# dague, Y 119 ne touche pas
+poke vk_weapons+0 0
+poke vk_weapons+1 0
+poke vk_weapons+4 224
+poke vk_weapons+5 0
+poke vk_weapons+9 0
+poke vk_weapons+10 0
+poke vk_weapons+13 224
+poke vk_weapons+14 0
+poke vk_enemies+0 1
+poke vk_enemies+1 0
+poke vk_enemies+2 9
+poke vk_enemies+3 8
+poke vk_enemies+4 144 16
+poke vk_enemies+6 144
+poke vk_enemies+18 0
+poke vk_enemies+36 0
+poke vk_enemies+54 0
+poke vk_enemies+72 0
+poke vk_enemies+90 0
+poke vk_enemies+108 0
+poke vk_weapons+0 2
+poke vk_weapons+1 2
+poke vk_weapons+2 0
+poke vk_weapons+3 5
+poke vk_weapons+4 119
+poke vk_weapons+5 139
+poke vk_weapons+6 32
+poke vk_weapons+7 0
+poke vk_weapons+8 0
+until ram8('vk_weapons+5') != 139 max 8
+expect (ram8('vk_enemies+3') & 15) == 8 and (ram8('vk_enemies+3') & 128) == 0
+# dague, bord bas : Y 149 (Y - E = +5) touche
+poke vk_weapons+0 0
+poke vk_weapons+1 0
+poke vk_weapons+4 224
+poke vk_weapons+5 0
+poke vk_weapons+9 0
+poke vk_weapons+10 0
+poke vk_weapons+13 224
+poke vk_weapons+14 0
+poke vk_enemies+0 1
+poke vk_enemies+1 0
+poke vk_enemies+2 9
+poke vk_enemies+3 8
+poke vk_enemies+4 144 16
+poke vk_enemies+6 144
+poke vk_enemies+18 0
+poke vk_enemies+36 0
+poke vk_enemies+54 0
+poke vk_enemies+72 0
+poke vk_enemies+90 0
+poke vk_enemies+108 0
+poke vk_weapons+0 2
+poke vk_weapons+1 2
+poke vk_weapons+2 0
+poke vk_weapons+3 5
+poke vk_weapons+4 149
+poke vk_weapons+5 139
+poke vk_weapons+6 32
+poke vk_weapons+7 0
+poke vk_weapons+8 0
+until ram8('vk_weapons+5') != 139 max 8
+expect (ram8('vk_enemies+3') & 15) == 7 and (ram8('vk_enemies+3') & 128) == 128
+# dague, Y 150 ne touche pas
+poke vk_weapons+0 0
+poke vk_weapons+1 0
+poke vk_weapons+4 224
+poke vk_weapons+5 0
+poke vk_weapons+9 0
+poke vk_weapons+10 0
+poke vk_weapons+13 224
+poke vk_weapons+14 0
+poke vk_enemies+0 1
+poke vk_enemies+1 0
+poke vk_enemies+2 9
+poke vk_enemies+3 8
+poke vk_enemies+4 144 16
+poke vk_enemies+6 144
+poke vk_enemies+18 0
+poke vk_enemies+36 0
+poke vk_enemies+54 0
+poke vk_enemies+72 0
+poke vk_enemies+90 0
+poke vk_enemies+108 0
+poke vk_weapons+0 2
+poke vk_weapons+1 2
+poke vk_weapons+2 0
+poke vk_weapons+3 5
+poke vk_weapons+4 150
+poke vk_weapons+5 139
+poke vk_weapons+6 32
+poke vk_weapons+7 0
+poke vk_weapons+8 0
+until ram8('vk_weapons+5') != 139 max 8
+expect (ram8('vk_enemies+3') & 15) == 8 and (ram8('vk_enemies+3') & 128) == 0
+# hache, bord bas : Y 155 (Y - E = +11) touche
+poke vk_weapons+0 0
+poke vk_weapons+1 0
+poke vk_weapons+4 224
+poke vk_weapons+5 0
+poke vk_weapons+9 0
+poke vk_weapons+10 0
+poke vk_weapons+13 224
+poke vk_weapons+14 0
+poke vk_enemies+0 1
+poke vk_enemies+1 0
+poke vk_enemies+2 9
+poke vk_enemies+3 8
+poke vk_enemies+4 144 16
+poke vk_enemies+6 144
+poke vk_enemies+18 0
+poke vk_enemies+36 0
+poke vk_enemies+54 0
+poke vk_enemies+72 0
+poke vk_enemies+90 0
+poke vk_enemies+108 0
+poke vk_weapons+0 2
+poke vk_weapons+1 3
+poke vk_weapons+2 0
+poke vk_weapons+3 3
+poke vk_weapons+4 155
+poke vk_weapons+5 141
+poke vk_weapons+6 32
+poke vk_weapons+7 0
+poke vk_weapons+8 0
+until ram8('vk_weapons+5') != 141 max 8
+expect (ram8('vk_enemies+3') & 15) == 4 and (ram8('vk_enemies+3') & 128) == 128
+# hache, Y 156 ne touche pas
+poke vk_weapons+0 0
+poke vk_weapons+1 0
+poke vk_weapons+4 224
+poke vk_weapons+5 0
+poke vk_weapons+9 0
+poke vk_weapons+10 0
+poke vk_weapons+13 224
+poke vk_weapons+14 0
+poke vk_enemies+0 1
+poke vk_enemies+1 0
+poke vk_enemies+2 9
+poke vk_enemies+3 8
+poke vk_enemies+4 144 16
+poke vk_enemies+6 144
+poke vk_enemies+18 0
+poke vk_enemies+36 0
+poke vk_enemies+54 0
+poke vk_enemies+72 0
+poke vk_enemies+90 0
+poke vk_enemies+108 0
+poke vk_weapons+0 2
+poke vk_weapons+1 3
+poke vk_weapons+2 0
+poke vk_weapons+3 3
+poke vk_weapons+4 156
+poke vk_weapons+5 141
+poke vk_weapons+6 32
+poke vk_weapons+7 0
+poke vk_weapons+8 0
+until ram8('vk_weapons+5') != 141 max 8
+expect (ram8('vk_enemies+3') & 15) == 8 and (ram8('vk_enemies+3') & 128) == 0
+# hache, bord haut : Y 120 touche
+poke vk_weapons+0 0
+poke vk_weapons+1 0
+poke vk_weapons+4 224
+poke vk_weapons+5 0
+poke vk_weapons+9 0
+poke vk_weapons+10 0
+poke vk_weapons+13 224
+poke vk_weapons+14 0
+poke vk_enemies+0 1
+poke vk_enemies+1 0
+poke vk_enemies+2 9
+poke vk_enemies+3 8
+poke vk_enemies+4 144 16
+poke vk_enemies+6 144
+poke vk_enemies+18 0
+poke vk_enemies+36 0
+poke vk_enemies+54 0
+poke vk_enemies+72 0
+poke vk_enemies+90 0
+poke vk_enemies+108 0
+poke vk_weapons+0 2
+poke vk_weapons+1 3
+poke vk_weapons+2 0
+poke vk_weapons+3 3
+poke vk_weapons+4 120
+poke vk_weapons+5 141
+poke vk_weapons+6 32
+poke vk_weapons+7 0
+poke vk_weapons+8 0
+until ram8('vk_weapons+5') != 141 max 8
+expect (ram8('vk_enemies+3') & 15) == 4 and (ram8('vk_enemies+3') & 128) == 128
+# hache, Y 119 ne touche pas
+poke vk_weapons+0 0
+poke vk_weapons+1 0
+poke vk_weapons+4 224
+poke vk_weapons+5 0
+poke vk_weapons+9 0
+poke vk_weapons+10 0
+poke vk_weapons+13 224
+poke vk_weapons+14 0
+poke vk_enemies+0 1
+poke vk_enemies+1 0
+poke vk_enemies+2 9
+poke vk_enemies+3 8
+poke vk_enemies+4 144 16
+poke vk_enemies+6 144
+poke vk_enemies+18 0
+poke vk_enemies+36 0
+poke vk_enemies+54 0
+poke vk_enemies+72 0
+poke vk_enemies+90 0
+poke vk_enemies+108 0
+poke vk_weapons+0 2
+poke vk_weapons+1 3
+poke vk_weapons+2 0
+poke vk_weapons+3 3
+poke vk_weapons+4 119
+poke vk_weapons+5 141
+poke vk_weapons+6 32
+poke vk_weapons+7 0
+poke vk_weapons+8 0
+until ram8('vk_weapons+5') != 141 max 8
+expect (ram8('vk_enemies+3') & 15) == 8 and (ram8('vk_enemies+3') & 128) == 0
+# croix, bord bas : Y 155 touche
+poke vk_weapons+0 0
+poke vk_weapons+1 0
+poke vk_weapons+4 224
+poke vk_weapons+5 0
+poke vk_weapons+9 0
+poke vk_weapons+10 0
+poke vk_weapons+13 224
+poke vk_weapons+14 0
+poke vk_enemies+0 1
+poke vk_enemies+1 0
+poke vk_enemies+2 9
+poke vk_enemies+3 8
+poke vk_enemies+4 144 16
+poke vk_enemies+6 144
+poke vk_enemies+18 0
+poke vk_enemies+36 0
+poke vk_enemies+54 0
+poke vk_enemies+72 0
+poke vk_enemies+90 0
+poke vk_enemies+108 0
+poke vk_weapons+0 2
+poke vk_weapons+1 4
+poke vk_weapons+2 0
+poke vk_weapons+3 5
+poke vk_weapons+4 155
+poke vk_weapons+5 139
+poke vk_weapons+6 32
+poke vk_weapons+7 0
+poke vk_weapons+8 0
+until ram8('vk_weapons+5') != 139 max 8
+expect (ram8('vk_enemies+3') & 15) == 6 and (ram8('vk_enemies+3') & 128) == 128
+# croix, Y 156 ne touche pas
+poke vk_weapons+0 0
+poke vk_weapons+1 0
+poke vk_weapons+4 224
+poke vk_weapons+5 0
+poke vk_weapons+9 0
+poke vk_weapons+10 0
+poke vk_weapons+13 224
+poke vk_weapons+14 0
+poke vk_enemies+0 1
+poke vk_enemies+1 0
+poke vk_enemies+2 9
+poke vk_enemies+3 8
+poke vk_enemies+4 144 16
+poke vk_enemies+6 144
+poke vk_enemies+18 0
+poke vk_enemies+36 0
+poke vk_enemies+54 0
+poke vk_enemies+72 0
+poke vk_enemies+90 0
+poke vk_enemies+108 0
+poke vk_weapons+0 2
+poke vk_weapons+1 4
+poke vk_weapons+2 0
+poke vk_weapons+3 5
+poke vk_weapons+4 156
+poke vk_weapons+5 139
+poke vk_weapons+6 32
+poke vk_weapons+7 0
+poke vk_weapons+8 0
+until ram8('vk_weapons+5') != 139 max 8
+expect (ram8('vk_enemies+3') & 15) == 8 and (ram8('vk_enemies+3') & 128) == 0
+# dague en C460, X 128 (dX -16) touche
+poke vk_weapons+0 0
+poke vk_weapons+1 0
+poke vk_weapons+4 224
+poke vk_weapons+5 0
+poke vk_weapons+9 0
+poke vk_weapons+10 0
+poke vk_weapons+13 224
+poke vk_weapons+14 0
+poke vk_enemies+0 1
+poke vk_enemies+1 0
+poke vk_enemies+2 9
+poke vk_enemies+3 8
+poke vk_enemies+4 144 16
+poke vk_enemies+6 144
+poke vk_enemies+18 0
+poke vk_enemies+36 0
+poke vk_enemies+54 0
+poke vk_enemies+72 0
+poke vk_enemies+90 0
+poke vk_enemies+108 0
+poke vk_weapons+9 2
+poke vk_weapons+10 2
+poke vk_weapons+11 0
+poke vk_weapons+12 5
+poke vk_weapons+13 130
+poke vk_weapons+14 123
+poke vk_weapons+15 32
+poke vk_weapons+16 0
+poke vk_weapons+17 0
+until ram8('vk_weapons+14') != 123 max 8
+expect (ram8('vk_enemies+3') & 15) == 7 and (ram8('vk_enemies+3') & 128) == 128
+# dague en C460, X 127 (dX -17) ne touche pas
+poke vk_weapons+0 0
+poke vk_weapons+1 0
+poke vk_weapons+4 224
+poke vk_weapons+5 0
+poke vk_weapons+9 0
+poke vk_weapons+10 0
+poke vk_weapons+13 224
+poke vk_weapons+14 0
+poke vk_enemies+0 1
+poke vk_enemies+1 0
+poke vk_enemies+2 9
+poke vk_enemies+3 8
+poke vk_enemies+4 144 16
+poke vk_enemies+6 144
+poke vk_enemies+18 0
+poke vk_enemies+36 0
+poke vk_enemies+54 0
+poke vk_enemies+72 0
+poke vk_enemies+90 0
+poke vk_enemies+108 0
+poke vk_weapons+9 2
+poke vk_weapons+10 2
+poke vk_weapons+11 0
+poke vk_weapons+12 5
+poke vk_weapons+13 130
+poke vk_weapons+14 122
+poke vk_weapons+15 32
+poke vk_weapons+16 0
+poke vk_weapons+17 0
+until ram8('vk_weapons+14') != 122 max 8
+expect (ram8('vk_enemies+3') & 15) == 8 and (ram8('vk_enemies+3') & 128) == 0
+# dague en C460, X 160 (dX +16) touche
+poke vk_weapons+0 0
+poke vk_weapons+1 0
+poke vk_weapons+4 224
+poke vk_weapons+5 0
+poke vk_weapons+9 0
+poke vk_weapons+10 0
+poke vk_weapons+13 224
+poke vk_weapons+14 0
+poke vk_enemies+0 1
+poke vk_enemies+1 0
+poke vk_enemies+2 9
+poke vk_enemies+3 8
+poke vk_enemies+4 144 16
+poke vk_enemies+6 144
+poke vk_enemies+18 0
+poke vk_enemies+36 0
+poke vk_enemies+54 0
+poke vk_enemies+72 0
+poke vk_enemies+90 0
+poke vk_enemies+108 0
+poke vk_weapons+9 2
+poke vk_weapons+10 2
+poke vk_weapons+11 0
+poke vk_weapons+12 5
+poke vk_weapons+13 130
+poke vk_weapons+14 155
+poke vk_weapons+15 32
+poke vk_weapons+16 0
+poke vk_weapons+17 0
+until ram8('vk_weapons+14') != 155 max 8
+expect (ram8('vk_enemies+3') & 15) == 7 and (ram8('vk_enemies+3') & 128) == 128
+# dague en C460, X 161 (dX +17) ne touche pas
+poke vk_weapons+0 0
+poke vk_weapons+1 0
+poke vk_weapons+4 224
+poke vk_weapons+5 0
+poke vk_weapons+9 0
+poke vk_weapons+10 0
+poke vk_weapons+13 224
+poke vk_weapons+14 0
+poke vk_enemies+0 1
+poke vk_enemies+1 0
+poke vk_enemies+2 9
+poke vk_enemies+3 8
+poke vk_enemies+4 144 16
+poke vk_enemies+6 144
+poke vk_enemies+18 0
+poke vk_enemies+36 0
+poke vk_enemies+54 0
+poke vk_enemies+72 0
+poke vk_enemies+90 0
+poke vk_enemies+108 0
+poke vk_weapons+9 2
+poke vk_weapons+10 2
+poke vk_weapons+11 0
+poke vk_weapons+12 5
+poke vk_weapons+13 130
+poke vk_weapons+14 156
+poke vk_weapons+15 32
+poke vk_weapons+16 0
+poke vk_weapons+17 0
+until ram8('vk_weapons+14') != 156 max 8
+expect (ram8('vk_enemies+3') & 15) == 8 and (ram8('vk_enemies+3') & 128) == 0
+# dague en C460 derriere une dague de C450 (X 144, Y 100) : Y 114 (Y - E = -30) touche
+poke vk_weapons+0 0
+poke vk_weapons+1 0
+poke vk_weapons+4 224
+poke vk_weapons+5 0
+poke vk_weapons+9 0
+poke vk_weapons+10 0
+poke vk_weapons+13 224
+poke vk_weapons+14 0
+poke vk_enemies+0 1
+poke vk_enemies+1 0
+poke vk_enemies+2 9
+poke vk_enemies+3 8
+poke vk_enemies+4 144 16
+poke vk_enemies+6 144
+poke vk_enemies+18 0
+poke vk_enemies+36 0
+poke vk_enemies+54 0
+poke vk_enemies+72 0
+poke vk_enemies+90 0
+poke vk_enemies+108 0
+poke vk_weapons+0 2
+poke vk_weapons+1 2
+poke vk_weapons+2 0
+poke vk_weapons+3 5
+poke vk_weapons+4 100
+poke vk_weapons+5 139
+poke vk_weapons+6 32
+poke vk_weapons+7 0
+poke vk_weapons+8 0
+poke vk_weapons+9 2
+poke vk_weapons+10 2
+poke vk_weapons+11 0
+poke vk_weapons+12 5
+poke vk_weapons+13 114
+poke vk_weapons+14 139
+poke vk_weapons+15 32
+poke vk_weapons+16 0
+poke vk_weapons+17 0
+until ram8('vk_weapons+14') != 139 max 8
+expect (ram8('vk_enemies+3') & 15) == 7 and (ram8('vk_enemies+3') & 128) == 128
+# idem, Y 113 ne touche pas
+poke vk_weapons+0 0
+poke vk_weapons+1 0
+poke vk_weapons+4 224
+poke vk_weapons+5 0
+poke vk_weapons+9 0
+poke vk_weapons+10 0
+poke vk_weapons+13 224
+poke vk_weapons+14 0
+poke vk_enemies+0 1
+poke vk_enemies+1 0
+poke vk_enemies+2 9
+poke vk_enemies+3 8
+poke vk_enemies+4 144 16
+poke vk_enemies+6 144
+poke vk_enemies+18 0
+poke vk_enemies+36 0
+poke vk_enemies+54 0
+poke vk_enemies+72 0
+poke vk_enemies+90 0
+poke vk_enemies+108 0
+poke vk_weapons+0 2
+poke vk_weapons+1 2
+poke vk_weapons+2 0
+poke vk_weapons+3 5
+poke vk_weapons+4 100
+poke vk_weapons+5 139
+poke vk_weapons+6 32
+poke vk_weapons+7 0
+poke vk_weapons+8 0
+poke vk_weapons+9 2
+poke vk_weapons+10 2
+poke vk_weapons+11 0
+poke vk_weapons+12 5
+poke vk_weapons+13 113
+poke vk_weapons+14 139
+poke vk_weapons+15 32
+poke vk_weapons+16 0
+poke vk_weapons+17 0
+until ram8('vk_weapons+14') != 139 max 8
+expect (ram8('vk_enemies+3') & 15) == 8 and (ram8('vk_enemies+3') & 128) == 0
+# idem, bord bas Y 149 touche
+poke vk_weapons+0 0
+poke vk_weapons+1 0
+poke vk_weapons+4 224
+poke vk_weapons+5 0
+poke vk_weapons+9 0
+poke vk_weapons+10 0
+poke vk_weapons+13 224
+poke vk_weapons+14 0
+poke vk_enemies+0 1
+poke vk_enemies+1 0
+poke vk_enemies+2 9
+poke vk_enemies+3 8
+poke vk_enemies+4 144 16
+poke vk_enemies+6 144
+poke vk_enemies+18 0
+poke vk_enemies+36 0
+poke vk_enemies+54 0
+poke vk_enemies+72 0
+poke vk_enemies+90 0
+poke vk_enemies+108 0
+poke vk_weapons+0 2
+poke vk_weapons+1 2
+poke vk_weapons+2 0
+poke vk_weapons+3 5
+poke vk_weapons+4 100
+poke vk_weapons+5 139
+poke vk_weapons+6 32
+poke vk_weapons+7 0
+poke vk_weapons+8 0
+poke vk_weapons+9 2
+poke vk_weapons+10 2
+poke vk_weapons+11 0
+poke vk_weapons+12 5
+poke vk_weapons+13 149
+poke vk_weapons+14 139
+poke vk_weapons+15 32
+poke vk_weapons+16 0
+poke vk_weapons+17 0
+until ram8('vk_weapons+14') != 139 max 8
+expect (ram8('vk_enemies+3') & 15) == 7 and (ram8('vk_enemies+3') & 128) == 128
+# idem, Y 150 ne touche pas
+poke vk_weapons+0 0
+poke vk_weapons+1 0
+poke vk_weapons+4 224
+poke vk_weapons+5 0
+poke vk_weapons+9 0
+poke vk_weapons+10 0
+poke vk_weapons+13 224
+poke vk_weapons+14 0
+poke vk_enemies+0 1
+poke vk_enemies+1 0
+poke vk_enemies+2 9
+poke vk_enemies+3 8
+poke vk_enemies+4 144 16
+poke vk_enemies+6 144
+poke vk_enemies+18 0
+poke vk_enemies+36 0
+poke vk_enemies+54 0
+poke vk_enemies+72 0
+poke vk_enemies+90 0
+poke vk_enemies+108 0
+poke vk_weapons+0 2
+poke vk_weapons+1 2
+poke vk_weapons+2 0
+poke vk_weapons+3 5
+poke vk_weapons+4 100
+poke vk_weapons+5 139
+poke vk_weapons+6 32
+poke vk_weapons+7 0
+poke vk_weapons+8 0
+poke vk_weapons+9 2
+poke vk_weapons+10 2
+poke vk_weapons+11 0
+poke vk_weapons+12 5
+poke vk_weapons+13 150
+poke vk_weapons+14 139
+poke vk_weapons+15 32
+poke vk_weapons+16 0
+poke vk_weapons+17 0
+until ram8('vk_weapons+14') != 139 max 8
+expect (ram8('vk_enemies+3') & 15) == 8 and (ram8('vk_enemies+3') & 128) == 0
+# fouet, pointe a dX -16 de l'objet (Simon X 108) : touche
+until whip.timer == 0 max 60
+until game.player.mode == 0 max 100
+poke vk_weapons+0 0
+poke vk_weapons+1 0
+poke vk_weapons+4 224
+poke vk_weapons+5 0
+poke vk_weapons+9 0
+poke vk_weapons+10 0
+poke vk_weapons+13 224
+poke vk_weapons+14 0
+poke vk_game+0 108
+poke vk_game+1 144
+poke vk_game+2 0
+poke vk_enemies+0 1
+poke vk_enemies+1 0
+poke vk_enemies+2 9
+poke vk_enemies+3 8
+poke vk_enemies+4 144 16
+poke vk_enemies+6 144
+poke vk_enemies+18 0
+poke vk_enemies+36 0
+poke vk_enemies+54 0
+poke vk_enemies+72 0
+poke vk_enemies+90 0
+poke vk_enemies+108 0
+hold B 2
+wait 20
+expect (ram8('vk_enemies+3') & 15) == 7
+# fouet, pointe a dX -17 (Simon X 107) : ne touche pas
+until whip.timer == 0 max 60
+until game.player.mode == 0 max 100
+poke vk_weapons+0 0
+poke vk_weapons+1 0
+poke vk_weapons+4 224
+poke vk_weapons+5 0
+poke vk_weapons+9 0
+poke vk_weapons+10 0
+poke vk_weapons+13 224
+poke vk_weapons+14 0
+poke vk_game+0 107
+poke vk_game+1 144
+poke vk_game+2 0
+poke vk_enemies+0 1
+poke vk_enemies+1 0
+poke vk_enemies+2 9
+poke vk_enemies+3 8
+poke vk_enemies+4 144 16
+poke vk_enemies+6 144
+poke vk_enemies+18 0
+poke vk_enemies+36 0
+poke vk_enemies+54 0
+poke vk_enemies+72 0
+poke vk_enemies+90 0
+poke vk_enemies+108 0
+hold B 2
+wait 20
+expect (ram8('vk_enemies+3') & 15) == 8
+# fouet, pointe a dX +16 (Simon X 140) : touche
+until whip.timer == 0 max 60
+until game.player.mode == 0 max 100
+poke vk_weapons+0 0
+poke vk_weapons+1 0
+poke vk_weapons+4 224
+poke vk_weapons+5 0
+poke vk_weapons+9 0
+poke vk_weapons+10 0
+poke vk_weapons+13 224
+poke vk_weapons+14 0
+poke vk_game+0 140
+poke vk_game+1 144
+poke vk_game+2 0
+poke vk_enemies+0 1
+poke vk_enemies+1 0
+poke vk_enemies+2 9
+poke vk_enemies+3 8
+poke vk_enemies+4 144 16
+poke vk_enemies+6 144
+poke vk_enemies+18 0
+poke vk_enemies+36 0
+poke vk_enemies+54 0
+poke vk_enemies+72 0
+poke vk_enemies+90 0
+poke vk_enemies+108 0
+hold B 2
+wait 20
+expect (ram8('vk_enemies+3') & 15) == 7
+# fouet, pointe a dX +17 (Simon X 141) : ne touche pas
+until whip.timer == 0 max 60
+until game.player.mode == 0 max 100
+poke vk_weapons+0 0
+poke vk_weapons+1 0
+poke vk_weapons+4 224
+poke vk_weapons+5 0
+poke vk_weapons+9 0
+poke vk_weapons+10 0
+poke vk_weapons+13 224
+poke vk_weapons+14 0
+poke vk_game+0 141
+poke vk_game+1 144
+poke vk_game+2 0
+poke vk_enemies+0 1
+poke vk_enemies+1 0
+poke vk_enemies+2 9
+poke vk_enemies+3 8
+poke vk_enemies+4 144 16
+poke vk_enemies+6 144
+poke vk_enemies+18 0
+poke vk_enemies+36 0
+poke vk_enemies+54 0
+poke vk_enemies+72 0
+poke vk_enemies+90 0
+poke vk_enemies+108 0
+hold B 2
+wait 20
+expect (ram8('vk_enemies+3') & 15) == 8
+# fouet, Y - E = -6 (E 150) : touche
+until whip.timer == 0 max 60
+until game.player.mode == 0 max 100
+poke vk_weapons+0 0
+poke vk_weapons+1 0
+poke vk_weapons+4 224
+poke vk_weapons+5 0
+poke vk_weapons+9 0
+poke vk_weapons+10 0
+poke vk_weapons+13 224
+poke vk_weapons+14 0
+poke vk_game+0 124
+poke vk_game+1 144
+poke vk_game+2 0
+poke vk_enemies+0 1
+poke vk_enemies+1 0
+poke vk_enemies+2 9
+poke vk_enemies+3 8
+poke vk_enemies+4 144 16
+poke vk_enemies+6 150
+poke vk_enemies+18 0
+poke vk_enemies+36 0
+poke vk_enemies+54 0
+poke vk_enemies+72 0
+poke vk_enemies+90 0
+poke vk_enemies+108 0
+hold B 2
+wait 20
+expect (ram8('vk_enemies+3') & 15) == 7
+# fouet, Y - E = -7 (E 151) : ne touche pas
+until whip.timer == 0 max 60
+until game.player.mode == 0 max 100
+poke vk_weapons+0 0
+poke vk_weapons+1 0
+poke vk_weapons+4 224
+poke vk_weapons+5 0
+poke vk_weapons+9 0
+poke vk_weapons+10 0
+poke vk_weapons+13 224
+poke vk_weapons+14 0
+poke vk_game+0 124
+poke vk_game+1 144
+poke vk_game+2 0
+poke vk_enemies+0 1
+poke vk_enemies+1 0
+poke vk_enemies+2 9
+poke vk_enemies+3 8
+poke vk_enemies+4 144 16
+poke vk_enemies+6 151
+poke vk_enemies+18 0
+poke vk_enemies+36 0
+poke vk_enemies+54 0
+poke vk_enemies+72 0
+poke vk_enemies+90 0
+poke vk_enemies+108 0
+hold B 2
+wait 20
+expect (ram8('vk_enemies+3') & 15) == 8
+# fouet, Y - E = +21 (E 123) : touche
+until whip.timer == 0 max 60
+until game.player.mode == 0 max 100
+poke vk_weapons+0 0
+poke vk_weapons+1 0
+poke vk_weapons+4 224
+poke vk_weapons+5 0
+poke vk_weapons+9 0
+poke vk_weapons+10 0
+poke vk_weapons+13 224
+poke vk_weapons+14 0
+poke vk_game+0 124
+poke vk_game+1 144
+poke vk_game+2 0
+poke vk_enemies+0 1
+poke vk_enemies+1 0
+poke vk_enemies+2 9
+poke vk_enemies+3 8
+poke vk_enemies+4 144 16
+poke vk_enemies+6 123
+poke vk_enemies+18 0
+poke vk_enemies+36 0
+poke vk_enemies+54 0
+poke vk_enemies+72 0
+poke vk_enemies+90 0
+poke vk_enemies+108 0
+hold B 2
+wait 20
+expect (ram8('vk_enemies+3') & 15) == 7
+# fouet, Y - E = +22 (E 122) : ne touche pas
+until whip.timer == 0 max 60
+until game.player.mode == 0 max 100
+poke vk_weapons+0 0
+poke vk_weapons+1 0
+poke vk_weapons+4 224
+poke vk_weapons+5 0
+poke vk_weapons+9 0
+poke vk_weapons+10 0
+poke vk_weapons+13 224
+poke vk_weapons+14 0
+poke vk_game+0 124
+poke vk_game+1 144
+poke vk_game+2 0
+poke vk_enemies+0 1
+poke vk_enemies+1 0
+poke vk_enemies+2 9
+poke vk_enemies+3 8
+poke vk_enemies+4 144 16
+poke vk_enemies+6 122
+poke vk_enemies+18 0
+poke vk_enemies+36 0
+poke vk_enemies+54 0
+poke vk_enemies+72 0
+poke vk_enemies+90 0
+poke vk_enemies+108 0
+hold B 2
+wait 20
+expect (ram8('vk_enemies+3') & 15) == 8
+poke Enemies_god 0
+# contact debout, dX -9 (statue X 109) : touche
+poke vk_enemies+0 0
+until enemies.invuln == 0 and enemies.recoil == 0 and game.player.mode == 0 max 600
+poke enemy_state+126 32
+poke vk_weapons+0 0
+poke vk_weapons+1 0
+poke vk_weapons+4 224
+poke vk_weapons+5 0
+poke vk_weapons+9 0
+poke vk_weapons+10 0
+poke vk_weapons+13 224
+poke vk_weapons+14 0
+poke vk_game+0 100
+poke vk_game+1 144
+poke vk_game+2 0
+poke vk_enemies+0 1
+poke vk_enemies+1 0
+poke vk_enemies+2 9
+poke vk_enemies+3 8
+poke vk_enemies+4 109 16
+poke vk_enemies+6 144
+poke vk_enemies+18 0
+poke vk_enemies+36 0
+poke vk_enemies+54 0
+poke vk_enemies+72 0
+poke vk_enemies+90 0
+poke vk_enemies+108 0
+wait 6
+expect enemies.energy == 30
+# contact debout, dX -10 (statue X 110) : rien
+poke vk_enemies+0 0
+until enemies.invuln == 0 and enemies.recoil == 0 and game.player.mode == 0 max 600
+poke enemy_state+126 32
+poke vk_weapons+0 0
+poke vk_weapons+1 0
+poke vk_weapons+4 224
+poke vk_weapons+5 0
+poke vk_weapons+9 0
+poke vk_weapons+10 0
+poke vk_weapons+13 224
+poke vk_weapons+14 0
+poke vk_game+0 100
+poke vk_game+1 144
+poke vk_game+2 0
+poke vk_enemies+0 1
+poke vk_enemies+1 0
+poke vk_enemies+2 9
+poke vk_enemies+3 8
+poke vk_enemies+4 110 16
+poke vk_enemies+6 144
+poke vk_enemies+18 0
+poke vk_enemies+36 0
+poke vk_enemies+54 0
+poke vk_enemies+72 0
+poke vk_enemies+90 0
+poke vk_enemies+108 0
+wait 6
+expect enemies.energy == 32
+# contact debout, dX +9 (statue X 91) : touche
+poke vk_enemies+0 0
+until enemies.invuln == 0 and enemies.recoil == 0 and game.player.mode == 0 max 600
+poke enemy_state+126 32
+poke vk_weapons+0 0
+poke vk_weapons+1 0
+poke vk_weapons+4 224
+poke vk_weapons+5 0
+poke vk_weapons+9 0
+poke vk_weapons+10 0
+poke vk_weapons+13 224
+poke vk_weapons+14 0
+poke vk_game+0 100
+poke vk_game+1 144
+poke vk_game+2 0
+poke vk_enemies+0 1
+poke vk_enemies+1 0
+poke vk_enemies+2 9
+poke vk_enemies+3 8
+poke vk_enemies+4 91 16
+poke vk_enemies+6 144
+poke vk_enemies+18 0
+poke vk_enemies+36 0
+poke vk_enemies+54 0
+poke vk_enemies+72 0
+poke vk_enemies+90 0
+poke vk_enemies+108 0
+wait 6
+expect enemies.energy == 30
+# contact debout, dX +10 (statue X 90) : rien
+poke vk_enemies+0 0
+until enemies.invuln == 0 and enemies.recoil == 0 and game.player.mode == 0 max 600
+poke enemy_state+126 32
+poke vk_weapons+0 0
+poke vk_weapons+1 0
+poke vk_weapons+4 224
+poke vk_weapons+5 0
+poke vk_weapons+9 0
+poke vk_weapons+10 0
+poke vk_weapons+13 224
+poke vk_weapons+14 0
+poke vk_game+0 100
+poke vk_game+1 144
+poke vk_game+2 0
+poke vk_enemies+0 1
+poke vk_enemies+1 0
+poke vk_enemies+2 9
+poke vk_enemies+3 8
+poke vk_enemies+4 90 16
+poke vk_enemies+6 144
+poke vk_enemies+18 0
+poke vk_enemies+36 0
+poke vk_enemies+54 0
+poke vk_enemies+72 0
+poke vk_enemies+90 0
+poke vk_enemies+108 0
+wait 6
+expect enemies.energy == 32
+# contact debout, Y - E = +27 (E 117) : touche
+poke vk_enemies+0 0
+until enemies.invuln == 0 and enemies.recoil == 0 and game.player.mode == 0 max 600
+poke enemy_state+126 32
+poke vk_weapons+0 0
+poke vk_weapons+1 0
+poke vk_weapons+4 224
+poke vk_weapons+5 0
+poke vk_weapons+9 0
+poke vk_weapons+10 0
+poke vk_weapons+13 224
+poke vk_weapons+14 0
+poke vk_game+0 100
+poke vk_game+1 144
+poke vk_game+2 0
+poke vk_enemies+0 1
+poke vk_enemies+1 0
+poke vk_enemies+2 9
+poke vk_enemies+3 8
+poke vk_enemies+4 104 16
+poke vk_enemies+6 117
+poke vk_enemies+18 0
+poke vk_enemies+36 0
+poke vk_enemies+54 0
+poke vk_enemies+72 0
+poke vk_enemies+90 0
+poke vk_enemies+108 0
+wait 6
+expect enemies.energy == 30
+# contact debout, Y - E = +28 (E 116) : rien
+poke vk_enemies+0 0
+until enemies.invuln == 0 and enemies.recoil == 0 and game.player.mode == 0 max 600
+poke enemy_state+126 32
+poke vk_weapons+0 0
+poke vk_weapons+1 0
+poke vk_weapons+4 224
+poke vk_weapons+5 0
+poke vk_weapons+9 0
+poke vk_weapons+10 0
+poke vk_weapons+13 224
+poke vk_weapons+14 0
+poke vk_game+0 100
+poke vk_game+1 144
+poke vk_game+2 0
+poke vk_enemies+0 1
+poke vk_enemies+1 0
+poke vk_enemies+2 9
+poke vk_enemies+3 8
+poke vk_enemies+4 104 16
+poke vk_enemies+6 116
+poke vk_enemies+18 0
+poke vk_enemies+36 0
+poke vk_enemies+54 0
+poke vk_enemies+72 0
+poke vk_enemies+90 0
+poke vk_enemies+108 0
+wait 6
+expect enemies.energy == 32
+# contact debout, Y - E = -22 (E 166) : touche
+poke vk_enemies+0 0
+until enemies.invuln == 0 and enemies.recoil == 0 and game.player.mode == 0 max 600
+poke enemy_state+126 32
+poke vk_weapons+0 0
+poke vk_weapons+1 0
+poke vk_weapons+4 224
+poke vk_weapons+5 0
+poke vk_weapons+9 0
+poke vk_weapons+10 0
+poke vk_weapons+13 224
+poke vk_weapons+14 0
+poke vk_game+0 100
+poke vk_game+1 144
+poke vk_game+2 0
+poke vk_enemies+0 1
+poke vk_enemies+1 0
+poke vk_enemies+2 9
+poke vk_enemies+3 8
+poke vk_enemies+4 104 16
+poke vk_enemies+6 166
+poke vk_enemies+18 0
+poke vk_enemies+36 0
+poke vk_enemies+54 0
+poke vk_enemies+72 0
+poke vk_enemies+90 0
+poke vk_enemies+108 0
+wait 6
+expect enemies.energy == 30
+# contact debout, Y - E = -23 (E 167) : rien
+poke vk_enemies+0 0
+until enemies.invuln == 0 and enemies.recoil == 0 and game.player.mode == 0 max 600
+poke enemy_state+126 32
+poke vk_weapons+0 0
+poke vk_weapons+1 0
+poke vk_weapons+4 224
+poke vk_weapons+5 0
+poke vk_weapons+9 0
+poke vk_weapons+10 0
+poke vk_weapons+13 224
+poke vk_weapons+14 0
+poke vk_game+0 100
+poke vk_game+1 144
+poke vk_game+2 0
+poke vk_enemies+0 1
+poke vk_enemies+1 0
+poke vk_enemies+2 9
+poke vk_enemies+3 8
+poke vk_enemies+4 104 16
+poke vk_enemies+6 167
+poke vk_enemies+18 0
+poke vk_enemies+36 0
+poke vk_enemies+54 0
+poke vk_enemies+72 0
+poke vk_enemies+90 0
+poke vk_enemies+108 0
+wait 6
+expect enemies.energy == 32
+# contact accroupi, Y - E = +19 (E 125) : touche
+poke vk_enemies+0 0
+until enemies.invuln == 0 and enemies.recoil == 0 and game.player.mode == 0 max 600
+poke enemy_state+126 32
+poke vk_weapons+0 0
+poke vk_weapons+1 0
+poke vk_weapons+4 224
+poke vk_weapons+5 0
+poke vk_weapons+9 0
+poke vk_weapons+10 0
+poke vk_weapons+13 224
+poke vk_weapons+14 0
+poke vk_game+0 100
+poke vk_game+1 144
+poke vk_game+2 0
+until game.player.crouched == 1 max 30 DOWN
+poke vk_enemies+0 1
+poke vk_enemies+1 0
+poke vk_enemies+2 9
+poke vk_enemies+3 8
+poke vk_enemies+4 104 16
+poke vk_enemies+6 125
+poke vk_enemies+18 0
+poke vk_enemies+36 0
+poke vk_enemies+54 0
+poke vk_enemies+72 0
+poke vk_enemies+90 0
+poke vk_enemies+108 0
+hold DOWN 6
+expect enemies.energy == 30
+# contact accroupi, Y - E = +20 (E 124) : rien (debout il toucherait)
+poke vk_enemies+0 0
+until enemies.invuln == 0 and enemies.recoil == 0 and game.player.mode == 0 max 600
+poke enemy_state+126 32
+poke vk_weapons+0 0
+poke vk_weapons+1 0
+poke vk_weapons+4 224
+poke vk_weapons+5 0
+poke vk_weapons+9 0
+poke vk_weapons+10 0
+poke vk_weapons+13 224
+poke vk_weapons+14 0
+poke vk_game+0 100
+poke vk_game+1 144
+poke vk_game+2 0
+until game.player.crouched == 1 max 30 DOWN
+poke vk_enemies+0 1
+poke vk_enemies+1 0
+poke vk_enemies+2 9
+poke vk_enemies+3 8
+poke vk_enemies+4 104 16
+poke vk_enemies+6 124
+poke vk_enemies+18 0
+poke vk_enemies+36 0
+poke vk_enemies+54 0
+poke vk_enemies+72 0
+poke vk_enemies+90 0
+poke vk_enemies+108 0
+hold DOWN 6
+expect enemies.energy == 32

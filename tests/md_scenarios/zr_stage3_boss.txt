@@ -1,0 +1,81 @@
+# (zr) Boss du stage 3, objet 12h (research/stage3-boss.md). Porte de la salle 4 -> salle 5, combat,
+# orbe, fin vers le stage 4. vk_boss : +3 vivant, +4 etat, +8 Y, +10 X, +21 C418, +25 CE0B, +26 CE10,
+# +33 Y orbe, +34 CE14, +35 CE11. Cle blanche donnee en memoire (items : +1 prise, +2 porte).
+until front_mode == MODES['TITLE'] max 2000
+wait 10
+tap C
+wait 30
+poke vk_game+22 3
+poke vk_game+20 3
+hold A 3
+hold A+RIGHT 3
+wait 10
+expect game.stage == 3
+poke vk_game+20 4
+poke items+0 0x01
+poke items+1 1
+poke vk_game+0 228
+poke vk_game+1 128
+poke vk_game+2 0
+wait 4
+until ram8('items+2') == 1 max 60 RIGHT
+until game.room == 5 max 400
+expect game.player.x == 10 # trace : x 10, y 176, puis chute a 192
+until game.player.y == 192 max 60
+expect ram8('vk_boss') == 1
+expect ram8('vk_boss+3') == 1 and ram8('vk_boss+8') == 0x40 and ram8('vk_boss+10') == 0x70
+wait 2
+shot zr-boss-depart
+# Fouet : X de Simon + 20, boite 83F2.
+poke vk_boss+8 176
+poke vk_boss+10 30
+wait 1
+tap B
+wait 20
+expect ram8('vk_boss+21') == 0x78 # -8
+expect pixel(119, 24) != pixel(120, 24) # barre ENEMY : 60 px
+shot zr-coup
+# Contact 83EA : degat 4, recul.
+poke vk_boss+8 176
+poke vk_boss+10 16
+wait 2
+expect enemies.energy == 28 and enemies.invuln > 0
+poke vk_boss+8 64
+poke vk_boss+10 200
+until game.recoil == 0 and game.player.y == 192 max 120
+until enemies.invuln == 0 max 300
+# Le boss vole seul : cible au-dessus de Simon.
+poke vk_boss+4 2
+poke vk_boss+7 1
+until ram8('vk_boss+4') >= 4 max 400
+expect ram16('vk_boss+12') == 0 and ram16('vk_boss+14') == 0
+shot zr-vise
+until ram8('vk_boss+36') == 1 max 200
+wait 6
+shot zr-boule
+# Dernier coup : disparition, orbe a Y 40h qui tombe a C0h.
+poke vk_boss+36 0
+poke vk_boss+46 0
+poke vk_boss+21 8
+poke vk_game+0 28
+poke vk_boss+8 176
+poke vk_boss+10 48
+wait 1
+tap B
+until ram8('vk_boss+21') == 0 max 20
+expect ram8('vk_boss+3') == 0
+wait 4
+until ram8('vk_boss+28') == 1 max 200
+until ram8('vk_boss+34') == 1 max 500
+expect ram8('vk_boss+33') == 0xC0
+wait 2
+shot zr-orbe
+poke vk_game+0 120
+until ram8('vk_boss+35') == 1 max 10
+poke vk_game+0 40
+set e0 enemies.energy
+until enemies.energy > e0 max 500
+until game.stage == 4 max 400
+wait 10
+expect game.room == 0 and ram8('vk_boss') == 0
+shot zr-stage4

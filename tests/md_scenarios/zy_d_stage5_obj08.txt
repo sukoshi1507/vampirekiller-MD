@@ -1,0 +1,28 @@
+# (zy_d) Stage 5, objet 08 : trajectoire passe par passe contre la trace openMSX (scratchpad/stage5/out/R, salle 0, Simon en (232, 96)).
+# Valeurs (Y, X) de l'objet 08 le plus ancien toutes les 10 passes (20 images) depuis la 1re passe apres la creation, 89 passes jusqu'a la sortie en X 238.
+include zy_enter5.inc
+poke Enemies_god 1
+poke vk_game+20 1
+hold A 3
+hold A+LEFT 3
+until game.room == 0 max 200
+poke vk_game+0 232
+poke vk_game+1 96
+until any(e.active and e.type == 7 and e.x == 18 for e in enemies.enemy) max 400
+expect sorted((e.age, e.y, e.x) for e in enemies.enemy if e.active and e.type == 7)[-1][1:] == (84, 18) # passe 0, vy -960
+wait 20
+expect sorted((e.age, e.y, e.x) for e in enemies.enemy if e.active and e.type == 7)[-1][1:] == (60, 43) # passe 10, vy -320
+wait 20
+expect sorted((e.age, e.y, e.x) for e in enemies.enemy if e.active and e.type == 7)[-1][1:] == (61, 68) # passe 20, vy 320
+wait 20
+expect sorted((e.age, e.y, e.x) for e in enemies.enemy if e.active and e.type == 7)[-1][1:] == (88, 93) # passe 30, vy 960
+wait 20
+expect sorted((e.age, e.y, e.x) for e in enemies.enemy if e.active and e.type == 7)[-1][1:] == (111, 118) # passe 40, vy 320
+wait 20
+expect sorted((e.age, e.y, e.x) for e in enemies.enemy if e.active and e.type == 7)[-1][1:] == (110, 143) # passe 50, vy -320
+wait 20
+expect sorted((e.age, e.y, e.x) for e in enemies.enemy if e.active and e.type == 7)[-1][1:] == (84, 168) # passe 60, vy -960
+wait 20
+expect sorted((e.age, e.y, e.x) for e in enemies.enemy if e.active and e.type == 7)[-1][1:] == (60, 193) # passe 70, vy -320
+wait 20
+expect sorted((e.age, e.y, e.x) for e in enemies.enemy if e.active and e.type == 7)[-1][1:] == (61, 218) # passe 80, vy 320

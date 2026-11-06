@@ -1,0 +1,66 @@
+# (zs) God mode, ajout du port : code Konami en pause. Enemies_god = 1, le selecteur s'ouvre ; A bascule.
+# Boss en contact : ni degat ni recul ; chute dans l'eau : la vie n'est pas perdue.
+until front_mode == MODES['TITLE'] max 2000
+wait 10
+tap C
+wait 30
+poke vk_game+22 3
+poke vk_game+20 4
+hold A 3
+hold A+RIGHT 3
+wait 30
+expect game.stage == 3 and game.room == 5 and ram8('vk_boss') == 1
+expect ram8('Enemies_god') == 0
+# Sans god mode, le contact coute 4 points.
+poke vk_boss+8 192
+poke vk_game+1 192
+wait 1
+poke vk_game+0 40
+poke vk_boss+10 40
+wait 3
+expect enemies.energy == 28 and enemies.invuln > 0
+poke vk_boss+8 64
+poke vk_boss+10 200
+until enemies.invuln == 0 and game.recoil == 0 max 400
+# Code Konami en pause.
+tap START
+wait 10
+tap UP
+tap UP
+tap DOWN
+tap DOWN
+tap LEFT
+tap RIGHT
+tap LEFT
+tap RIGHT
+tap B
+tap A
+wait 4
+expect ram8('Enemies_god') == 1
+shot zs-selecteur
+tap A
+expect ram8('Enemies_god') == 0
+tap A
+expect ram8('Enemies_god') == 1
+tap C
+wait 10
+# Avec god mode : aucun effet du contact.
+until game.player.y == 192 and game.recoil == 0 max 200
+poke vk_boss+8 192
+poke vk_game+0 40
+poke vk_boss+10 40
+wait 3
+expect enemies.energy == 28 and enemies.invuln == 0 and game.recoil == 0
+# Chute dans l'eau du stage 2, salle 4 : la vie revient.
+set lives0 health.lives
+poke vk_game+22 2
+poke vk_game+20 3
+hold A 3
+hold A+RIGHT 3
+expect game.stage == 2 and game.room == 4
+poke vk_game+0 172
+poke vk_game+1 200
+until health.phase == 1 and health.fell == 1 max 60
+until health.phase == 0 max 600
+expect health.lives == lives0
+expect ram8('Enemies_god') == 1

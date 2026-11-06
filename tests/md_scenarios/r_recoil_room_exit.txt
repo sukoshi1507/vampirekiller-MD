@@ -1,0 +1,16 @@
+# (r) Recul au bord d'une salle (research/player-health.md, « Recul au coup recu ») : le test
+# de sortie 767B tourne aussi pendant C420 = 5. Hall salle 0 (salle 3 a gauche) : Simon en
+# x 16 pousse vers la gauche passe en salle 3 a X F6 des que X < 8, et le recul continue.
+include boot_to_courtyard.inc
+until front_mode == MODES['INTERIOR'] max 3000 RIGHT
+expect game.room == 0 and game.player.x == 16
+until enemies.alive > 0 max 600
+until enemies.energy < 32 max 600                 # l'ennemi arrive de la droite
+expect game.recoil == 1 and game.recoil_dir == -1 # pousse vers la gauche
+set f_contact frame
+until game.room == 3 max 40
+expect game.player.x == 0xF6 and game.recoil == 2 # salle 3, X F6, toujours en l'air (C420 = 5)
+expect frame - f_contact <= 12 # pose, puis 5 pas de 2 px (16 -> 6), une passe toutes les 2 images
+until game.recoil == 3 max 200                    # apres le gel de l'etat 9, atterrissage en salle 3
+expect game.room == 3 and game.player.y == 192 and game.player.x == 0xF6 - 2 * 17
+shot r-salle3

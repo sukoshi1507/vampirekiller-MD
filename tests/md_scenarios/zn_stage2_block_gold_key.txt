@@ -1,0 +1,21 @@
+# Cle doree du bloc cache (128, 160) de la salle 0 du stage 2. 8F83 : refusee tant qu'une cle est
+# tenue (C701 & 6), elle reste au sol, sans son ; sinon prise au contact (8E50).
+until front_mode == MODES['TITLE'] max 2000
+wait 10
+tap C
+wait 30
+poke vk_game+0 100
+poke vk_game+1 192
+wait 20
+hold RIGHT 4
+wait 4
+tap B
+wait 30
+expect ram8('vk_candles+6') == 3 and ram8('vk_candles+9') == 0x17 # cle posee
+expect ram8('vk_candles+7') == 128 and ram8('vk_candles+8') == 176 # sous le bloc, 16 px plus bas
+poke vk_candles+119 1
+until game.player.x >= 128 max 60 RIGHT
+expect ram8('vk_candles+6') == 3 and ram8('vk_candles+119') == 1 # cle deja tenue : refusee
+poke vk_candles+119 0
+wait 2
+expect ram8('vk_candles+6') == 0 and ram8('vk_candles+119') == 1 # plus aucune cle : prise

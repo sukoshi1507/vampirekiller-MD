@@ -1,0 +1,1190 @@
+{
+  "rom_sha256": "99eabaaeb2b6c02220e131043d5a6401d0d8c5f413d89204547adcc04d65e7e2",
+  "asset_source": "MSX2 original, position/mask tables",
+  "palette_source": "stage 1 room 0 palette (decode_room(rom,1,0)), all 16 entries, RGB333 -> MD 0000BBB0GGG0RRR0",
+  "palette_rgb333": [
+    [
+      0,
+      0,
+      0
+    ],
+    [
+      7,
+      5,
+      4
+    ],
+    [
+      1,
+      1,
+      1
+    ],
+    [
+      6,
+      2,
+      3
+    ],
+    [
+      7,
+      1,
+      6
+    ],
+    [
+      0,
+      0,
+      4
+    ],
+    [
+      7,
+      6,
+      5
+    ],
+    [
+      0,
+      2,
+      0
+    ],
+    [
+      7,
+      0,
+      1
+    ],
+    [
+      3,
+      0,
+      0
+    ],
+    [
+      4,
+      0,
+      0
+    ],
+    [
+      4,
+      3,
+      1
+    ],
+    [
+      5,
+      5,
+      5
+    ],
+    [
+      2,
+      2,
+      2
+    ],
+    [
+      7,
+      7,
+      7
+    ],
+    [
+      0,
+      0,
+      7
+    ]
+  ],
+  "palette_md_words": [
+    "0x0000",
+    "0x08AE",
+    "0x0222",
+    "0x064C",
+    "0x0C2E",
+    "0x0800",
+    "0x0ACE",
+    "0x0040",
+    "0x020E",
+    "0x0006",
+    "0x0008",
+    "0x0268",
+    "0x0AAA",
+    "0x0444",
+    "0x0EEE",
+    "0x0E00"
+  ],
+  "index0": "transparent (VDP); palette entry 0 not used for drawing",
+  "colour_model": "layer parity: even -> plane 1, odd -> plane 2 (CC), overlap -> 3",
+  "level0_reference_words_checked": 768,
+  "canvas": {
+    "width": 64,
+    "height": 32,
+    "origin_y": -30,
+    "origin_x": {
+      "right": -24,
+      "left": -39
+    },
+    "halves": "two 32x32 sprites per frame at canvas x 0 and 32"
+  },
+  "frame_order": "frames 0..2 right, 3..5 left (triplet order = C42F sequence)",
+  "levels": {
+    "1": {
+      "symbol_tiles": "vk_whip_level1_tiles",
+      "symbol_palette": "vk_whip_level1_palette",
+      "tile_words": 1536,
+      "frames": [
+        {
+          "frame": 0,
+          "facing": "right",
+          "lower_index": 0,
+          "upper_index": 9,
+          "origin_world_xy": [
+            -24,
+            -30
+          ],
+          "png": "assets/whip_levels/whip_level1_right_0-9.png",
+          "tiles": 32,
+          "colour_counts": {
+            "0": 1662,
+            "1": 50,
+            "2": 263,
+            "3": 73
+          },
+          "components": {
+            "lower": {
+              "index": 0,
+              "pattern_cpu": "ACD1",
+              "pattern_file_offset": "1ACD1",
+              "coordinate_cpu": "7A1D",
+              "coordinate_file_offset": "03A1D",
+              "layer_count": 2,
+              "position_count": 2,
+              "offsets_dy_dx": [
+                [
+                  -14,
+                  -8
+                ],
+                [
+                  -14,
+                  -8
+                ]
+              ],
+              "placed_layers": [
+                0,
+                1
+              ]
+            },
+            "upper": {
+              "index": 9,
+              "pattern_cpu": "B3FB",
+              "pattern_file_offset": "1B3FB",
+              "coordinate_cpu": "7A59",
+              "coordinate_file_offset": "03A59",
+              "layer_count": 6,
+              "position_count": 6,
+              "offsets_dy_dx": [
+                [
+                  -30,
+                  -16
+                ],
+                [
+                  -30,
+                  -16
+                ],
+                [
+                  -30,
+                  -32
+                ],
+                [
+                  -30,
+                  -32
+                ],
+                [
+                  -14,
+                  -32
+                ],
+                [
+                  -14,
+                  -32
+                ]
+              ],
+              "placed_layers": [
+                0,
+                1,
+                2,
+                3,
+                4,
+                5
+              ]
+            }
+          },
+          "unplaced_layers": [],
+          "unplaced_layers_note": "",
+          "status": "candidate",
+          "classification": "ROM-derived candidate; full on-screen match not verified for every frame"
+        },
+        {
+          "frame": 1,
+          "facing": "right",
+          "lower_index": 0,
+          "upper_index": 10,
+          "origin_world_xy": [
+            -24,
+            -30
+          ],
+          "png": "assets/whip_levels/whip_level1_right_0-10.png",
+          "tiles": 32,
+          "colour_counts": {
+            "0": 1731,
+            "1": 50,
+            "2": 211,
+            "3": 56
+          },
+          "components": {
+            "lower": {
+              "index": 0,
+              "pattern_cpu": "ACD1",
+              "pattern_file_offset": "1ACD1",
+              "coordinate_cpu": "7A1D",
+              "coordinate_file_offset": "03A1D",
+              "layer_count": 2,
+              "position_count": 2,
+              "offsets_dy_dx": [
+                [
+                  -14,
+                  -8
+                ],
+                [
+                  -14,
+                  -8
+                ]
+              ],
+              "placed_layers": [
+                0,
+                1
+              ]
+            },
+            "upper": {
+              "index": 10,
+              "pattern_cpu": "B46B",
+              "pattern_file_offset": "1B46B",
+              "coordinate_cpu": "7A66",
+              "coordinate_file_offset": "03A66",
+              "layer_count": 4,
+              "position_count": 4,
+              "offsets_dy_dx": [
+                [
+                  -30,
+                  -16
+                ],
+                [
+                  -30,
+                  -16
+                ],
+                [
+                  -23,
+                  -32
+                ],
+                [
+                  -23,
+                  -32
+                ]
+              ],
+              "placed_layers": [
+                0,
+                1,
+                2,
+                3
+              ]
+            }
+          },
+          "unplaced_layers": [],
+          "unplaced_layers_note": "",
+          "status": "candidate",
+          "classification": "ROM-derived candidate; full on-screen match not verified for every frame"
+        },
+        {
+          "frame": 2,
+          "facing": "right",
+          "lower_index": 0,
+          "upper_index": 11,
+          "origin_world_xy": [
+            -24,
+            -30
+          ],
+          "png": "assets/whip_levels/whip_level1_right_0-11.png",
+          "tiles": 32,
+          "colour_counts": {
+            "0": 1654,
+            "1": 50,
+            "2": 276,
+            "3": 68
+          },
+          "components": {
+            "lower": {
+              "index": 0,
+              "pattern_cpu": "ACD1",
+              "pattern_file_offset": "1ACD1",
+              "coordinate_cpu": "7A1D",
+              "coordinate_file_offset": "03A1D",
+              "layer_count": 2,
+              "position_count": 2,
+              "offsets_dy_dx": [
+                [
+                  -14,
+                  -8
+                ],
+                [
+                  -14,
+                  -8
+                ]
+              ],
+              "placed_layers": [
+                0,
+                1
+              ]
+            },
+            "upper": {
+              "index": 11,
+              "pattern_cpu": "B4BE",
+              "pattern_file_offset": "1B4BE",
+              "coordinate_cpu": "7A6F",
+              "coordinate_file_offset": "03A6F",
+              "layer_count": 6,
+              "position_count": 6,
+              "offsets_dy_dx": [
+                [
+                  -30,
+                  -8
+                ],
+                [
+                  -30,
+                  -8
+                ],
+                [
+                  -30,
+                  24
+                ],
+                [
+                  -30,
+                  24
+                ],
+                [
+                  -30,
+                  8
+                ],
+                [
+                  -30,
+                  8
+                ]
+              ],
+              "placed_layers": [
+                0,
+                1,
+                2,
+                3,
+                4,
+                5
+              ]
+            }
+          },
+          "unplaced_layers": [],
+          "unplaced_layers_note": "",
+          "status": "candidate",
+          "classification": "ROM-derived candidate; full on-screen match not verified for every frame"
+        },
+        {
+          "frame": 3,
+          "facing": "left",
+          "lower_index": 10,
+          "upper_index": 24,
+          "origin_world_xy": [
+            -39,
+            -30
+          ],
+          "png": "assets/whip_levels/whip_level1_left_10-24.png",
+          "tiles": 32,
+          "colour_counts": {
+            "0": 1662,
+            "1": 50,
+            "2": 263,
+            "3": 73
+          },
+          "components": {
+            "lower": {
+              "index": 10,
+              "pattern_cpu": "A3CA",
+              "pattern_file_offset": "1A3CA",
+              "coordinate_cpu": "7A31",
+              "coordinate_file_offset": "03A31",
+              "layer_count": 2,
+              "position_count": 2,
+              "offsets_dy_dx": [
+                [
+                  -14,
+                  -7
+                ],
+                [
+                  -14,
+                  -7
+                ]
+              ],
+              "placed_layers": [
+                0,
+                1
+              ]
+            },
+            "upper": {
+              "index": 24,
+              "pattern_cpu": "AAEE",
+              "pattern_file_offset": "1AAEE",
+              "coordinate_cpu": "7A9E",
+              "coordinate_file_offset": "03A9E",
+              "layer_count": 6,
+              "position_count": 6,
+              "offsets_dy_dx": [
+                [
+                  -30,
+                  1
+                ],
+                [
+                  -30,
+                  1
+                ],
+                [
+                  -30,
+                  17
+                ],
+                [
+                  -30,
+                  17
+                ],
+                [
+                  -14,
+                  17
+                ],
+                [
+                  -14,
+                  17
+                ]
+              ],
+              "placed_layers": [
+                0,
+                1,
+                2,
+                3,
+                4,
+                5
+              ]
+            }
+          },
+          "unplaced_layers": [],
+          "unplaced_layers_note": "",
+          "status": "candidate",
+          "classification": "ROM-derived candidate; full on-screen match not verified for every frame"
+        },
+        {
+          "frame": 4,
+          "facing": "left",
+          "lower_index": 10,
+          "upper_index": 25,
+          "origin_world_xy": [
+            -39,
+            -30
+          ],
+          "png": "assets/whip_levels/whip_level1_left_10-25.png",
+          "tiles": 32,
+          "colour_counts": {
+            "0": 1731,
+            "1": 50,
+            "2": 211,
+            "3": 56
+          },
+          "components": {
+            "lower": {
+              "index": 10,
+              "pattern_cpu": "A3CA",
+              "pattern_file_offset": "1A3CA",
+              "coordinate_cpu": "7A31",
+              "coordinate_file_offset": "03A31",
+              "layer_count": 2,
+              "position_count": 2,
+              "offsets_dy_dx": [
+                [
+                  -14,
+                  -7
+                ],
+                [
+                  -14,
+                  -7
+                ]
+              ],
+              "placed_layers": [
+                0,
+                1
+              ]
+            },
+            "upper": {
+              "index": 25,
+              "pattern_cpu": "AB60",
+              "pattern_file_offset": "1AB60",
+              "coordinate_cpu": "7AAB",
+              "coordinate_file_offset": "03AAB",
+              "layer_count": 4,
+              "position_count": 4,
+              "offsets_dy_dx": [
+                [
+                  -30,
+                  1
+                ],
+                [
+                  -30,
+                  1
+                ],
+                [
+                  -23,
+                  17
+                ],
+                [
+                  -23,
+                  17
+                ]
+              ],
+              "placed_layers": [
+                0,
+                1,
+                2,
+                3
+              ]
+            }
+          },
+          "unplaced_layers": [],
+          "unplaced_layers_note": "",
+          "status": "candidate",
+          "classification": "ROM-derived candidate; full on-screen match not verified for every frame"
+        },
+        {
+          "frame": 5,
+          "facing": "left",
+          "lower_index": 10,
+          "upper_index": 26,
+          "origin_world_xy": [
+            -39,
+            -30
+          ],
+          "png": "assets/whip_levels/whip_level1_left_10-26.png",
+          "tiles": 32,
+          "colour_counts": {
+            "0": 1654,
+            "1": 50,
+            "2": 276,
+            "3": 68
+          },
+          "components": {
+            "lower": {
+              "index": 10,
+              "pattern_cpu": "A3CA",
+              "pattern_file_offset": "1A3CA",
+              "coordinate_cpu": "7A31",
+              "coordinate_file_offset": "03A31",
+              "layer_count": 2,
+              "position_count": 2,
+              "offsets_dy_dx": [
+                [
+                  -14,
+                  -7
+                ],
+                [
+                  -14,
+                  -7
+                ]
+              ],
+              "placed_layers": [
+                0,
+                1
+              ]
+            },
+            "upper": {
+              "index": 26,
+              "pattern_cpu": "ABB4",
+              "pattern_file_offset": "1ABB4",
+              "coordinate_cpu": "7AB4",
+              "coordinate_file_offset": "03AB4",
+              "layer_count": 6,
+              "position_count": 6,
+              "offsets_dy_dx": [
+                [
+                  -30,
+                  -7
+                ],
+                [
+                  -30,
+                  -7
+                ],
+                [
+                  -30,
+                  -39
+                ],
+                [
+                  -30,
+                  -39
+                ],
+                [
+                  -30,
+                  -23
+                ],
+                [
+                  -30,
+                  -23
+                ]
+              ],
+              "placed_layers": [
+                0,
+                1,
+                2,
+                3,
+                4,
+                5
+              ]
+            }
+          },
+          "unplaced_layers": [],
+          "unplaced_layers_note": "",
+          "status": "candidate",
+          "classification": "ROM-derived candidate; full on-screen match not verified for every frame"
+        }
+      ]
+    },
+    "2": {
+      "symbol_tiles": "vk_whip_level2_tiles",
+      "symbol_palette": "vk_whip_level2_palette",
+      "tile_words": 1536,
+      "frames": [
+        {
+          "frame": 0,
+          "facing": "right",
+          "lower_index": 0,
+          "upper_index": 12,
+          "origin_world_xy": [
+            -24,
+            -30
+          ],
+          "png": "assets/whip_levels/whip_level2_right_0-12.png",
+          "tiles": 32,
+          "colour_counts": {
+            "0": 1760,
+            "1": 36,
+            "2": 185,
+            "3": 67
+          },
+          "components": {
+            "lower": {
+              "index": 0,
+              "pattern_cpu": "ACD1",
+              "pattern_file_offset": "1ACD1",
+              "coordinate_cpu": "7A1D",
+              "coordinate_file_offset": "03A1D",
+              "layer_count": 2,
+              "position_count": 2,
+              "offsets_dy_dx": [
+                [
+                  -14,
+                  -8
+                ],
+                [
+                  -14,
+                  -8
+                ]
+              ],
+              "placed_layers": [
+                0,
+                1
+              ]
+            },
+            "upper": {
+              "index": 12,
+              "pattern_cpu": "B2ED",
+              "pattern_file_offset": "1B2ED",
+              "coordinate_cpu": "7A7C",
+              "coordinate_file_offset": "03A7C",
+              "layer_count": 6,
+              "position_count": 2,
+              "offsets_dy_dx": [
+                [
+                  -30,
+                  -16
+                ],
+                [
+                  -30,
+                  -16
+                ]
+              ],
+              "placed_layers": [
+                0,
+                1
+              ]
+            }
+          },
+          "unplaced_layers": [
+            {
+              "part": "upper",
+              "layer": 2,
+              "pattern_cpu": "B2ED",
+              "pattern_file_offset": "1B2ED"
+            },
+            {
+              "part": "upper",
+              "layer": 3,
+              "pattern_cpu": "B2ED",
+              "pattern_file_offset": "1B2ED"
+            },
+            {
+              "part": "upper",
+              "layer": 4,
+              "pattern_cpu": "B2ED",
+              "pattern_file_offset": "1B2ED"
+            },
+            {
+              "part": "upper",
+              "layer": 5,
+              "pattern_cpu": "B2ED",
+              "pattern_file_offset": "1B2ED"
+            }
+          ],
+          "unplaced_layers_note": "mask layers beyond the coordinate count: no position in the ROM, not emitted. Not drawn by the game in the VRAM check, see vram_evidence",
+          "status": "candidate",
+          "classification": "ROM-derived candidate; full on-screen match not verified for every frame"
+        },
+        {
+          "frame": 1,
+          "facing": "right",
+          "lower_index": 0,
+          "upper_index": 13,
+          "origin_world_xy": [
+            -24,
+            -30
+          ],
+          "png": "assets/whip_levels/whip_level2_right_0-13.png",
+          "tiles": 32,
+          "colour_counts": {
+            "0": 1801,
+            "1": 37,
+            "2": 154,
+            "3": 56
+          },
+          "components": {
+            "lower": {
+              "index": 0,
+              "pattern_cpu": "ACD1",
+              "pattern_file_offset": "1ACD1",
+              "coordinate_cpu": "7A1D",
+              "coordinate_file_offset": "03A1D",
+              "layer_count": 2,
+              "position_count": 2,
+              "offsets_dy_dx": [
+                [
+                  -14,
+                  -8
+                ],
+                [
+                  -14,
+                  -8
+                ]
+              ],
+              "placed_layers": [
+                0,
+                1
+              ]
+            },
+            "upper": {
+              "index": 13,
+              "pattern_cpu": "B52D",
+              "pattern_file_offset": "1B52D",
+              "coordinate_cpu": "7A7C",
+              "coordinate_file_offset": "03A7C",
+              "layer_count": 2,
+              "position_count": 2,
+              "offsets_dy_dx": [
+                [
+                  -30,
+                  -16
+                ],
+                [
+                  -30,
+                  -16
+                ]
+              ],
+              "placed_layers": [
+                0,
+                1
+              ]
+            }
+          },
+          "unplaced_layers": [],
+          "unplaced_layers_note": "",
+          "status": "candidate",
+          "classification": "ROM-derived candidate; full on-screen match not verified for every frame"
+        },
+        {
+          "frame": 2,
+          "facing": "right",
+          "lower_index": 0,
+          "upper_index": 14,
+          "origin_world_xy": [
+            -24,
+            -30
+          ],
+          "png": "assets/whip_levels/whip_level2_right_0-14.png",
+          "tiles": 32,
+          "colour_counts": {
+            "0": 1739,
+            "1": 37,
+            "2": 205,
+            "3": 67
+          },
+          "components": {
+            "lower": {
+              "index": 0,
+              "pattern_cpu": "ACD1",
+              "pattern_file_offset": "1ACD1",
+              "coordinate_cpu": "7A1D",
+              "coordinate_file_offset": "03A1D",
+              "layer_count": 2,
+              "position_count": 2,
+              "offsets_dy_dx": [
+                [
+                  -14,
+                  -8
+                ],
+                [
+                  -14,
+                  -8
+                ]
+              ],
+              "placed_layers": [
+                0,
+                1
+              ]
+            },
+            "upper": {
+              "index": 14,
+              "pattern_cpu": "B556",
+              "pattern_file_offset": "1B556",
+              "coordinate_cpu": "7A81",
+              "coordinate_file_offset": "03A81",
+              "layer_count": 4,
+              "position_count": 4,
+              "offsets_dy_dx": [
+                [
+                  -30,
+                  -8
+                ],
+                [
+                  -30,
+                  -8
+                ],
+                [
+                  -30,
+                  8
+                ],
+                [
+                  -30,
+                  8
+                ]
+              ],
+              "placed_layers": [
+                0,
+                1,
+                2,
+                3
+              ]
+            }
+          },
+          "unplaced_layers": [],
+          "unplaced_layers_note": "",
+          "status": "candidate",
+          "classification": "ROM-derived candidate; full on-screen match not verified for every frame"
+        },
+        {
+          "frame": 3,
+          "facing": "left",
+          "lower_index": 10,
+          "upper_index": 27,
+          "origin_world_xy": [
+            -39,
+            -30
+          ],
+          "png": "assets/whip_levels/whip_level2_left_10-27.png",
+          "tiles": 32,
+          "colour_counts": {
+            "0": 1760,
+            "1": 36,
+            "2": 185,
+            "3": 67
+          },
+          "components": {
+            "lower": {
+              "index": 10,
+              "pattern_cpu": "A3CA",
+              "pattern_file_offset": "1A3CA",
+              "coordinate_cpu": "7A31",
+              "coordinate_file_offset": "03A31",
+              "layer_count": 2,
+              "position_count": 2,
+              "offsets_dy_dx": [
+                [
+                  -14,
+                  -7
+                ],
+                [
+                  -14,
+                  -7
+                ]
+              ],
+              "placed_layers": [
+                0,
+                1
+              ]
+            },
+            "upper": {
+              "index": 27,
+              "pattern_cpu": "A9E2",
+              "pattern_file_offset": "1A9E2",
+              "coordinate_cpu": "7AC1",
+              "coordinate_file_offset": "03AC1",
+              "layer_count": 6,
+              "position_count": 2,
+              "offsets_dy_dx": [
+                [
+                  -30,
+                  1
+                ],
+                [
+                  -30,
+                  1
+                ]
+              ],
+              "placed_layers": [
+                0,
+                1
+              ]
+            }
+          },
+          "unplaced_layers": [
+            {
+              "part": "upper",
+              "layer": 2,
+              "pattern_cpu": "A9E2",
+              "pattern_file_offset": "1A9E2"
+            },
+            {
+              "part": "upper",
+              "layer": 3,
+              "pattern_cpu": "A9E2",
+              "pattern_file_offset": "1A9E2"
+            },
+            {
+              "part": "upper",
+              "layer": 4,
+              "pattern_cpu": "A9E2",
+              "pattern_file_offset": "1A9E2"
+            },
+            {
+              "part": "upper",
+              "layer": 5,
+              "pattern_cpu": "A9E2",
+              "pattern_file_offset": "1A9E2"
+            }
+          ],
+          "unplaced_layers_note": "mask layers beyond the coordinate count: no position in the ROM, not emitted. Not drawn by the game in the VRAM check, see vram_evidence",
+          "status": "candidate",
+          "classification": "ROM-derived candidate; full on-screen match not verified for every frame"
+        },
+        {
+          "frame": 4,
+          "facing": "left",
+          "lower_index": 10,
+          "upper_index": 28,
+          "origin_world_xy": [
+            -39,
+            -30
+          ],
+          "png": "assets/whip_levels/whip_level2_left_10-28.png",
+          "tiles": 32,
+          "colour_counts": {
+            "0": 1801,
+            "1": 37,
+            "2": 154,
+            "3": 56
+          },
+          "components": {
+            "lower": {
+              "index": 10,
+              "pattern_cpu": "A3CA",
+              "pattern_file_offset": "1A3CA",
+              "coordinate_cpu": "7A31",
+              "coordinate_file_offset": "03A31",
+              "layer_count": 2,
+              "position_count": 2,
+              "offsets_dy_dx": [
+                [
+                  -14,
+                  -7
+                ],
+                [
+                  -14,
+                  -7
+                ]
+              ],
+              "placed_layers": [
+                0,
+                1
+              ]
+            },
+            "upper": {
+              "index": 28,
+              "pattern_cpu": "AC21",
+              "pattern_file_offset": "1AC21",
+              "coordinate_cpu": "7AC1",
+              "coordinate_file_offset": "03AC1",
+              "layer_count": 2,
+              "position_count": 2,
+              "offsets_dy_dx": [
+                [
+                  -30,
+                  1
+                ],
+                [
+                  -30,
+                  1
+                ]
+              ],
+              "placed_layers": [
+                0,
+                1
+              ]
+            }
+          },
+          "unplaced_layers": [],
+          "unplaced_layers_note": "",
+          "status": "candidate",
+          "classification": "ROM-derived candidate; full on-screen match not verified for every frame"
+        },
+        {
+          "frame": 5,
+          "facing": "left",
+          "lower_index": 10,
+          "upper_index": 29,
+          "origin_world_xy": [
+            -39,
+            -30
+          ],
+          "png": "assets/whip_levels/whip_level2_left_10-29.png",
+          "tiles": 32,
+          "colour_counts": {
+            "0": 1739,
+            "1": 37,
+            "2": 205,
+            "3": 67
+          },
+          "components": {
+            "lower": {
+              "index": 10,
+              "pattern_cpu": "A3CA",
+              "pattern_file_offset": "1A3CA",
+              "coordinate_cpu": "7A31",
+              "coordinate_file_offset": "03A31",
+              "layer_count": 2,
+              "position_count": 2,
+              "offsets_dy_dx": [
+                [
+                  -14,
+                  -7
+                ],
+                [
+                  -14,
+                  -7
+                ]
+              ],
+              "placed_layers": [
+                0,
+                1
+              ]
+            },
+            "upper": {
+              "index": 29,
+              "pattern_cpu": "AC4C",
+              "pattern_file_offset": "1AC4C",
+              "coordinate_cpu": "7AC6",
+              "coordinate_file_offset": "03AC6",
+              "layer_count": 4,
+              "position_count": 4,
+              "offsets_dy_dx": [
+                [
+                  -30,
+                  -7
+                ],
+                [
+                  -30,
+                  -7
+                ],
+                [
+                  -30,
+                  -23
+                ],
+                [
+                  -30,
+                  -23
+                ]
+              ],
+              "placed_layers": [
+                0,
+                1,
+                2,
+                3
+              ]
+            }
+          },
+          "unplaced_layers": [],
+          "unplaced_layers_note": "",
+          "status": "candidate",
+          "classification": "ROM-derived candidate; full on-screen match not verified for every frame"
+        }
+      ]
+    }
+  },
+  "phase_source": "research/whip-variants.md (C42F sequence, right: 2,2,8 ticks; level 1 left 25 x2, 26 x8 seen)",
+  "vram_evidence": [
+    {
+      "level": 1,
+      "frame": "right 11",
+      "ticks": "2281-2286",
+      "result": "upper 0..5 and lower 0..1 matched at the ROM positions"
+    },
+    {
+      "level": 1,
+      "frame": "left 25",
+      "ticks": "2651-2652",
+      "result": "upper 0..3 and lower 0..1 matched at the ROM positions"
+    },
+    {
+      "level": 1,
+      "frame": "left 26",
+      "ticks": "2653-2659",
+      "result": "upper 0..1 and lower 0..1 matched; upper 2..5 not in the sprite table. Hypothesis: the game omits sprites with negative screen x (C427=14, dx -39 and -23); not confirmed"
+    },
+    {
+      "level": 2,
+      "frame": "right 12",
+      "ticks": "2277-2278",
+      "result": "upper 0..1 and lower 0..1 matched; upper 2..5 never drawn, so the 4 extra mask layers are unused"
+    },
+    {
+      "level": 2,
+      "frame": "right 13",
+      "ticks": "2279-2280",
+      "result": "upper 0..1 and lower 0..1 matched at the ROM positions"
+    },
+    {
+      "level": 2,
+      "frame": "right 14",
+      "ticks": "2281-2282",
+      "result": "upper 0..3 and lower 0..1 matched at the ROM positions"
+    },
+    {
+      "level": 2,
+      "frame": "left 27",
+      "ticks": "not checked",
+      "result": "not checked yet"
+    }
+  ]
+}

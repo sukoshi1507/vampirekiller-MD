@@ -1,0 +1,58 @@
+# (zy_b) Fouet sur l'objet 06 (4 points de vie, +D) et 08 (1), stage 4. MSX : 7DAD (C422 = 3), 827C (boite), 7DD9 (RES 0,+E),
+# 7DE6 (-1, ou -2 avec C416 != 0 ; mort si 0 ou negatif), 81AB (200 points, table 81CE), 999F (rearme au debut du coup, 7257).
+include zy_enter4.inc
+poke Enemies_god 1
+set s0 ram32('vk_hud_score')
+# Fouet de cuir : 4 -> 3 -> 2 -> 1 -> mort au 4e coup, 200 points a la mort seulement.
+include zy_place06.inc
+hold B 2
+wait 20
+expect enemies.enemy[0].active == 1 and (enemies.enemy[0].extraPhase & 15) == 3 # 4 - 1
+expect ram32('vk_hud_score') == s0 # pas de points tant qu'il vit
+wait 20
+include zy_place06.inc
+hold B 2
+wait 20
+expect enemies.enemy[0].active == 1 and (enemies.enemy[0].extraPhase & 15) == 2
+wait 20
+include zy_place06.inc
+hold B 2
+wait 20
+expect enemies.enemy[0].active == 1 and (enemies.enemy[0].extraPhase & 15) == 1
+wait 20
+include zy_place06.inc
+hold B 2
+wait 20
+expect enemies.enemy[0].active == 0 # 7DE6 : PV a 0
+expect ram32('vk_hud_score') == s0 + 200 # 81CE : 2 centaines
+# Fouet chaine (C416 = 1, vk_candles+120) : -2 par coup, mort au 2e.
+wait 20
+poke vk_candles+120 1
+poke vk_whip+5 1
+include zy_revive06.inc
+include zy_place06.inc
+hold B 2
+wait 20
+expect enemies.enemy[0].active == 1 and (enemies.enemy[0].extraPhase & 15) == 2 # 4 - 2
+wait 20
+include zy_place06.inc
+set s1 ram32('vk_hud_score')
+hold B 2
+wait 20
+expect enemies.enemy[0].active == 0 # 2 - 2 = 0 : mort
+expect ram32('vk_hud_score') == s1 + 200
+# Objet 08 : 1 point de vie, mort au premier coup, 200 points (chaine ou cuir).
+wait 20
+include zy_place08.inc
+set s2 ram32('vk_hud_score')
+hold B 2
+wait 6
+expect enemies.enemy[0].active == 0 and ram32('vk_hud_score') == s2 + 200 # 7DE6 : -2 -> FF, bit 7 -> mort
+poke vk_candles+120 0
+poke vk_whip+5 0
+wait 20
+include zy_place08.inc
+set s3 ram32('vk_hud_score')
+hold B 2
+wait 6
+expect enemies.enemy[0].active == 0 and ram32('vk_hud_score') == s3 + 200 # cuir : 1 - 1 = 0

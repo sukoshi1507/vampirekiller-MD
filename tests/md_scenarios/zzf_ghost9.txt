@@ -1,0 +1,83 @@
+# (zzf) Stage 9 salle 2 : la bougie (48, 64) d'objet 15 libere l'objet 1C (research/stage9-candle-object.md).
+# Trace openMSX (scratchpad/o1c/out4 et out7) : bougie eteinte a l'image 843, objet 1C cree en (48, 80) a 874 (31 images),
+# attend 8 passes sans contact (889 : etat 1, Y 82), tombe (Y 82, 84, 86, 89, 92, 95, 99, 103, 107, 111, 115 une passe sur
+# deux images), pose en Y 112 (911, etat 2) pour 30 passes (971, etat 3). Contact : energie 32 -> 28. Fouet accroupi :
+# mort, +100 points (score 000000 -> 000100 a l'image 940).
+include zzc_enter9.inc
+poke Enemies_god 1
+wait 60
+include zzb_next.inc
+until game.stage == 9 and game.room == 1 max 200
+include zzb_next.inc
+until game.stage == 9 and game.room == 2 max 200
+wait 20
+expect ram8('vk_candles+4') & 1 # bougie (48, 64) allumee
+poke vk_game+0 36
+poke vk_game+1 112
+wait 4
+tap C 1
+until game.player.y <= 98 max 30
+hold B 1
+until (ram8('vk_candles+4') & 1) == 0 max 12
+set f0 frame
+until any(enemies.enemy[k].active and enemies.enemy[k].type == 15 for k in range(7)) max 60
+set f1 frame
+expect f1 - f0 == 31 # 843 -> 874
+set g [k for k in range(7) if enemies.enemy[k].active and enemies.enemy[k].type == 15][0]
+expect (enemies.enemy[g].x, enemies.enemy[g].y, enemies.enemy[g].state, enemies.enemy[g].pose) == (48, 80, 0, 0x9F)
+shot zzf-bougie-eteinte
+# Huit passes d'attente (889 : etat 1, Y 82), puis la chute.
+until enemies.enemy[g].state == 1 max 30
+expect frame - f1 == 15 # 874 -> 889
+expect enemies.enemy[g].y == 82
+wait 2
+expect enemies.enemy[g].y == 84
+wait 2
+expect enemies.enemy[g].y == 86
+wait 2
+expect enemies.enemy[g].y == 89
+wait 2
+expect enemies.enemy[g].y == 92
+wait 2
+expect enemies.enemy[g].y == 95
+wait 2
+expect enemies.enemy[g].y == 99
+wait 2
+expect enemies.enemy[g].y == 103
+wait 2
+expect enemies.enemy[g].y == 107
+wait 2
+expect enemies.enemy[g].y == 111
+wait 2
+expect enemies.enemy[g].y == 115
+wait 2
+expect enemies.enemy[g].state == 2 and enemies.enemy[g].y == 112 and enemies.enemy[g].x == 48
+set f2 frame
+shot zzf-pose
+# Fouet accroupi a gauche, Simon a 12 px a droite (a moins de 24 px de l'objet, X fouet 40 - X 48 = -8) : mort, 100 points.
+poke vk_game+0 60
+poke vk_game+2 1
+set s0 ram32('vk_hud_score')
+hold DOWN 2
+hold DOWN+B 1
+until not enemies.enemy[g].active max 30 DOWN
+expect ram32('vk_hud_score') == s0 + 100
+# Seconde bougie (96, 64), meme objet : cree, puis contact (energie 32 -> 28, trace).
+wait 30
+until game.player.mode == 0 max 100
+poke vk_game+0 84
+poke vk_game+1 112
+poke vk_game+2 0
+wait 4
+tap C 1
+until game.player.y <= 98 max 30
+hold B 1
+until any(enemies.enemy[k].active and enemies.enemy[k].type == 15 for k in range(7)) max 60
+set g [k for k in range(7) if enemies.enemy[k].active and enemies.enemy[k].type == 15][0]
+expect (enemies.enemy[g].x, enemies.enemy[g].y) == (96, 80)
+until enemies.enemy[g].state == 2 max 60
+# Etat 0 : sans contact (+E = 0) ; Simon sur l'objet des l'etat 1 le toucherait.
+poke Enemies_god 0
+poke vk_game+0 96
+wait 4
+expect enemies.energy == 28

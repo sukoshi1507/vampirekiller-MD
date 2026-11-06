@@ -1,0 +1,40 @@
+# (zw) Chute : 2, 4, 6, 6 par passe de 2 images (trace stage 5 salle 4, research/stage5-enemies.md).
+until front_mode == MODES['TITLE'] max 2000
+wait 10
+tap C
+wait 40
+tap START
+wait 10
+tap UP
+tap UP
+tap DOWN
+tap DOWN
+tap LEFT
+tap RIGHT
+tap LEFT
+tap RIGHT
+tap B
+tap A
+wait 4
+tap DOWN
+tap DOWN
+tap DOWN
+tap RIGHT
+tap RIGHT
+tap RIGHT
+tap RIGHT
+hold B 1
+wait 100
+poke vk_game+0 44
+poke vk_game+1 104
+expect game.player.y == 104
+wait 3
+expect game.player.y == 106 and game.player.mode == 4
+wait 2
+expect game.player.y == 110
+wait 2
+expect game.player.y == 116
+wait 2
+expect game.player.y == 122
+wait 2
+expect game.player.y == 128

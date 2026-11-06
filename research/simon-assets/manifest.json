@@ -1,0 +1,662 @@
+{
+  "sha256": "99eabaaeb2b6c02220e131043d5a6401d0d8c5f413d89204547adcc04d65e7e2",
+  "note": "Source-confirmed pixel masks; animation meanings not identified. Jump frame may need positional correction and nonmatching lower/upper pairing.",
+  "decoded": 10,
+  "total": 24,
+  "frames": [
+    {
+      "index": 0,
+      "role": "unidentified",
+      "source_type": "MSX2 ROM",
+      "lower": {
+        "pattern_cpu": "ACD1",
+        "pattern_file_offset": "1ACD1",
+        "decoded_bytes": 64,
+        "coordinate_cpu": "7A1D",
+        "component_count": 2
+      },
+      "upper": {
+        "pattern_cpu": "AC93",
+        "pattern_file_offset": "1AC93",
+        "decoded_bytes": 64,
+        "coordinate_cpu": "7A45",
+        "component_count": 2
+      },
+      "status": "decoded_24x32",
+      "sources": [
+        {
+          "frame": 0,
+          "pattern_cpu": "ACD1",
+          "pattern_file_offset": "1ACD1",
+          "coordinate_cpu": "7A1D"
+        },
+        {
+          "frame": 0,
+          "pattern_cpu": "AC93",
+          "pattern_file_offset": "1AC93",
+          "coordinate_cpu": "7A45"
+        }
+      ],
+      "image": "candidate-00.png",
+      "opaque_pixels": 289
+    },
+    {
+      "index": 1,
+      "role": "unidentified",
+      "source_type": "MSX2 ROM",
+      "lower": {
+        "pattern_cpu": "AD4E",
+        "pattern_file_offset": "1AD4E",
+        "decoded_bytes": 64,
+        "coordinate_cpu": "7A1D",
+        "component_count": 2
+      },
+      "upper": {
+        "pattern_cpu": "AD12",
+        "pattern_file_offset": "1AD12",
+        "decoded_bytes": 64,
+        "coordinate_cpu": "7A45",
+        "component_count": 2
+      },
+      "status": "decoded_24x32",
+      "sources": [
+        {
+          "frame": 1,
+          "pattern_cpu": "AD4E",
+          "pattern_file_offset": "1AD4E",
+          "coordinate_cpu": "7A1D"
+        },
+        {
+          "frame": 1,
+          "pattern_cpu": "AD12",
+          "pattern_file_offset": "1AD12",
+          "coordinate_cpu": "7A45"
+        }
+      ],
+      "image": "candidate-01.png",
+      "opaque_pixels": 244
+    },
+    {
+      "index": 2,
+      "role": "unidentified",
+      "source_type": "MSX2 ROM",
+      "lower": {
+        "pattern_cpu": "ADC3",
+        "pattern_file_offset": "1ADC3",
+        "decoded_bytes": 64,
+        "coordinate_cpu": "7A1D",
+        "component_count": 2
+      },
+      "upper": {
+        "pattern_cpu": "AD87",
+        "pattern_file_offset": "1AD87",
+        "decoded_bytes": 64,
+        "coordinate_cpu": "7A45",
+        "component_count": 2
+      },
+      "status": "decoded_24x32",
+      "sources": [
+        {
+          "frame": 2,
+          "pattern_cpu": "ADC3",
+          "pattern_file_offset": "1ADC3",
+          "coordinate_cpu": "7A1D"
+        },
+        {
+          "frame": 2,
+          "pattern_cpu": "AD87",
+          "pattern_file_offset": "1AD87",
+          "coordinate_cpu": "7A45"
+        }
+      ],
+      "image": "candidate-02.png",
+      "opaque_pixels": 283
+    },
+    {
+      "index": 3,
+      "role": "unidentified",
+      "source_type": "MSX2 ROM",
+      "lower": {
+        "pattern_cpu": "AFB4",
+        "pattern_file_offset": "1AFB4",
+        "decoded_bytes": 64,
+        "coordinate_cpu": "7A1D",
+        "component_count": 2
+      },
+      "upper": {
+        "pattern_cpu": "B1CC",
+        "pattern_file_offset": "1B1CC",
+        "decoded_bytes": 64,
+        "coordinate_cpu": "7A4F",
+        "component_count": 2
+      },
+      "status": "decoded_24x32",
+      "sources": [
+        {
+          "frame": 3,
+          "pattern_cpu": "AFB4",
+          "pattern_file_offset": "1AFB4",
+          "coordinate_cpu": "7A1D"
+        },
+        {
+          "frame": 3,
+          "pattern_cpu": "B1CC",
+          "pattern_file_offset": "1B1CC",
+          "coordinate_cpu": "7A4F"
+        }
+      ],
+      "image": "candidate-03.png",
+      "opaque_pixels": 273
+    },
+    {
+      "index": 4,
+      "role": "unidentified",
+      "source_type": "MSX2 ROM",
+      "lower": {
+        "pattern_cpu": "B026",
+        "pattern_file_offset": "1B026",
+        "decoded_bytes": 64,
+        "coordinate_cpu": "7A1D",
+        "component_count": 2
+      },
+      "upper": {
+        "pattern_cpu": "B235",
+        "pattern_file_offset": "1B235",
+        "decoded_bytes": 64,
+        "coordinate_cpu": "7A4F",
+        "component_count": 2
+      },
+      "status": "decoded_24x32",
+      "sources": [
+        {
+          "frame": 4,
+          "pattern_cpu": "B026",
+          "pattern_file_offset": "1B026",
+          "coordinate_cpu": "7A1D"
+        },
+        {
+          "frame": 4,
+          "pattern_cpu": "B235",
+          "pattern_file_offset": "1B235",
+          "coordinate_cpu": "7A4F"
+        }
+      ],
+      "image": "candidate-04.png",
+      "opaque_pixels": 136
+    },
+    {
+      "index": 5,
+      "role": "unidentified",
+      "source_type": "MSX2 ROM",
+      "lower": {
+        "pattern_cpu": "B09B",
+        "pattern_file_offset": "1B09B",
+        "decoded_bytes": 64,
+        "coordinate_cpu": "7A1D",
+        "component_count": 2
+      },
+      "upper": {
+        "pattern_cpu": "B28A",
+        "pattern_file_offset": "1B28A",
+        "decoded_bytes": 64,
+        "coordinate_cpu": "7A54",
+        "component_count": 2
+      },
+      "status": "decoded_24x32",
+      "sources": [
+        {
+          "frame": 5,
+          "pattern_cpu": "B09B",
+          "pattern_file_offset": "1B09B",
+          "coordinate_cpu": "7A1D"
+        },
+        {
+          "frame": 5,
+          "pattern_cpu": "B28A",
+          "pattern_file_offset": "1B28A",
+          "coordinate_cpu": "7A54"
+        }
+      ],
+      "image": "candidate-05.png",
+      "opaque_pixels": 242
+    },
+    {
+      "index": 6,
+      "role": "unidentified",
+      "source_type": "MSX2 ROM",
+      "lower": {
+        "pattern_cpu": "B171",
+        "pattern_file_offset": "1B171",
+        "decoded_bytes": 64,
+        "coordinate_cpu": "7A22",
+        "component_count": 2
+      },
+      "upper": {
+        "pattern_cpu": "B2ED",
+        "pattern_file_offset": "1B2ED",
+        "decoded_bytes": 192,
+        "coordinate_cpu": "7A59",
+        "component_count": 6
+      },
+      "status": "different_layout",
+      "reason": "Pose requires a different sprite layout"
+    },
+    {
+      "index": 7,
+      "role": "unidentified",
+      "source_type": "MSX2 ROM",
+      "lower": {
+        "pattern_cpu": "B1FF",
+        "pattern_file_offset": "1B1FF",
+        "decoded_bytes": 64,
+        "coordinate_cpu": "7A27",
+        "component_count": 2
+      },
+      "upper": {
+        "pattern_cpu": "B34A",
+        "pattern_file_offset": "1B34A",
+        "decoded_bytes": 128,
+        "coordinate_cpu": "7A66",
+        "component_count": 4
+      },
+      "status": "different_layout",
+      "reason": "Pose requires a different sprite layout"
+    },
+    {
+      "index": 8,
+      "role": "unidentified",
+      "source_type": "MSX2 ROM",
+      "lower": {
+        "pattern_cpu": "B24B",
+        "pattern_file_offset": "1B24B",
+        "decoded_bytes": 64,
+        "coordinate_cpu": "7A27",
+        "component_count": 2
+      },
+      "upper": {
+        "pattern_cpu": "B392",
+        "pattern_file_offset": "1B392",
+        "decoded_bytes": 192,
+        "coordinate_cpu": "7A6F",
+        "component_count": 6
+      },
+      "status": "different_layout",
+      "reason": "Pose requires a different sprite layout"
+    },
+    {
+      "index": 9,
+      "role": "unidentified",
+      "source_type": "MSX2 ROM",
+      "lower": {
+        "pattern_cpu": "B2BC",
+        "pattern_file_offset": "1B2BC",
+        "decoded_bytes": 64,
+        "coordinate_cpu": "7A2C",
+        "component_count": 2
+      },
+      "upper": {
+        "pattern_cpu": "B3FB",
+        "pattern_file_offset": "1B3FB",
+        "decoded_bytes": 192,
+        "coordinate_cpu": "7A59",
+        "component_count": 6
+      },
+      "status": "different_layout",
+      "reason": "Nontransparent sprite pixel would be clipped"
+    },
+    {
+      "index": 10,
+      "role": "unidentified",
+      "source_type": "MSX2 ROM",
+      "lower": {
+        "pattern_cpu": "A3CA",
+        "pattern_file_offset": "1A3CA",
+        "decoded_bytes": 64,
+        "coordinate_cpu": "7A31",
+        "component_count": 2
+      },
+      "upper": {
+        "pattern_cpu": "B46B",
+        "pattern_file_offset": "1B46B",
+        "decoded_bytes": 128,
+        "coordinate_cpu": "7A66",
+        "component_count": 4
+      },
+      "status": "different_layout",
+      "reason": "Pose requires a different sprite layout"
+    },
+    {
+      "index": 11,
+      "role": "unidentified",
+      "source_type": "MSX2 ROM",
+      "lower": {
+        "pattern_cpu": "A447",
+        "pattern_file_offset": "1A447",
+        "decoded_bytes": 64,
+        "coordinate_cpu": "7A31",
+        "component_count": 2
+      },
+      "upper": {
+        "pattern_cpu": "B4BE",
+        "pattern_file_offset": "1B4BE",
+        "decoded_bytes": 192,
+        "coordinate_cpu": "7A6F",
+        "component_count": 6
+      },
+      "status": "different_layout",
+      "reason": "Pose requires a different sprite layout"
+    },
+    {
+      "index": 12,
+      "role": "unidentified",
+      "source_type": "MSX2 ROM",
+      "lower": {
+        "pattern_cpu": "A4BC",
+        "pattern_file_offset": "1A4BC",
+        "decoded_bytes": 64,
+        "coordinate_cpu": "7A31",
+        "component_count": 2
+      },
+      "upper": {
+        "pattern_cpu": "B2ED",
+        "pattern_file_offset": "1B2ED",
+        "decoded_bytes": 192,
+        "coordinate_cpu": "7A7C",
+        "component_count": 2
+      },
+      "status": "different_layout",
+      "reason": "Pose requires a different sprite layout"
+    },
+    {
+      "index": 13,
+      "role": "unidentified",
+      "source_type": "MSX2 ROM",
+      "lower": {
+        "pattern_cpu": "A6AD",
+        "pattern_file_offset": "1A6AD",
+        "decoded_bytes": 64,
+        "coordinate_cpu": "7A31",
+        "component_count": 2
+      },
+      "upper": {
+        "pattern_cpu": "B52D",
+        "pattern_file_offset": "1B52D",
+        "decoded_bytes": 64,
+        "coordinate_cpu": "7A7C",
+        "component_count": 2
+      },
+      "status": "different_layout",
+      "reason": "Nontransparent sprite pixel would be clipped"
+    },
+    {
+      "index": 14,
+      "role": "unidentified",
+      "source_type": "MSX2 ROM",
+      "lower": {
+        "pattern_cpu": "A720",
+        "pattern_file_offset": "1A720",
+        "decoded_bytes": 64,
+        "coordinate_cpu": "7A31",
+        "component_count": 2
+      },
+      "upper": {
+        "pattern_cpu": "B556",
+        "pattern_file_offset": "1B556",
+        "decoded_bytes": 128,
+        "coordinate_cpu": "7A81",
+        "component_count": 4
+      },
+      "status": "different_layout",
+      "reason": "Pose requires a different sprite layout"
+    },
+    {
+      "index": 15,
+      "role": "unidentified",
+      "source_type": "MSX2 ROM",
+      "lower": {
+        "pattern_cpu": "A795",
+        "pattern_file_offset": "1A795",
+        "decoded_bytes": 64,
+        "coordinate_cpu": "7A31",
+        "component_count": 2
+      },
+      "upper": {
+        "pattern_cpu": "A38C",
+        "pattern_file_offset": "1A38C",
+        "decoded_bytes": 64,
+        "coordinate_cpu": "7A8A",
+        "component_count": 2
+      },
+      "status": "decoded_24x32",
+      "sources": [
+        {
+          "frame": 15,
+          "pattern_cpu": "A795",
+          "pattern_file_offset": "1A795",
+          "coordinate_cpu": "7A31"
+        },
+        {
+          "frame": 15,
+          "pattern_cpu": "A38C",
+          "pattern_file_offset": "1A38C",
+          "coordinate_cpu": "7A8A"
+        }
+      ],
+      "image": "candidate-15.png",
+      "opaque_pixels": 288
+    },
+    {
+      "index": 16,
+      "role": "unidentified",
+      "source_type": "MSX2 ROM",
+      "lower": {
+        "pattern_cpu": "A869",
+        "pattern_file_offset": "1A869",
+        "decoded_bytes": 64,
+        "coordinate_cpu": "7A36",
+        "component_count": 2
+      },
+      "upper": {
+        "pattern_cpu": "A40B",
+        "pattern_file_offset": "1A40B",
+        "decoded_bytes": 64,
+        "coordinate_cpu": "7A8A",
+        "component_count": 2
+      },
+      "status": "decoded_24x32",
+      "sources": [
+        {
+          "frame": 16,
+          "pattern_cpu": "A869",
+          "pattern_file_offset": "1A869",
+          "coordinate_cpu": "7A36"
+        },
+        {
+          "frame": 16,
+          "pattern_cpu": "A40B",
+          "pattern_file_offset": "1A40B",
+          "coordinate_cpu": "7A8A"
+        }
+      ],
+      "image": "candidate-16.png",
+      "opaque_pixels": 275
+    },
+    {
+      "index": 17,
+      "role": "unidentified",
+      "source_type": "MSX2 ROM",
+      "lower": {
+        "pattern_cpu": "A8F4",
+        "pattern_file_offset": "1A8F4",
+        "decoded_bytes": 64,
+        "coordinate_cpu": "7A3B",
+        "component_count": 2
+      },
+      "upper": {
+        "pattern_cpu": "A480",
+        "pattern_file_offset": "1A480",
+        "decoded_bytes": 64,
+        "coordinate_cpu": "7A8A",
+        "component_count": 2
+      },
+      "status": "decoded_24x32",
+      "sources": [
+        {
+          "frame": 17,
+          "pattern_cpu": "A8F4",
+          "pattern_file_offset": "1A8F4",
+          "coordinate_cpu": "7A3B"
+        },
+        {
+          "frame": 17,
+          "pattern_cpu": "A480",
+          "pattern_file_offset": "1A480",
+          "coordinate_cpu": "7A8A"
+        }
+      ],
+      "image": "candidate-17.png",
+      "opaque_pixels": 267
+    },
+    {
+      "index": 18,
+      "role": "unidentified",
+      "source_type": "MSX2 ROM",
+      "lower": {
+        "pattern_cpu": "A941",
+        "pattern_file_offset": "1A941",
+        "decoded_bytes": 64,
+        "coordinate_cpu": "7A3B",
+        "component_count": 2
+      },
+      "upper": {
+        "pattern_cpu": "A8C1",
+        "pattern_file_offset": "1A8C1",
+        "decoded_bytes": 64,
+        "coordinate_cpu": "7A94",
+        "component_count": 2
+      },
+      "status": "decoded_24x32",
+      "sources": [
+        {
+          "frame": 18,
+          "pattern_cpu": "A941",
+          "pattern_file_offset": "1A941",
+          "coordinate_cpu": "7A3B"
+        },
+        {
+          "frame": 18,
+          "pattern_cpu": "A8C1",
+          "pattern_file_offset": "1A8C1",
+          "coordinate_cpu": "7A94"
+        }
+      ],
+      "image": "candidate-18.png",
+      "opaque_pixels": 357
+    },
+    {
+      "index": 19,
+      "role": "unidentified",
+      "source_type": "MSX2 ROM",
+      "lower": {
+        "pattern_cpu": "A9B1",
+        "pattern_file_offset": "1A9B1",
+        "decoded_bytes": 64,
+        "coordinate_cpu": "7A40",
+        "component_count": 2
+      },
+      "upper": {
+        "pattern_cpu": "A92B",
+        "pattern_file_offset": "1A92B",
+        "decoded_bytes": 64,
+        "coordinate_cpu": "7A94",
+        "component_count": 2
+      },
+      "status": "different_layout",
+      "reason": "Nontransparent sprite pixel would be clipped"
+    },
+    {
+      "index": 20,
+      "role": "unidentified",
+      "source_type": "MSX2 ROM",
+      "lower": {
+        "pattern_cpu": "AEBC",
+        "pattern_file_offset": "1AEBC",
+        "decoded_bytes": 64,
+        "coordinate_cpu": "7A1D",
+        "component_count": 2
+      },
+      "upper": {
+        "pattern_cpu": "A980",
+        "pattern_file_offset": "1A980",
+        "decoded_bytes": 64,
+        "coordinate_cpu": "7A99",
+        "component_count": 2
+      },
+      "status": "different_layout",
+      "reason": "Nontransparent sprite pixel would be clipped"
+    },
+    {
+      "index": 21,
+      "role": "unidentified",
+      "source_type": "MSX2 ROM",
+      "lower": {
+        "pattern_cpu": "AEFD",
+        "pattern_file_offset": "1AEFD",
+        "decoded_bytes": 64,
+        "coordinate_cpu": "7A1D",
+        "component_count": 2
+      },
+      "upper": {
+        "pattern_cpu": "A9E2",
+        "pattern_file_offset": "1A9E2",
+        "decoded_bytes": 192,
+        "coordinate_cpu": "7A9E",
+        "component_count": 6
+      },
+      "status": "different_layout",
+      "reason": "Pose requires a different sprite layout"
+    },
+    {
+      "index": 22,
+      "role": "unidentified",
+      "source_type": "MSX2 ROM",
+      "lower": {
+        "pattern_cpu": "AF36",
+        "pattern_file_offset": "1AF36",
+        "decoded_bytes": 64,
+        "coordinate_cpu": "7A1D",
+        "component_count": 2
+      },
+      "upper": {
+        "pattern_cpu": "AA3F",
+        "pattern_file_offset": "1AA3F",
+        "decoded_bytes": 128,
+        "coordinate_cpu": "7AAB",
+        "component_count": 4
+      },
+      "status": "different_layout",
+      "reason": "Pose requires a different sprite layout"
+    },
+    {
+      "index": 23,
+      "role": "unidentified",
+      "source_type": "MSX2 ROM",
+      "lower": {
+        "pattern_cpu": "B0CE",
+        "pattern_file_offset": "1B0CE",
+        "decoded_bytes": 64,
+        "coordinate_cpu": "7A1D",
+        "component_count": 2
+      },
+      "upper": {
+        "pattern_cpu": "AA87",
+        "pattern_file_offset": "1AA87",
+        "decoded_bytes": 192,
+        "coordinate_cpu": "7AB4",
+        "component_count": 6
+      },
+      "status": "different_layout",
+      "reason": "Pose requires a different sprite layout"
+    }
+  ]
+}

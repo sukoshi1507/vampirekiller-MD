@@ -1,0 +1,122 @@
+[
+  {
+    "event": "attaque_fouet_sol",
+    "command_id": "C096=05 puis C016=9C",
+    "channel": "pointeur 4 (C016), effet",
+    "source_address": "721D (C42F=6), 517D (C096), 519E (C016)",
+    "delay_frames": 2,
+    "status": "prouve"
+  },
+  {
+    "event": "attaque_fouet_air",
+    "command_id": "C096=05 puis C016=9C",
+    "channel": "pointeur 4 (C016), effet",
+    "source_address": "721D, 517D, 519E",
+    "delay_frames": 2,
+    "status": "prouve"
+  },
+  {
+    "event": "fin_effet_fouet",
+    "command_id": "C096=00 puis C016=F1",
+    "channel": "pointeur 4 (C016)",
+    "source_address": "7280 (C42F=0), 89D7, 89E9",
+    "delay_frames": 13,
+    "status": "prouve"
+  },
+  {
+    "event": "musique_titre_intro_start",
+    "command_id": "C0A7=07, C010=64, C016=9E",
+    "channel": "pointeurs 1 et 4 (C010, C016)",
+    "source_address": "43B5 (C000=3), 5109..5136",
+    "delay_frames": 1,
+    "status": "prouve"
+  },
+  {
+    "event": "musique_cour_start",
+    "command_id": "C0A7=07, C010=64, C016=9E",
+    "channel": "pointeurs 1 et 4 (C010, C016)",
+    "source_address": "4251 (C000=5), 5109..5136",
+    "delay_frames": 0,
+    "status": "prouve"
+  },
+  {
+    "event": "musique_arret_titre",
+    "command_id": "C0A7=06,04,00 ; C010=F1",
+    "channel": "pointeur 1 (C010)",
+    "source_address": "8C8F, 89E9",
+    "delay_frames": null,
+    "status": "inconnu"
+  },
+  {
+    "event": "saut",
+    "command_id": null,
+    "channel": null,
+    "source_address": null,
+    "delay_frames": null,
+    "status": "inconnu"
+  },
+  {
+    "event": "marche_droite",
+    "command_id": null,
+    "channel": null,
+    "source_address": null,
+    "delay_frames": null,
+    "status": "inconnu"
+  },
+  {
+    "event": "marche_gauche",
+    "command_id": null,
+    "channel": null,
+    "source_address": null,
+    "delay_frames": null,
+    "status": "inconnu"
+  },
+  {
+    "event": "accroupi",
+    "command_id": null,
+    "channel": null,
+    "source_address": null,
+    "delay_frames": null,
+    "status": "inconnu"
+  },
+  {
+    "event": "impact_ennemi",
+    "command_id": null,
+    "channel": null,
+    "source_address": null,
+    "delay_frames": null,
+    "status": "inconnu"
+  },
+  {
+    "event": "degats_subis",
+    "command_id": null,
+    "channel": null,
+    "source_address": null,
+    "delay_frames": null,
+    "status": "inconnu"
+  },
+  {
+    "event": "ramassage",
+    "command_id": null,
+    "channel": null,
+    "source_address": null,
+    "delay_frames": null,
+    "status": "inconnu"
+  },
+  {
+    "event": "changement_salle",
+    "command_id": null,
+    "channel": null,
+    "source_address": null,
+    "delay_frames": null,
+    "status": "inconnu"
+  },
+  {
+    "event": "fin_game_over",
+    "command_id": null,
+    "channel": null,
+    "source_address": null,
+    "delay_frames": null,
+    "status": "inconnu"
+  }
+]

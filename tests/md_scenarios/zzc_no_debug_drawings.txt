@@ -1,0 +1,11 @@
+# (zzc) Titre, C : stage 2 salle 0 par le debug. Les torches de la cour ne doivent pas rester dessinees en
+# (64,144) et (192,144) (rangees de tuiles du decor de la cour, restees en file DMA derriere new_game).
+# Ces zones sont du mur gris et brun : aucun pixel vert ou bleu.
+until front_mode == MODES['TITLE'] max 2000
+wait 10
+tap C
+wait 60
+expect game.stage == 2 and game.room == 0
+expect not any(max(pixel(x, y)[1], pixel(x, y)[2]) > pixel(x, y)[0] + 40 for x in range(64, 80) for y in range(144, 160))
+expect not any(max(pixel(x, y)[1], pixel(x, y)[2]) > pixel(x, y)[0] + 40 for x in range(192, 208) for y in range(144, 160))
+shot zzc

@@ -1,0 +1,28 @@
+# Cadre du HUD hors des scenes de la cour et du hall 0, couleurs des flammes, plus de texte
+# de debug sous le jeu. Reference : openMSX (hall 0 et hall 1, 0 px d'ecart dans le cadre).
+include boot_to_courtyard.inc
+wait 20
+# Flamme (64,144), couleur 8 de la palette de la salle : rouge 701 du MSX, sur les deux etats.
+expect pixel(74, 145) == (238, 0, 32) # (10,1) de la tuile, flamme d'origine
+expect pixel(0, 210) == (0, 0, 0) # rangees 26 et 27 vides
+expect pixel(16, 218) == (0, 0, 0)
+# Cadence : 16 images par etat, la flamme B (x 192) change 4 images avant la flamme A (x 64).
+# Pixel (7,0) de la flamme : couleur 8 (rouge) dans l'etat A, couleur 2 (gris fonce) dans l'etat B.
+until pixel(199, 144) == (32, 32, 32) max 40
+until pixel(199, 144) == (238, 0, 32) max 40
+set fb frame
+until pixel(71, 144) == (238, 0, 32) max 40
+expect frame == fb + 4 # A change 4 images apres B
+until pixel(199, 144) == (32, 32, 32) max 40
+expect frame == fb + 16 # 16 images par etat
+until front_mode == MODES['INTERIOR'] max 3000 RIGHT
+until game.room == 1 max 1500 RIGHT
+wait 30
+expect pixel(135, 11) == (238, 0, 32) # case rouge, haut
+expect pixel(135, 28) == (238, 0, 32) # case rouge, bas
+expect pixel(200, 11) == (238, 238, 238) # case de droite, haut
+expect pixel(200, 28) == (238, 238, 238) # case de droite, bas
+expect pixel(248, 20) == (238, 238, 238) # case de droite, bord droit
+expect pixel(135, 20) == (0, 0, 0) # interieur vide
+expect pixel(10, 210) == (0, 0, 0) # rangee 26 vide
+shot hud

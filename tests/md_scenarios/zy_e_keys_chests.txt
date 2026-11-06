@@ -1,0 +1,50 @@
+# (zy_e) Stage 4, salle 4 : cle doree (176,176) et deux coffres (32,112) contenu 0A, (160,112) contenu 1C (objets fixes C500 type 83,
+# decodes de la ROM par 5A49/5B1B, tools/build_candles_md.py). MSX : ramassage au contact (8E50 : C700 + 1, icone 8EC9), coffre
+# ouvert au contact avec C700 > 0 (8F68, 8C14 : C700 - 1, son 11, objet +13 en attente 32 images, 8 px plus haut), pas au fouet.
+# Pas de trace openMSX de la prise ni de l'ouverture (research/castle-candles.md 9.7) : seuls les objets et leurs contenus sont lus
+# dans la ROM ; le deroulement reprend celui du hall.
+include zy_enter4.inc
+poke Enemies_god 1
+poke vk_game+20 3
+hold A 3
+hold A+RIGHT 3
+until game.room == 4 max 200
+wait 10
+expect ram8('vk_candles+6') == 3 and ram8('vk_candles+7') == 176 and ram8('vk_candles+8') == 176 and ram8('vk_candles+9') == 0x17 # cle
+expect ram8('vk_candles+20') == 3 and ram8('vk_candles+21') == 32 and ram8('vk_candles+22') == 112 and ram8('vk_candles+26') == 0x0A # coffre 1
+expect ram8('vk_candles+34') == 3 and ram8('vk_candles+35') == 160 and ram8('vk_candles+36') == 112 and ram8('vk_candles+40') == 0x1C # coffre 2
+expect ram8('vk_candles+119') == 0
+# Coffre sans cle : rien.
+poke vk_game+0 190
+poke vk_game+1 128
+hold LEFT 20
+expect ram8('vk_candles+34') == 3 and ram8('vk_candles+119') == 0
+echo (game.player.x, game.player.y)
+# Cle : ramassage au contact (8E50 : C700 = 1, icone 8EC9 = objet 17).
+poke vk_game+0 140
+poke vk_game+1 192
+wait 4
+until ram8('vk_candles+119') == 1 max 120 RIGHT
+expect ram8('vk_candles+6') == 0 # cle prise
+expect ram8('vk_candles+319') == 0x17 # icone de la cle au HUD
+# Coffre (160, 112) contenu 1C (hache, C416 = 3) : ouvert au contact avec la cle, la cle est consommee.
+poke vk_game+0 190
+poke vk_game+1 128
+wait 4
+until ram8('vk_candles+119') == 0 max 120 LEFT
+expect ram8('vk_candles+34') == 4 and ram8('vk_candles+37') == 0x1C # attente du contenu (type 05 puis objet 1C)
+expect ram8('vk_candles+319') == 0 # derniere cle utilisee : icone effacee
+until ram8('vk_candles+120') == 3 max 200 LEFT
+expect ram8('vk_candles+34') == 0 # contenu pris : hache (1C -> C416 = 3)
+# Les objets pris ne reviennent pas : sortie de salle puis retour. Le coffre (32, 112) reste ferme.
+poke vk_game+0 100
+poke vk_game+1 192
+hold A 3
+hold A+RIGHT 3
+until game.room == 5 max 200
+hold A 3
+hold A+LEFT 3
+until game.room == 4 max 200
+wait 10
+expect ram8('vk_candles+6') == 3 and ram8('vk_candles+9') == 25 and ram8('vk_candles+7') == 32 # seul le coffre (32, 112) est revenu
+expect ram8('vk_candles+20') == 0

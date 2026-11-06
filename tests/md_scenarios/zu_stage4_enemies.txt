@@ -1,0 +1,49 @@
+# (zu) Stage 4, objets 06 et 08 (research/stage4-enemies.md). Entree par le selecteur (god mode coupe).
+# Positions X de la trace openMSX, Simon immobile en (16, 192). Type du port : 6 = objet 06, 7 = objet 08.
+until front_mode == MODES['TITLE'] max 2000
+wait 10
+tap C
+wait 40
+tap START
+wait 10
+tap UP
+tap UP
+tap DOWN
+tap DOWN
+tap LEFT
+tap RIGHT
+tap LEFT
+tap RIGHT
+tap B
+tap A
+wait 4
+tap A
+expect ram8('Enemies_god') == 0
+tap DOWN
+tap DOWN
+tap B
+until enemies.alive == 2 max 200
+expect game.stage == 4 and game.room == 0 and game.player.x == 16 and game.player.y == 192
+wait 60
+expect sorted(enemies.enemy[k].x for k in range(7) if enemies.enemy[k].active) == [116, 215]
+wait 60
+expect sorted(enemies.enemy[k].x for k in range(7) if enemies.enemy[k].active) == [75, 224]
+wait 60
+expect sorted(enemies.enemy[k].x for k in range(7) if enemies.enemy[k].active) == [108, 215]
+# Pas de cible d'entrainement de la cour sur un stage lance par le debug (64,144).
+shot zu-salle0
+# Contact : 4 points (81CE, base 2 doublee).
+poke vk_game+0 205
+until enemies.energy < 32 max 200
+expect enemies.energy == 28
+until game.recoil == 0 and enemies.invuln == 0 max 400
+# Salle 4 : le canal du bit 20 cree l'objet 08 (Y de Simon - 8, cote oppose).
+poke vk_game+20 3
+hold A 3
+hold A+RIGHT 3
+wait 2
+expect game.room == 4
+until any(enemies.enemy[k].active and enemies.enemy[k].type == 7 for k in range(7)) max 400
+wait 8
+shot zu-salle4
+expect pixel(165, 120) == (0, 0, 238)  # coffre fixe (160,112) de la salle 4, objet 0x19

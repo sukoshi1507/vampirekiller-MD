@@ -1,0 +1,86 @@
+# (f) Cle blanche de la salle 2, porte de la salle 7, entree dans le stage 2 jouable
+# (research/door-room7.md, section 16 ; sgdk/src/items.c). items : keys, white_key_taken,
+# door (0 fermee, 1 levee, 2 sortie a pied, 3 faite), timer, white_key_revealed.
+include boot_to_courtyard.inc
+until front_mode == MODES['INTERIOR'] max 3000 RIGHT
+# Changement de salle debug du hall : A tenu, puis A+DROITE (le premier front est perdu).
+hold A 3
+hold A+RIGHT 3
+wait 10
+hold A 3
+hold A+RIGHT 3
+wait 10
+hold A 3
+hold A+RIGHT 3
+wait 10
+expect game.room == 2 # salle 2 du hall
+poke vk_game+0 166
+poke vk_game+1 192
+wait 4
+expect ram8('items+4') == 0 # cle cachee dans le bloc (bougie C490, mode 3)
+# Regard a gauche puis fouet : X fouet 164 - 20 = 144, |144 - 136| < 20 (8450).
+hold LEFT 2
+hold B 2
+until ram8('items+4') == 1 max 30
+wait 10
+shot f-cle-au-sol
+until ram8('items') & 1 max 200 LEFT
+expect ram8('items') == 1 and ram8('items+1') == 1 # cle blanche prise (C701 bit 0)
+expect 140 <= game.player.x <= 152 # ramassage au contact (K1 : x 148)
+wait 4
+shot f-cle-prise
+# Salle 7, sur le rebord y 96 a gauche de la porte.
+hold A 3
+hold A+RIGHT 3
+wait 10
+hold A 3
+hold A+RIGHT 3
+wait 10
+hold A 3
+hold A+RIGHT 3
+wait 10
+hold A 3
+hold A+RIGHT 3
+wait 10
+hold A 3
+hold A+RIGHT 3
+wait 10
+expect game.room == 7 # salle 7 du hall
+# La panthere de la salle 7 (C0,60) nait sur le rebord de la porte ; on la retire et on
+# laisse passer un eventuel recul pour isoler la porte (le run K3 du MSX encaissait son coup).
+until enemies.enemy[0].active max 40
+poke enemy_state+0 0
+wait 30
+poke vk_game+0 200
+poke vk_game+1 96
+wait 4
+shot f-porte-fermee
+until ram8('items+2') == 1 max 120 RIGHT
+expect game.player.x == 228 # ouverture a x 228, regard a droite
+expect ram8('items') == 0 # cle consommee (7743)
+wait 40
+shot f-porte-levee
+set music0 ram32('vk_psg+4')
+until game.stage == 2 max 200
+expect ram8('items+2') == 0 # porte franchie ; celle du stage 2 (salle 1) est fermee (BB37, vk_items_enter_stage)
+wait 30                                            # chargement de la salle passe
+expect ram32('vk_psg+4') >= music0 # 794F : 7777[1] = 0, la musique continue sans redemarrer
+expect front_mode == MODES['INTERIOR'] and game.room == 0 # stage 2 jouable, salle 0
+expect game.player.x == 16 and game.player.y == 96 # arrivee (door-room7.md section 16)
+wait 10
+shot f-stage2-salle0
+# Salle 0 du stage 2 (drapeau 08) : la chauve-souris (type 4, motifs du hall) part a
+# droite en Y SAT = C425 - 22 = 74 (trace stage 2, image 6068).
+until enemies.alive > 0 max 200
+expect enemies.enemy[0].type == 2 and enemies.enemy[0].x == 0xE5 and enemies.enemy[0].y == 74
+wait 20
+shot f-stage2-chauve-souris
+# Sortie droite par l'etage haut (sol y 64, colonnes 20-31) que l'escalier dessert.
+poke vk_game+0 200
+poke vk_game+1 64
+wait 4
+until game.room == 1 max 300 RIGHT
+expect game.stage == 2 and game.player.x == 10 # salle 1 du stage 2 par la droite (lien R1)
+expect game.player.y == 64 and game.player.mode == 0 # sur le sol haut (colonnes 0-7)
+wait 30
+shot f-stage2-salle1

@@ -1,0 +1,160 @@
+# (zx) Stage 6 : objets 07 (chauve-souris), 08, 0A (statue et sa boule), pics du plafond (research/stage6-enemies.md).
+# Entree par le selecteur. Valeurs de la trace openMSX, passe par passe (2 images par passe).
+until front_mode == MODES['TITLE'] max 2000
+wait 10
+tap C
+wait 40
+tap START
+wait 10
+tap UP
+tap UP
+tap DOWN
+tap DOWN
+tap LEFT
+tap RIGHT
+tap LEFT
+tap RIGHT
+tap B
+tap A
+wait 4
+tap A
+expect ram8('Enemies_god') == 0
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap B
+until game.stage == 6 and game.room == 0 max 200
+expect enemies.alive == 0
+# Salle 0, Simon immobile en (232, 128) : la chauve-souris nait en X 10h, Y 78h, et avance de 120h par passe.
+poke vk_game+0 232
+poke vk_game+1 128
+until any(enemies.enemy[k].active and enemies.enemy[k].type == 8 for k in range(7)) max 400
+expect [enemies.enemy[k].x for k in range(7) if enemies.enemy[k].active] == [16]
+wait 1
+expect [enemies.enemy[k].x for k in range(7) if enemies.enemy[k].active] == [17]
+wait 2
+expect [enemies.enemy[k].x for k in range(7) if enemies.enemy[k].active] == [18]
+wait 2
+expect [enemies.enemy[k].x for k in range(7) if enemies.enemy[k].active] == [19]
+wait 2
+expect [enemies.enemy[k].x for k in range(7) if enemies.enemy[k].active] == [20]
+wait 2
+expect [enemies.enemy[k].x for k in range(7) if enemies.enemy[k].active] == [21]
+wait 2
+expect [enemies.enemy[k].x for k in range(7) if enemies.enemy[k].active] == [22]
+wait 2
+expect [enemies.enemy[k].x for k in range(7) if enemies.enemy[k].active] == [23]
+wait 2
+expect [enemies.enemy[k].x for k in range(7) if enemies.enemy[k].active] == [25]
+expect [enemies.enemy[k].y for k in range(7) if enemies.enemy[k].active] == [120]
+shot zx-chauve-souris
+# Le premier contact, comme la trace (MSX, images 1205-1206) : X 220, degat 2.
+until enemies.energy < 32 max 600
+expect enemies.energy == 30
+expect [enemies.enemy[k].x for k in range(7) if enemies.enemy[k].active and enemies.enemy[k].type == 8][0] == 220
+# Salle 3 : objet 08 (9DD5), memes valeurs que la trace, Simon en (232, 128).
+until game.player.mode == 0 max 200
+tap START
+wait 10
+tap UP
+tap UP
+tap DOWN
+tap DOWN
+tap LEFT
+tap RIGHT
+tap LEFT
+tap RIGHT
+tap B
+tap A
+wait 4
+tap RIGHT
+tap RIGHT
+tap RIGHT
+tap B
+until game.stage == 6 and game.room == 3 max 200
+poke vk_game+0 232
+poke vk_game+1 128
+until any(enemies.enemy[k].active and enemies.enemy[k].type == 7 for k in range(7)) max 600
+wait 1
+expect [enemies.enemy[k].x for k in range(7) if enemies.enemy[k].active] == [18]
+expect [enemies.enemy[k].y for k in range(7) if enemies.enemy[k].active] == [116]
+wait 2
+expect [enemies.enemy[k].x for k in range(7) if enemies.enemy[k].active] == [21]
+expect [enemies.enemy[k].y for k in range(7) if enemies.enemy[k].active] == [112]
+wait 2
+expect [enemies.enemy[k].x for k in range(7) if enemies.enemy[k].active] == [23]
+expect [enemies.enemy[k].y for k in range(7) if enemies.enemy[k].active] == [109]
+wait 2
+expect [enemies.enemy[k].x for k in range(7) if enemies.enemy[k].active] == [26]
+expect [enemies.enemy[k].y for k in range(7) if enemies.enemy[k].active] == [106]
+wait 2
+expect [enemies.enemy[k].x for k in range(7) if enemies.enemy[k].active] == [28]
+expect [enemies.enemy[k].y for k in range(7) if enemies.enemy[k].active] == [103]
+shot zx-objet08
+# Salle 2 : la statue 0A en (192, 80) tire une boule en (196, 60), +4 par passe (trace).
+tap START
+wait 10
+tap UP
+tap UP
+tap DOWN
+tap DOWN
+tap LEFT
+tap RIGHT
+tap LEFT
+tap RIGHT
+tap B
+tap A
+wait 4
+tap LEFT
+tap B
+until game.stage == 6 and game.room == 2 max 200
+poke vk_game+0 232
+poke vk_game+1 160
+until any(enemies.enemy[k].active and enemies.enemy[k].type == 9 for k in range(7)) max 100
+expect [enemies.enemy[k].x for k in range(7) if enemies.enemy[k].active] == [192]
+expect [enemies.enemy[k].y for k in range(7) if enemies.enemy[k].active] == [80]
+until any(enemies.enemy[k].active and enemies.enemy[k].type == 10 for k in range(7)) max 200
+expect [enemies.enemy[k].x for k in range(7) if enemies.enemy[k].active and enemies.enemy[k].type == 10] == [196]
+expect [enemies.enemy[k].y for k in range(7) if enemies.enemy[k].active and enemies.enemy[k].type == 10] == [60]
+# La boule marche dans la meme passe que la statue (trace R2 : X de la boule et compteur +12 de la statue
+# changent aux memes images, 1910, 1912, ...) et non une image avant.
+set st0 [enemies.enemy[k].sub for k in range(7) if enemies.enemy[k].active and enemies.enemy[k].type == 9][0]
+wait 1
+expect [enemies.enemy[k].x for k in range(7) if enemies.enemy[k].active and enemies.enemy[k].type == 10] == [196]
+expect [enemies.enemy[k].sub for k in range(7) if enemies.enemy[k].active and enemies.enemy[k].type == 9][0] == st0
+wait 1
+expect [enemies.enemy[k].x for k in range(7) if enemies.enemy[k].active and enemies.enemy[k].type == 10] == [200]
+expect [enemies.enemy[k].sub for k in range(7) if enemies.enemy[k].active and enemies.enemy[k].type == 9][0] == st0 - 1
+wait 2
+expect [enemies.enemy[k].x for k in range(7) if enemies.enemy[k].active and enemies.enemy[k].type == 10] == [204]
+shot zx-statue
+until [enemies.enemy[k].x for k in range(7) if enemies.enemy[k].active and enemies.enemy[k].type == 10] == [240] max 100
+wait 2
+expect not any(enemies.enemy[k].active and enemies.enemy[k].type == 10 for k in range(7))
+# Salle 1 : trois pics du plafond (8F9A), premiere passe : Y 64, 64, 60 (la troisieme attend une passe paire).
+tap START
+wait 10
+tap UP
+tap UP
+tap DOWN
+tap DOWN
+tap LEFT
+tap RIGHT
+tap LEFT
+tap RIGHT
+tap B
+tap A
+wait 4
+tap A
+tap LEFT
+tap B
+until game.stage == 6 and game.room == 1 and ram8('vk_crushers') == 1 max 200
+expect ram8('vk_crushers+1') == 0x64 and ram8('vk_crushers+8') == 0x64 and ram8('vk_crushers+15') == 0x60
+# Simon sous le troisieme, qui descend : touche quand Y vaut 80h (trace), degat 16.
+poke vk_game+0 196
+poke vk_game+1 160
+until enemies.energy < 32 max 300
+expect enemies.energy == 16
+expect ram8('vk_crushers+15') == 0x80 and ram8('vk_crushers+14') == 1
+shot zx-pics

@@ -1,0 +1,78 @@
+# (zzj) Stage 5 salle 0 : la bougie (64, 32) d'objet 15 libere l'objet 1A (research/stage9-candle-object.md, section 1A).
+# Trace openMSX (scratchpad/obj1a, o_5_0_64_32 ; Simon (52, 96) saute, fouet vers l'apex Y 64) : flamme de 30 passes, objet 1A cree en (64, 48)
+# (pose 9F), 8 passes d'attente, chute Y 50, 52, 54, 57, 60, 63, 67... jusqu'au sol en Y 96 (etat 2), puis marche. Contact : energie 32 -> 28.
+# Fouet accroupi : mort, +100 points.
+until front_mode == MODES['TITLE'] max 2000
+wait 10
+tap C
+wait 40
+tap START
+wait 10
+tap UP
+tap UP
+tap DOWN
+tap DOWN
+tap LEFT
+tap RIGHT
+tap LEFT
+tap RIGHT
+tap B
+tap A
+wait 4
+tap A
+expect ram8('Enemies_god') == 0
+tap DOWN
+tap DOWN
+tap DOWN
+tap B
+until game.stage == 5 and game.room == 0 max 200
+poke Enemies_god 1
+wait 60
+expect ram8('vk_candles+4') & 1 # bougie (64, 32) allumee
+poke vk_game+0 56
+poke vk_game+1 96
+poke vk_game+2 0
+wait 4
+tap C 1
+until game.player.y <= 66 max 40
+hold B 1
+until (ram8('vk_candles+4') & 1) == 0 max 12
+set f0 frame
+until any(enemies.enemy[k].active and enemies.enemy[k].type == 15 for k in range(7)) max 60
+set f1 frame
+expect f1 - f0 == 31 # flamme de 30 passes
+set g [k for k in range(7) if enemies.enemy[k].active and enemies.enemy[k].type == 15][0]
+expect (enemies.enemy[g].x, enemies.enemy[g].y, enemies.enemy[g].state, enemies.enemy[g].pose) == (64, 48, 0, 0x9F)
+shot zzj-bougie-eteinte
+until enemies.enemy[g].state == 1 max 30
+expect frame - f1 == 15
+expect enemies.enemy[g].y == 50
+wait 2
+expect enemies.enemy[g].y == 52
+wait 2
+expect enemies.enemy[g].y == 54
+wait 2
+expect enemies.enemy[g].y == 57
+wait 2
+expect enemies.enemy[g].y == 60
+wait 2
+expect enemies.enemy[g].y == 63
+wait 2
+expect enemies.enemy[g].y == 67
+until enemies.enemy[g].state == 2 max 60
+expect enemies.enemy[g].y == 96 and enemies.enemy[g].x == 64
+shot zzj-pose
+# Contact (energie 32 -> 28), puis fouet accroupi vers l'objet qui marche : mort, 100 points.
+poke Enemies_god 0
+poke vk_game+0 64
+poke vk_game+1 96
+wait 4
+expect enemies.energy == 28
+wait 60
+until game.player.mode == 0 max 100
+poke vk_game+2 1
+set s0 ram32('vk_hud_score')
+hold DOWN 2
+hold DOWN+B 1
+until not enemies.enemy[g].active max 40 DOWN
+expect ram32('vk_hud_score') == s0 + 100

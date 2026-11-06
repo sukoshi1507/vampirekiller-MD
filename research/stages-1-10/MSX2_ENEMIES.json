@@ -1,0 +1,973 @@
+[
+  {
+    "stage": 1,
+    "room": 0,
+    "flags": 1,
+    "unsupported_channels": 0,
+    "fixed": []
+  },
+  {
+    "stage": 1,
+    "room": 1,
+    "flags": 1,
+    "unsupported_channels": 0,
+    "fixed": []
+  },
+  {
+    "stage": 1,
+    "room": 2,
+    "flags": 0,
+    "unsupported_channels": 0,
+    "fixed": [
+      {
+        "raw_type": 5,
+        "type": 5,
+        "x": 128,
+        "y": 128,
+        "id": 9,
+        "integrated": true
+      }
+    ]
+  },
+  {
+    "stage": 1,
+    "room": 3,
+    "flags": 0,
+    "unsupported_channels": 0,
+    "fixed": [
+      {
+        "raw_type": 133,
+        "type": 5,
+        "x": 96,
+        "y": 64,
+        "id": 13,
+        "integrated": true
+      }
+    ]
+  },
+  {
+    "stage": 1,
+    "room": 4,
+    "flags": 8,
+    "unsupported_channels": 0,
+    "fixed": []
+  },
+  {
+    "stage": 1,
+    "room": 5,
+    "flags": 1,
+    "unsupported_channels": 0,
+    "fixed": []
+  },
+  {
+    "stage": 1,
+    "room": 6,
+    "flags": 1,
+    "unsupported_channels": 0,
+    "fixed": []
+  },
+  {
+    "stage": 1,
+    "room": 7,
+    "flags": 0,
+    "unsupported_channels": 0,
+    "fixed": [
+      {
+        "raw_type": 133,
+        "type": 5,
+        "x": 192,
+        "y": 96,
+        "id": 29,
+        "integrated": true
+      }
+    ]
+  },
+  {
+    "stage": 2,
+    "room": 0,
+    "flags": 8,
+    "unsupported_channels": 0,
+    "fixed": []
+  },
+  {
+    "stage": 2,
+    "room": 1,
+    "flags": 8,
+    "unsupported_channels": 0,
+    "fixed": []
+  },
+  {
+    "stage": 2,
+    "room": 2,
+    "flags": 1,
+    "unsupported_channels": 0,
+    "fixed": []
+  },
+  {
+    "stage": 2,
+    "room": 3,
+    "flags": 8,
+    "unsupported_channels": 0,
+    "fixed": []
+  },
+  {
+    "stage": 2,
+    "room": 4,
+    "flags": 2,
+    "unsupported_channels": 0,
+    "fixed": []
+  },
+  {
+    "stage": 2,
+    "room": 5,
+    "flags": 2,
+    "unsupported_channels": 0,
+    "fixed": []
+  },
+  {
+    "stage": 3,
+    "room": 0,
+    "flags": 0,
+    "unsupported_channels": 0,
+    "fixed": [
+      {
+        "raw_type": 5,
+        "type": 5,
+        "x": 112,
+        "y": 128,
+        "id": 129,
+        "integrated": true
+      }
+    ]
+  },
+  {
+    "stage": 3,
+    "room": 1,
+    "flags": 0,
+    "unsupported_channels": 0,
+    "fixed": [
+      {
+        "raw_type": 5,
+        "type": 5,
+        "x": 128,
+        "y": 128,
+        "id": 133,
+        "integrated": true
+      },
+      {
+        "raw_type": 133,
+        "type": 5,
+        "x": 176,
+        "y": 160,
+        "id": 134,
+        "integrated": true
+      }
+    ]
+  },
+  {
+    "stage": 3,
+    "room": 2,
+    "flags": 0,
+    "unsupported_channels": 0,
+    "fixed": [
+      {
+        "raw_type": 31,
+        "type": 31,
+        "x": 112,
+        "y": 96,
+        "id": 137,
+        "integrated": false
+      }
+    ]
+  },
+  {
+    "stage": 3,
+    "room": 3,
+    "flags": 129,
+    "unsupported_channels": 0,
+    "fixed": []
+  },
+  {
+    "stage": 3,
+    "room": 4,
+    "flags": 8,
+    "unsupported_channels": 0,
+    "fixed": []
+  },
+  {
+    "stage": 3,
+    "room": 5,
+    "flags": 0,
+    "unsupported_channels": 0,
+    "fixed": []
+  },
+  {
+    "stage": 4,
+    "room": 0,
+    "flags": 128,
+    "unsupported_channels": 0,
+    "fixed": [
+      {
+        "raw_type": 6,
+        "type": 6,
+        "x": 224,
+        "y": 192,
+        "id": 1,
+        "integrated": false
+      },
+      {
+        "raw_type": 6,
+        "type": 6,
+        "x": 144,
+        "y": 96,
+        "id": 2,
+        "integrated": false
+      }
+    ]
+  },
+  {
+    "stage": 4,
+    "room": 1,
+    "flags": 0,
+    "unsupported_channels": 0,
+    "fixed": [
+      {
+        "raw_type": 6,
+        "type": 6,
+        "x": 128,
+        "y": 192,
+        "id": 5,
+        "integrated": false
+      },
+      {
+        "raw_type": 6,
+        "type": 6,
+        "x": 64,
+        "y": 96,
+        "id": 6,
+        "integrated": false
+      },
+      {
+        "raw_type": 31,
+        "type": 31,
+        "x": 64,
+        "y": 48,
+        "id": 7,
+        "integrated": false
+      }
+    ]
+  },
+  {
+    "stage": 4,
+    "room": 2,
+    "flags": 0,
+    "unsupported_channels": 0,
+    "fixed": [
+      {
+        "raw_type": 6,
+        "type": 6,
+        "x": 176,
+        "y": 192,
+        "id": 9,
+        "integrated": false
+      },
+      {
+        "raw_type": 6,
+        "type": 6,
+        "x": 64,
+        "y": 96,
+        "id": 10,
+        "integrated": false
+      }
+    ]
+  },
+  {
+    "stage": 4,
+    "room": 3,
+    "flags": 0,
+    "unsupported_channels": 0,
+    "fixed": [
+      {
+        "raw_type": 31,
+        "type": 31,
+        "x": 48,
+        "y": 48,
+        "id": 13,
+        "integrated": false
+      }
+    ]
+  },
+  {
+    "stage": 4,
+    "room": 4,
+    "flags": 160,
+    "unsupported_channels": 32,
+    "fixed": [
+      {
+        "raw_type": 6,
+        "type": 6,
+        "x": 160,
+        "y": 192,
+        "id": 17,
+        "integrated": false
+      },
+      {
+        "raw_type": 6,
+        "type": 6,
+        "x": 96,
+        "y": 160,
+        "id": 18,
+        "integrated": false
+      }
+    ]
+  },
+  {
+    "stage": 4,
+    "room": 5,
+    "flags": 128,
+    "unsupported_channels": 0,
+    "fixed": []
+  },
+  {
+    "stage": 5,
+    "room": 0,
+    "flags": 160,
+    "unsupported_channels": 32,
+    "fixed": []
+  },
+  {
+    "stage": 5,
+    "room": 1,
+    "flags": 32,
+    "unsupported_channels": 32,
+    "fixed": []
+  },
+  {
+    "stage": 5,
+    "room": 2,
+    "flags": 128,
+    "unsupported_channels": 0,
+    "fixed": [
+      {
+        "raw_type": 6,
+        "type": 6,
+        "x": 80,
+        "y": 96,
+        "id": 73,
+        "integrated": false
+      }
+    ]
+  },
+  {
+    "stage": 5,
+    "room": 3,
+    "flags": 128,
+    "unsupported_channels": 0,
+    "fixed": [
+      {
+        "raw_type": 6,
+        "type": 6,
+        "x": 160,
+        "y": 96,
+        "id": 77,
+        "integrated": false
+      },
+      {
+        "raw_type": 6,
+        "type": 6,
+        "x": 160,
+        "y": 160,
+        "id": 78,
+        "integrated": false
+      }
+    ]
+  },
+  {
+    "stage": 5,
+    "room": 4,
+    "flags": 32,
+    "unsupported_channels": 32,
+    "fixed": []
+  },
+  {
+    "stage": 5,
+    "room": 5,
+    "flags": 160,
+    "unsupported_channels": 32,
+    "fixed": []
+  },
+  {
+    "stage": 6,
+    "room": 0,
+    "flags": 16,
+    "unsupported_channels": 16,
+    "fixed": []
+  },
+  {
+    "stage": 6,
+    "room": 1,
+    "flags": 0,
+    "unsupported_channels": 0,
+    "fixed": []
+  },
+  {
+    "stage": 6,
+    "room": 2,
+    "flags": 0,
+    "unsupported_channels": 0,
+    "fixed": [
+      {
+        "raw_type": 10,
+        "type": 10,
+        "x": 192,
+        "y": 80,
+        "id": 137,
+        "integrated": false
+      }
+    ]
+  },
+  {
+    "stage": 6,
+    "room": 3,
+    "flags": 160,
+    "unsupported_channels": 32,
+    "fixed": []
+  },
+  {
+    "stage": 6,
+    "room": 4,
+    "flags": 32,
+    "unsupported_channels": 32,
+    "fixed": []
+  },
+  {
+    "stage": 6,
+    "room": 5,
+    "flags": 0,
+    "unsupported_channels": 0,
+    "fixed": []
+  },
+  {
+    "stage": 7,
+    "room": 0,
+    "flags": 128,
+    "unsupported_channels": 0,
+    "fixed": []
+  },
+  {
+    "stage": 7,
+    "room": 1,
+    "flags": 128,
+    "unsupported_channels": 0,
+    "fixed": [
+      {
+        "raw_type": 13,
+        "type": 13,
+        "x": 80,
+        "y": 144,
+        "id": 5,
+        "integrated": false
+      },
+      {
+        "raw_type": 13,
+        "type": 13,
+        "x": 160,
+        "y": 144,
+        "id": 6,
+        "integrated": false
+      }
+    ]
+  },
+  {
+    "stage": 7,
+    "room": 2,
+    "flags": 128,
+    "unsupported_channels": 0,
+    "fixed": [
+      {
+        "raw_type": 11,
+        "type": 11,
+        "x": 144,
+        "y": 176,
+        "id": 9,
+        "integrated": false
+      }
+    ]
+  },
+  {
+    "stage": 7,
+    "room": 3,
+    "flags": 128,
+    "unsupported_channels": 0,
+    "fixed": [
+      {
+        "raw_type": 11,
+        "type": 11,
+        "x": 176,
+        "y": 192,
+        "id": 13,
+        "integrated": false
+      }
+    ]
+  },
+  {
+    "stage": 7,
+    "room": 4,
+    "flags": 0,
+    "unsupported_channels": 0,
+    "fixed": [
+      {
+        "raw_type": 11,
+        "type": 11,
+        "x": 208,
+        "y": 192,
+        "id": 17,
+        "integrated": false
+      },
+      {
+        "raw_type": 13,
+        "type": 13,
+        "x": 176,
+        "y": 128,
+        "id": 18,
+        "integrated": false
+      },
+      {
+        "raw_type": 13,
+        "type": 13,
+        "x": 80,
+        "y": 80,
+        "id": 19,
+        "integrated": false
+      }
+    ]
+  },
+  {
+    "stage": 7,
+    "room": 5,
+    "flags": 128,
+    "unsupported_channels": 0,
+    "fixed": [
+      {
+        "raw_type": 11,
+        "type": 11,
+        "x": 48,
+        "y": 144,
+        "id": 21,
+        "integrated": false
+      }
+    ]
+  },
+  {
+    "stage": 7,
+    "room": 6,
+    "flags": 0,
+    "unsupported_channels": 0,
+    "fixed": [
+      {
+        "raw_type": 11,
+        "type": 11,
+        "x": 144,
+        "y": 176,
+        "id": 25,
+        "integrated": false
+      }
+    ]
+  },
+  {
+    "stage": 7,
+    "room": 7,
+    "flags": 0,
+    "unsupported_channels": 0,
+    "fixed": [
+      {
+        "raw_type": 12,
+        "type": 12,
+        "x": 112,
+        "y": 80,
+        "id": 29,
+        "integrated": false
+      }
+    ]
+  },
+  {
+    "stage": 7,
+    "room": 8,
+    "flags": 0,
+    "unsupported_channels": 0,
+    "fixed": [
+      {
+        "raw_type": 12,
+        "type": 12,
+        "x": 112,
+        "y": 80,
+        "id": 33,
+        "integrated": false
+      }
+    ]
+  },
+  {
+    "stage": 8,
+    "room": 0,
+    "flags": 0,
+    "unsupported_channels": 0,
+    "fixed": []
+  },
+  {
+    "stage": 8,
+    "room": 1,
+    "flags": 32,
+    "unsupported_channels": 32,
+    "fixed": []
+  },
+  {
+    "stage": 8,
+    "room": 2,
+    "flags": 0,
+    "unsupported_channels": 0,
+    "fixed": [
+      {
+        "raw_type": 11,
+        "type": 11,
+        "x": 208,
+        "y": 80,
+        "id": 73,
+        "integrated": false
+      }
+    ]
+  },
+  {
+    "stage": 8,
+    "room": 3,
+    "flags": 0,
+    "unsupported_channels": 0,
+    "fixed": [
+      {
+        "raw_type": 11,
+        "type": 11,
+        "x": 144,
+        "y": 144,
+        "id": 77,
+        "integrated": false
+      }
+    ]
+  },
+  {
+    "stage": 8,
+    "room": 4,
+    "flags": 0,
+    "unsupported_channels": 0,
+    "fixed": []
+  },
+  {
+    "stage": 8,
+    "room": 5,
+    "flags": 0,
+    "unsupported_channels": 0,
+    "fixed": [
+      {
+        "raw_type": 12,
+        "type": 12,
+        "x": 80,
+        "y": 80,
+        "id": 85,
+        "integrated": false
+      }
+    ]
+  },
+  {
+    "stage": 8,
+    "room": 6,
+    "flags": 0,
+    "unsupported_channels": 0,
+    "fixed": [
+      {
+        "raw_type": 10,
+        "type": 10,
+        "x": 144,
+        "y": 144,
+        "id": 89,
+        "integrated": false
+      },
+      {
+        "raw_type": 12,
+        "type": 12,
+        "x": 80,
+        "y": 192,
+        "id": 90,
+        "integrated": false
+      }
+    ]
+  },
+  {
+    "stage": 8,
+    "room": 7,
+    "flags": 0,
+    "unsupported_channels": 0,
+    "fixed": [
+      {
+        "raw_type": 11,
+        "type": 11,
+        "x": 128,
+        "y": 192,
+        "id": 93,
+        "integrated": false
+      }
+    ]
+  },
+  {
+    "stage": 9,
+    "room": 0,
+    "flags": 160,
+    "unsupported_channels": 32,
+    "fixed": []
+  },
+  {
+    "stage": 9,
+    "room": 1,
+    "flags": 160,
+    "unsupported_channels": 32,
+    "fixed": [
+      {
+        "raw_type": 10,
+        "type": 10,
+        "x": 192,
+        "y": 112,
+        "id": 133,
+        "integrated": false
+      }
+    ]
+  },
+  {
+    "stage": 9,
+    "room": 2,
+    "flags": 32,
+    "unsupported_channels": 32,
+    "fixed": [
+      {
+        "raw_type": 10,
+        "type": 10,
+        "x": 80,
+        "y": 112,
+        "id": 137,
+        "integrated": false
+      },
+      {
+        "raw_type": 10,
+        "type": 10,
+        "x": 176,
+        "y": 112,
+        "id": 138,
+        "integrated": false
+      }
+    ]
+  },
+  {
+    "stage": 9,
+    "room": 3,
+    "flags": 32,
+    "unsupported_channels": 32,
+    "fixed": []
+  },
+  {
+    "stage": 9,
+    "room": 4,
+    "flags": 0,
+    "unsupported_channels": 0,
+    "fixed": [
+      {
+        "raw_type": 10,
+        "type": 10,
+        "x": 80,
+        "y": 112,
+        "id": 145,
+        "integrated": false
+      },
+      {
+        "raw_type": 11,
+        "type": 11,
+        "x": 176,
+        "y": 112,
+        "id": 146,
+        "integrated": false
+      }
+    ]
+  },
+  {
+    "stage": 9,
+    "room": 5,
+    "flags": 0,
+    "unsupported_channels": 0,
+    "fixed": [
+      {
+        "raw_type": 13,
+        "type": 13,
+        "x": 80,
+        "y": 112,
+        "id": 149,
+        "integrated": false
+      },
+      {
+        "raw_type": 13,
+        "type": 13,
+        "x": 112,
+        "y": 80,
+        "id": 150,
+        "integrated": false
+      }
+    ]
+  },
+  {
+    "stage": 9,
+    "room": 6,
+    "flags": 0,
+    "unsupported_channels": 0,
+    "fixed": [
+      {
+        "raw_type": 11,
+        "type": 11,
+        "x": 64,
+        "y": 80,
+        "id": 153,
+        "integrated": false
+      }
+    ]
+  },
+  {
+    "stage": 9,
+    "room": 7,
+    "flags": 0,
+    "unsupported_channels": 0,
+    "fixed": []
+  },
+  {
+    "stage": 9,
+    "room": 8,
+    "flags": 0,
+    "unsupported_channels": 0,
+    "fixed": [
+      {
+        "raw_type": 11,
+        "type": 11,
+        "x": 48,
+        "y": 176,
+        "id": 161,
+        "integrated": false
+      },
+      {
+        "raw_type": 13,
+        "type": 13,
+        "x": 112,
+        "y": 80,
+        "id": 162,
+        "integrated": false
+      }
+    ]
+  },
+  {
+    "stage": 10,
+    "room": 0,
+    "flags": 8,
+    "unsupported_channels": 0,
+    "fixed": []
+  },
+  {
+    "stage": 10,
+    "room": 1,
+    "flags": 4,
+    "unsupported_channels": 4,
+    "fixed": []
+  },
+  {
+    "stage": 10,
+    "room": 2,
+    "flags": 4,
+    "unsupported_channels": 4,
+    "fixed": []
+  },
+  {
+    "stage": 10,
+    "room": 3,
+    "flags": 4,
+    "unsupported_channels": 4,
+    "fixed": []
+  },
+  {
+    "stage": 10,
+    "room": 4,
+    "flags": 4,
+    "unsupported_channels": 4,
+    "fixed": []
+  },
+  {
+    "stage": 10,
+    "room": 5,
+    "flags": 4,
+    "unsupported_channels": 4,
+    "fixed": []
+  },
+  {
+    "stage": 10,
+    "room": 6,
+    "flags": 0,
+    "unsupported_channels": 0,
+    "fixed": [
+      {
+        "raw_type": 33,
+        "type": 33,
+        "x": 48,
+        "y": 176,
+        "id": 25,
+        "integrated": false
+      },
+      {
+        "raw_type": 33,
+        "type": 33,
+        "x": 192,
+        "y": 176,
+        "id": 26,
+        "integrated": false
+      }
+    ]
+  },
+  {
+    "stage": 10,
+    "room": 7,
+    "flags": 0,
+    "unsupported_channels": 0,
+    "fixed": [
+      {
+        "raw_type": 33,
+        "type": 33,
+        "x": 128,
+        "y": 176,
+        "id": 29,
+        "integrated": false
+      }
+    ]
+  },
+  {
+    "stage": 10,
+    "room": 8,
+    "flags": 0,
+    "unsupported_channels": 0,
+    "fixed": [
+      {
+        "raw_type": 33,
+        "type": 33,
+        "x": 48,
+        "y": 176,
+        "id": 33,
+        "integrated": false
+      },
+      {
+        "raw_type": 33,
+        "type": 33,
+        "x": 208,
+        "y": 176,
+        "id": 34,
+        "integrated": false
+      }
+    ]
+  }
+]

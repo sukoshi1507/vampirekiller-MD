@@ -1,0 +1,19 @@
+# (zt) Un coup recu arrete le fouet (7EC1 : C422 := 0) sans toucher a C416 : le fouet chaine reste.
+# vk_whip+5 : niveau. Contact provoque avec le boss du stage 3.
+until front_mode == MODES['TITLE'] max 2000
+wait 10
+tap C
+wait 30
+poke vk_game+22 3
+poke vk_game+20 4
+hold A 3
+hold A+RIGHT 3
+wait 30
+poke vk_whip+5 1
+poke vk_game+0 40
+poke vk_game+1 192
+poke vk_boss+8 192
+poke vk_boss+10 40
+wait 3
+expect enemies.energy == 28 and enemies.invuln > 0 # touche
+expect ram8('vk_whip+5') == 1 # fouet garde

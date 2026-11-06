@@ -1,0 +1,28 @@
+# (zy_j) Stage 6 : cle blanche (bloc cache de la salle 0, (192, 160)), porte de la salle 4 en (12, 80) cote gauche, sortie vers la salle 5 du boss.
+# Trace openMSX (scratchpad/stage6boss/out/K, A) : Simon (188, 192) face a droite, fouet image 954, bloc 0C + 0E image 957, cle prise
+# (C701 = 1, effet 14) image 968 ; porte : FF + 1A, effet 87, salle 5 en (246, 128) puis chute a 160. Voir research/stage6-boss.md.
+include zy_enter6.inc
+poke Enemies_god 1
+wait 30
+poke vk_game+0 188
+poke vk_game+1 192
+poke vk_game+2 0
+wait 4
+expect ram8('items+4') == 0 and ram8('items') == 0 # cle cachee dans le bloc (192, 160)
+tap B
+wait 20
+until ram8('items') & 1 max 200
+expect ram8('items+4') == 1 and ram8('items') == 1 # bloc brise par le fouet, cle blanche prise
+poke vk_game+20 4
+poke vk_game+0 34
+poke vk_game+1 128
+poke vk_game+2 1
+wait 4
+expect ram8('items+2') == 0 # porte fermee
+until ram8('items+2') == 1 max 160 LEFT
+expect ram8('items') == 0 and game.player.x < 34 # cle consommee a l'ouverture (porte de gauche)
+until game.room == 5 max 400 LEFT
+wait 20
+expect game.stage == 6 and game.player.x == 246 # trace : x 246 (liaison gauche de la salle 4)
+until game.player.y == 160 max 100
+expect ram8('vk_boss') == 1 and ram8('vk_boss+56') == 1 # le boss du stage 6 est en jeu

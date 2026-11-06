@@ -1,0 +1,81 @@
+# (zzh) Flamme de mort (objet 1E, 9A3E ; research/death-flame.md). Stage 2 salle 2 : le zombie (X 87h, Y A0h pour la trace A) tue
+# par le fouet laisse une flamme dans son bloc. Trace openMSX (scratchpad/dflame, o3, plan mk.py, bp 98EC et 9A3E) : flamme en
+# (X, Y - 10h), +B 85 / +C 10h a la passe de la mort, puis (pose, +C) a chaque passe : 85 0F, 86 0E, 86 0D, 86 0C, 86 0B, 85 0A,
+# 85 09, 85 08, 85 07, 86 06, 86 05, 86 04, 86 03, 85 02, 85 01 ; effacee a la 16e mise a jour ; 32 images a l'ecran (SAT 128/129,
+# motifs F4 / F8, couleur 8).
+include boot_to_courtyard.inc
+until front_mode == MODES['INTERIOR'] max 3000 RIGHT
+poke vk_game+22 2
+hold A 3
+hold A+RIGHT 3
+wait 10
+hold A 3
+hold A+RIGHT 3
+wait 10
+hold A 3
+hold A+RIGHT 3
+poke vk_game+0 145
+poke vk_game+1 160
+wait 2
+expect game.stage == 2 and game.room == 2 # salle 2 du stage 2
+until enemies.alive > 0 max 80
+until enemies.enemy[0].x <= 174 max 200
+tap B 1
+until enemies.enemy[0].flame == 1 max 30
+set f0 frame
+set zx enemies.enemy[0].x
+set zy enemies.enemy[0].y
+expect enemies.enemy[0].type == 16 and enemies.enemy[0].anim == 0x10 and enemies.enemy[0].pose == 0x85 # +C = 10h, +B = 85
+expect enemies.energy == 32 # tue avant le contact
+# Le zombie de la trace A est en (87h, A0h) ; ici la flamme est en (X, Y - 10h) du zombie tue (x SAT + 8, y SAT + 31).
+expect zy == 0xA0 - 0x10 # flamme 10h au-dessus des pieds
+expect zx >= 0x80 and zx < 0xC8 # X du zombie tue a portee de fouet
+shot zzh-flamme-creation
+# Sprite (table de sprites du port, tuiles 752 = F4 et 756 = F8, palette 2) : une entree en (X - 8, Y - 15 pose 85 / Y - 14 pose 86),
+# envoyee une image apres le calcul (frame-timing.md).
+set fl lambda t: [(ram16('vdpSpriteCache+%d' % (8 * i + 6)), ram16('vdpSpriteCache+%d' % (8 * i))) for i in range(80) if (ram16('vdpSpriteCache+%d' % (8 * i + 4)) & 0x7FF) == t]
+# La mise a jour du port a lieu toutes les deux images, a partir de la deuxieme image apres la creation (age impair >= 3) ; l'age compte
+# les images du port depuis la creation (1) : a l'age 2k + 1, (pose, +C) de la passe 632 + k de la trace.
+until enemies.enemy[0].age == 1 max 8
+expect (enemies.enemy[0].pose, enemies.enemy[0].anim) == (0x85, 0x10) # passe 632
+until enemies.enemy[0].age == 3 max 8
+expect (enemies.enemy[0].pose, enemies.enemy[0].anim) == (0x85, 0x0F) # passe 633
+until enemies.enemy[0].age == 5 max 8
+expect (enemies.enemy[0].pose, enemies.enemy[0].anim) == (0x86, 0x0E) # passe 634
+until enemies.enemy[0].age == 7 max 8
+expect (enemies.enemy[0].pose, enemies.enemy[0].anim) == (0x86, 0x0D) # passe 635
+until enemies.enemy[0].age == 9 max 8
+expect (enemies.enemy[0].pose, enemies.enemy[0].anim) == (0x86, 0x0C) # passe 636
+wait 1
+expect fl(756) == [(zx - 8 + 128, zy - 14 + 128)] and fl(752) == [] # pose 86 : cellule F8
+expect len([c for c in colors(zx - 8, zy - 15, zx + 8, zy + 1) if c == (238, 0, 32)]) > 40 # couleur 8 (rouge) a l'ecran
+until enemies.enemy[0].age == 11 max 8
+expect (enemies.enemy[0].pose, enemies.enemy[0].anim) == (0x86, 0x0B) # passe 637
+until enemies.enemy[0].age == 13 max 8
+expect (enemies.enemy[0].pose, enemies.enemy[0].anim) == (0x85, 0x0A) # passe 638
+shot zzh-flamme-milieu
+until enemies.enemy[0].age == 15 max 8
+expect (enemies.enemy[0].pose, enemies.enemy[0].anim) == (0x85, 0x09) # passe 639
+until enemies.enemy[0].age == 17 max 8
+expect (enemies.enemy[0].pose, enemies.enemy[0].anim) == (0x85, 0x08) # passe 640
+wait 1
+expect fl(752) == [(zx - 8 + 128, zy - 15 + 128)] and fl(756) == [] # pose 85 : cellule F4
+until enemies.enemy[0].age == 19 max 8
+expect (enemies.enemy[0].pose, enemies.enemy[0].anim) == (0x85, 0x07) # passe 641
+until enemies.enemy[0].age == 21 max 8
+expect (enemies.enemy[0].pose, enemies.enemy[0].anim) == (0x86, 0x06) # passe 642
+until enemies.enemy[0].age == 23 max 8
+expect (enemies.enemy[0].pose, enemies.enemy[0].anim) == (0x86, 0x05) # passe 643
+until enemies.enemy[0].age == 25 max 8
+expect (enemies.enemy[0].pose, enemies.enemy[0].anim) == (0x86, 0x04) # passe 644
+until enemies.enemy[0].age == 27 max 8
+expect (enemies.enemy[0].pose, enemies.enemy[0].anim) == (0x86, 0x03) # passe 645
+until enemies.enemy[0].age == 29 max 8
+expect (enemies.enemy[0].pose, enemies.enemy[0].anim) == (0x85, 0x02) # passe 646
+until enemies.enemy[0].age == 31 max 8
+expect (enemies.enemy[0].pose, enemies.enemy[0].anim) == (0x85, 0x01) # passe 647
+expect enemies.enemy[0].flame == 1
+until enemies.enemy[0].flame == 0 max 8
+expect enemies.enemy[0].age == 33 and enemies.enemy[0].active == 0 # 16e mise a jour : 32 images d'affichage (age 1 a 32)
+# La flamme ne touche pas Simon et ne se fouette pas : Simon sur la flamme, fouet, energie intacte.
+expect enemies.energy == 32

@@ -1,0 +1,37 @@
+# (b) Cour -> hall (salle 0) en tenant DROITE, un ennemi de type 1 apparait,
+# un coup de fouet le tue (lecture de enemy_state).
+include boot_to_courtyard.inc
+until front_mode == MODES['INTERIOR'] max 3000 RIGHT               # cour 0 -> 1 -> 2 -> porte (x 216), entree auto -> hall
+expect front_mode == MODES['INTERIOR'] and game.room == 0 # hall, salle 0
+expect game.player.x == 16 and game.player.y == 192 # retour en jeu a gauche du hall (image 1555 MSX)
+shot b-hall
+# Simon a droite, tourne vers la gauche : C42C != 0 fait sortir l'ennemi a gauche (9D30). Regard a
+# droite, D = F0 : la garde 9E16 refuserait tout tir (X de Simon >= C0, D >= C0).
+poke vk_game+0 200
+wait 30                                            # commandes rendues apres l'entree
+tap LEFT 2
+until enemies.alive > 0 max 600                    # minuterie de spawn du canal type 1
+set slot [i for i, e in enumerate(enemies.enemy) if e.active][0]
+dump spawn
+shot b-spawn
+expect enemies.enemy[slot].type in (0, 1) # type 1 MSX (A = 0 droite, B = 1 gauche)
+expect enemies.enemy[slot].romBox == 1 # objet de la ROM : sortie 99E5, contact 8290, fouet 7DAD (comme au stage 2)
+expect enemies.enemy[slot].dx == (1 if enemies.enemy[slot].x < game.player.x else -1) # avance vers Simon
+expect game.player.facing == 1 # face a gauche, vers l'ennemi
+# Fouet 84A7 face gauche : X du fouet = x - 20, ennemi (X objet = x ecran + 8) touche si
+# |x - 20 - ex| < 17 a l'image du test (whip.timer 11, passe C422 = 3 du MSX). On frappe
+# quand ex atteint x-36 : le fouet teste 3 images plus tard.
+until enemies.enemy[slot].x + 8 >= game.player.x - 36 max 600
+set energy0 enemies.energy
+dump avant-coup
+tap B 1
+until whip.timer == 0 or not enemies.enemy[slot].active max 30
+dump apres-coup
+wait 2                                             # la table des sprites suit d'une image
+shot b-apres-coup
+expect not enemies.enemy[slot].active # ennemi tue par le fouet
+expect enemies.enemy[slot].x + 8 > game.player.x - 48 # tue a portee de fouet, pas sorti de l'ecran
+expect enemies.energy == energy0 # aucun contact
+wait 2
+expect ram32('vk_hud_score') == 100 # 81AB : type 1, 100 points (table 81CE)
+shot b-score

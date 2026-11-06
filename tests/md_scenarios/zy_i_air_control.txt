@@ -1,0 +1,38 @@
+# (zy_i) Stage 5, salle 2, Simon en (232, 96) : sortie de la corniche en marchant et saut long vers le sol y 128
+# (trace openMSX scratchpad/checks45/lj, plan lj_plan.txt ; chute de la salle 1 : scratchpad/stage5/out/J).
+# MSX : C421 (6CC0) est lu une seule fois, a la premiere passe du saut (6CCE-6CE5) : 1 tout droit, 2 gauche, 3 droite, puis garde ;
+# le saut continue a 2 px par passe jusqu'au sol, au dela de la fin de la table. Une chute depuis une corniche (6BA5 : C421 = 0)
+# ne lit aucune touche : X constant meme avec GAUCHE tenu (trace J : X 149, DROITE tenu, y 96 -> 222).
+include zy_enter5.inc
+poke Enemies_god 1
+poke vk_game+20 1
+hold A 3
+hold A+RIGHT 3
+until game.room == 2 max 200
+wait 30
+# Sortie en marchant : la chute suit 98, 102, 108, 114, 120, 126 (2, 4, 6, 6 par passe de 2 images), X immobile.
+poke vk_game+0 232
+poke vk_game+1 96
+poke vk_game+2 1
+wait 20
+until game.player.mode == 4 max 80 LEFT
+set x0 game.player.x
+until game.player.y == 98 max 4 LEFT
+until game.player.y == 102 max 4 LEFT
+until game.player.y == 108 max 4 LEFT
+until game.player.y == 114 max 4 LEFT
+until game.player.y == 120 max 4 LEFT
+until game.player.y == 126 max 4 LEFT
+expect game.player.x == x0 # pas de pas lateral en chute (trace J)
+until game.player.y == 222 max 80 LEFT
+expect game.player.x == x0
+# Saut long (trace lj) : arc 96 -> 64 -> 96, puis le MSX poursuit jusqu'au sol y 128 en gardant la direction (X 188 a l'arrivee).
+until health.phase == 0 max 400
+poke vk_game+0 232
+poke vk_game+1 96
+poke vk_game+2 1
+wait 30
+hold C+LEFT 36
+until game.player.mode == 0 max 120
+expect game.player.y == 128 and game.room == 2 # trace : (188, 128)
+expect 186 <= game.player.x <= 192 # direction gardee apres le relachement : X continue a reculer jusqu'au sol

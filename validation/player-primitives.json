@@ -1,0 +1,14 @@
+{
+  "all_equal": true,
+  "cases": {
+    "tile_classification": 9728,
+    "coordinate_lookup": 3744,
+    "ground_probe": 7488,
+    "side_probe": 29952,
+    "jump_step": 2960
+  },
+  "total": 53872,
+  "seed": "564B",
+  "reference": "Actual original ROM instructions executed by kosarev/z80 1.2.0",
+  "scope": "Collision probes and jump helper, not the full player state dispatcher."
+}

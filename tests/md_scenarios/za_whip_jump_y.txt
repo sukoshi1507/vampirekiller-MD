@@ -1,0 +1,42 @@
+# (za) Fouet en plein saut : la boite suit Simon (research/whip-hitbox.md, « Fouet en
+# saut »). Sur le MSX, le coup ne teste qu'une passe, celle de C422 = 3 (la 2e du coup,
+# C42F 7), et 84A7 lit C425/C427 de cette passe, apres le pas de saut (6D5D). Trace
+# openMSX (scratchpad/whip-jump/run3), Simon a x 44 sous la torche A (64,144) de la
+# cour, saut vertical : coup lance a Y 164 en montant, teste a Y 159 (159 - 18 - 144 < 0),
+# torche intacte ; coup lance a Y 159 en descendant, teste a Y 164 : torche eteinte.
+# Le port teste a whip.timer 11 (3 images apres l'appui), avec la position de Simon a
+# cette image. Les sprites de Simon et du fouet suivent sa position de chaque image
+# (affiches deux images apres le calcul, research/frame-timing.md).
+# vk_candles (candles.h) : allumees en +4 (bit 0 = torche A).
+include boot_to_courtyard.inc
+poke vk_game+0 44
+wait 4
+expect ram8('vk_candles+4') == 3 # torches A et B allumees
+tap C 1
+# Montee : appui a l'image du pas 170 -> 164 (le pas a lieu une image sur deux).
+until game.player.y == 170 max 20
+wait 1
+hold B 1
+expect whip.timer == 14 and game.player.y == 164 # coup lance a Y 164
+wait 2
+expect whip.timer == 12 and game.player.y == 159
+set y12 game.player.y
+wait 1
+expect whip.timer == 11 and whip.y == 159 and whip.x == 44 # boite a la position de l'image du test
+expect ram8('vk_candles+4') & 1 # torche A intacte (le port d'avant, fige a Y 164, l'eteignait)
+expect ram16('vdpSpriteCache+40') - 128 == y12 - 30 # sprites du coup a la position de l'image d'avant
+shot za-montee
+until whip.timer == 0 max 20
+expect ram8('vk_candles+4') & 1 # toujours allumee apres le coup de la montee
+# Descente : appui a l'image du pas 154 -> 159.
+until game.player.y <= 145 max 30
+until game.player.y == 154 max 30
+wait 1
+hold B 1
+expect whip.timer == 14 and game.player.y == 159 # coup lance a Y 159
+until (ram8('vk_candles+4') & 1) == 0 max 6
+expect whip.timer == 11 and whip.y == 164 # eteinte a l'image du test, Y 164 (le port d'avant, fige a 159, la ratait)
+wait 2
+shot za-descente
+until game.player.mode == 0 max 30
+expect game.player.y == 176 and ram8('vk_candles+4') == 2 # au sol, torche B seule allumee

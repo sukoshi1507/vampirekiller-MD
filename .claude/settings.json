@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git commit *)",
+      "Bash(cd sgdk && make GDK=\"$HOME/Documents/githubsuko/SGDK\")"
+    ]
+  }
+}

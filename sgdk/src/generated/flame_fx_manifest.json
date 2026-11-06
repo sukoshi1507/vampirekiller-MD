@@ -1,0 +1,195 @@
+{
+  "source_rom_sha256": "99eabaaeb2b6c02220e131043d5a6401d0d8c5f413d89204547adcc04d65e7e2",
+  "screen_mode": "SCREEN 5 (256x212, 4 bpp)",
+  "transparency": "index 0 transparent: LMMM with R#46=0x98 (TIMP) does not copy colour 0",
+  "states": [
+    {
+      "state": "A",
+      "file_offset": "0x0DF48",
+      "bank": "06",
+      "offset_in_bank": "0x1F48",
+      "cpu_address": null,
+      "cpu_address_note": "depends on the bank window; not determined",
+      "vram_x": 48,
+      "vram_y": 368,
+      "bytes": 128,
+      "format": "16x16 4bpp row-major, left pixel high nibble",
+      "pixel_sha256": "f042e3f7d7891127e3d54a2ab3122ea38693ecabd70caf4395af87fec555bd73",
+      "status": "decoded",
+      "status_note": "ROM bytes equal the VRAM of the ROM run (IntroHarness) and the openMSX VRAM dump at ticks 2300-2379 (page 0 block at x 64/192 matches on all stable frames)."
+    },
+    {
+      "state": "B",
+      "file_offset": "0x0DEC8",
+      "bank": "06",
+      "offset_in_bank": "0x1EC8",
+      "cpu_address": null,
+      "cpu_address_note": "depends on the bank window; not determined",
+      "vram_x": 32,
+      "vram_y": 368,
+      "bytes": 128,
+      "format": "16x16 4bpp row-major, left pixel high nibble",
+      "pixel_sha256": "bf78d07aea312c41ca2ea1e36502fce3bdd26ebb526911aa5daffbe3f17c57aa",
+      "status": "decoded",
+      "status_note": "ROM bytes equal the VRAM of the ROM run (IntroHarness) and the openMSX VRAM dump at ticks 2300-2379 (page 0 block at x 64/192 matches on all stable frames)."
+    }
+  ],
+  "flame_frames": [
+    {
+      "index": 0,
+      "state": "A"
+    },
+    {
+      "index": 1,
+      "state": "A"
+    },
+    {
+      "index": 2,
+      "state": "B"
+    },
+    {
+      "index": 3,
+      "state": "B"
+    }
+  ],
+  "spark_frames": [
+    {
+      "index": 0,
+      "state": "A",
+      "note": "burst reuses ROM flame states; no ROM spark found"
+    },
+    {
+      "index": 1,
+      "state": "B",
+      "note": "burst reuses ROM flame states; no ROM spark found"
+    },
+    {
+      "index": 2,
+      "state": "A",
+      "note": "burst reuses ROM flame states; no ROM spark found"
+    }
+  ],
+  "palette": {
+    "room": 0,
+    "source": "IntroHarness run of the ROM courtyard routines (port 9A writes)",
+    "status": "candidate",
+    "status_note": "not compared with the live VDP palette in openMSX",
+    "rgb333": [
+      [
+        0,
+        0,
+        0
+      ],
+      [
+        7,
+        5,
+        4
+      ],
+      [
+        1,
+        1,
+        1
+      ],
+      [
+        6,
+        2,
+        3
+      ],
+      [
+        4,
+        2,
+        1
+      ],
+      [
+        5,
+        4,
+        0
+      ],
+      [
+        4,
+        3,
+        2
+      ],
+      [
+        0,
+        2,
+        0
+      ],
+      [
+        7,
+        0,
+        1
+      ],
+      [
+        0,
+        3,
+        0
+      ],
+      [
+        0,
+        5,
+        0
+      ],
+      [
+        4,
+        3,
+        0
+      ],
+      [
+        5,
+        5,
+        5
+      ],
+      [
+        3,
+        3,
+        3
+      ],
+      [
+        7,
+        7,
+        7
+      ],
+      [
+        0,
+        0,
+        7
+      ]
+    ],
+    "cram_md": [
+      "0x0000",
+      "0x08AE",
+      "0x0222",
+      "0x064C",
+      "0x0248",
+      "0x008A",
+      "0x0468",
+      "0x0040",
+      "0x020E",
+      "0x0060",
+      "0x00A0",
+      "0x0068",
+      "0x0AAA",
+      "0x0666",
+      "0x0EEE",
+      "0x0E00"
+    ],
+    "used_indices": [
+      0,
+      1,
+      2,
+      8,
+      14
+    ],
+    "index0": "transparent for sprites"
+  },
+  "mega_drive_tiles": {
+    "sprite_order": "column-major (SPRITE_SIZE(2,2))",
+    "count": 28,
+    "status_note": "column-major order to verify in an MD emulator"
+  },
+  "png": [
+    "assets/flame_fx/flame_state_A.png",
+    "assets/flame_fx/flame_state_B.png"
+  ]
+}

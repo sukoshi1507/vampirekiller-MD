@@ -1,0 +1,26 @@
+# (zzd) Cle blanche du hall salle 2 prise sous le fouet qui casse son bloc : 7FE2 sort tant que
+# C422 != 0 (pas de ramassage pendant l'attaque). Le bloc casse au minuteur 11 du fouet, la cle est
+# prise quand le minuteur tombe a 0, 11 images plus tard (MSX : 957 -> 968, research/stage6-boss.md).
+include boot_to_courtyard.inc
+until front_mode == MODES['INTERIOR'] max 3000 RIGHT
+hold A 3
+hold A+RIGHT 3
+wait 10
+hold A 3
+hold A+RIGHT 3
+wait 10
+hold A 3
+hold A+RIGHT 3
+wait 10
+expect game.room == 2
+poke vk_game+0 148
+poke vk_game+1 192
+wait 4
+hold LEFT 1
+hold B 2
+until ram8('items+4') == 1 max 30
+set f0 frame
+until ram8('items+1') == 1 max 40
+expect frame - f0 == 11
+expect whip.timer == 0
+expect ram8('items') & 1

@@ -1,0 +1,29 @@
+# Code Konami au titre : ouvre le test du son ; B y revient au titre.
+until front_mode == MODES['TITLE'] max 2000
+wait 10
+tap UP
+wait 2
+tap UP
+wait 2
+tap DOWN
+wait 2
+tap DOWN
+wait 2
+tap LEFT
+wait 2
+tap RIGHT
+wait 2
+tap LEFT
+wait 2
+tap RIGHT
+wait 2
+tap B
+wait 2
+expect front_mode == MODES['TITLE'] # code incomplet
+tap A
+wait 10
+expect front_mode == MODES['SOUND']
+shot sound-test
+tap B
+wait 10
+expect front_mode == MODES['TITLE']

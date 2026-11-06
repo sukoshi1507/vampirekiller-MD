@@ -1,0 +1,35 @@
+# (zw) Fouet atteignant le bloc (32,80) et la bougie (64,80), stage 2 salle 4 : un seul touche par passe (80D1). Le bloc doit disparaitre a l ecran.
+until front_mode == MODES['TITLE'] max 2000
+wait 10
+tap C
+wait 40
+tap START
+wait 10
+tap UP
+tap UP
+tap DOWN
+tap DOWN
+tap LEFT
+tap RIGHT
+tap LEFT
+tap RIGHT
+tap B
+tap A
+wait 4
+tap RIGHT
+tap RIGHT
+tap RIGHT
+tap RIGHT
+hold B 1
+wait 120
+poke vk_game+0 76
+poke vk_game+1 112
+wait 2
+hold LEFT 1
+wait 4
+poke vk_game+0 76
+set before pixel(48,92)
+hold B 1
+wait 40
+expect ram8('vk_candles+4') == 6 # bloc seul : le premier de la liste touche, sortie en 80D1
+expect pixel(48,92) != before # le bloc n'est plus dessine
