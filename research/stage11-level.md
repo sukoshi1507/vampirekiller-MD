@@ -19,3 +19,11 @@ scénarios. Tests : `tests/test_candles.c`, `stage_exits.c`, `room_transitions.c
 
 - **Stage 12** : la sortie du stage 11 renvoie au titre (`main.c`), le stage 12 (boss) n'est pas porté. Entrée tracée : (16, 176), tournée à droite.
 - Ennemis du stage 11 : `stage11-enemies.md`.
+
+## Contrôle supplémentaire du 6 novembre 2026 (livraison stage 11)
+
+- `tests/test_stage11_rooms.c` : liens horizontaux complets des 6 salles, 12 tentatives de franchissement et seuils, absence de liens verticaux, absence de plateformes mobiles, 25 bougies/blocs et 4 objets 15, clé dorée fixe, bloc à clé blanche, tables d'ennemis fixes, drapeaux `85A6` et porte/entrée.
+- `tests/run_stage11_native.sh` : exécute indépendamment le test des salles, les 42 vecteurs de l'aigle/puce, les 10 vecteurs et 432 visées du dragon, les bougies, les tests de clé/porte/sortie. Ce script ne requiert pas la ROM MSX2 fournie séparément.
+- Les scripts natifs globaux `tests/run_native.sh` et `tests/audit_run_native.sh` incluent désormais ce test des salles. La suite globale et la suite ciblée passent dans l'environnement d'audit.
+- Ce contrôle est une **régression contre les extractions et les traces préexistantes**, pas une nouvelle preuve openMSX. Aucun nouveau comportement de gameplay n'a été inventé ni ajouté à cette étape.
+- **Limites** : pas de compilation SGDK ni de test sur une ROM Mega Drive dans cet environnement ; la transition vers le stage 12 revient au titre car le stage 12 n'est pas porté (état déjà présent) ; durée précise et rendu final à vérifier sur émulateur MD.

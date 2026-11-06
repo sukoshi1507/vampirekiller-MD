@@ -1,0 +1,265 @@
+{
+  "rom_sha256": "99eabaaeb2b6c02220e131043d5a6401d0d8c5f413d89204547adcc04d65e7e2",
+  "stage": 12,
+  "type": "raw ROM extracted data; NOT an executable stage",
+  "room_count": 12,
+  "link_table_cpu": "0xBA9D",
+  "links": [
+    {
+      "UP": null,
+      "DOWN": null,
+      "LEFT": 2,
+      "RIGHT": 1
+    },
+    {
+      "UP": null,
+      "DOWN": null,
+      "LEFT": 0,
+      "RIGHT": 2
+    },
+    {
+      "UP": null,
+      "DOWN": null,
+      "LEFT": 1,
+      "RIGHT": 0
+    },
+    {
+      "UP": null,
+      "DOWN": null,
+      "LEFT": null,
+      "RIGHT": 4
+    },
+    {
+      "UP": null,
+      "DOWN": null,
+      "LEFT": 3,
+      "RIGHT": 5
+    },
+    {
+      "UP": null,
+      "DOWN": null,
+      "LEFT": 4,
+      "RIGHT": 6
+    },
+    {
+      "UP": null,
+      "DOWN": null,
+      "LEFT": null,
+      "RIGHT": null
+    },
+    {
+      "UP": null,
+      "DOWN": null,
+      "LEFT": 8,
+      "RIGHT": 8
+    },
+    {
+      "UP": null,
+      "DOWN": null,
+      "LEFT": 7,
+      "RIGHT": 7
+    },
+    {
+      "UP": null,
+      "DOWN": null,
+      "LEFT": 11,
+      "RIGHT": 10
+    },
+    {
+      "UP": null,
+      "DOWN": null,
+      "LEFT": 9,
+      "RIGHT": 11
+    },
+    {
+      "UP": null,
+      "DOWN": null,
+      "LEFT": 10,
+      "RIGHT": 9
+    }
+  ],
+  "rooms": [
+    {
+      "room": 0,
+      "map_cpu": "70DB",
+      "map_sha256": "686d746c859b2d60cd7f518ca09059809ce5d503a270ea51c7c269fb0071e38c",
+      "graphics_sha256": "98715da6c8d7e98e433d4884c3dfb2d2d39004be1547d6e0f8fa6bd4099f0b8a"
+    },
+    {
+      "room": 1,
+      "map_cpu": "710B",
+      "map_sha256": "10b51734c275849ba0c04a7ded1f3460d3a00854c97dde3098ee82aa428c6253",
+      "graphics_sha256": "98715da6c8d7e98e433d4884c3dfb2d2d39004be1547d6e0f8fa6bd4099f0b8a"
+    },
+    {
+      "room": 2,
+      "map_cpu": "713B",
+      "map_sha256": "a923bf98ed6e3e9513a924e0c96bd40268f8a1f8c8180190a39291b4ce551066",
+      "graphics_sha256": "98715da6c8d7e98e433d4884c3dfb2d2d39004be1547d6e0f8fa6bd4099f0b8a"
+    },
+    {
+      "room": 3,
+      "map_cpu": "716B",
+      "map_sha256": "1b244e9e98e0cc7633cfece8f4673dcf22639e1d3a2a9112240ce1fcb8e2fed8",
+      "graphics_sha256": "98715da6c8d7e98e433d4884c3dfb2d2d39004be1547d6e0f8fa6bd4099f0b8a"
+    },
+    {
+      "room": 4,
+      "map_cpu": "719B",
+      "map_sha256": "b755de12863b3b0b3baa4cce0470aea4f006ca73b110b77201bffdfe3fca3950",
+      "graphics_sha256": "98715da6c8d7e98e433d4884c3dfb2d2d39004be1547d6e0f8fa6bd4099f0b8a"
+    },
+    {
+      "room": 5,
+      "map_cpu": "71CB",
+      "map_sha256": "4900f00a956178d2c28d7ee08025551443737434a150b6a2dff7b7702c227fe2",
+      "graphics_sha256": "98715da6c8d7e98e433d4884c3dfb2d2d39004be1547d6e0f8fa6bd4099f0b8a"
+    },
+    {
+      "room": 6,
+      "map_cpu": "71FB",
+      "map_sha256": "be827b44502465bcd112e90a7742491a676634db9b16f2699d697e23c9f84b3e",
+      "graphics_sha256": "98715da6c8d7e98e433d4884c3dfb2d2d39004be1547d6e0f8fa6bd4099f0b8a"
+    },
+    {
+      "room": 7,
+      "map_cpu": "722B",
+      "map_sha256": "4d7145baca6c3a0ccb3fb8ad447cf4bcd80e66f4d9ea9c7be0c232a5dd7915b7",
+      "graphics_sha256": "98715da6c8d7e98e433d4884c3dfb2d2d39004be1547d6e0f8fa6bd4099f0b8a"
+    },
+    {
+      "room": 8,
+      "map_cpu": "725B",
+      "map_sha256": "85913709cde450ac09b88121b30bb84c2f86b070eb345a8cfd2c8fdc1864193e",
+      "graphics_sha256": "98715da6c8d7e98e433d4884c3dfb2d2d39004be1547d6e0f8fa6bd4099f0b8a"
+    },
+    {
+      "room": 9,
+      "map_cpu": "728B",
+      "map_sha256": "fc30e6303f4466a05345ba4e9652b8e5234806571683d3b6f0cc543256343dce",
+      "graphics_sha256": "98715da6c8d7e98e433d4884c3dfb2d2d39004be1547d6e0f8fa6bd4099f0b8a"
+    },
+    {
+      "room": 10,
+      "map_cpu": "72BB",
+      "map_sha256": "ed5abf5d8792439a9559c98766d622c0a109951b097a3f4931d4dda182a26290",
+      "graphics_sha256": "98715da6c8d7e98e433d4884c3dfb2d2d39004be1547d6e0f8fa6bd4099f0b8a"
+    },
+    {
+      "room": 11,
+      "map_cpu": "72EB",
+      "map_sha256": "a63a91f0f345323fff96cf63826b129fed3bee32d9283be5916cbf9bdda64f24",
+      "graphics_sha256": "98715da6c8d7e98e433d4884c3dfb2d2d39004be1547d6e0f8fa6bd4099f0b8a"
+    }
+  ],
+  "secret_passages": [
+    {
+      "source": 0,
+      "destination": 3,
+      "x": 88,
+      "y": 168,
+      "rom_offset": "0x1BBCD"
+    },
+    {
+      "source": 1,
+      "destination": 4,
+      "x": 184,
+      "y": 136,
+      "rom_offset": "0x1BBD1"
+    },
+    {
+      "source": 2,
+      "destination": 11,
+      "x": 152,
+      "y": 168,
+      "rom_offset": "0x1BBD5"
+    },
+    {
+      "source": 3,
+      "destination": 0,
+      "x": 88,
+      "y": 168,
+      "rom_offset": "0x1BBD9"
+    },
+    {
+      "source": 4,
+      "destination": 1,
+      "x": 184,
+      "y": 136,
+      "rom_offset": "0x1BBDD"
+    },
+    {
+      "source": 5,
+      "destination": 8,
+      "x": 88,
+      "y": 168,
+      "rom_offset": "0x1BBE1"
+    },
+    {
+      "source": 7,
+      "destination": 10,
+      "x": 56,
+      "y": 168,
+      "rom_offset": "0x1BBE5"
+    },
+    {
+      "source": 8,
+      "destination": 5,
+      "x": 88,
+      "y": 168,
+      "rom_offset": "0x1BBE9"
+    },
+    {
+      "source": 10,
+      "destination": 7,
+      "x": 56,
+      "y": 168,
+      "rom_offset": "0x1BBED"
+    },
+    {
+      "source": 11,
+      "destination": 2,
+      "x": 152,
+      "y": 168,
+      "rom_offset": "0x1BBF1"
+    }
+  ],
+  "spawn_flags_rom": {
+    "pointer_table_offset": "0x1C5BE",
+    "pointer_cpu": "0x861E",
+    "file_offset": "0x1C61E",
+    "room_flags": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "note": "raw channel flags, not fixed enemies"
+  },
+  "stage_group_d002": {
+    "file_offset": "0x1E76",
+    "value": 3
+  },
+  "entry_openmsx_trace": {
+    "x": 16,
+    "y": 176,
+    "facing": "right",
+    "source": "research/stage11-level.md (KD trace)"
+  },
+  "unverified": [
+    "4F83 collision execution",
+    "5A49/5B1B objects and candles",
+    "6154 enemies",
+    "stage12 boss",
+    "secret passage state machine",
+    "SGDK runtime"
+  ]
+}

@@ -24,3 +24,9 @@ Drapeaux `85A6` (`vk_enemy_room_flags[11]` = 81, 00, 40, 40, 40, 80) ; liste fix
 - **Objet 03 (stage 10), flamme de mort** : `9B33[03]` = 10h dans la ROM, le port met 0 pour le type FISH3 (`deathOffset`) ; lu, non tracé, non corrigé (hors stage 11).
 - Flammes de l'aigle et du dragon, dégâts de contact, fouet sur l'aigle : lus dans la ROM, non mesurés. `+C` aléatoire des objets 0F/23h (R) non reproductible.
 - Gigue d'un pixel en X (boule du dragon, aigle) partiellement reproduite. Pas de scénario du coup de fouet sur l'objet 1B.
+
+## Contrôle supplémentaire du 6 novembre 2026 (livraison stage 11)
+
+- `tests/test_stage11.c` vérifie désormais aussi l'initialisation de l'objet 1B libéré par une bougie 15 en salles 0 et 5 (routines `B4D2` et table `B681`, poses `9B` et `A1`, trames G/G5 conservées, motif A0). Les coordonnées (160,160) testées sont celles du scénario de création ; seule la salle 0 dispose de ce point documenté par la trace G. **Ce test ne prétend pas établir une trace du déplacement complet de l'objet 1B.**
+- Les 42 vecteurs aigle/puce (`10 920` passes), les 10 vecteurs dragon (`4 000` passes) et les 432 visées restent sans écart par rapport aux données de l'émulateur Z80 utilisées par les tests.
+- Aucune routine d'ennemi, table générée ni mécanique 68000 n'a été modifiée au cours de cette livraison. Les réserves ci-dessus sur le hasard `R`, les flammes, le contact/fouet non tracé et les petites différences de placement SAT restent ouvertes.

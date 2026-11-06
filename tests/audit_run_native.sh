@@ -47,6 +47,10 @@ ${CC:-cc} -std=c99 -Wall -Wextra -Werror -Isgdk/src tests/test_psg_core.c sgdk/s
 ${CC:-cc} -std=c99 -Wall -Wextra -Werror -Isgdk/src tests/test_room_freeze.c sgdk/src/room_freeze.c -o "$BIN"
 "$BIN"
 MAPS="sgdk/src/generated/stage2_maps.c sgdk/src/generated/stage3_maps.c sgdk/src/generated/stage4_maps.c sgdk/src/generated/stage5_maps.c sgdk/src/generated/stage6_maps.c sgdk/src/generated/stage7_maps.c sgdk/src/generated/stage8_maps.c sgdk/src/generated/stage9_maps.c sgdk/src/generated/stage10_maps.c sgdk/src/generated/stage11_maps.c"
+# Stage 11 extracted room/gameplay coverage (six rooms, key, fixed enemies).
+${CC:-cc} -std=c99 -Wall -Wextra -Werror -Isgdk/src tests/test_stage11_rooms.c \
+    sgdk/src/room_manager.c sgdk/src/platforms.c sgdk/src/generated/candles_md.c $MAPS -o "$BIN"
+"$BIN"
 # Stages 1-10: exits, room links and enemy tables against the generated maps.
 ${CC:-cc} -std=c99 -Wall -Wextra -Werror -Isgdk/src -Itests/native_include tests/enemy_integration.c sgdk/src/enemies.c sgdk/src/gameplay.c \
     sgdk/src/player.c sgdk/src/room_manager.c sgdk/src/generated/intro_assets.c sgdk/src/generated/player_assets.c sgdk/src/generated/stage1_collision.c $MAPS -o "$BIN"

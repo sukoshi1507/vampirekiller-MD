@@ -79,6 +79,35 @@ static int runVector(int vec, int *hovers, int *drops)
     return bad;
 }
 
+
+/* Stage 11 object 1B from the 0x15 candles. Positions and poses from
+ * openMSX traces G/G5; init B4D2, per-room B681. This does not claim a
+ * full-stage 11 movement trace for object 1B. */
+static void stage11CandleEnemy(void)
+{
+    const EnemyU8 rooms[2] = { 0, 5 };
+    const EnemyU8 poses[2] = { 0x9B, 0xA1 };
+    int j;
+    for (j = 0; j < 2; j++) {
+        EnemyState s;
+        EnemySprite sp[ENEMY_SPRITES];
+        int i, k = -1;
+        Enemies_init(&s);
+        Enemies_candleObject(&s, 11, rooms[j], 160, 144);
+        for (i = 0; i < ENEMY_MAX; i++)
+            if (s.enemy[i].active && s.enemy[i].type == ENEMY_TYPE_GHOST) k = i;
+        assert(k >= 0);
+        assert(s.enemy[k].x == 160 && s.enemy[k].y == 160);
+        assert(s.enemy[k].pose == poses[j] && s.enemy[k].state == 0);
+        assert(s.enemy[k].extraPhase == 1 && s8x[k].c10 == 8 && ghostInert(&s.enemy[k]));
+        assert(Enemies_sprites(&s, (EnemyU8)k, sp) == 1);
+        assert(sp[0].x == 152 && sp[0].y == 146 && sp[0].pattern == 0xA0);
+        assert(Enemies_ghostCell(11) == 0xA0 && Enemies_ghostBase(11, rooms[j]) == poses[j]);
+    }
+    assert(Enemies_ghostBase(11, 2) == 0 && Enemies_ghostBase(11, 3) == 0 && Enemies_ghostBase(11, 4) == 0);
+    puts("Stage 11 object 1B: openMSX G/G5 poses, ROM B4D2 initialization and sprite cells PASS");
+}
+
 int main(void)
 {
     EnemyState s;
@@ -159,6 +188,7 @@ int main(void)
         assert(Enemies_sprites(&s, (EnemyU8)ke, sp) == 3 && sp[0].y == 80 - 24 && sp[1].pattern == 0x68 && sp[2].pattern == 0x70);
     }
     Enemies_s7R = -1;
+    stage11CandleEnemy();
 
     printf("object 0F / 23h (eagle and flea of the stage 11): %d vectors, %d passes against the ROM routines, channel and rules PASS\n", nvec, passes);
     return 0;
