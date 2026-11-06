@@ -138,7 +138,9 @@ Ce qui n'est pas porté ou reste provisoire :
   `references/castle_objects_z80.json`) en tables C, plus une scène isolée par stage
   (`sgdk/src/stage1[2-8]_scene.c`) ; rien n'est appelé par `main.c`. Ennemis fixes des stages 12 à 18 extraits
   par exécution Z80 de `6154` (93 enregistrements bruts, `tools/extract_late_fixed_enemies.py`)
-  et drapeaux de canaux bruts (`tools/prepare_late_enemy_flags.py`) ; leurs IA ne sont pas portées. Non jouables : Dracula, la fin,
+  et drapeaux de canaux bruts (`tools/prepare_late_enemy_flags.py`)  ; `enemies.c` crée les types 0Bh,
+  0Dh et 0Eh (routines existantes B37E, B248, A9B7) si un stage 12-18 lui est fourni ; 09h, 10h
+  et 12h ne sont pas portés (dispatch `9942`, `tools/verify_late_enemy_routines.py`). Non jouables : Dracula, la fin,
   collisions, objets, ennemis et passages secrets (accroupi puis HAUT, `C420` = 7,
   `research/enemy-behavior.md`) restent à porter ; aucune transition n'est activée.
 - **Énergie (provisoire)** : commandes bloquées pendant la mort : non relevées sur le

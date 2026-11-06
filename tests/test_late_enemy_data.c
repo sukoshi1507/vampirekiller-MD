@@ -14,6 +14,14 @@ static const unsigned char expected[7][12] = {
  {0,128,0,0,0,0,0,128,128,0,0,0}
 };
 int main(void) {
+ assert(vk_late_enemy_update_address(0x09)==0xAF5F);
+ assert(vk_late_enemy_update_address(0x0B)==0xB37E);
+ assert(vk_late_enemy_update_address(0x0D)==0xB248);
+ assert(vk_late_enemy_update_address(0x0E)==0xA9B7);
+ assert(vk_late_enemy_update_address(0x10)==0xADF8);
+ assert(vk_late_enemy_update_address(0x12)==0xBE70);
+ assert(vk_late_enemy_update_address(0)==0);
+
  unsigned int stage,room,slot,total=0,fixed=0;
  uint32_t hash=2166136261u;
  for(stage=12;stage<=18;stage++) {

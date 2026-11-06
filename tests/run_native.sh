@@ -121,3 +121,4 @@ sh tests/run_stage18_scene.sh
 
 # Raw late-stage enemy channel flags, no spawn emulation.
 ./tests/run_late_enemy_data.sh
+./tests/run_late_enemy_spawn.sh

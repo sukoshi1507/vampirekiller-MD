@@ -1,0 +1,38 @@
+{
+  "rom_sha256": "99eabaaeb2b6c02220e131043d5a6401d0d8c5f413d89204547adcc04d65e7e2",
+  "bank": 2,
+  "cpu_table": "0x9942",
+  "file_offset": "0x5942",
+  "objects": [
+    {
+      "type": "0x9",
+      "update_cpu": "0xaf5f",
+      "ported_existing": false
+    },
+    {
+      "type": "0xb",
+      "update_cpu": "0xb37e",
+      "ported_existing": true
+    },
+    {
+      "type": "0xd",
+      "update_cpu": "0xb248",
+      "ported_existing": true
+    },
+    {
+      "type": "0xe",
+      "update_cpu": "0xa9b7",
+      "ported_existing": true
+    },
+    {
+      "type": "0x10",
+      "update_cpu": "0xadf8",
+      "ported_existing": false
+    },
+    {
+      "type": "0x12",
+      "update_cpu": "0xbe70",
+      "ported_existing": false
+    }
+  ]
+}

@@ -43,9 +43,13 @@
 #include "enemies.h"
 #include "player.h"
 #include "generated/enemy_rooms.h"
+#include "generated/late_fixed_enemies.h"
+#include "generated/late_enemy_flags.h"
 
 EnemyU8 Enemies_roomFlags(EnemyU8 stage, EnemyU8 room)
 {
+    if (stage >= 12 && stage <= 18)
+        return room < vk_late_enemy_room_counts[stage - 12] ? vk_late_enemy_flags[stage - 12][room] : 0;
     return stage <= 11 && room < vk_enemy_room_count[stage] ? vk_enemy_room_flags[stage][room] : 0;
 }
 
@@ -1738,6 +1742,34 @@ int Enemies_frame(EnemyState *s, EnemySpawnTimer *t, const EnemyRoomVars *v)
                 if ((v->stage == 7 || v->stage == 9 || v->stage == 11) && (def->raw_type & 0x7F) == 13) fleaSpawn(s, def->x, def->y);
                 if (v->stage == 10 && (def->raw_type & 0x7F) == 33) fish3SpawnFixed(s, def->x, def->y);
                 if (v->stage == 11 && (def->raw_type & 0x7F) == 14) dragonSpawn(s, def->x, def->y);
+            }
+        }
+    }
+
+    /* 6154 / 5F1D : creation fixe des stages 12..18, premier passage en salle.
+     * Les types 0Bh, 0Dh, 0Eh utilisent les routines ROM B37E, B248, A9B7
+     * deja implantees pour les stages 7..11. On reutilise exclusivement ces
+     * routines; les types 09h, 10h, 12h restent volontairement non crees.
+     * Ne branche PAS la progression des stages : ce chemin n'est actif que si
+     * un appelant fournit explicitement un stage 12..18 dans EnemyRoomVars.
+     * Identification des routines et initialisations : stage7-enemies.md,
+     * stage8-enemies.md, stage11-enemies.md, table ROM 9942.
+     * Attente : verification des sprites / banques et de l'IA en traces pour
+     * les salles tardives avant d'autoriser le rendu Mega Drive.
+     */
+    if (v->stage >= 12 && v->stage <= 18 &&
+        v->room < vk_late_enemy_room_counts[v->stage - 12] &&
+        s->type5Timer < ENEMY_TYPE5_DELAY) {
+        if (++s->type5Timer == ENEMY_TYPE5_DELAY) {
+            EnemyU8 slot;
+            for (slot = 0; slot < 4; slot++) {
+                const unsigned char *b = vk_late_fixed_raw[v->stage - 12][v->room][slot];
+                const EnemyU8 type = (EnemyU8)(b[0] & 0x7F);
+                const EnemyU8 x = (EnemyU8)((b[1] & 15) << 4);
+                const EnemyU8 y = (EnemyU8)(b[1] & 0xF0);
+                if (type == 0x0B) hopperSpawn(s, x, y, v);
+                else if (type == 0x0D) fleaSpawn(s, x, y);
+                else if (type == 0x0E) dragonSpawn(s, x, y);
             }
         }
     }
