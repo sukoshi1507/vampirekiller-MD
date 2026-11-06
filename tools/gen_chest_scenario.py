@@ -62,7 +62,7 @@ wait 4
 """
 C431, C701, C702, C70F, WEAP, HEARTS = 'ram8("vk_candles+320")', 'ram8("vk_candles+322")', 'ram8("vk_candles+330")', 'ram8("vk_candles+329")', \
     'ram8("vk_candles+120")', 'ram8("vk_candles+118")'
-KILL, SPAWN, ARMOR, FLASH = 'ram8("vk_enemies+143")', 'ram8("vk_enemies+145")', 'ram8("vk_enemies+146")', 'ram8("vk_enemies+151")'
+KILL, SPAWN, ARMOR, FLASH = 'ram8("vk_enemies+143")', 'ram8("vk_enemies+145")', 'ram8("vk_enemies+146")', 'ram8("vk_enemies+159")'
 EFFECT = {
     0x02: HEARTS + ' == 5',
     0x03: '(%s & 0x10) == 0x10 and %s == 0x10' % (C701, ARMOR),
@@ -108,7 +108,7 @@ def main():
         out.append('poke Enemies_god 1')
         for off in (320, 322, 330, 329, 120, 118, 321):
             out.append('poke vk_candles+%d 0' % off)
-        for off in (143, 144, 145, 146, 151):
+        for off in (143, 144, 145, 146, 159):
             out.append('poke vk_enemies+%d 0' % off)
         out.append('wait 20\npoke vk_candles+119 1\nset s0 ram32("vk_hud_score")')
         out.append('poke vk_game+0 %d\npoke vk_game+1 %d' % (x + 8, y + 16))

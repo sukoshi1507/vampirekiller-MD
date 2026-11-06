@@ -67,7 +67,7 @@ FRONT_MODES = ['LOGO', 'TITLE', 'CASTLE', 'COURTYARD', 'INTERIOR', 'VIEWER', 'TE
 # Blocs d'ennemis (ENEMY_MAX de enemies.h : les 7 blocs C800..CB00 de la ROM).
 ENEMY_SLOTS = 7
 # Tailles attendues (octets) des globales decodees : garde-fou contre une derive des structures.
-EXPECTED_SIZES = {'player': 15, 'game': 36, 'whip': 6, 'enemy_state': 158,
+EXPECTED_SIZES = {'player': 15, 'game': 36, 'whip': 6, 'enemy_state': 166,
                   'test_target': 18, 'courtyard_flame': 36, 'front_mode': 2, 'health': 6}
 # Noms C actuels des globales partagees (sgdk/src/frontend.h, actors.h) ; les scenarios
 # gardent les noms courts. test_target et courtyard_flame sont statiques (room_view.c).
@@ -327,10 +327,12 @@ class Game_View:
                                 'guardTimer': m.rd8(b + 18), 'spawnPause': m.rd8(b + 19),
                                 'armor': m.rd8(b + 20), 'itemPhase': m.rd8(b + 21),
                                 'contactScore': m.rd8(b + 22), 'itemSound': m.rd8(b + 23),
-                                'tick': m.rd8(b + 24), 'flash': m.rd8(b + 25), 'border': m.rd8(b + 26),
-                                'timeStop': m.rd8(b + 27), 'frozen': m.rd8(b + 28),
-                                'timeStopEnd': m.rd8(b + 29),
-                                'silhouette': m.rd8(b + 30), 'hidden': m.rd8(b + 31)}
+                                'fishSoundCount': m.rd8(b + 24),
+                                'fishSounds': [m.rd8(b + 25 + k) for k in range(ENEMY_SLOTS)],
+                                'tick': m.rd8(b + 32), 'flash': m.rd8(b + 33), 'border': m.rd8(b + 34),
+                                'timeStop': m.rd8(b + 35), 'frozen': m.rd8(b + 36),
+                                'timeStopEnd': m.rd8(b + 37),
+                                'silhouette': m.rd8(b + 38), 'hidden': m.rd8(b + 39)}
         if 'health' in A:
             a = A['health']   # VKHealth (health.h), statique de main.c
             state['health'] = {'lives': m.rd8(a), 'phase': m.rd8(a + 1), 'timer': m.rd16(a + 2),
@@ -358,7 +360,7 @@ def flatten(prefix, value, out):
         for i, v in enumerate(value):
             flatten(f'{prefix}[{i}]', v, out)
     else:
-        out[prefix] = '+'.join(value) if isinstance(value, list) else value
+        out[prefix] = '+'.join(map(str, value)) if isinstance(value, list) else value
     return out
 
 

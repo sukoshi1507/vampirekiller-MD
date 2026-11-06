@@ -25,8 +25,8 @@ poke vk_enemies+127 255
 until len([e for e in enemies.enemy if e.active and e.type == 2]) > 0 max 200
 expect enemies.enemy[0].active and enemies.enemy[0].type == 2 # premier tir dans le bloc 0
 # Fige les objets (C43B, D010), Simon regarde a droite en X 100, Y 192.
-poke vk_enemies+153 255
-poke vk_enemies+154 1
+poke vk_enemies+161 255
+poke vk_enemies+162 1
 tap RIGHT 2
 poke vk_game+0 100
 expect game.player.facing == 0 and game.player.y == 192
