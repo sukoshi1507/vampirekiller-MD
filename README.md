@@ -198,6 +198,14 @@ Tests Python (certains lisent la ROM de référence) :
 scratchpad/venv/bin/python -m unittest discover -s tests -p 'test_*.py'
 ```
 
+Contrôle des cartes des stages 10 à 12 contre la ROM, indépendant des générateurs : la
+routine Z80 originale `4F83` reconstruit chaque salle, comparée octet par octet aux tableaux C,
+et les liens sont comparés à la table ROM `B9D3` (`tests/test_stages_10_12_rom.py` le lance aussi) :
+
+```sh
+scratchpad/venv/bin/python tools/verify_stages_10_12_maps.py
+```
+
 ## Données générées
 
 Les données extraites de la ROM sont versionnées dans `sgdk/src/generated/` et
