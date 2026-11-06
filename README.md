@@ -131,7 +131,9 @@ Ce qui n'est pas porté ou reste provisoire :
 - **Stages 12 à 18** : seules les données ROM sont extraites et vérifiées (cartes statiques,
   liens, passages secrets du stage 12, drapeaux de canaux, portes ;
   `research/stage12-foundations.md` à `research/stage16-foundations.md`,
-  `research/stages17-18-foundations.md`). Non jouables : Dracula, la fin,
+  `research/stages17-18-foundations.md`). Stage 12 : collisions (4F83/4FAF) et positions des
+  bougies/objets (`research/castle-candles.md`) en tables C, non branchées
+  (`tools/prepare_stage12_gameplay_data.py`, `tests/run_stage12_gameplay_data.sh`). Non jouables : Dracula, la fin,
   collisions, objets, ennemis et passages secrets (accroupi puis HAUT, `C420` = 7,
   `research/enemy-behavior.md`) restent à porter ; aucune transition n'est activée.
 - **Énergie (provisoire)** : commandes bloquées pendant la mort : non relevées sur le

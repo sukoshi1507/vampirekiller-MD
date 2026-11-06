@@ -1,0 +1,285 @@
+{
+  "rom_sha256": "99eabaaeb2b6c02220e131043d5a6401d0d8c5f413d89204547adcc04d65e7e2",
+  "scope": "collision map load data and historical room object positions, not playable stage",
+  "method_collision": "4F83 normal path 4FAF translated via tools/extract_rooms.py; independently compared with generated Z80 maps stages 1-11",
+  "precedent_comparison_bytes": 60672,
+  "precedent_rooms": 79,
+  "precedents": [
+    {
+      "stage": 1,
+      "rooms": 8,
+      "bytes_equal": 6144
+    },
+    {
+      "stage": 2,
+      "rooms": 6,
+      "bytes_equal": 4608
+    },
+    {
+      "stage": 3,
+      "rooms": 6,
+      "bytes_equal": 4608
+    },
+    {
+      "stage": 4,
+      "rooms": 6,
+      "bytes_equal": 4608
+    },
+    {
+      "stage": 5,
+      "rooms": 6,
+      "bytes_equal": 4608
+    },
+    {
+      "stage": 6,
+      "rooms": 6,
+      "bytes_equal": 4608
+    },
+    {
+      "stage": 7,
+      "rooms": 9,
+      "bytes_equal": 6912
+    },
+    {
+      "stage": 8,
+      "rooms": 8,
+      "bytes_equal": 6144
+    },
+    {
+      "stage": 9,
+      "rooms": 9,
+      "bytes_equal": 6912
+    },
+    {
+      "stage": 10,
+      "rooms": 9,
+      "bytes_equal": 6912
+    },
+    {
+      "stage": 11,
+      "rooms": 6,
+      "bytes_equal": 4608
+    }
+  ],
+  "stage12_collision_rooms": 12,
+  "stage12_collision_bytes": 9216,
+  "stage12_collision_sha256": "c66739ed1132a3d7cf89b5c67bb163e49cf018260878c0a25bea27b66a486a0d",
+  "method_objects": "positions transcribed and mechanically parsed from historical 5A49+5B1B CPU+mapper execution results in research/castle-candles.md; no current Z80 execution",
+  "objects_by_room": {
+    "0": {
+      "candles": [
+        [
+          48,
+          144
+        ]
+      ],
+      "other_objects": []
+    },
+    "1": {
+      "candles": [
+        [
+          64,
+          112
+        ],
+        [
+          144,
+          128
+        ],
+        [
+          224,
+          128
+        ]
+      ],
+      "other_objects": []
+    },
+    "2": {
+      "candles": [
+        [
+          32,
+          128
+        ],
+        [
+          112,
+          144
+        ],
+        [
+          192,
+          144
+        ]
+      ],
+      "other_objects": [
+        [
+          224,
+          160
+        ]
+      ]
+    },
+    "3": {
+      "candles": [
+        [
+          48,
+          144
+        ],
+        [
+          128,
+          144
+        ],
+        [
+          176,
+          144
+        ],
+        [
+          224,
+          144
+        ]
+      ],
+      "other_objects": []
+    },
+    "4": {
+      "candles": [
+        [
+          224,
+          128
+        ]
+      ],
+      "other_objects": [
+        [
+          96,
+          128
+        ]
+      ]
+    },
+    "5": {
+      "candles": [
+        [
+          192,
+          96
+        ],
+        [
+          32,
+          144
+        ],
+        [
+          128,
+          144
+        ],
+        [
+          160,
+          144
+        ]
+      ],
+      "other_objects": []
+    },
+    "6": {
+      "candles": [],
+      "other_objects": []
+    },
+    "7": {
+      "candles": [
+        [
+          160,
+          112
+        ],
+        [
+          224,
+          112
+        ],
+        [
+          16,
+          144
+        ]
+      ],
+      "other_objects": [
+        [
+          192,
+          128
+        ]
+      ]
+    },
+    "8": {
+      "candles": [
+        [
+          32,
+          112
+        ],
+        [
+          144,
+          112
+        ],
+        [
+          192,
+          144
+        ]
+      ],
+      "other_objects": [
+        [
+          224,
+          160
+        ]
+      ]
+    },
+    "9": {
+      "candles": [
+        [
+          32,
+          112
+        ],
+        [
+          64,
+          112
+        ],
+        [
+          112,
+          112
+        ],
+        [
+          160,
+          112
+        ]
+      ],
+      "other_objects": []
+    },
+    "10": {
+      "candles": [
+        [
+          192,
+          128
+        ],
+        [
+          16,
+          144
+        ],
+        [
+          96,
+          144
+        ]
+      ],
+      "other_objects": []
+    },
+    "11": {
+      "candles": [
+        [
+          112,
+          144
+        ]
+      ],
+      "other_objects": [
+        [
+          64,
+          128
+        ]
+      ]
+    }
+  },
+  "total_candle_positions": 30,
+  "total_other_object_positions": 5,
+  "not_verified": [
+    "types and contents of stage12 candles/objects",
+    "5A49/5B1B raw object records in this session",
+    "6154 fixed enemies",
+    "collision runtime semantics/solid tile classifications",
+    "secret-passage state machine",
+    "key/door conditions",
+    "SGDK in-emulator gameplay"
+  ]
+}
