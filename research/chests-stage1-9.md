@@ -1,7 +1,7 @@
 # Coffres des stages 1 à 9 et décor du stage 9 : trace openMSX contre le port
 
 Code : `sgdk/src/candles.c` (`step_drop`, `vk_candles_give`, `pick`), `candle_view.c` (icône de clé du HUD), `tools/gen_chest_scenario.py` (génère
-`tests/md_scenarios/zzz_chests_stage1_9.txt`). Tests : `tests/test_candles.c`, `tests/test_gameplay.c` (recul du coffre 0C), scénarios `zzz_chests_stage1_9`,
+`tests/md_scenarios/zzz_chests_stage1_10.txt`). Tests : `tests/test_candles.c`, `tests/test_gameplay.c` (recul du coffre 0C), scénarios `zzz_chests_stage1_9`,
 `p_gold_key_chest`. Outils de trace (non versionnés) : `scratchpad/chest/` (plans, hook de journal, analyse).
 
 ## Méthode

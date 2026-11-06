@@ -19,6 +19,7 @@
 #include "generated/stage7_enemies_md.h"
 #include "crushers.h"
 #include "generated/stage5_platform_md.h"
+#include "generated/stage10_platform_md.h"
 #include "platforms.h"
 
 _Static_assert(HUD_TEXT_TILE_INDEX + HUD_TEXT_TILE_COUNT <= DEATH_TILE_INDEX &&
@@ -443,6 +444,9 @@ void vk_step_enemies(void)
                     VDP_loadTileData(vk_stage5_platform_tiles, ENEMY5_TILE_INDEX + VK_PLATFORM_PATTERN - VK_ENEMY5_FIRST_PATTERN,
                                      VK_STAGE5_PLATFORM_TILE_COUNT, CPU);
             }
+            else if (vk_game.stage == 10)
+                VDP_loadTileData(vk_stage10_platform_tiles, ENEMY5_TILE_INDEX + VK_PLATFORM_PATTERN - VK_ENEMY5_FIRST_PATTERN,
+                                 VK_STAGE10_PLATFORM_TILE_COUNT, CPU);
             else if (vk_game.stage == 6)
                 VDP_loadTileData(vk_stage6_enemy_tiles, ENEMY5_TILE_INDEX, VK_STAGE6_ENEMY_TILE_COUNT, CPU);
             else if (vk_game.stage == 9)

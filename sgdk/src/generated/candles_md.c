@@ -3,7 +3,7 @@
 
 /* x, y, mode (+4: 0 candle, 1 courtyard torch, 3 hidden block), object (+5),
  * content (+9 of a 0x1F block). */
-const VKCandleDef vk_candle_defs[224] = {
+const VKCandleDef vk_candle_defs[250] = {
     { 64, 144, 1, 0x01, 0x00 },   /* stage 0 room 0 */
     { 192, 144, 1, 0x01, 0x00 },   /* stage 0 room 0 */
     { 64, 144, 1, 0x02, 0x00 },   /* stage 0 room 1 */
@@ -228,6 +228,32 @@ const VKCandleDef vk_candle_defs[224] = {
     { 144, 48, 0, 0x02, 0x00 },   /* stage 9 room 8 */
     { 144, 128, 0, 0x01, 0x00 },   /* stage 9 room 8 */
     { 192, 144, 3, 0x1F, 0xDC },   /* stage 9 room 8 */
+    { 80, 96, 0, 0x09, 0x00 },   /* stage 10 room 0 */
+    { 160, 112, 0, 0x06, 0x00 },   /* stage 10 room 0 */
+    { 128, 48, 0, 0x10, 0x00 },   /* stage 10 room 1 */
+    { 224, 48, 0, 0x02, 0x00 },   /* stage 10 room 1 */
+    { 80, 96, 0, 0x01, 0x00 },   /* stage 10 room 1 */
+    { 32, 96, 0, 0x05, 0x00 },   /* stage 10 room 2 */
+    { 208, 112, 0, 0x09, 0x00 },   /* stage 10 room 2 */
+    { 160, 112, 0, 0x08, 0x00 },   /* stage 10 room 3 */
+    { 96, 112, 3, 0x17, 0x00 },   /* stage 10 room 3 */
+    { 208, 112, 0, 0x01, 0x00 },   /* stage 10 room 3 */
+    { 112, 112, 0, 0x14, 0x00 },   /* stage 10 room 4 */
+    { 208, 112, 0, 0x01, 0x00 },   /* stage 10 room 4 */
+    { 80, 48, 0, 0x01, 0x00 },   /* stage 10 room 5 */
+    { 208, 48, 0, 0x0D, 0x00 },   /* stage 10 room 5 */
+    { 208, 112, 0, 0x01, 0x00 },   /* stage 10 room 5 */
+    { 32, 128, 0, 0x01, 0x00 },   /* stage 10 room 6 */
+    { 96, 128, 0, 0x02, 0x00 },   /* stage 10 room 6 */
+    { 160, 128, 0, 0x01, 0x00 },   /* stage 10 room 6 */
+    { 192, 128, 0, 0x02, 0x00 },   /* stage 10 room 6 */
+    { 32, 144, 0, 0x01, 0x00 },   /* stage 10 room 7 */
+    { 64, 128, 0, 0x02, 0x00 },   /* stage 10 room 7 */
+    { 96, 128, 0, 0x01, 0x00 },   /* stage 10 room 7 */
+    { 144, 128, 0, 0x01, 0x00 },   /* stage 10 room 7 */
+    { 176, 144, 0, 0x01, 0x00 },   /* stage 10 room 7 */
+    { 224, 144, 0, 0x02, 0x00 },   /* stage 10 room 7 */
+    { 64, 144, 0, 0x01, 0x00 },   /* stage 10 room 8 */
 };
 /* First candle of each room; room r has first[r + 1] - first[r]. */
 const VKByte vk_candle_first[11][10] = {
@@ -241,11 +267,11 @@ const VKByte vk_candle_first[11][10] = {
     { 142, 143, 148, 152, 155, 159, 162, 165, 168, 171 },
     { 171, 179, 186, 189, 192, 195, 199, 199, 204, 204 },
     { 204, 204, 205, 209, 209, 212, 214, 217, 221, 224 },
-    { 224, 224, 224, 224, 224, 224, 224, 224, 224, 224 },
+    { 224, 226, 229, 231, 234, 236, 239, 243, 249, 250 },
 };
 
 /* x, y, 0, object, content (+13, chest only). */
-const VKCandleDef vk_fixed_object_defs[64] = {
+const VKCandleDef vk_fixed_object_defs[70] = {
     { 64, 176, 0, 0x17, 0x00 },   /* stage 1 room 2 */
     { 176, 176, 0, 0x19, 0x02 },   /* stage 1 room 2 */
     { 48, 112, 0, 0x19, 0x0D },   /* stage 1 room 3 */
@@ -310,6 +336,12 @@ const VKCandleDef vk_fixed_object_defs[64] = {
     { 32, 64, 0, 0x19, 0x05 },   /* stage 9 room 6 */
     { 144, 128, 0, 0x17, 0x00 },   /* stage 9 room 6 */
     { 112, 64, 0, 0x19, 0x1E },   /* stage 9 room 8 */
+    { 224, 128, 0, 0x19, 0x1A },   /* stage 10 room 0 */
+    { 144, 96, 0, 0x17, 0x00 },   /* stage 10 room 1 */
+    { 64, 128, 0, 0x19, 0x11 },   /* stage 10 room 4 */
+    { 224, 128, 0, 0x17, 0x00 },   /* stage 10 room 5 */
+    { 96, 64, 0, 0x19, 0x1C },   /* stage 10 room 5 */
+    { 112, 128, 0, 0x19, 0x13 },   /* stage 10 room 5 */
 };
 const VKByte vk_fixed_object_first[11][10] = {
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
@@ -322,11 +354,11 @@ const VKByte vk_fixed_object_first[11][10] = {
     { 41, 41, 43, 44, 45, 48, 50, 51, 52, 52 },
     { 52, 52, 52, 52, 54, 55, 55, 55, 55, 55 },
     { 55, 56, 56, 56, 56, 59, 61, 63, 63, 64 },
-    { 64, 64, 64, 64, 64, 64, 64, 64, 64, 64 },
+    { 64, 65, 66, 66, 66, 67, 70, 70, 70, 70 },
 };
 
 /* Wall objects shown at the room load (5BB7 -> 9179): x, y, stream entry. */
-const VKWallDef vk_wall_defs[7] = {
+const VKWallDef vk_wall_defs[9] = {
     { 160, 32, 0xD5 },   /* stage 2 room 0 */
     { 192, 160, 0xC4 },   /* stage 4 room 1 */
     { 64, 64, 0xD6 },   /* stage 4 room 2 */
@@ -334,6 +366,8 @@ const VKWallDef vk_wall_defs[7] = {
     { 32, 144, 0xC8 },   /* stage 7 room 8 */
     { 192, 112, 0xCF },   /* stage 8 room 2 */
     { 192, 112, 0xD3 },   /* stage 8 room 3 */
+    { 32, 48, 0xC5 },   /* stage 10 room 1 */
+    { 32, 144, 0xCE },   /* stage 10 room 8 */
 };
 const VKByte vk_wall_first[11][10] = {
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
@@ -346,7 +380,7 @@ const VKByte vk_wall_first[11][10] = {
     { 3, 4, 4, 4, 4, 4, 4, 4, 4, 5 },
     { 5, 5, 5, 6, 7, 7, 7, 7, 7, 7 },
     { 7, 7, 7, 7, 7, 7, 7, 7, 7, 7 },
-    { 7, 7, 7, 7, 7, 7, 7, 7, 7, 7 },
+    { 7, 7, 8, 8, 8, 8, 8, 8, 8, 9 },
 };
 /* DE00 (5AAF, 944F): item of wall slots 0 and 1, per room. */
 const VKByte vk_wall_items[11][9][2] = {
@@ -360,7 +394,7 @@ const VKByte vk_wall_items[11][9][2] = {
     { { 0x0E, 0x00 }, { 0x00, 0x00 }, { 0x00, 0x00 }, { 0x00, 0x00 }, { 0x00, 0x00 }, { 0x00, 0x00 }, { 0x00, 0x00 }, { 0x00, 0x00 }, { 0x03, 0x00 } },
     { { 0x00, 0x00 }, { 0x00, 0x00 }, { 0x04, 0x00 }, { 0x0A, 0x00 }, { 0x00, 0x00 }, { 0x00, 0x00 }, { 0x00, 0x00 }, { 0x00, 0x00 }, { 0x00, 0x00 } },
     { { 0x00, 0x00 }, { 0x00, 0x00 }, { 0x00, 0x00 }, { 0x00, 0x00 }, { 0x00, 0x00 }, { 0x00, 0x00 }, { 0x00, 0x00 }, { 0x00, 0x00 }, { 0x1D, 0x00 } },
-    { { 0x00, 0x00 }, { 0x00, 0x00 }, { 0x00, 0x00 }, { 0x00, 0x00 }, { 0x00, 0x00 }, { 0x00, 0x00 }, { 0x00, 0x00 }, { 0x00, 0x00 }, { 0x00, 0x00 } },
+    { { 0x00, 0x00 }, { 0x12, 0x00 }, { 0x00, 0x00 }, { 0x00, 0x00 }, { 0x00, 0x00 }, { 0x00, 0x00 }, { 0x00, 0x00 }, { 0x00, 0x00 }, { 0x04, 0x00 } },
 };
 
 const VKByte vk_key_block_tiles[11][16] = {

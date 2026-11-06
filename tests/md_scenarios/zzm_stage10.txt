@@ -1,0 +1,59 @@
+# (zzm) Stage 10 : parcours des 9 salles, plateformes mobiles (table 906C, salles 0, 2, 3, 4), cle visible (48, 48), porte (236, 128) de la salle 8, sortie.
+# Valeurs des traces openMSX du stage 10 (research/stage10-level.md) : plateforme de la salle 0 en X 61h apres le chargement (+1 par passe de 2 images, retournement en 191).
+# vk_platforms : +0 id, +1 Y, +2 X, +3 pas, +4 longueur, +5 passe, +6 compteur.
+include zzm_enter10.inc
+poke Enemies_god 1
+wait 10
+expect ram8('vk_platforms') == 1 and ram8('vk_platforms+1') == 0x8F and ram8('vk_platforms+4') == 0x60 # salle 0
+set x0 ram8('vk_platforms+2')
+wait 20
+expect ram8('vk_platforms+2') - x0 == 10 # une case par passe de 2 images
+shot zzm-salle0
+# Cle visible de la salle 0 en (48, 48) : prise au contact (trace : Simon en (56, 50), son 14h).
+poke vk_game+0 56
+poke vk_game+1 50
+poke vk_game+2 0
+wait 6
+expect ram8('items') & 1 == 1
+include zzb_next.inc
+until game.stage == 10 and game.room == 1 max 200
+wait 10
+expect ram8('vk_platforms') == 0 # salle 1 : pas de plateforme
+shot zzm-salle1
+include zzb_next.inc
+until game.stage == 10 and game.room == 2 max 200
+wait 10
+expect ram8('vk_platforms') == 1 and ram8('vk_platforms+1') == 0xA7 and ram8('vk_platforms+4') == 0x80
+include zzb_next.inc
+until game.stage == 10 and game.room == 3 max 200
+wait 10
+expect ram8('vk_platforms') == 1 and ram8('vk_platforms+1') == 0x8F and ram8('vk_platforms+4') == 0xA0
+include zzb_next.inc
+until game.stage == 10 and game.room == 4 max 200
+wait 10
+expect ram8('vk_platforms') == 1 and ram8('vk_platforms+1') == 0xA7 and ram8('vk_platforms+4') == 0x40
+include zzb_next.inc
+until game.stage == 10 and game.room == 5 max 200
+wait 10
+expect ram8('vk_platforms') == 0
+include zzb_next.inc
+until game.stage == 10 and game.room == 6 max 200
+include zzb_next.inc
+until game.stage == 10 and game.room == 7 max 200
+include zzb_next.inc
+until game.stage == 10 and game.room == 8 max 200
+wait 10
+shot zzm-salle8
+# Porte de la salle 8 en (236, 128), cle prise : Simon pousse a droite (trace : son 1Ah, puis X 248 et D000 = 11, salle 0).
+until game.player.mode == 0 max 100
+poke items 1
+poke vk_game+0 200
+poke vk_game+1 176
+poke vk_game+2 0
+wait 4
+expect ram8('items+2') == 0 # porte fermee
+until ram8('items+2') == 1 max 400 RIGHT
+expect ram8('items') == 0 # cle consommee a l'ouverture
+shot zzm-porte
+# Le port ne montre pas le stage 11 (non porte) : retour au titre.
+until front_mode == MODES['TITLE'] max 1200 RIGHT

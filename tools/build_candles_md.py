@@ -15,7 +15,7 @@ from castle_room_objects import decode_room
 from probe import load_rom
 
 ROOMS = {0:3, 1:9, 2:6, 3:6, 4:6, 5:6, 6:6, 7:9, 8:8, 9:9, 10:9}
-WALL_STAGES = 10  # as the objects: the stages with their full object set
+WALL_STAGES = 11  # all stages 0 to 10 have their full object set
 
 def decode_wall(data, stage, room):
     """DE00 slot items and C5B5/C5C5 records after 5A49 and 5B1B (5BB7 -> 9179)."""
@@ -62,11 +62,9 @@ def collect(data):
             r = decode_room(data, stage, room)
             for e in r['candles']:
                 b = bytes.fromhex(e['raw'])
-                if stage > 9 and not (b[4] == 3 and b[5] == 0x18): continue
                 candles.append((b[2], b[1], b[4], b[5], b[9], stage, room))
             for e in r['other_objects']:
                 b = bytes.fromhex(e['raw'])
-                if stage > 9: continue  # Later stages are not ported yet.
                 if b[4] == 0x18: continue  # A visible white key (stage 8 room 7) is the key of items.c, not a drop.
                 if int(e['slot'], 16) >= 0xC500 and b[0] == 0x83:
                     fixed.append((b[2], b[1], 0, b[4], b[13], stage, room))

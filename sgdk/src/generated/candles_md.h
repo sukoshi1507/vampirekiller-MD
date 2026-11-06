@@ -5,15 +5,15 @@
 typedef struct { VKByte x, y, mode, kind, content; } VKCandleDef;
 typedef struct { VKByte x, y, code; } VKWallDef;
 #define VK_OBJECT_SHEET_COUNT 0x22
-#define VK_WALL_DEF_COUNT 7
-extern const VKWallDef vk_wall_defs[7];
+#define VK_WALL_DEF_COUNT 9
+extern const VKWallDef vk_wall_defs[9];
 extern const VKByte vk_wall_first[11][10];
 extern const VKByte vk_wall_items[11][9][2];
-#define VK_CANDLE_DEF_COUNT 224
-#define VK_FIXED_OBJECT_COUNT 64
+#define VK_CANDLE_DEF_COUNT 250
+#define VK_FIXED_OBJECT_COUNT 70
 extern const VKByte vk_key_block_tiles[11][16];
-extern const VKCandleDef vk_candle_defs[224];
+extern const VKCandleDef vk_candle_defs[250];
 extern const VKByte vk_candle_first[11][10];
-extern const VKCandleDef vk_fixed_object_defs[64];
+extern const VKCandleDef vk_fixed_object_defs[70];
 extern const VKByte vk_fixed_object_first[11][10];
 #endif

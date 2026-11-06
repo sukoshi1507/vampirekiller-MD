@@ -599,5 +599,30 @@ int main(void)
         assert(c.drop[0].state == VK_DROP_NONE);
     }
 
+    /* Stage 10 (5A49 + 5B1B run by build_candles_md.py, research/stage10-level.md): candles and hidden blocks per room, chests and
+     * golden keys (objects 83 of the ROM), the two breakable blocks and the items of their slots. */
+    {
+        static const int candles[9] = { 2, 3, 2, 3, 2, 3, 4, 6, 1 };
+        static const int fixed[9] = { 1, 1, 0, 0, 1, 3, 0, 0, 0 };
+        int r, sum = 0;
+        for (r = 0; r < 9; r++) {
+            assert(vk_candle_first[10][r + 1] - vk_candle_first[10][r] == candles[r]);
+            assert(vk_fixed_object_first[10][r + 1] - vk_fixed_object_first[10][r] == fixed[r]);
+            sum += candles[r];
+        }
+        assert(sum == 26 && vk_candle_first[10][9] - vk_candle_first[10][0] == 26);
+        assert(vk_candle_first[10][0] == 224 && vk_candle_first[10][9] == 250);
+        assert(vk_fixed_object_first[10][0] == 64 && vk_fixed_object_first[10][9] == 70);
+        assert(vk_wall_first[10][2] - vk_wall_first[10][1] == 1 && vk_wall_first[10][9] - vk_wall_first[10][8] == 1);
+        assert(vk_wall_items[10][1][0] == 0x12 && vk_wall_items[10][8][0] == 0x04);
+        /* chests (0x19) and their content (+13): rooms 0, 4 and 5 */
+        assert(vk_fixed_object_defs[64].kind == 0x19 && vk_fixed_object_defs[64].content == 0x1A && vk_fixed_object_defs[64].x == 224 && vk_fixed_object_defs[64].y == 128);
+        assert(vk_fixed_object_defs[66].kind == 0x19 && vk_fixed_object_defs[66].content == 0x11);
+        assert(vk_fixed_object_defs[68].content == 0x1C && vk_fixed_object_defs[69].content == 0x13);
+        /* no candle of object 15 in the stage 10: the object 1B cannot be made there */
+        for (r = vk_candle_first[10][0]; r < vk_candle_first[10][9]; r++) assert(vk_candle_defs[r].kind != 0x15);
+        for (r = 0; r < 9; r++) assert(vk_wall_items[10][r][0] != 0x15 && vk_wall_items[10][r][1] != 0x15);
+    }
+
     return 0;
 }

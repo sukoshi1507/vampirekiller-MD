@@ -1,10 +1,14 @@
 #include "platforms.h"
 
-/* Table 906C for stage 5: room, Y, X, step, length. The ROM also lists stage 10, not ported. */
-static const struct { VKByte room, y, x; signed char dx; VKByte length; } vk_platform_defs[] = {
-    { 1, 0x5F, 0x60,  1, 0x40 },
-    { 4, 0x5F, 0x20,  1, 0x30 },
-    { 4, 0x5F, 0xB8, -1, 0x38 },
+/* Table 906C: stage, room, Y, X, step, length (stage 5: rooms 1 and 4; stage 10: rooms 0, 2, 3 and 4, read in the ROM). */
+static const struct { VKByte stage, room, y, x; signed char dx; VKByte length; } vk_platform_defs[] = {
+    {  5, 1, 0x5F, 0x60,  1, 0x40 },
+    {  5, 4, 0x5F, 0x20,  1, 0x30 },
+    {  5, 4, 0x5F, 0xB8, -1, 0x38 },
+    { 10, 0, 0x8F, 0x60,  1, 0x60 },
+    { 10, 2, 0xA7, 0x40,  1, 0x80 },
+    { 10, 3, 0x8F, 0x20,  1, 0xA0 },
+    { 10, 4, 0xA7, 0x80,  1, 0x40 },
 };
 
 void vk_platforms_room(VKPlatforms *p, VKByte stage, VKByte room)
@@ -18,10 +22,10 @@ void vk_platforms_room(VKPlatforms *p, VKByte stage, VKByte room)
         p->slot[i].dx = 0;
     }
     p->under = 0;
-    if (stage != 5) return;
+    if (stage != 5 && stage != 10) return;
     for (i = 0; i < sizeof vk_platform_defs / sizeof vk_platform_defs[0]; i++)
     {
-        if (vk_platform_defs[i].room != room) continue;
+        if (vk_platform_defs[i].stage != stage || vk_platform_defs[i].room != room) continue;
         p->slot[n].id = (VKByte)(n + 1);
         p->slot[n].y = vk_platform_defs[i].y;
         p->slot[n].x = vk_platform_defs[i].x;
