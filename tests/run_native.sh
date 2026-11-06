@@ -118,3 +118,6 @@ bash tests/run_stage16_scene.sh
 # Phase-2 isolated stage 17-18 room/object facades (no progression activation).
 sh tests/run_stage17_scene.sh
 sh tests/run_stage18_scene.sh
+
+# Raw late-stage enemy channel flags, no spawn emulation.
+./tests/run_late_enemy_data.sh

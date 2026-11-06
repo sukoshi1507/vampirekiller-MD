@@ -136,7 +136,9 @@ Ce qui n'est pas porté ou reste provisoire :
   (`tools/prepare_stage12_gameplay_data.py`, `tests/run_stage12_gameplay_data.sh`).
   Stages 12 à 18 : bougies, objets fixes et enregistrements Z80 bruts (`5A49`/`5B1B`,
   `references/castle_objects_z80.json`) en tables C, plus une scène isolée par stage
-  (`sgdk/src/stage1[2-8]_scene.c`) ; rien n'est appelé par `main.c`. Non jouables : Dracula, la fin,
+  (`sgdk/src/stage1[2-8]_scene.c`) ; rien n'est appelé par `main.c`. Ennemis fixes des stages 12 à 18 extraits
+  par exécution Z80 de `6154` (93 enregistrements bruts, `tools/extract_late_fixed_enemies.py`)
+  et drapeaux de canaux bruts (`tools/prepare_late_enemy_flags.py`) ; leurs IA ne sont pas portées. Non jouables : Dracula, la fin,
   collisions, objets, ennemis et passages secrets (accroupi puis HAUT, `C420` = 7,
   `research/enemy-behavior.md`) restent à porter ; aucune transition n'est activée.
 - **Énergie (provisoire)** : commandes bloquées pendant la mort : non relevées sur le

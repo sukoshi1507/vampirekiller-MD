@@ -1,0 +1,143 @@
+{
+  "reference_rom_sha256": "99eabaaeb2b6c02220e131043d5a6401d0d8c5f413d89204547adcc04d65e7e2",
+  "scope": "spawn-channel flags only, not fixed enemies, AI or gameplay",
+  "stages": [
+    {
+      "stage": 12,
+      "count": 12,
+      "ptr": 34334,
+      "offset": 116254,
+      "flags": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "nonzero": 0
+    },
+    {
+      "stage": 13,
+      "count": 12,
+      "ptr": 34346,
+      "offset": 116266,
+      "flags": [
+        0,
+        0,
+        128,
+        0,
+        0,
+        0,
+        128,
+        128,
+        128,
+        128,
+        128,
+        128
+      ],
+      "nonzero": 7
+    },
+    {
+      "stage": 14,
+      "count": 8,
+      "ptr": 34358,
+      "offset": 116278,
+      "flags": [
+        128,
+        128,
+        128,
+        128,
+        128,
+        128,
+        128,
+        128
+      ],
+      "nonzero": 8
+    },
+    {
+      "stage": 15,
+      "count": 10,
+      "ptr": 34366,
+      "offset": 116286,
+      "flags": [
+        0,
+        128,
+        128,
+        128,
+        0,
+        0,
+        0,
+        128,
+        0,
+        0
+      ],
+      "nonzero": 4
+    },
+    {
+      "stage": 16,
+      "count": 10,
+      "ptr": 34376,
+      "offset": 116296,
+      "flags": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "nonzero": 0
+    },
+    {
+      "stage": 17,
+      "count": 12,
+      "ptr": 34386,
+      "offset": 116306,
+      "flags": [
+        0,
+        0,
+        0,
+        128,
+        0,
+        128,
+        0,
+        64,
+        0,
+        0,
+        64,
+        0
+      ],
+      "nonzero": 4
+    },
+    {
+      "stage": 18,
+      "count": 10,
+      "ptr": 34398,
+      "offset": 116318,
+      "flags": [
+        0,
+        128,
+        0,
+        0,
+        0,
+        0,
+        0,
+        128,
+        128,
+        0
+      ],
+      "nonzero": 3
+    }
+  ]
+}
