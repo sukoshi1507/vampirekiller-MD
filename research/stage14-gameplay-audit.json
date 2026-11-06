@@ -1,0 +1,25 @@
+{
+  "stage": 14,
+  "room_count": 8,
+  "source": "VK-gpt.zip scratchpad/castle-candles/work/tool.json, archived 5A49+5B1B execution",
+  "candle_count": 22,
+  "fixed_count": 10,
+  "raw_slots": 33,
+  "unknown_slots": [
+    {
+      "room": 6,
+      "slot": "0xC5B0",
+      "note": "unclassified original slot"
+    }
+  ],
+  "raw_sha256": "25e404508525e7c6eb764e1558d346ca1c69ddab44fdd4421243683d6f1bfac8",
+  "candle_offsets": "x=+2 y=+1 mode=+4 kind=+5 content=+9 (275 historical matches)",
+  "fixed_offsets": "x=+2 y=+1 kind=+4 content=+13 (71 historical matches)",
+  "collision": "ROM normal-path tile decoder verified for stages 1-11; same expansion used for stage map; not dynamic collision simulation",
+  "limits": [
+    "no enemy type/AI extraction",
+    "no real gameplay scene activation",
+    "no engine object interactions",
+    "no compiled SGDK ROM or visual/sonic verification"
+  ]
+}

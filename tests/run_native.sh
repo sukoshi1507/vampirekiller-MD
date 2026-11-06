@@ -97,3 +97,24 @@ ${CC:-cc} -std=c99 -Wall -Wextra -Werror -Isgdk/src -Itests/native_include -Ites
     sgdk/src/player.c sgdk/src/room_manager.c sgdk/src/generated/intro_assets.c sgdk/src/generated/player_assets.c sgdk/src/generated/stage1_collision.c $MAPS -o "$BIN"
 "$BIN"
 echo 'Native gameplay, physics, whip, room manager, enemy, health, item, candle, weapon, PSG, room freeze, wall, stage map, stage 8 object, stage 9 object, stage 10 fishman, stage 11 objects, death flame and boss and stage 1-11 tests: PASS'
+# Archived MSX2 Z80 raw object slots for the unfinished stage 12.
+./tests/run_stage12_object_records.sh
+./tests/run_stage12_secret.sh
+# Safe per-room access to original stage-12 Z80 object slots; no object effects inferred.
+./tests/run_stage12_object_view.sh
+# Candle field mapping independently checked against 275 Z80 precedents (stages 0..11).
+./tests/run_stage12_candles.sh
+# Five original type-83 fixed objects, decoded after validating 71 older entries.
+./tests/run_stage12_fixed_objects.sh
+# Isolated state for all twelve stage-12 rooms (does not enable progression).
+./tests/run_stage12_scene.sh
+# Independent stage 13/14 data/state adapters. No stage transition hook.
+./tests/run_stage13_scene.sh
+./tests/run_stage14_scene.sh
+
+# Phase-2 isolated stage 15-16 room/object facades (not gameplay activation).
+bash tests/run_stage15_scene.sh
+bash tests/run_stage16_scene.sh
+# Phase-2 isolated stage 17-18 room/object facades (no progression activation).
+sh tests/run_stage17_scene.sh
+sh tests/run_stage18_scene.sh

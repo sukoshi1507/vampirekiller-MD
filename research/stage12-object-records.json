@@ -1,0 +1,344 @@
+{
+  "provenance": "VK-gpt.zip: scratchpad/castle-candles/work/tool.json; tools/castle_room_objects.py Z80 runtime 5A49 + 5B1B",
+  "scope": "Original slot bytes only; no gameplay hooks or item/drop inference",
+  "stage": 12,
+  "room_count": 12,
+  "record_count": 36,
+  "candle_records": 30,
+  "other_records": 6,
+  "raw_sha256": "3d0f46a7bd445f2d1002856d3f39c7d57b82656ed78ebcb2bdd93b8afb6fdeb7",
+  "records": [
+    {
+      "room": 0,
+      "slot": 50288,
+      "raw": "01903000000101e30000000000000000",
+      "category": "candles"
+    },
+    {
+      "room": 1,
+      "slot": 50288,
+      "raw": "01809000000119e31800000000000000",
+      "category": "candles"
+    },
+    {
+      "room": 1,
+      "slot": 50304,
+      "raw": "0180e00000011be31a00000000000000",
+      "category": "candles"
+    },
+    {
+      "room": 1,
+      "slot": 50320,
+      "raw": "0170400003171de31c00000000000000",
+      "category": "candles"
+    },
+    {
+      "room": 2,
+      "slot": 50288,
+      "raw": "01802000000031e33000000000000000",
+      "category": "candles"
+    },
+    {
+      "room": 2,
+      "slot": 50304,
+      "raw": "01907000000233e33200000000000000",
+      "category": "candles"
+    },
+    {
+      "room": 2,
+      "slot": 50320,
+      "raw": "0190c000000035e33400000000000000",
+      "category": "candles"
+    },
+    {
+      "room": 2,
+      "slot": 50432,
+      "raw": "83a0e00019ff0000000000000012e336",
+      "category": "other_objects"
+    },
+    {
+      "room": 3,
+      "slot": 50288,
+      "raw": "01903000000149e34800000000000000",
+      "category": "candles"
+    },
+    {
+      "room": 3,
+      "slot": 50304,
+      "raw": "0190800000014be34a00000000000000",
+      "category": "candles"
+    },
+    {
+      "room": 3,
+      "slot": 50320,
+      "raw": "0190b00000004de34c00000000000000",
+      "category": "candles"
+    },
+    {
+      "room": 3,
+      "slot": 50336,
+      "raw": "0190e00000024fe34e00000000000000",
+      "category": "candles"
+    },
+    {
+      "room": 4,
+      "slot": 50288,
+      "raw": "0180e000000161e36000000000000000",
+      "category": "candles"
+    },
+    {
+      "room": 4,
+      "slot": 50432,
+      "raw": "8380600019ff0000000000000011e362",
+      "category": "other_objects"
+    },
+    {
+      "room": 4,
+      "slot": 50608,
+      "raw": "000000000001708000070300e3640000",
+      "category": "other_objects"
+    },
+    {
+      "room": 5,
+      "slot": 50288,
+      "raw": "01908000000279e37800000000000000",
+      "category": "candles"
+    },
+    {
+      "room": 5,
+      "slot": 50304,
+      "raw": "0160c00003187be37a00000000000000",
+      "category": "candles"
+    },
+    {
+      "room": 5,
+      "slot": 50320,
+      "raw": "01902000031f7de37c88000000000000",
+      "category": "candles"
+    },
+    {
+      "room": 5,
+      "slot": 50336,
+      "raw": "0190a000030080e37f00000000000000",
+      "category": "candles"
+    },
+    {
+      "room": 7,
+      "slot": 50288,
+      "raw": "01901000000ca9e3a800000000000000",
+      "category": "candles"
+    },
+    {
+      "room": 7,
+      "slot": 50304,
+      "raw": "0170a0000015abe3aa00000000000000",
+      "category": "candles"
+    },
+    {
+      "room": 7,
+      "slot": 50320,
+      "raw": "0170e0000000ade3ac00000000000000",
+      "category": "candles"
+    },
+    {
+      "room": 7,
+      "slot": 50432,
+      "raw": "8380c00019ff000000000000000fe3ae",
+      "category": "other_objects"
+    },
+    {
+      "room": 8,
+      "slot": 50288,
+      "raw": "017020000001c1e3c000000000000000",
+      "category": "candles"
+    },
+    {
+      "room": 8,
+      "slot": 50304,
+      "raw": "017090000015c3e3c200000000000000",
+      "category": "candles"
+    },
+    {
+      "room": 8,
+      "slot": 50320,
+      "raw": "0190c0000002c5e3c400000000000000",
+      "category": "candles"
+    },
+    {
+      "room": 8,
+      "slot": 50432,
+      "raw": "83a0e00017ff0000000000000000e3c6",
+      "category": "other_objects"
+    },
+    {
+      "room": 9,
+      "slot": 50288,
+      "raw": "017020000002d9e3d800000000000000",
+      "category": "candles"
+    },
+    {
+      "room": 9,
+      "slot": 50304,
+      "raw": "017070000001dbe3da00000000000000",
+      "category": "candles"
+    },
+    {
+      "room": 9,
+      "slot": 50320,
+      "raw": "0170a0000015dde3dc00000000000000",
+      "category": "candles"
+    },
+    {
+      "room": 9,
+      "slot": 50336,
+      "raw": "017040000317dfe3de00000000000000",
+      "category": "candles"
+    },
+    {
+      "room": 10,
+      "slot": 50288,
+      "raw": "019010000001f1e3f000000000000000",
+      "category": "candles"
+    },
+    {
+      "room": 10,
+      "slot": 50304,
+      "raw": "019060000008f3e3f200000000000000",
+      "category": "candles"
+    },
+    {
+      "room": 10,
+      "slot": 50320,
+      "raw": "0180c0000002f5e3f400000000000000",
+      "category": "candles"
+    },
+    {
+      "room": 11,
+      "slot": 50288,
+      "raw": "01907000000009e40800000000000000",
+      "category": "candles"
+    },
+    {
+      "room": 11,
+      "slot": 50432,
+      "raw": "8380400019ff0000000000000005e40a",
+      "category": "other_objects"
+    }
+  ],
+  "rooms": [
+    {
+      "room": 0,
+      "count": 1,
+      "slots": [
+        50288
+      ]
+    },
+    {
+      "room": 1,
+      "count": 3,
+      "slots": [
+        50288,
+        50304,
+        50320
+      ]
+    },
+    {
+      "room": 2,
+      "count": 4,
+      "slots": [
+        50288,
+        50304,
+        50320,
+        50432
+      ]
+    },
+    {
+      "room": 3,
+      "count": 4,
+      "slots": [
+        50288,
+        50304,
+        50320,
+        50336
+      ]
+    },
+    {
+      "room": 4,
+      "count": 3,
+      "slots": [
+        50288,
+        50432,
+        50608
+      ]
+    },
+    {
+      "room": 5,
+      "count": 4,
+      "slots": [
+        50288,
+        50304,
+        50320,
+        50336
+      ]
+    },
+    {
+      "room": 6,
+      "count": 0,
+      "slots": []
+    },
+    {
+      "room": 7,
+      "count": 4,
+      "slots": [
+        50288,
+        50304,
+        50320,
+        50432
+      ]
+    },
+    {
+      "room": 8,
+      "count": 4,
+      "slots": [
+        50288,
+        50304,
+        50320,
+        50432
+      ]
+    },
+    {
+      "room": 9,
+      "count": 4,
+      "slots": [
+        50288,
+        50304,
+        50320,
+        50336
+      ]
+    },
+    {
+      "room": 10,
+      "count": 3,
+      "slots": [
+        50288,
+        50304,
+        50320
+      ]
+    },
+    {
+      "room": 11,
+      "count": 2,
+      "slots": [
+        50288,
+        50432
+      ]
+    }
+  ],
+  "noninterpreted_nonzero_slots": [
+    {
+      "room": 4,
+      "slot": 50608,
+      "raw": "000000000001708000070300e3640000"
+    }
+  ]
+}
