@@ -79,7 +79,7 @@ et les limites. « Prouvé » = mesuré en trace openMSX ou lu dans la ROM ;
 | `castlevania-nes-comparison.md` | Comparaison avec castlevania-md | Référence. |
 | `licensing.md` | Inventaire des sources tierces et licences | Inventaire. Points à trancher (voir la note). |
 
-Dossiers : `audio/` (VGM et CSV), `castle-navigation/`, `partner-baseline/`
+Dossiers : `audio/` (VGM et CSV), `castle-navigation/`
 (code partenaire, licence inconnue), `simon-assets/`, `simon-frame-audit/`.
 
 ## Stages 1 à 10
