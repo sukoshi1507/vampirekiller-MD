@@ -323,7 +323,7 @@ int vk_candles_hit(VKCandles *c, int i)
      * makes a C500 object of type 01 with +5 = 0, drawn as the red flame F4/F8
      * (8C7E) for 16 frames; then 8AA7 removes it (8B1B): nothing to take. 0x15
      * also makes, at the end (8AD0), the enemy object of 8AF0[D002 - 1] at (X, Y + 16):
-     * the object 1A in the stages 4 to 6, 1C in the stages 7 to 9 (VK_CANDLE_EVENT_GHOST, enemies.c; 1B of the stage 10 is not ported), none with
+     * the object 1A in the stages 4 to 6, 1C in the stages 7 to 9 (VK_CANDLE_EVENT_GHOST, enemies.c; 1B of the stage 11), none with
      * D002 = 0 (stages 0-3). The burst stands in for the red flame. */
     if ((kind == 0 || kind == VK_OBJ_NOTHING) && def->mode < 2)
     {

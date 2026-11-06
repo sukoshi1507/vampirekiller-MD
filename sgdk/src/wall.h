@@ -53,6 +53,7 @@ typedef struct {
      * new life or stage start). */
     VKByte count[VK_CANDLE_STAGES][VK_CANDLE_ROOMS][VK_WALL_RECORDS];
     VKByte gone[VK_CANDLE_STAGES][VK_CANDLE_ROOMS];   /* direct wall objects removed (9358) */
+    VKByte pad2;                     /* even offsets for the 68000 since the stage 11 rows (count and gone grew by 27 bytes) */
     VKByte c70c, c70b;               /* result and frame of the last hit (92BB) */
     VKByte d012;                     /* D012: spawn speed (9CD8), changed by 9333/933C */
     VKByte phase;                    /* 91BE runs once a pass (2 frames): 1 between */

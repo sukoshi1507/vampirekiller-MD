@@ -30,16 +30,16 @@ wait 4
 until ram8('vk_walls+8') == 0x82 max 90
 poke vk_candles+118 50
 poke vk_walls+11 1
-until ram8('vk_walls+320') == 2 max 120
+until ram8('vk_walls+348') == 2 max 120
 wait 2
 shot zo-fenetre
 expect pixel(161, 137)[0] > 200 and pixel(164, 150) != pixel(161, 137) # cadre blanc de la fenetre (9397)
 set x0 game.player.x
 wait 20
-expect game.player.x == x0 and ram8('vk_walls+320') == 2 # jeu fige, la fenetre attend
+expect game.player.x == x0 and ram8('vk_walls+348') == 2 # jeu fige, la fenetre attend
 tap B
 wait 2
 expect ram8('vk_candles+118') == 30 and ram8('vk_candles+322') & 0x20 # 20 coeurs, objet 04 donne (94D9, 8D30)
-until ram8('vk_walls+320') == 0 max 30
+until ram8('vk_walls+348') == 0 max 30
 wait 4
 shot zo-apres

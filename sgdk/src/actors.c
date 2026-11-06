@@ -21,6 +21,7 @@
 #include "generated/stage5_platform_md.h"
 #include "generated/stage10_platform_md.h"
 #include "generated/stage10_enemies_md.h"
+#include "generated/stage11_enemies_md.h"
 #include "platforms.h"
 
 _Static_assert(HUD_TEXT_TILE_INDEX + HUD_TEXT_TILE_COUNT <= DEATH_TILE_INDEX &&
@@ -453,6 +454,8 @@ void vk_step_enemies(void)
                 VDP_loadTileData(vk_stage10_platform_tiles, ENEMY5_TILE_INDEX + VK_PLATFORM_PATTERN_10 - VK_ENEMY5_FIRST_PATTERN,
                                  VK_STAGE10_PLATFORM_TILE_COUNT, CPU);
             }
+            else if (vk_game.stage == 11)   /* eagle, flea, dragon and its shot (tools/build_stage11_enemies_md.py) */
+                VDP_loadTileData(vk_stage11_enemy_tiles, ENEMY5_TILE_INDEX, VK_STAGE11_ENEMY_TILE_COUNT, CPU);
             else if (vk_game.stage == 6)
                 VDP_loadTileData(vk_stage6_enemy_tiles, ENEMY5_TILE_INDEX, VK_STAGE6_ENEMY_TILE_COUNT, CPU);
             else if (vk_game.stage == 9)
@@ -475,6 +478,12 @@ void vk_step_enemies(void)
             }
             /* Object 1A (stages 4 to 6): the same image in colour 15, whatever the pose base 9B, 9D or 9F of the room; cells 70 and 74
              * (stages 4, 5) or 80 and 84 (stage 6) of the block. */
+            else if (vk_game.stage == 11)
+            {   /* Object 1B (candles of object 15, rooms 0 and 5): the two poses of the room, cells A0 and A4 of the block (base 9B or A1). */
+                const EnemyU8 base = Enemies_ghostBase(11, (EnemyU8)vk_game.room);
+                if (base)
+                    VDP_loadTileData(vk_stage11_ghost_tiles[base == 0x9B ? 0 : 1], ENEMY5_TILE_INDEX + (0xA0 - 0x40), VK_STAGE11_GHOST_TILE_COUNT, CPU);
+            }
             else if (vk_game.stage >= 4 && vk_game.stage <= 6 &&
                      Enemies_ghostBase((EnemyU8)vk_game.stage, (EnemyU8)vk_game.room))
                 VDP_loadTileData(vk_ghost_a_tiles, ENEMY5_TILE_INDEX + (Enemies_ghostCell((EnemyU8)vk_game.stage) - 0x40),

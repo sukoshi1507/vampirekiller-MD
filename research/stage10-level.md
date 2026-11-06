@@ -26,7 +26,7 @@ de `research/chests-stage1-9.md` avec `D002` = 3).
 - **Clé** (salle 0, (48, 48), visible, objet 83/18) : trace `K3`, Simon posé en (56, 50), prise 3 images plus tard, son 14h (C500 `84 30 30 01 18` -> `00`). Le port : prise au contact au même point (scénario).
 - **Porte et sortie** (salle 8, (236, 128), côté droit) : trace `K4`, clé prise, Simon posé en (200, 176) et poussé à droite : arrêt contre la porte en X 228 à l'image 1221, **son 1Ah à 1222**, Simon traverse, `D000` 10 -> 11
   et `D001` = 0 à 1390 (X 248, **168 images** après le son), `C000` = 4 (chargement), Simon en (16, 176) à 1410, musique 81 à 1427. Le port rejoue la porte (168 images, `kStageItems[9]` : ouverture, clé consommée) ;
-  l'entrée du stage 11 (16, 176) **n'est pas portée** : sortie vers le titre (`main.c`, « Never enter undefined stage 11 »).
+  l'entrée du stage 11 (16, 176) est portée depuis (`stage11-level.md`).
 
 ## Non porté ou non vérifié
 

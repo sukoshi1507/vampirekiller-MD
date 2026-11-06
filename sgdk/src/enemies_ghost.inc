@@ -21,6 +21,7 @@ static EnemyU8 ghostBase(EnemyU8 stage, EnemyU8 room)
     static const EnemyU8 st6[6] = { 0x9B, 0x9B, 0x9B, 0x9F, 0x9F, 0x9B };
     static const EnemyU8 st7[10] = { 0xA1, 0xA1, 0x9B, 0x9B, 0x00, 0x9B, 0x9B, 0x9F, 0x9F, 0x00 };
     static const EnemyU8 st8[8] = { 0x9F, 0x9F, 0x00, 0x9B, 0x9B, 0x9F, 0x9F, 0x9B };
+    static const EnemyU8 st11[6] = { 0x9B, 0xA1, 0x00, 0x00, 0x00, 0xA1 };
     static const EnemyU8 st9[10] = { 0x9F, 0x9F, 0x9F, 0x9F, 0x00, 0xA1, 0x9B, 0x9B, 0x00, 0x00 };
     if (stage == 4 && room < 6) return st4[room];
     if (stage == 5 && room < 6) return st5[room];
@@ -28,6 +29,7 @@ static EnemyU8 ghostBase(EnemyU8 stage, EnemyU8 room)
     if (stage == 7 && room < 10) return st7[room];
     if (stage == 8 && room < 8) return st8[room];
     if (stage == 9 && room < 10) return st9[room];
+    if (stage == 11 && room < 6) return st11[room];          /* B681 : bytes 14 00 04 -> 9B A1 - - - A1 */
     return 0;
 }
 
@@ -35,7 +37,7 @@ static EnemyU8 ghostBase(EnemyU8 stage, EnemyU8 room)
  * (free there, after the moving platform at 60), 80 in the stage 6 (70 to 7B are taken). The tiles are loaded with the room (actors.c). */
 EnemyU8 Enemies_ghostCell(EnemyU8 stage)
 {
-    return stage == 6 ? 0x80 : (stage == 4 || stage == 5) ? 0x70 : 0xB4;
+    return stage == 11 ? 0xA0 : stage == 6 ? 0x80 : (stage == 4 || stage == 5) ? 0x70 : 0xB4;
 }
 
 static EnemyU8 ghostCell = 0xB4;   /* of the stage of the last frame or candle */
@@ -149,7 +151,7 @@ void Enemies_candleObject(EnemyState *s, EnemyU8 stage, EnemyU8 room, EnemyU8 x,
 {
     Enemy *e;
     S8Ext *q;
-    if (stage < 4 || stage > 9) return;                  /* D002 = 1 : object 1A, D002 = 2 : object 1C ; the group 3 (stage 10) cannot be made: no object 15 in its rooms */
+    if (stage < 4 || stage > 11 || stage == 10) return; /* D002 = 1 : object 1A, D002 = 2 : object 1C, D002 = 3 : object 1B (stage 11, 4 candles of object 15 ; none in the stage 10) */
     ghostCell = Enemies_ghostCell(stage);
     e = newObject(s, ENEMY_TYPE_GHOST);
     if (!e) return;

@@ -1,0 +1,31 @@
+# (zzo) Stage 11 : zombies de la salle 0 (canal 9CE6), puces 0D de la liste fixe (salles 1 et 2), aigle 0F et puce 23h (canal 9DE7, salles 2 a 4), dragon 0E et son tir
+# vise (salle 5). Valeurs des traces openMSX R et R5 (research/stage11-enemies.md).
+include zzm_enter11.inc
+poke Enemies_god 1
+wait 10
+until any(enemies.enemy[k].active and enemies.enemy[k].type in (0, 1) for k in range(7)) max 500
+include zzb_next.inc
+until game.stage == 11 and game.room == 1 max 200
+# Puce 0D de la liste fixe en (144, 80) (trace R : bloc 0D en X 90h, Y 50h).
+until any(enemies.enemy[k].active and enemies.enemy[k].type == 14 for k in range(7)) max 300
+expect [(enemies.enemy[k].x, enemies.enemy[k].y) for k in range(7) if enemies.enemy[k].active and enemies.enemy[k].type == 14][0][1] >= 80
+include zzb_next.inc
+until game.stage == 11 and game.room == 2 max 200
+# Aigle 0F : X E0h - 3 et Y 30h a la creation (trace R : DDh, 30h), la puce 23h en (E1h, 3Ch) dessous.
+until any(enemies.enemy[k].active and enemies.enemy[k].type == 18 for k in range(7)) max 500
+expect [enemies.enemy[k].y for k in range(7) if enemies.enemy[k].active and enemies.enemy[k].type == 18] == [48]
+expect any(enemies.enemy[k].active and enemies.enemy[k].type == 14 and enemies.enemy[k].y == 60 for k in range(7))
+shot zzo-aigle
+include zzb_next.inc
+until game.stage == 11 and game.room == 3 max 200
+include zzb_next.inc
+until game.stage == 11 and game.room == 4 max 200
+include zzb_next.inc
+until game.stage == 11 and game.room == 5 max 200
+# Dragon 0E en (208, 112) : la tete glisse jusqu'a X 160 (boite en X 168, Y 128), puis le tir vise (type 10, etat 1) quand il ouvre la bouche.
+until any(enemies.enemy[k].active and enemies.enemy[k].type == 19 for k in range(7)) max 300
+until [enemies.enemy[k].x for k in range(7) if enemies.enemy[k].active and enemies.enemy[k].type == 19] == [168] max 300
+shot zzo-dragon
+until any(enemies.enemy[k].active and enemies.enemy[k].type == 10 for k in range(7)) max 600
+expect [enemies.enemy[k].y for k in range(7) if enemies.enemy[k].active and enemies.enemy[k].type == 10][0] >= 124
+shot zzo-tir
