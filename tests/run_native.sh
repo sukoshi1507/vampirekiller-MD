@@ -83,7 +83,13 @@ ${CC:-cc} -std=c99 -Wall -Wextra -Werror -Isgdk/src -Itests/native_include -Ites
 ${CC:-cc} -std=c99 -Wall -Wextra -Werror -Isgdk/src -Itests/native_include -Itests tests/test_fish3.c sgdk/src/gameplay.c \
     sgdk/src/player.c sgdk/src/room_manager.c sgdk/src/generated/intro_assets.c sgdk/src/generated/player_assets.c sgdk/src/generated/stage1_collision.c $MAPS -o "$BIN"
 "$BIN"
+${CC:-cc} -std=c99 -Wall -Wextra -Werror -Isgdk/src -Itests/native_include -Itests tests/test_stage11.c sgdk/src/gameplay.c \
+    sgdk/src/player.c sgdk/src/room_manager.c sgdk/src/generated/intro_assets.c sgdk/src/generated/player_assets.c sgdk/src/generated/stage1_collision.c $MAPS -o "$BIN"
+"$BIN"
+${CC:-cc} -std=c99 -Wall -Wextra -Werror -Isgdk/src -Itests/native_include -Itests tests/test_dragon.c sgdk/src/gameplay.c \
+    sgdk/src/player.c sgdk/src/room_manager.c sgdk/src/generated/intro_assets.c sgdk/src/generated/player_assets.c sgdk/src/generated/stage1_collision.c $MAPS -o "$BIN"
+"$BIN"
 ${CC:-cc} -std=c99 -Wall -Wextra -Werror -Isgdk/src -Itests/native_include -Itests tests/test_death_flame.c sgdk/src/gameplay.c \
     sgdk/src/player.c sgdk/src/room_manager.c sgdk/src/generated/intro_assets.c sgdk/src/generated/player_assets.c sgdk/src/generated/stage1_collision.c $MAPS -o "$BIN"
 "$BIN"
-echo 'Native gameplay, physics, whip, room manager, enemy, health, item, candle, weapon, PSG, room freeze, wall, stage map, stage 8 object, stage 9 object, stage 10 fishman, death flame and boss and stage 1-10 tests: PASS'
+echo 'Native gameplay, physics, whip, room manager, enemy, health, item, candle, weapon, PSG, room freeze, wall, stage map, stage 8 object, stage 9 object, stage 10 fishman, stage 11 objects, death flame and boss and stage 1-11 tests: PASS'

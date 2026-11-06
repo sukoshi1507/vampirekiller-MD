@@ -76,7 +76,9 @@ typedef enum {
     ENEMY_TYPE_FLEA = 14,    /* objet 0D (stage 7, salles 1 et 4) : puce qui saute, B248 (enemies_stage7.inc) */
     ENEMY_TYPE_GHOST = 15,   /* objet 1A / 1B / 1C d'une bougie 15 (8AD0), routine B4EA (enemies_ghost.inc) */
     ENEMY_TYPE_DEATH = 16,   /* objet 1E, flamme de mort creee par 9A3E a la mort d'un ennemi (enemies_death.inc) */
-    ENEMY_TYPE_FISH3 = 17    /* objet 03 et 21h du stage 10 (homme-poisson qui crache, routine A310, enemies_fish3.inc) */
+    ENEMY_TYPE_FISH3 = 17,   /* objet 03 et 21h du stage 10 (homme-poisson qui crache, routine A310, enemies_fish3.inc) */
+    ENEMY_TYPE_EAGLE = 18,   /* objet 0F du stage 11 (aigle qui porte une puce 23h, routine B1C3, enemies_stage11.inc) */
+    ENEMY_TYPE_DRAGON = 19   /* objet 0E du stage 11 salle 5 (dragon a quatre morceaux, routine A9B7, enemies_dragon.inc) */
 } EnemyType;
 
 /* Un bloc qui tient une flamme de mort (objet 1E, creee a la mort d'un ennemi) n'est pas un ennemi vivant. */

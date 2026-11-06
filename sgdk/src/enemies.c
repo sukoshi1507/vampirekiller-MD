@@ -536,7 +536,7 @@ static int isObjS4(EnemyU8 type)
     return type == ENEMY_TYPE_6 || type == ENEMY_TYPE_8 || type == ENEMY_TYPE_7 ||
            type == ENEMY_TYPE_STATUE || type == ENEMY_TYPE_FIREBALL ||
            type == ENEMY_TYPE_HOPPER || type == ENEMY_TYPE_LEAPER || type == ENEMY_TYPE_BONE ||
-           type == ENEMY_TYPE_FLEA || type == ENEMY_TYPE_GHOST || type == ENEMY_TYPE_FISH3;
+           type == ENEMY_TYPE_FLEA || type == ENEMY_TYPE_GHOST || type == ENEMY_TYPE_FISH3 || type == ENEMY_TYPE_EAGLE || type == ENEMY_TYPE_DRAGON;
 }
 
 /* Objets D700 (boules et os) : boite 8318 / 8358, degat 1 sans armure, detruits par le contact et le fouet. */
@@ -549,8 +549,9 @@ static int isProjectile(EnemyU8 type)
 static void boxOf(EnemyU8 type, int *l, int *h)
 {
     switch (type) {
-    case ENEMY_TYPE_8: case ENEMY_TYPE_7: case ENEMY_TYPE_LEAPER: case ENEMY_TYPE_FLEA: case ENEMY_TYPE_GHOST:
+    case ENEMY_TYPE_8: case ENEMY_TYPE_7: case ENEMY_TYPE_LEAPER: case ENEMY_TYPE_FLEA: case ENEMY_TYPE_GHOST: case ENEMY_TYPE_DRAGON:
         *l = 0x08; *h = 0x10; break;   /* classe 2 de 82CB (objet 1C compris) */
+    case ENEMY_TYPE_EAGLE: *l = 0x0C; *h = 0x18; break;   /* classe 4 de 82CB : 83FA */
     case ENEMY_TYPE_FIREBALL: *l = 0x03; *h = 0x06; break;
     case ENEMY_TYPE_BONE: *l = 0x06; *h = 0x0C; break;
     default: *l = 0x05; *h = 0x18; break;   /* 06, 0A, 0B : classe 1 */
@@ -562,7 +563,7 @@ static int hasHp(EnemyU8 type)
 {
     return type == ENEMY_TYPE_6 || type == ENEMY_TYPE_7 || type == ENEMY_TYPE_STATUE ||
            type == ENEMY_TYPE_HOPPER || type == ENEMY_TYPE_LEAPER || type == ENEMY_TYPE_FLEA || type == ENEMY_TYPE_GHOST ||
-           type == ENEMY_TYPE_FISH3;
+           type == ENEMY_TYPE_FISH3 || type == ENEMY_TYPE_EAGLE || type == ENEMY_TYPE_DRAGON;
 }
 
 /* Une image pour un ennemi deja actif. */
@@ -789,7 +790,7 @@ EnemyU8 Enemies_killScore;
 /* 81CE : points (centaines) de l'objet detruit, premier octet de la paire. Objet D700 : 822A, 100 points. */
 static EnemyU8 s4Score(EnemyU8 type)
 {
-    return type == ENEMY_TYPE_STATUE ? 3 : isProjectile(type) || type == ENEMY_TYPE_LEAPER || type == ENEMY_TYPE_GHOST ? 1 : 2;   /* 81CE, 822A */
+    return type == ENEMY_TYPE_DRAGON ? 10 : type == ENEMY_TYPE_EAGLE ? 4 : type == ENEMY_TYPE_STATUE ? 3 : isProjectile(type) || type == ENEMY_TYPE_LEAPER || type == ENEMY_TYPE_GHOST ? 1 : 2;   /* 81CE, 822A */
 }
 
 #define ENEMY_T6_HP_MASK 0x0F
@@ -1033,6 +1034,16 @@ static void statueStep(EnemyState *s, Enemy *e, const EnemyRoomVars *v)
 /* 9E31 : 9E77 ne fait rien, puis 99B9 et 99E5. */
 static void fireballStep(Enemy *e)
 {
+    if (e->state) {          /* tir vise du dragon du stage 11 (enemies_dragon.inc) : vx 16 bits dans (pose, anim), vy, fractions dans timer et sub, 99B9 puis 99E5 */
+        const int vx = (EnemyS16)((e->pose << 8) | e->anim);
+        const int x16 = ((EnemyU8)e->x << 8) + e->timer + vx, y16 = (e->y << 8) + e->sub + e->vy;
+        e->x = (EnemyS16)((x16 >> 8) & 0xFF);
+        e->timer = (EnemyU8)x16;
+        e->y = (EnemyU8)(y16 >> 8);
+        e->sub = (EnemyU8)y16;
+        if (e->y >= 0xE4 || e->x >= 0xF1 || e->x < 7) e->active = 0;
+        return;
+    }
     e->x = (EnemyS16)(e->x + (e->anim ? e->anim : 4) * e->dx);   /* anim : 3 pour la boule de l'homme-poisson (vx 300h), sinon 4 (400h) */
     if (e->x >= 0xF1 || e->x < 7) e->active = 0;
 }
@@ -1418,7 +1429,7 @@ static EnemyU8 satCount(EnemyU8 type)
     if (isProjectile(type)) return 0;            /* objet D700 : ses entrees SAT (D67C) sont a part */
     return (EnemyU8)((type == ENEMY_TYPE_4 || type == ENEMY_TYPE_SPLASH || type == ENEMY_TYPE_8 || type == ENEMY_TYPE_7 ||
                       type == ENEMY_TYPE_LEAPER || type == ENEMY_TYPE_FLEA || type == ENEMY_TYPE_GHOST ||
-                      type == ENEMY_TYPE_DEATH) ? 2 : 4);   /* table 6057 */
+                      type == ENEMY_TYPE_DEATH) ? 2 : type == ENEMY_TYPE_EAGLE ? 6 : type == ENEMY_TYPE_DRAGON ? 8 : 4);   /* table 6057 */
 }
 
 /* 5F1D : premier bloc libre, puis assez d'entrees SAT libres parmi les 14 ; sinon rien. */
@@ -1550,6 +1561,8 @@ static void fishSpawn(EnemyState *s, EnemyU8 x, const EnemyRoomVars *v)
 }
 
 #include "enemies_fish3.inc"
+#include "enemies_stage11.inc"
+#include "enemies_dragon.inc"
 
 /* Canal 9D4B (bit 1 du drapeau), un appel par passe de l'etat 5 (une image sur deux, a partir
  * de la premiere) : 9CC3 sur CF02/CF03 comme le canal 9D97 (DEC CF10 partage, puis CF02 tous
@@ -1628,6 +1641,7 @@ static void type4Channel(EnemyState *s, EnemySpawnTimer *t, const EnemyRoomVars 
 /* Premiere cellule des puces dans le bloc de tuiles : 80 au stage 7, A4 au stage 9 (les cellules 84 a 94 y sont
  * celles de l'objet 0C du stage 8, que le stage 9 garde dans le meme bloc). */
 static EnemyU8 fleaBase = 0x80;
+static EnemyU8 fireballCell = 0x60;   /* cellule de la boule (D700 type 1, motif F0) : 60 aux stages 6 et 10, 9C au stage 11 (stage11_enemies_md.c) */
 
 int Enemies_frame(EnemyState *s, EnemySpawnTimer *t, const EnemyRoomVars *v)
 {
@@ -1636,6 +1650,7 @@ int Enemies_frame(EnemyState *s, EnemySpawnTimer *t, const EnemyRoomVars *v)
     int hit = 0;
 
     fleaBase = v->stage == 9 ? 0xA4 : 0x80;
+    fireballCell = v->stage == 11 ? 0x9C : 0x60;
     ghostCell = Enemies_ghostCell(v->stage);
 
     /* 75F2-7601 (6B2D) : C43B baisse a chaque passe de la routine de Simon (les images
@@ -1679,6 +1694,8 @@ int Enemies_frame(EnemyState *s, EnemySpawnTimer *t, const EnemyRoomVars *v)
             else if (e->type == ENEMY_TYPE_LEAPER) leaperStep(s, e, v);
             else if (e->type == ENEMY_TYPE_BONE) boneStep(s, e);
             else if (e->type == ENEMY_TYPE_FLEA) fleaStep(s, e, v);
+            else if (e->type == ENEMY_TYPE_EAGLE) eagleStep(s, e, v);
+            else if (e->type == ENEMY_TYPE_DRAGON) dragonStep(s, e, v);
             else if (e->type == ENEMY_TYPE_GHOST) ghostStep(s, e, v);
             else fireballStep(e);
         }
@@ -1699,6 +1716,7 @@ int Enemies_frame(EnemyState *s, EnemySpawnTimer *t, const EnemyRoomVars *v)
         if (roomFlags(v) & ENEMY_FLAG_TYPE4) type4Channel(s, t, v);
         if (((v->stage >= 4 && v->stage <= 6) || v->stage == 8 || v->stage == 9) && (roomFlags(v) & 0x20)) type8Channel(s, t, v, ENEMY_TYPE_8);
         if (v->stage == 6 && (roomFlags(v) & 0x10)) type8Channel(s, t, v, ENEMY_TYPE_7);
+        if (v->stage == 11 && (roomFlags(v) & 0x40)) eagleChannel(s, t, v);   /* 9DE7 */
     }
     s->parity ^= 1;
 
@@ -1715,8 +1733,9 @@ int Enemies_frame(EnemyState *s, EnemySpawnTimer *t, const EnemyRoomVars *v)
                 if ((v->stage == 6 || v->stage == 8 || v->stage == 9) && (def->raw_type & 0x7F) == 10) statueSpawn(s, def->x, def->y, v);
                 if ((v->stage >= 7 && v->stage <= 9) && (def->raw_type & 0x7F) == 11) hopperSpawn(s, def->x, def->y, v);
                 if ((v->stage == 7 || v->stage == 8) && (def->raw_type & 0x7F) == 12) leaperSpawn(s, def->x, def->y);
-                if ((v->stage == 7 || v->stage == 9) && (def->raw_type & 0x7F) == 13) fleaSpawn(s, def->x, def->y);
+                if ((v->stage == 7 || v->stage == 9 || v->stage == 11) && (def->raw_type & 0x7F) == 13) fleaSpawn(s, def->x, def->y);
                 if (v->stage == 10 && (def->raw_type & 0x7F) == 33) fish3SpawnFixed(s, def->x, def->y);
+                if (v->stage == 11 && (def->raw_type & 0x7F) == 14) dragonSpawn(s, def->x, def->y);
             }
         }
     }
@@ -1734,7 +1753,7 @@ int Enemies_frame(EnemyState *s, EnemySpawnTimer *t, const EnemyRoomVars *v)
             Enemy *e = &s->enemy[i];
             if (!e->active || e->exiting) continue;
             if (e->type == ENEMY_TYPE_SPLASH || e->type == ENEMY_TYPE_DEATH || ghostInert(e)) continue;   /* goutte, flamme de mort, objet 1C attendant : +E = 0, ni contact ni fouet */
-            EnemyU8 damage = (e->type == ENEMY_TYPE_6 || e->type == ENEMY_TYPE_8 || e->type == ENEMY_TYPE_GHOST || e->type == ENEMY_TYPE_FISH3) ? ENEMY_STAGE4_DAMAGE :
+            EnemyU8 damage = e->type == ENEMY_TYPE_DRAGON ? DRAGON_DAMAGE : (e->type == ENEMY_TYPE_6 || e->type == ENEMY_TYPE_8 || e->type == ENEMY_TYPE_GHOST || e->type == ENEMY_TYPE_FISH3 || e->type == ENEMY_TYPE_EAGLE) ? ENEMY_STAGE4_DAMAGE :
                              (e->type == ENEMY_TYPE_7 || e->type == ENEMY_TYPE_STATUE ||
                               e->type == ENEMY_TYPE_HOPPER || e->type == ENEMY_TYPE_LEAPER || e->type == ENEMY_TYPE_FLEA) ? 2 :   /* 81CE : base 1, doublee */
                              isProjectile(e->type) ? 1 :                                       /* 7F3D : 462B avec B = 1 */
@@ -1891,6 +1910,8 @@ int Enemies_sprites(const EnemyState *s, EnemyU8 index, EnemySprite out[ENEMY_SP
     }
 
     if (e->type == ENEMY_TYPE_FISH3) return fish3Sprites(e, out);
+    if (e->type == ENEMY_TYPE_EAGLE) return eagleSprites(e, out);
+    if (e->type == ENEMY_TYPE_DRAGON) return dragonSprites(s, e, out);
 
     if (e->type == ENEMY_TYPE_6) {
         /* Trace : haut 80 ou A0, bas 88, 90, 98 ou A8, B0, B8 ; lignes Y-31 a Y, X-8. Les deux
@@ -1995,7 +2016,9 @@ int Enemies_sprites(const EnemyState *s, EnemyU8 index, EnemySprite out[ENEMY_SP
         out[0].y = (EnemyU8)(e->y - 11);
         /* La boule de l'homme-poisson (stage 10, anim = 3) : SAT en X - 5 vers la droite et X - 11 vers la gauche (trace R : 725 et 463 images). */
         out[0].x = (EnemyS16)(e->anim ? e->x - (e->dx > 0 ? 5 : 11) : e->x - 4);
-        out[0].pattern = 0x60;
+        /* Le tir vise du dragon (stage 11, etat 1) : SAT (X - 4, Y - 13) (trace R5, 27 echantillons : un pixel de moins ou de plus selon la fraction). */
+        if (e->state) { out[0].y = (EnemyU8)(e->y - 12); out[0].x = (EnemyS16)(e->x - 4); }
+        out[0].pattern = fireballCell;
         out[0].bank = 1;
         return 1;
     }

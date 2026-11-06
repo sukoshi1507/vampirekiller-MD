@@ -62,6 +62,8 @@ static int deathOffset(EnemyU8 type)
     case ENEMY_TYPE_A: case ENEMY_TYPE_B: case ENEMY_TYPE_2: case ENEMY_TYPE_6:
     case ENEMY_TYPE_STATUE: case ENEMY_TYPE_HOPPER:
         return 0x10;
+    case ENEMY_TYPE_EAGLE:
+        return 0x18;               /* 9B33[0F] (lue dans la ROM, flamme de l'aigle non tracee) */
     default:
         return 0;
     }
@@ -75,6 +77,20 @@ static void deathFlame(EnemyState *s, const Enemy *dead)
     EnemyU8 roll;
     Enemy *f;
     if (isProjectile(dead->type) || dead->type == ENEMY_TYPE_SPLASH || dead->type == ENEMY_TYPE_DEATH) return;
+    if (dead->type == ENEMY_TYPE_DRAGON) {     /* 9AF3 : quatre flammes en (X + 16 k, Y), chacune avec un petit coeur (+1F = 1), sans tirage ni CF40 */
+        int k;
+        for (k = 0; k < 4; k++) {
+            f = newObject(s, ENEMY_TYPE_DEATH);
+            if (!f) return;
+            f->state = 1;
+            f->x = (EnemyS16)(dead->x + 16 * k);
+            f->y = dead->y;
+            f->anim = ENEMY_DEATH_START;
+            f->pose = ENEMY_DEATH_POSE_A;
+            f->age = 1;
+        }
+        return;
+    }
     if (isObjS4(dead->type) || dead->type == ENEMY_TYPE_5 || dead->type == ENEMY_TYPE_2) { x = dead->x; y = dead->y; }
     else if (dead->type == ENEMY_TYPE_4) { x = dead->x + ENEMY_OBJ_X; y = dead->y + ENEMY_TYPE4_OBJ_Y; }
     else { x = dead->x + ENEMY_OBJ_X; y = dead->y + ENEMY_OBJ_Y; }
