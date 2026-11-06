@@ -343,3 +343,14 @@ const VKStage12Passage vk_stage12_raw_passages[VK_STAGE12_PASSAGE_COUNT] = {
     {11, 2, 152, 168},
 };
 const VKByte vk_stage12_raw_spawn_flags[VK_STAGE12_ROOM_COUNT] = {0,0,0,0,0,0,0,0,0,0,0,0};
+
+/* Deterministic lookup of ROM BBCD entries; no gameplay activation. */
+const VKStage12Passage *vk_stage12_find_raw_passage(VKByte source, VKByte x, VKByte y)
+{
+    unsigned int i;
+    for (i = 0; i < VK_STAGE12_PASSAGE_COUNT; ++i) {
+        const VKStage12Passage *p = &vk_stage12_raw_passages[i];
+        if (p->source == source && p->x == x && p->y == y) return p;
+    }
+    return 0;
+}

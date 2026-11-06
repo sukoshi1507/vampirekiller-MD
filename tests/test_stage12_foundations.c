@@ -32,6 +32,12 @@ int main(void)
        assert(p->source==secret[i][0] && p->destination==secret[i][1]);
        assert(p->x==secret[i][2] && p->y==secret[i][3]);
     }
+    for (i=0;i<VK_STAGE12_PASSAGE_COUNT;++i)                 /* each BBCD entry is found by its own key */
+        assert(vk_stage12_find_raw_passage(secret[i][0],secret[i][2],secret[i][3])==&vk_stage12_raw_passages[i]);
+    /* A raw lookup must not silently create an unobserved passage. */
+    assert(vk_stage12_find_raw_passage(6,88,168)==0);
+    assert(vk_stage12_find_raw_passage(0,87,168)==0);
+    assert(vk_stage12_find_raw_passage(0,88,167)==0);
     puts("Stage 12 foundation data: 12 maps, 12 links, one-way 5->6, 10 secrets: PASS");
     return 0;
 }

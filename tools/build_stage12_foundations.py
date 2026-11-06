@@ -74,6 +74,16 @@ def generate(data):
     c += ['};', 'const VKStage12Passage vk_stage12_raw_passages[VK_STAGE12_PASSAGE_COUNT] = {']
     c += [f'    {{{p["source"]}, {p["destination"]}, {p["x"]}, {p["y"]}}},' for p in passages]
     c += ['};', 'const VKByte vk_stage12_raw_spawn_flags[VK_STAGE12_ROOM_COUNT] = {'+','.join(map(str,flags))+'};', '']
+    c += ['/* Deterministic lookup of ROM BBCD entries; no gameplay activation. */',
+          'const VKStage12Passage *vk_stage12_find_raw_passage(VKByte source, VKByte x, VKByte y)',
+          '{',
+          '    unsigned int i;',
+          '    for (i = 0; i < VK_STAGE12_PASSAGE_COUNT; ++i) {',
+          '        const VKStage12Passage *p = &vk_stage12_raw_passages[i];',
+          '        if (p->source == source && p->x == x && p->y == y) return p;',
+          '    }',
+          '    return 0;',
+          '}', '']
     (out/'stage12_foundations.c').write_text('\n'.join(c))
     (out/'stage12_foundations.h').write_text('''/* Raw ROM data staging; not an enabled gameplay stage. */
 #ifndef VK_STAGE12_FOUNDATIONS_H
@@ -86,6 +96,8 @@ extern const VKByte vk_stage12_tiles[VK_STAGE12_ROOM_COUNT][768];
 extern const VKRoomLink vk_stage12_raw_links[VK_STAGE12_ROOM_COUNT];
 extern const VKStage12Passage vk_stage12_raw_passages[VK_STAGE12_PASSAGE_COUNT];
 extern const VKByte vk_stage12_raw_spawn_flags[VK_STAGE12_ROOM_COUNT];
+/* Raw ROM table lookup only. Does not execute the MSX2 secret-passage state machine. */
+const VKStage12Passage *vk_stage12_find_raw_passage(VKByte source, VKByte x, VKByte y);
 #endif
 ''')
     report={'rom_sha256':hashlib.sha256(data).hexdigest(), 'stage':STAGE,
