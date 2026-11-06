@@ -1,4 +1,4 @@
-/* Moving platforms of stage 5, rooms 1 and 4: records C598 and C59F (research/stage5-enemies.md). */
+/* Moving platforms of the stage 5 (rooms 1 and 4) and of the stage 10 (rooms 0, 2, 3 and 4): records C598 and C59F (research/stage5-enemies.md, stage10-level.md). */
 #ifndef VK_PLATFORMS_H
 #define VK_PLATFORMS_H
 #include "player.h"

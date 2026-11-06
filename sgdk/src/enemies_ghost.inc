@@ -2,7 +2,7 @@
  * Object 1A / 1B / 1C released by a candle of object 15 (8AD0): routine B4EA (init B4D2), shared by the types 19 to 1C. The type
  * comes from the table 8AF0 [(D002 - 1) & 7] = 1A 1C 1B 1B 1B 1B 1C 1C, D002 being the object group of the stage (5E6A: 0 for
  * the stages 0 to 3, 1 for 4 to 6, 2 for 7 to 9, 3 for 10). The groups 1 (1A, stages 4 to 6) and 2 (1C, stages 7 to 9) are traced and
- * ported (same routine and same image, another colour); the group 3 (1B, stage 10) is not: the stage 10 is not ported.
+ * ported (same routine and same image, another colour); the group 3 (1B, stage 10) is not: no candle or block of object 15 exists in the stage 10 (research/stage10-level.md).
  * Included by enemies.c after enemies_stage7.inc; it uses the statics of that file (S8Ext, setVx, addVy, moveObj, s4Solid).
  * research/stage9-candle-object.md.
  *
@@ -149,7 +149,7 @@ void Enemies_candleObject(EnemyState *s, EnemyU8 stage, EnemyU8 room, EnemyU8 x,
 {
     Enemy *e;
     S8Ext *q;
-    if (stage < 4 || stage > 9) return;                  /* D002 = 1 : object 1A, D002 = 2 : object 1C ; the group 3 (stage 10) is not ported */
+    if (stage < 4 || stage > 9) return;                  /* D002 = 1 : object 1A, D002 = 2 : object 1C ; the group 3 (stage 10) cannot be made: no object 15 in its rooms */
     ghostCell = Enemies_ghostCell(stage);
     e = newObject(s, ENEMY_TYPE_GHOST);
     if (!e) return;

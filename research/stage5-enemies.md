@@ -54,7 +54,7 @@ tuiles. Rien de nouveau au stage 5 hors plateformes.
   directement. Même famille que les parasites (64,144) et (192,144) du debug, cause non cherchée.
 - L'instantané `r4` de la trace R montre l'image de la salle 3 (le plan C montre bien la salle 4) : non expliqué, sans
   effet sur les objets relevés.
-- Table `906C` : le stage 10 (salles 0, 2, 3, 4, motifs D8, DC) n'est pas porté. `8F9A` : trois objets `C580` en stage 6
+- Table `906C` : le stage 10 (salles 0, 2, 3, 4, motifs D8, DC) est porté : `stage10-level.md`. `8F9A` : trois objets `C580` en stage 6
   salle 1, à lire pour le stage 6.
 
 ## Clés dorées et coffres

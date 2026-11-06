@@ -75,7 +75,8 @@ typedef enum {
     ENEMY_TYPE_BONE = 13,    /* objet D700 de type 4 : l'os lance par l'objet 0B, 9F07 */
     ENEMY_TYPE_FLEA = 14,    /* objet 0D (stage 7, salles 1 et 4) : puce qui saute, B248 (enemies_stage7.inc) */
     ENEMY_TYPE_GHOST = 15,   /* objet 1A / 1B / 1C d'une bougie 15 (8AD0), routine B4EA (enemies_ghost.inc) */
-    ENEMY_TYPE_DEATH = 16    /* objet 1E, flamme de mort creee par 9A3E a la mort d'un ennemi (enemies_death.inc) */
+    ENEMY_TYPE_DEATH = 16,   /* objet 1E, flamme de mort creee par 9A3E a la mort d'un ennemi (enemies_death.inc) */
+    ENEMY_TYPE_FISH3 = 17    /* objet 03 et 21h du stage 10 (homme-poisson qui crache, routine A310, enemies_fish3.inc) */
 } EnemyType;
 
 /* Un bloc qui tient une flamme de mort (objet 1E, creee a la mort d'un ennemi) n'est pas un ennemi vivant. */
@@ -235,7 +236,7 @@ void Enemies_init(EnemyState *s);
  * effet ici. */
 void Enemies_item(EnemyState *s, EnemyU8 kind, EnemyU8 c431);
 /* 8AD0 : une bougie d'objet 15 s'eteint apres 16 passes ; l'objet 1A (stages 4 a 6, groupe D002 = 1) ou 1C (stages 7 a 9, D002 = 2) est cree
- * en (x, y + 16) de la bougie (B4D2). Sans effet hors de ces stages (le groupe 3, objet 1B du stage 10, n'est pas porte). */
+ * en (x, y + 16) de la bougie (B4D2). Sans effet hors de ces stages (le groupe 3, objet 1B du stage 10, est inatteignable : aucune bougie 15). */
 /* Pose de base (9B, 9D, 9F ou A1, 0 si aucune) de l'objet 1A / 1C dans une salle des stages 4 a 9 : choisit les tuiles de la salle. */
 EnemyU8 Enemies_ghostBase(EnemyU8 stage, EnemyU8 room);
 /* Premiere cellule (pose impaire, la paire est 4 plus loin) de l'objet dans le bloc de tuiles : 70 (stages 4, 5), 80 (stage 6), B4 (7 a 9). */

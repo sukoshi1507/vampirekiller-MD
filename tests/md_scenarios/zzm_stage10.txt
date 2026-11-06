@@ -1,4 +1,4 @@
-# (zzm) Stage 10 : parcours des 9 salles, plateformes mobiles (table 906C, salles 0, 2, 3, 4), cle visible (48, 48), porte (236, 128) de la salle 8, sortie.
+# (zzm) Stage 10 : parcours des 9 salles, plateformes mobiles (table 906C, salles 0, 2, 3, 4), chauve-souris (salle 0), hommes-poissons (03 et 21h), cle visible (48, 48), porte (236, 128) de la salle 8, sortie.
 # Valeurs des traces openMSX du stage 10 (research/stage10-level.md) : plateforme de la salle 0 en X 61h apres le chargement (+1 par passe de 2 images, retournement en 191).
 # vk_platforms : +0 id, +1 Y, +2 X, +3 pas, +4 longueur, +5 passe, +6 compteur.
 include zzm_enter10.inc
@@ -9,6 +9,9 @@ set x0 ram8('vk_platforms+2')
 wait 20
 expect ram8('vk_platforms+2') - x0 == 10 # une case par passe de 2 images
 shot zzm-salle0
+# Salle 0 : drapeau 08 (canal 9D97), chauve-souris (objet 04) : SAT (229, 122) a la creation (trace R : 24/48:122:229 a l'image 843).
+until any(enemies.enemy[k].active and enemies.enemy[k].type == 2 for k in range(7)) max 400
+expect [(enemies.enemy[k].x, enemies.enemy[k].y) for k in range(7) if enemies.enemy[k].active and enemies.enemy[k].type == 2] == [(229, 122)]
 # Cle visible de la salle 0 en (48, 48) : prise au contact (trace : Simon en (56, 50), son 14h).
 poke vk_game+0 56
 poke vk_game+1 50
@@ -19,6 +22,12 @@ include zzb_next.inc
 until game.stage == 10 and game.room == 1 max 200
 wait 10
 expect ram8('vk_platforms') == 0 # salle 1 : pas de plateforme
+# Canal 9D52 (drapeau 04 des salles 1 a 5) : premier objet 03 en X 208 (table 9D87), le suivant 16 images plus tard (trace R : 71 et 87 images apres le chargement, MD : 37 et 53).
+until len([k for k in range(7) if enemies.enemy[k].active and enemies.enemy[k].type == 17]) >= 1 max 200
+expect [enemies.enemy[k].x for k in range(7) if enemies.enemy[k].active and enemies.enemy[k].type == 17] == [208]
+set tf frame
+until len([k for k in range(7) if enemies.enemy[k].active and enemies.enemy[k].type == 17]) >= 2 max 100
+expect 15 <= frame - tf <= 17
 shot zzm-salle1
 include zzb_next.inc
 until game.stage == 10 and game.room == 2 max 200
@@ -38,6 +47,17 @@ wait 10
 expect ram8('vk_platforms') == 0
 include zzb_next.inc
 until game.stage == 10 and game.room == 6 max 200
+# Salle 6 : deux objets 21h de la liste fixe en (48, 176) et (192, 176), a terre et immobiles tant que Simon n'est pas a leur hauteur (trace R : type 21h une image,
+# puis 03 ; declenchement quand Y - 8 < C425 <= Y + 8, premiere passe : X 46 + fraction 80h, vx FE80h, pose 10h ; research/stage10-enemies.md).
+poke vk_game+1 120
+wait 30
+expect sorted((enemies.enemy[k].x, enemies.enemy[k].y) for k in range(7) if enemies.enemy[k].active and enemies.enemy[k].type == 17) == [(48, 176), (192, 176)]
+expect all(enemies.enemy[k].pose == 18 for k in range(7) if enemies.enemy[k].active and enemies.enemy[k].type == 17)
+poke vk_game+0 32
+poke vk_game+1 174
+until [enemies.enemy[k].x for k in range(7) if enemies.enemy[k].active and enemies.enemy[k].type == 17 and enemies.enemy[k].y == 176 and enemies.enemy[k].x < 48] == [46] max 8
+shot zzm-poisson21
+poke vk_game+1 120
 include zzb_next.inc
 until game.stage == 10 and game.room == 7 max 200
 include zzb_next.inc

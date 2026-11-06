@@ -52,6 +52,7 @@
 /* Shield pose of the moment (7618, 12 tiles), copied from vk_player_shield_tiles when
  * it changes: after the type 5 block (128 tiles), before the HUD tiles (900). */
 #define SHIELD_TILE_INDEX (ENEMY5_TILE_INDEX + 128)
+#define VK_PLATFORM_PATTERN_10 0x6C /* the stage 10 block: the shot of the fishman takes 60 */
 #define VK_PLATFORM_PATTERN 0x60    /* free cell of the stage 4 and 5 block: the moving platform */
 /* Stage 6 block (tools/build_stage6_enemies_md.py): cells of the crushers, 4 tiles each. */
 #define VK_CRUSHER_CHAIN_FULL 0x64  /* chain strip, 16 rows; 0x68, 0x6C, 0x70: its first 4, 8 and 12 rows */

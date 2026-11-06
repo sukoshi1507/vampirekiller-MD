@@ -46,7 +46,7 @@ d'objet 15 des stages 4 à 6 a été éteint un par un, stage et salle forcés (
 
 **Liste des 17** (stage, salle, X, Y ; `candles_md.c`) : stage 4 : salle 0 (128, 64), salle 1 (192, 48), salle 2 (80, 48), salle 4 (16, 48) ; stage 5 :
 salle 0 (64, 32), salle 4 (208, 64), salle 5 (80, 48), (208, 48), (144, 144) ; stage 6 : salle 0 les trois **blocs** (96, 160), (128, 160), (160, 160),
-salle 1 (96, 32), (32, 128), (96, 128), salle 4 (96, 96), (224, 96). Le stage 10 n'a aucune entrée dans `candles_md.c` (non porté).
+salle 1 (96, 32), (32, 128), (96, 128), salle 4 (96, 96), (224, 96). Le stage 10 est dans `candles_md.c` (26 bougies et blocs, aucun de type 15 : voir `stage10-level.md`).
 
 - **Même routine** : `9942` donne `B4EA` pour les types 19 à 1C ; `81CE` (01, 02), classe `82CB` 2 et points de vie (`60E1`) 1 identiques. Les 17 objets sont
   créés en (X, Y + 16) de la bougie (bloc : Y de la bougie + 32, comme au stage 8) 30 passes après le coup (flamme C500 de 30 passes), attendent 8 passes
@@ -69,7 +69,7 @@ salle 1 (96, 32), (32, 128), (96, 128), salle 4 (96, 96), (224, 96). Le stage 10
 
 ## Non porté ou non vérifié
 
-- **1B** (D002 = 3, stage 10) : même routine, mais le stage 10 n'est pas porté (aucune bougie 15 dans `candles_md.c`, aucun atteignable en jeu) : rien tracé,
+- **1B** (D002 = 3, stage 10) : même routine, mais **inatteignable** : aucune bougie ni bloc d'objet 15 dans les 9 salles du stage 10 (`stage10-level.md`, lu dans 5A49 + 5B1B et `DE00`) ; rien tracé, pas de code,
   `Enemies_candleObject` ne fait rien au stage 10. Pointeur de pose du stage 10 : `B653` -> `B67C` (non relevé).
 - Les flammes des objets 00 (30 images vues, retrait 31 images après le coup), cœurs (31 images) et autres objets (41 images + chute) sont tracées et portées : `research/candle-flames.md`.
 - Effet de mort 1E (flamme de mort `9A3E`) : porté, voir `death-flame.md` (l'objet 1C tué laisse aussi une flamme, Y - 0).

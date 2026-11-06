@@ -20,6 +20,7 @@
 #include "crushers.h"
 #include "generated/stage5_platform_md.h"
 #include "generated/stage10_platform_md.h"
+#include "generated/stage10_enemies_md.h"
 #include "platforms.h"
 
 _Static_assert(HUD_TEXT_TILE_INDEX + HUD_TEXT_TILE_COUNT <= DEATH_TILE_INDEX &&
@@ -435,7 +436,8 @@ void vk_step_enemies(void)
         if (key)
         {
             VDP_loadTileData((const u32 *)vk_enemy_tiles, ENEMY_TILE_INDEX, VK_ENEMY_TILE_COUNT, CPU);
-            VDP_loadTileData((const u32 *)vk_enemy4_tiles, ENEMY4_TILE_INDEX, VK_ENEMY4_TILE_COUNT, CPU);
+            /* The bat of the stage 10 room 0 is another image than the bat of the hall and of the stage 2 (tools/build_stage10_enemies_md.py). */
+            VDP_loadTileData(vk_game.stage == 10 ? vk_stage10_bat_tiles : (const u32 *)vk_enemy4_tiles, ENEMY4_TILE_INDEX, VK_ENEMY4_TILE_COUNT, CPU);
             /* Stage 2 rooms 4 and 5: the fishman and its splash take the type 5 block. */
             if (vk_game.stage == 4 || vk_game.stage == 5)
             {
@@ -445,8 +447,12 @@ void vk_step_enemies(void)
                                      VK_STAGE5_PLATFORM_TILE_COUNT, CPU);
             }
             else if (vk_game.stage == 10)
-                VDP_loadTileData(vk_stage10_platform_tiles, ENEMY5_TILE_INDEX + VK_PLATFORM_PATTERN - VK_ENEMY5_FIRST_PATTERN,
+            {
+                /* The fishman 03 / 21h (cells 40 to 68), its shot (60), the drop (90) and the platform (6C) share the block. */
+                VDP_loadTileData(vk_stage10_enemy_tiles, ENEMY5_TILE_INDEX, VK_STAGE10_ENEMY_TILE_COUNT, CPU);
+                VDP_loadTileData(vk_stage10_platform_tiles, ENEMY5_TILE_INDEX + VK_PLATFORM_PATTERN_10 - VK_ENEMY5_FIRST_PATTERN,
                                  VK_STAGE10_PLATFORM_TILE_COUNT, CPU);
+            }
             else if (vk_game.stage == 6)
                 VDP_loadTileData(vk_stage6_enemy_tiles, ENEMY5_TILE_INDEX, VK_STAGE6_ENEMY_TILE_COUNT, CPU);
             else if (vk_game.stage == 9)
@@ -627,7 +633,7 @@ static u16 show_enemy_sprites(u16 tail)
         {
             list[count].x = (EnemyS16)(s->x + c * 16);
             list[count].y = s->y;
-            list[count].pattern = VK_PLATFORM_PATTERN;
+            list[count].pattern = vk_game.stage == 10 ? VK_PLATFORM_PATTERN_10 : VK_PLATFORM_PATTERN;
             list[count].bank = 1;
         }
     }
