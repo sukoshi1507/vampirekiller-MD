@@ -125,3 +125,20 @@ sh tests/run_stage18_scene.sh
 # Explicit distinction between late-stage types supported by existing constructors
 # and types whose Z80 behavior is not yet ported.
 ./tests/run_late_enemy_coverage.sh
+
+# Static ROM evidence only for future type-10 implementation (not a behavior test).
+./tests/run_enemy10_rom.sh
+# Additional byte-accurate conditional fire-path check; no executed Z80 trace.
+./tests/run_enemy10_fire_path.sh
+# Enemy 10h: static semantics of AF40 and projectile-slot preparation, no frame trace.
+./tests/run_enemy10_helpers.sh
+
+# Eight late-game lot static audits: ROM/source consistency, NOT frame traces.
+[ ! -x ./tests/run_pending_enemy09.sh ] || ./tests/run_pending_enemy09.sh
+[ ! -x ./tests/run_pending_enemy10.sh ] || ./tests/run_pending_enemy10.sh
+[ ! -x ./tests/run_pending_enemy12.sh ] || ./tests/run_pending_enemy12.sh
+[ ! -x ./tests/run_pending_channels.sh ] || ./tests/run_pending_channels.sh
+[ ! -x ./tests/run_pending_bosses.sh ] || ./tests/run_pending_bosses.sh
+[ ! -x ./tests/run_pending_merchants.sh ] || ./tests/run_pending_merchants.sh
+[ ! -x ./tests/run_pending_secrets.sh ] || ./tests/run_pending_secrets.sh
+[ ! -x ./tests/run_pending_items.sh ] || ./tests/run_pending_items.sh
