@@ -54,7 +54,7 @@ static void all_rooms(void)
         Enemies_init(&s);Enemies_setRoom(&s);Enemies_god=1;
         for(slot=0;slot<4;slot++) {
             const unsigned int type=vk_late_fixed_raw[st-12][room][slot][0]&127;
-            if(type==11||type==13||type==14) {expected++;covered++;}
+            if(type==11||type==13||type==14||type==16) {expected++;covered++;}
             else if(type) unknown++;
         }
         assert(Enemies_frame(&s,&t,&v)==0);
@@ -63,14 +63,14 @@ static void all_rooms(void)
         rooms++;
     }
     Enemies_god=0;
-    assert(rooms==74 && covered==46 && unknown==47);
+    assert(rooms==74 && covered==74 && unknown==19);
     printf("late fixed spawn: %u rooms, %u known types spawned, %u unknown kept inactive\n",rooms,covered,unknown);
 }
 int main(void) {
     check(12,0,1,ENEMY_TYPE_DRAGON,192,144); /* type 0Eh */
     check(13,0,1,ENEMY_TYPE_HOPPER,192,176); /* 0Bh; 09h kept unsupported */
     check(13,1,2,ENEMY_TYPE_HOPPER,64,80);  /* 0Bh + 0Dh */
-    check(14,0,0,0,0,0);                   /* 10h not silently remapped */
+    check(14,0,1,ENEMY_TYPE_10,192,112);    /* 10h, own ADDE/ADF8 implementation */
     check(16,1,0,0,0,0);                   /* 12h not silently remapped */
     check(17,1,1,ENEMY_TYPE_HOPPER,96,176);
     check(18,3,2,ENEMY_TYPE_FLEA,208,112);

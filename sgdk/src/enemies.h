@@ -78,6 +78,8 @@ typedef enum {
     ENEMY_TYPE_DEATH = 16,   /* objet 1E, flamme de mort creee par 9A3E a la mort d'un ennemi (enemies_death.inc) */
     ENEMY_TYPE_FISH3 = 17,   /* objet 03 et 21h du stage 10 (homme-poisson qui crache, routine A310, enemies_fish3.inc) */
     ENEMY_TYPE_EAGLE = 18,   /* objet 0F du stage 11 (aigle qui porte une puce 23h, routine B1C3, enemies_stage11.inc) */
+    ENEMY_TYPE_10 = 20,       /* MSX type 10h, ADDE/ADF8, returning projectile */
+    ENEMY_TYPE_10_SHOT = 21,  /* D700 type 09h, A07B/9EC5 */
     ENEMY_TYPE_DRAGON = 19   /* objet 0E du stage 11 salle 5 (dragon a quatre morceaux, routine A9B7, enemies_dragon.inc) */
 } EnemyType;
 

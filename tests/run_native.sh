@@ -98,19 +98,19 @@ ${CC:-cc} -std=c99 -Wall -Wextra -Werror -Isgdk/src -Itests/native_include -Ites
 "$BIN"
 echo 'Native gameplay, physics, whip, room manager, enemy, health, item, candle, weapon, PSG, room freeze, wall, stage map, stage 8 object, stage 9 object, stage 10 fishman, stage 11 objects, death flame and boss and stage 1-11 tests: PASS'
 # Archived MSX2 Z80 raw object slots for the unfinished stage 12.
-./tests/run_stage12_object_records.sh
-./tests/run_stage12_secret.sh
+sh ./tests/run_stage12_object_records.sh
+sh ./tests/run_stage12_secret.sh
 # Safe per-room access to original stage-12 Z80 object slots; no object effects inferred.
-./tests/run_stage12_object_view.sh
+sh ./tests/run_stage12_object_view.sh
 # Candle field mapping independently checked against 275 Z80 precedents (stages 0..11).
-./tests/run_stage12_candles.sh
+sh ./tests/run_stage12_candles.sh
 # Five original type-83 fixed objects, decoded after validating 71 older entries.
-./tests/run_stage12_fixed_objects.sh
+sh ./tests/run_stage12_fixed_objects.sh
 # Isolated state for all twelve stage-12 rooms (does not enable progression).
-./tests/run_stage12_scene.sh
+sh ./tests/run_stage12_scene.sh
 # Independent stage 13/14 data/state adapters. No stage transition hook.
-./tests/run_stage13_scene.sh
-./tests/run_stage14_scene.sh
+sh ./tests/run_stage13_scene.sh
+sh ./tests/run_stage14_scene.sh
 
 # Phase-2 isolated stage 15-16 room/object facades (not gameplay activation).
 bash tests/run_stage15_scene.sh
@@ -120,18 +120,18 @@ sh tests/run_stage17_scene.sh
 sh tests/run_stage18_scene.sh
 
 # Raw late-stage enemy channel flags, no spawn emulation.
-./tests/run_late_enemy_data.sh
-./tests/run_late_enemy_spawn.sh
+sh ./tests/run_late_enemy_data.sh
+sh ./tests/run_late_enemy_spawn.sh
 # Explicit distinction between late-stage types supported by existing constructors
 # and types whose Z80 behavior is not yet ported.
-./tests/run_late_enemy_coverage.sh
+sh ./tests/run_late_enemy_coverage.sh
 
 # Static ROM evidence only for future type-10 implementation (not a behavior test).
-./tests/run_enemy10_rom.sh
+sh ./tests/run_enemy10_rom.sh
 # Additional byte-accurate conditional fire-path check; no executed Z80 trace.
-./tests/run_enemy10_fire_path.sh
+sh ./tests/run_enemy10_fire_path.sh
 # Enemy 10h: static semantics of AF40 and projectile-slot preparation, no frame trace.
-./tests/run_enemy10_helpers.sh
+sh ./tests/run_enemy10_helpers.sh
 
 # Eight late-game lot static audits: ROM/source consistency, NOT frame traces.
 [ ! -x ./tests/run_pending_enemy09.sh ] || ./tests/run_pending_enemy09.sh
@@ -142,3 +142,6 @@ sh tests/run_stage18_scene.sh
 [ ! -x ./tests/run_pending_merchants.sh ] || ./tests/run_pending_merchants.sh
 [ ! -x ./tests/run_pending_secrets.sh ] || ./tests/run_pending_secrets.sh
 [ ! -x ./tests/run_pending_items.sh ] || ./tests/run_pending_items.sh
+
+# Executed Z80 vs C type-10 gameplay and returning projectile.
+sh ./tests/run_enemy10_trace.sh
