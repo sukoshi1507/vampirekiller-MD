@@ -113,18 +113,18 @@ static void eagleChannel(EnemyState *s, EnemySpawnTimer *t, const EnemyRoomVars 
     e->age = flea->age = 1;
 }
 
-/* Eagle cells in the type 5 block (pattern = cell, two layers composed) and their places (SAT Y - 1 and X - object, tools/build_stage11_enemies_md.py) :
- * poses 6D, 6E, 8D : the head (40) at (-14, -23 or -25 for 8D), the wings (48 / 58 / 68) at (+2, -31) and (50 / 60 / 70) at (+2, -15). The X goes one pixel further
- * when the fraction of X is 80h or more (trace R : the object X 219.0, 216.5, 214.0 for the SAT X 205, 203, 200). */
+/* Eagle cells: executed6445 gives head(X-16,Y-23 or-25), wings(X,Y-31/-15).
+ * The old openMSX-derived X-14+fraction estimate mixed display/update times.
+ * LOT11 checks the direct SAT producer against native placement. */
 static int eagleSprites(const Enemy *e, EnemySprite *out)
 {
     const int pose = e->pose == 0x6E ? 1 : e->pose == 0x8D ? 2 : 0;
-    const int half = e->timer >> 7;
+    /* Executed6445: integer X only; fractional X does not change the SAT. */
     out[0].y = (EnemyU8)(e->y - (pose == 2 ? 24 : 22));
-    out[0].x = (EnemyS16)(e->x - 14 + half);
+    out[0].x = (EnemyS16)(e->x - 16);
     out[0].pattern = 0x40;
     out[1].y = (EnemyU8)(e->y - 30);
-    out[1].x = (EnemyS16)(e->x + 2 + half);
+    out[1].x = (EnemyS16)(e->x);
     out[1].pattern = (EnemyU8)(0x48 + 0x10 * pose);
     out[2].y = (EnemyU8)(e->y - 14);
     out[2].x = out[1].x;

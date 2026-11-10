@@ -72,6 +72,10 @@ int vk_weapons_water(VKWeapons *w, VKByte *hearts, int left);
  * frame (the collisions of 801E and 80A6 then follow). */
 int vk_weapons_frame(VKWeapons *w, const VKWeaponSimon *simon, VKByte weapon,
                      const VKByte *map, VKByte stage, VKWeaponEvents *ev);
+/* Same update on the shared C003/30Hz phase, including after merchant/map pauses. */
+int vk_weapons_frame_clocked(VKWeapons *w,const VKWeaponSimon *simon,VKByte weapon,
+                            const VKByte *map,VKByte stage,VKWeaponEvents *ev,
+                            VKByte tick,VKByte phase);
 /* 8500: a shot touches the box of a candle or an enemy class (D = X, E = Y of the
  * box, H and L of its class): |X - D| < L + 6 and (Y - E + H) & FF < H + 6 for the
  * dagger, H + 12 for the others. */

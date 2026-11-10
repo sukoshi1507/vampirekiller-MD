@@ -1,0 +1,19 @@
+Mixed pools 3 False 0 7 C800 +8 D700 prefixes,360 images/shared SAT PASS
+Mixed pools 3 True 0 7 C800 +8 D700 prefixes,360 images/shared SAT PASS
+Mixed pools 4 False 0 7 C800 +8 D700 prefixes,360 images/shared SAT PASS
+Mixed pools 4 True 0 7 C800 +8 D700 prefixes,360 images/shared SAT PASS
+Mixed pools 9 False 0 7 C800 +8 D700 prefixes,360 images/shared SAT PASS
+Mixed pools 9 True 0 7 C800 +8 D700 prefixes,360 images/shared SAT PASS
+Mixed pools 3 False 1 7 C800 +8 D700 prefixes,360 images/shared SAT PASS
+Mixed pools 3 True 1 7 C800 +8 D700 prefixes,360 images/shared SAT PASS
+Mixed pools 4 False 1 7 C800 +8 D700 prefixes,360 images/shared SAT PASS
+Mixed pools 4 True 1 7 C800 +8 D700 prefixes,360 images/shared SAT PASS
+Mixed pools 9 False 1 7 C800 +8 D700 prefixes,360 images/shared SAT PASS
+Mixed pools 9 True 1 7 C800 +8 D700 prefixes,360 images/shared SAT PASS
+C800 pickup then D700 contact 1 360 images raw32/Simon/inventory/sounds PASS
+C800 pickup then D700 contact 2 360 images raw32/Simon/inventory/sounds PASS
+C800 pickup then D700 contact 3 360 images raw32/Simon/inventory/sounds PASS
+C800 pickup then D700 contact 8 360 images raw32/Simon/inventory/sounds PASS
+Cross:loot pickup/death flame/D700 clear,360 images all prefixes and sounds PASS
+Ordinary hopper AI revisit after heart reallocation,360 images all C80032 PASS
+Partial SAT reservations/release/lifecycle,360 images PASS

@@ -1,0 +1,22 @@
+{
+  "frames": 912,
+  "cases": [
+    {
+      "body": true,
+      "score": 300,
+      "sounds": [
+        23,
+        13
+      ],
+      "continuation": 360
+    },
+    {
+      "body": false,
+      "score": 100,
+      "sounds": [],
+      "continuation": 360
+    }
+  ],
+  "scope": "stage13/3 controlled RAM fixtures; no natural traversal",
+  "passed": true
+}

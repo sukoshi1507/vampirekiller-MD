@@ -24,7 +24,7 @@ int main(void) {
     for(i=0;i<VK_STAGE12_PASSAGE_COUNT;i++) {
         const VKStage12Passage *p=&vk_stage12_raw_passages[i];
         vk_stage12_secret_reset(&s);
-        assert(vk_stage12_secret_begin(&s,p->source,(VKByte)(p->y+4),p->x,1,1)==15);
+        assert(vk_stage12_secret_begin(&s,p->source,(VKByte)(p->y+4),p->x,1,1)==VK_STAGE12_SECRET_EFFECT);
         assert(s.destination==p->destination);
     }
     puts("Stage 12 secret passage: 10 ROM entries, 16px bounds and 64-state countdown: PASS");

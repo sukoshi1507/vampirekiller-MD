@@ -1,0 +1,17 @@
+{
+  "frames": 912,
+  "cases": [
+    {
+      "direction": -1,
+      "first_x": 189,
+      "frozen_continuation": 360
+    },
+    {
+      "direction": 1,
+      "first_x": 195,
+      "frozen_continuation": 360
+    }
+  ],
+  "scope": "stage10/6 RAM fixtures; no natural traversal",
+  "passed": true
+}

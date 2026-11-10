@@ -1,0 +1,286 @@
+{
+ "frames": 5066,
+ "checks": [
+  {
+   "line": 42,
+   "frame": 773,
+   "expr": "game.stage == 15 and game.room == 0",
+   "message": "",
+   "ok": true,
+   "error": null
+  },
+  {
+   "line": 43,
+   "frame": 773,
+   "expr": "enemies.tick == (clk+150)%256",
+   "message": "",
+   "ok": true,
+   "error": null
+  },
+  {
+   "line": 44,
+   "frame": 773,
+   "expr": "ram8('vk_candles') == 15 and ram8('vk_candles+1') == 0",
+   "message": "",
+   "ok": true,
+   "error": null
+  },
+  {
+   "line": 55,
+   "frame": 1207,
+   "expr": "game.stage == 15 and game.room == 1",
+   "message": "",
+   "ok": true,
+   "error": null
+  },
+  {
+   "line": 56,
+   "frame": 1207,
+   "expr": "enemies.tick == (clk+150)%256",
+   "message": "",
+   "ok": true,
+   "error": null
+  },
+  {
+   "line": 57,
+   "frame": 1207,
+   "expr": "ram8('vk_candles') == 15 and ram8('vk_candles+1') == 1",
+   "message": "",
+   "ok": true,
+   "error": null
+  },
+  {
+   "line": 68,
+   "frame": 1641,
+   "expr": "game.stage == 15 and game.room == 2",
+   "message": "",
+   "ok": true,
+   "error": null
+  },
+  {
+   "line": 69,
+   "frame": 1641,
+   "expr": "enemies.tick == (clk+150)%256",
+   "message": "",
+   "ok": true,
+   "error": null
+  },
+  {
+   "line": 70,
+   "frame": 1641,
+   "expr": "ram8('vk_candles') == 15 and ram8('vk_candles+1') == 2",
+   "message": "",
+   "ok": true,
+   "error": null
+  },
+  {
+   "line": 81,
+   "frame": 2075,
+   "expr": "game.stage == 15 and game.room == 3",
+   "message": "",
+   "ok": true,
+   "error": null
+  },
+  {
+   "line": 82,
+   "frame": 2075,
+   "expr": "enemies.tick == (clk+150)%256",
+   "message": "",
+   "ok": true,
+   "error": null
+  },
+  {
+   "line": 83,
+   "frame": 2075,
+   "expr": "ram8('vk_candles') == 15 and ram8('vk_candles+1') == 3",
+   "message": "",
+   "ok": true,
+   "error": null
+  },
+  {
+   "line": 94,
+   "frame": 2509,
+   "expr": "game.stage == 15 and game.room == 4",
+   "message": "",
+   "ok": true,
+   "error": null
+  },
+  {
+   "line": 95,
+   "frame": 2509,
+   "expr": "enemies.tick == (clk+150)%256",
+   "message": "",
+   "ok": true,
+   "error": null
+  },
+  {
+   "line": 96,
+   "frame": 2509,
+   "expr": "ram8('vk_candles') == 15 and ram8('vk_candles+1') == 4",
+   "message": "",
+   "ok": true,
+   "error": null
+  },
+  {
+   "line": 107,
+   "frame": 2943,
+   "expr": "game.stage == 15 and game.room == 5",
+   "message": "",
+   "ok": true,
+   "error": null
+  },
+  {
+   "line": 108,
+   "frame": 2943,
+   "expr": "enemies.tick == (clk+150)%256",
+   "message": "",
+   "ok": true,
+   "error": null
+  },
+  {
+   "line": 109,
+   "frame": 2943,
+   "expr": "ram8('vk_candles') == 15 and ram8('vk_candles+1') == 5",
+   "message": "",
+   "ok": true,
+   "error": null
+  },
+  {
+   "line": 120,
+   "frame": 3377,
+   "expr": "game.stage == 15 and game.room == 6",
+   "message": "",
+   "ok": true,
+   "error": null
+  },
+  {
+   "line": 121,
+   "frame": 3377,
+   "expr": "enemies.tick == (clk+150)%256",
+   "message": "",
+   "ok": true,
+   "error": null
+  },
+  {
+   "line": 122,
+   "frame": 3377,
+   "expr": "ram8('vk_candles') == 15 and ram8('vk_candles+1') == 6",
+   "message": "",
+   "ok": true,
+   "error": null
+  },
+  {
+   "line": 133,
+   "frame": 3811,
+   "expr": "game.stage == 15 and game.room == 7",
+   "message": "",
+   "ok": true,
+   "error": null
+  },
+  {
+   "line": 134,
+   "frame": 3811,
+   "expr": "enemies.tick == (clk+150)%256",
+   "message": "",
+   "ok": true,
+   "error": null
+  },
+  {
+   "line": 135,
+   "frame": 3811,
+   "expr": "ram8('vk_candles') == 15 and ram8('vk_candles+1') == 7",
+   "message": "",
+   "ok": true,
+   "error": null
+  },
+  {
+   "line": 146,
+   "frame": 4245,
+   "expr": "game.stage == 15 and game.room == 8",
+   "message": "",
+   "ok": true,
+   "error": null
+  },
+  {
+   "line": 147,
+   "frame": 4245,
+   "expr": "enemies.tick == (clk+150)%256",
+   "message": "",
+   "ok": true,
+   "error": null
+  },
+  {
+   "line": 148,
+   "frame": 4245,
+   "expr": "ram8('vk_candles') == 15 and ram8('vk_candles+1') == 8",
+   "message": "",
+   "ok": true,
+   "error": null
+  },
+  {
+   "line": 159,
+   "frame": 4679,
+   "expr": "game.stage == 15 and game.room == 9",
+   "message": "",
+   "ok": true,
+   "error": null
+  },
+  {
+   "line": 160,
+   "frame": 4679,
+   "expr": "enemies.tick == (clk+150)%256",
+   "message": "",
+   "ok": true,
+   "error": null
+  },
+  {
+   "line": 161,
+   "frame": 4679,
+   "expr": "ram8('vk_candles') == 15 and ram8('vk_candles+1') == 9",
+   "message": "",
+   "ok": true,
+   "error": null
+  },
+  {
+   "line": 198,
+   "frame": 4717,
+   "expr": "game.stage == 15",
+   "message": "",
+   "ok": true,
+   "error": null
+  },
+  {
+   "line": 229,
+   "frame": 4754,
+   "expr": "ram8('vk_candles+4') & 1 != 0",
+   "message": "",
+   "ok": true,
+   "error": null
+  },
+  {
+   "line": 313,
+   "frame": 4838,
+   "expr": "ram8('items') & 1 == 0",
+   "message": "",
+   "ok": true,
+   "error": null
+  },
+  {
+   "line": 316,
+   "frame": 5006,
+   "expr": "game.stage == 15",
+   "message": "",
+   "ok": true,
+   "error": null
+  },
+  {
+   "line": 318,
+   "frame": 5066,
+   "expr": "ram8('vk_boss') != 0",
+   "message": "",
+   "ok": true,
+   "error": null
+  }
+ ],
+ "passed": true
+}

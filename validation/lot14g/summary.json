@@ -1,0 +1,85 @@
+{
+  "partial_delivery": true,
+  "native_suite_exit": 0,
+  "sgdk_build_exit": 0,
+  "build_warnings": 0,
+  "differential_cases": 8,
+  "differential_images": 2880,
+  "stage_assertions": 272,
+  "stage_images": 51760,
+  "core_full": {
+    "passed": true,
+    "reference": {
+      "C800_types": [
+        22,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "D700_types": [
+        8,
+        8,
+        8,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "C500_fallback": "01602000020202000000000000000000",
+      "all18_SAT_reserved_before_free": true,
+      "free_third": false
+    },
+    "native": {
+      "ordinary_C800_types": [],
+      "sprite_count_before": 9,
+      "sprite_count_after": 9,
+      "C500_initial": "01602000020202000000000000000000",
+      "continuation": 360,
+      "min_sprites_continuation": 9
+    },
+    "scope": "actual stage15/9 candle; controlled freeze and Simon position; no natural traversal"
+  },
+  "core_free": {
+    "passed": true,
+    "reference": {
+      "C800_types": [
+        22,
+        38,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "D700_types": [
+        8,
+        8,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "C500_fallback": "00000000000000000000000000000000",
+      "all18_SAT_reserved_before_free": true,
+      "free_third": true
+    },
+    "native": {
+      "ordinary_C800_types": [
+        26
+      ],
+      "sprite_count_before": 8,
+      "sprite_count_after": 9,
+      "C500_initial": "00000000000000000000000000000000",
+      "continuation": 360,
+      "min_sprites_continuation": 8
+    },
+    "scope": "actual stage15/9 candle; controlled freeze and Simon position; no natural traversal"
+  },
+  "rom_build_sha256": "6fec4a3f7b3b03061306bef5cd65b4c83eed412e69c76bf1624759bcce12b9b4"
+}

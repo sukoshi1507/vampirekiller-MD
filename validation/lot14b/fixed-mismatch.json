@@ -1,0 +1,12 @@
+{
+  "initial_failure": {
+    "scenario": "pose85, IA active, pass1",
+    "native_mask_before_fix": "0x7",
+    "z80_mask": "0x5",
+    "z80_first_object_active": 0,
+    "z80_first_object_pose": 134,
+    "z80_first_object_counter": 254
+  },
+  "cause": "99E5 after9B71 missing in native deathStep",
+  "regression": "tools/verify_sat_alias.py: all4 scenarios pass after fix"
+}

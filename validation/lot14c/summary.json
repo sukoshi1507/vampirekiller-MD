@@ -1,0 +1,58 @@
+{
+  "build_exit": 0,
+  "build_warnings": 0,
+  "native_exit": 0,
+  "core_groups": 9,
+  "D700_cases": 54,
+  "D700_AI_cases": 36,
+  "D700_AI_images": 12960,
+  "static_cases": 18,
+  "static_render_passes": 3240,
+  "stages": [
+    {
+      "stage": 12,
+      "frames": 5909,
+      "checks": 41
+    },
+    {
+      "stage": 13,
+      "frames": 5858,
+      "checks": 40
+    },
+    {
+      "stage": 14,
+      "frames": 4129,
+      "checks": 28
+    },
+    {
+      "stage": 15,
+      "frames": 5064,
+      "checks": 35
+    },
+    {
+      "stage": 16,
+      "frames": 5014,
+      "checks": 34
+    },
+    {
+      "stage": 17,
+      "frames": 5890,
+      "checks": 40
+    },
+    {
+      "stage": 18,
+      "frames": 17890,
+      "checks": 37
+    }
+  ],
+  "stage_assertions": 255,
+  "stage_images": 49754,
+  "rom_checksum": "C2D0",
+  "rom_sha256": "50d6ac0f77c996afed8dc46ccf0c3195b67e5bbf3293fa8a03183d1fbd663786",
+  "remaining": [
+    "C800 other species alias",
+    "boss SAT integration",
+    "panther/fish3 IX revisits",
+    "all simultaneous score/sound09 combinations"
+  ]
+}

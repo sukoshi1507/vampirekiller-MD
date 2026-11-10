@@ -1,0 +1,15 @@
+{
+  "frames": 253,
+  "fixtures": [
+    {
+      "native_type": 25,
+      "hearts": 1,
+      "pickup_sound": 15
+    },
+    {
+      "native_type": 26,
+      "hearts": 5,
+      "pickup_sound": 15
+    }
+  ]
+}

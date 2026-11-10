@@ -43,14 +43,14 @@ static int run_vector(const S7Vector *v, int bonePos)
     Enemies_s7R = (EnemyS16)v->r;
     Enemies_god = 1;                                        /* the vectors have no contact */
     Enemies_frame(&s, &t, &r);                              /* the room is loaded : the fixed objects are created */
-    for (i = 0; i < ENEMY_MAX; i++)
-        if (s.enemy[i].active && s.enemy[i].type == types[v->type] && s.enemy[i].x == v->x && s.enemy[i].y == v->y)
+    for (i = 0; i < ENEMY_ALL; i++)
+        if (Enemies_slot(&s,i)->active && Enemies_slot(&s,i)->type == types[v->type] && Enemies_slot(&s,i)->x == v->x && Enemies_slot(&s,i)->y == v->y)
             target = i;
     assert(target >= 0);
     for (p = 0; p < v->passes; p++) {
         const int row = (v->first + p) * 6;
         const int tt0 = span ? (p * v->step) % (2 * span) : 0;
-        const Enemy *e = &s.enemy[target];
+        const Enemy *e = Enemies_slot(&s,target);
         Bone3 want[8], got[8];
         int nb = s7_rows[row + 4], ng = 0, ok = 1;
         r.simonX = (EnemyU8)(v->lo + (tt0 > span ? 2 * span - tt0 : tt0));
@@ -64,9 +64,9 @@ static int run_vector(const S7Vector *v, int bonePos)
                 want[i].x = s7_bones[bonePos + 3 * i]; want[i].y = s7_bones[bonePos + 3 * i + 1];
                 want[i].pose = s7_bones[bonePos + 3 * i + 2];
             }
-            for (i = 0; i < ENEMY_MAX; i++)
-                if (s.enemy[i].active && s.enemy[i].type == ENEMY_TYPE_BONE && ng < 8) {
-                    got[ng].x = s.enemy[i].x; got[ng].y = s.enemy[i].y; got[ng].pose = s.enemy[i].pose; ng++;
+            for (i = 0; i < ENEMY_ALL; i++)
+                if (Enemies_slot(&s,i)->active && Enemies_slot(&s,i)->type == ENEMY_TYPE_BONE && ng < 8) {
+                    got[ng].x = Enemies_slot(&s,i)->x; got[ng].y = Enemies_slot(&s,i)->y; got[ng].pose = Enemies_slot(&s,i)->pose; ng++;
                 }
             qsort(want, (size_t)nb, sizeof want[0], cmp_bone);
             qsort(got, (size_t)ng, sizeof got[0], cmp_bone);
@@ -92,8 +92,8 @@ static int run_vector(const S7Vector *v, int bonePos)
 static int find(const EnemyState *s, EnemyU8 type, int bone)
 {
     int i;
-    for (i = 0; i < ENEMY_MAX; i++)
-        if (s->enemy[i].active && s->enemy[i].type == type && (type != ENEMY_TYPE_BONE || bone)) return i;
+    for (i = 0; i < ENEMY_ALL; i++)
+        if (Enemies_object(s,i)->active && Enemies_object(s,i)->type == type && (type != ENEMY_TYPE_BONE || bone)) return i;
     return -1;
 }
 
@@ -117,11 +117,11 @@ static void rules(void)
         e = find(&s, cases[k].etype, 0);
         assert(e >= 0);
         /* fixed list (enemy_rooms.h) : the object is where the ROM list puts it */
-        assert(s.enemy[e].extraPhase == cases[k].hp);
+        assert(Enemies_slot(&s,e)->extraPhase == cases[k].hp);
         /* contact box : |dX| < L + 5, Y from the object foot */
         {
             const int l = k == 0 ? 10 : 13;
-            Enemy c = s.enemy[e];
+            Enemy c = (*Enemies_slot(&s,e));
             r.simonX = (EnemyU8)(c.x + l - 1); r.simonY = c.y;
             assert(Enemies_touches(&c, &r));
             r.simonX = (EnemyU8)(c.x + l); assert(!Enemies_touches(&c, &r));
@@ -130,25 +130,25 @@ static void rules(void)
         }
         /* whip : cases[k].hp strokes of 1, or half of them with the chain whip, then the score */
         for (n = 0; n < cases[k].hp; n++) {
-            const Enemy c = s.enemy[e];
+            const Enemy c = (*Enemies_slot(&s,e));
             assert(Enemies_whipHitStage4(&s, c.x - 20, c.y + 12, 0, 0, 0, &hits) == (n == cases[k].hp - 1) && hits == 1);
             Enemies_rearm(&s);
         }
-        assert(!Enemy_alive(s.enemy[e]) && Enemies_killScore == cases[k].score);
+        assert(!Enemy_alive((*Enemies_slot(&s,e))) && Enemies_killScore == cases[k].score);
         setup(&s, &t, &r, &g, cases[k].room, 232, 176);
         Enemies_frame(&s, &t, &r);
         e = find(&s, cases[k].etype, 0);
         for (n = 0; n < (cases[k].hp + 1) / 2; n++) {
-            const Enemy c = s.enemy[e];
+            const Enemy c = (*Enemies_slot(&s,e));
             assert(Enemies_whipHitStage4(&s, c.x + 24, c.y + 12, 1, 0, 1, &hits) == (n == (cases[k].hp + 1) / 2 - 1) && hits == 1);
             Enemies_rearm(&s);
         }
-        assert(!Enemy_alive(s.enemy[e]));
+        assert(!Enemy_alive((*Enemies_slot(&s,e))));
         /* contact : damage 2, recoil, invulnerability */
         setup(&s, &t, &r, &g, cases[k].room, 232, 176);
         Enemies_frame(&s, &t, &r);
         e = find(&s, cases[k].etype, 0);
-        r.simonX = s.enemy[e].x; r.simonY = s.enemy[e].y;
+        r.simonX = Enemies_slot(&s,e)->x; r.simonY = Enemies_slot(&s,e)->y;
         for (i = 0; i < 4 && s.energy == 32; i++) Enemies_frame(&s, &t, &r);
         assert(s.energy == 30 && s.invuln);
     }
@@ -158,11 +158,11 @@ static void rules(void)
     Enemies_frame(&s, &t, &r);
     for (i = 0; i < 2 * 55 && find(&s, ENEMY_TYPE_BONE, 1) < 0; i++) Enemies_frame(&s, &t, &r);
     k = find(&s, ENEMY_TYPE_BONE, 1);
-    assert(k >= 0 && s.enemy[k].x == 217 && s.enemy[k].y == 171);
+    assert(k >= 0 && Enemies_slot(&s,k)->x == 217 && Enemies_slot(&s,k)->y == 171);
     {
-        const Enemy c = s.enemy[k];
+        const Enemy c = (*Enemies_slot(&s,k));
         assert(Enemies_whipHitStage4(&s, c.x - 20, c.y + 12, 0, 0, 0, &hits) == 1 && hits == 1 && Enemies_killScore == 1);
-        assert(!s.enemy[k].active);
+        assert(!Enemy_alive(*Enemies_slot(&s,k)));
     }
     setup(&s, &t, &r, &g, 2, 232, 176);
     Enemies_god = 0;
@@ -172,7 +172,7 @@ static void rules(void)
     k = find(&s, ENEMY_TYPE_BONE, 1);
     assert(k >= 0);
     for (i = 0; i < 80 && s.energy == 32; i++) Enemies_frame(&s, &t, &r);
-    assert(s.energy == 31 && !s.enemy[k].active);
+    assert(s.energy == 31 && !Enemies_slot(&s,k)->active);
     Enemies_god = 1;
     Enemies_s7R = -1;
 }

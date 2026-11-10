@@ -1,0 +1,71 @@
+{
+  "native_exit": 0,
+  "build_exit": 0,
+  "build_warnings": 0,
+  "graphics_check_exit": 0,
+  "core_groups": 9,
+  "mixed_differential_scenarios": 19,
+  "mixed_differential_images": 6840,
+  "room_stress_z80_scenarios": 148,
+  "room_stress_z80_images": 118400,
+  "mixed_core": {
+    "frames": 564,
+    "C800": 6,
+    "D700_peak": 2,
+    "third_shot": "SAT denied",
+    "shield_charge": [
+      16,
+      14
+    ],
+    "sound": 11,
+    "continuation": 360,
+    "passed": true
+  },
+  "stage_scenarios": [
+    {
+      "stage": 12,
+      "frames": 5909,
+      "checks": 41
+    },
+    {
+      "stage": 13,
+      "frames": 5858,
+      "checks": 40
+    },
+    {
+      "stage": 14,
+      "frames": 4128,
+      "checks": 28
+    },
+    {
+      "stage": 15,
+      "frames": 5064,
+      "checks": 35
+    },
+    {
+      "stage": 16,
+      "frames": 5013,
+      "checks": 34
+    },
+    {
+      "stage": 17,
+      "frames": 5889,
+      "checks": 40
+    },
+    {
+      "stage": 18,
+      "frames": 17884,
+      "checks": 37
+    }
+  ],
+  "stage_assertions": 255,
+  "stage_images": 49745,
+  "rom_checksum": "1E6E",
+  "compiled_rom_sha256": "a2a69e228ec99c4432208592ca46139ef4fbd62809e30eb5f11d4846fd21348f",
+  "provisional": [
+    "SAT renderer Y=E0 reuse",
+    "boss SAT ownership integration",
+    "panther/fish3 mixed IX revisits",
+    "all simultaneous score/sound09 combinations"
+  ]
+}

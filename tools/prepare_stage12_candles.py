@@ -25,11 +25,12 @@ def definition(item):
 
 
 def verified_reference(records):
-    original=PREVIOUS.read_text().split('const VKCandleDef vk_candle_defs[275] = {',1)[1].split('};',1)[0]
+    original=re.split(r'const VKCandleDef vk_candle_defs\[\d+\] = \{',PREVIOUS.read_text(),maxsplit=1)[1].split('};',1)[0]
     matcher=re.compile(r'\{\s*(\d+),\s*(\d+),\s*(\d+),\s*0x([a-fA-F0-9]+),\s*0x([a-fA-F0-9]+)\s*\},\s*/\* stage (\d+) room (\d+) \*/')
     existing=defaultdict(list)
     for m in matcher.finditer(original):
         x,y,mode,kind,content,stage,room=m.groups()
+        if int(stage)>11:continue
         existing[int(stage),int(room)].append((int(x),int(y),int(mode),int(kind,16),int(content,16)))
     expected=defaultdict(list)
     for row in records:

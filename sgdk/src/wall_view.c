@@ -10,6 +10,11 @@
  * wall object can be (stage 1 room 7, stage 2 rooms 0 and 2; never hall room 0,
  * whose scene uses up to 216). */
 #define WALL_TILE_INDEX 200
+/* Every stage12..18 room has at most ONE direct or hidden wall (generator asserts
+ * it). Use the12 free tiles208..219, beyond the full room tileset16..207. */
+#define LATE_WALL_TILE_INDEX 208
+_Static_assert(LATE_WALL_TILE_INDEX + VK_WALL_TILES_PER_FRAME <= HUD_TEXT_TILE_INDEX,
+               "late wall tiles before HUD");
 _Static_assert(WALL_TILE_INDEX + VK_WALL_RECORDS * VK_WALL_TILES_PER_FRAME <= HUD_TEXT_TILE_INDEX,
                "wall object tiles before the HUD text tiles");
 
@@ -41,7 +46,7 @@ u16 vk_wall_view_sprites(u16 first)
     for (i = 0; i < VK_WALL_RECORDS; i++)
     {
         const int frame = vk_wall_frame(&vk_walls, (int)i);
-        const u16 tile = (u16)(WALL_TILE_INDEX + i * VK_WALL_TILES_PER_FRAME);
+        const u16 tile = (u16)((vk_walls.stage >= 12 ? LATE_WALL_TILE_INDEX : WALL_TILE_INDEX + i * VK_WALL_TILES_PER_FRAME));
         if (frame < 0) continue;
         if (frame_loaded[i] != frame)
         {
@@ -166,7 +171,7 @@ void vk_shop_view_open(void)
     VKByte wx, wy;
     u16 r, c, count;
     vk_shop_window(&vk_walls, &wx, &wy);
-    /* Stages 0-2: X and Y are multiples of 8, the window falls on whole cells. */
+    /* Generated direct/hidden wall positions are multiples of8. */
     win_col = wx / 8;
     win_row = wy / 8;
     compose();

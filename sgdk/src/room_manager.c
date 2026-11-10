@@ -1,4 +1,7 @@
 #include "room_manager.h"
+#include "generated/late_runtime.inc"
+const VKByte *vk_late_room_map(VKByte stage,VKByte room)
+{ return stage>=12 && stage<=18 && room<late_counts[stage-12] ? late_maps[stage-12][room] : 0; }
 #include "generated/stage2_maps.h"
 #include "generated/stage3_maps.h"
 #include "generated/stage4_maps.h"
@@ -24,12 +27,12 @@ const VKRoomLink vk_stage1_links[VK_STAGE1_ROOM_COUNT] = {
 };
 const VKRoomLink *vk_stage_links(VKByte stage)
 {
-    return stage == 1 ? vk_stage1_links : stage == 2 ? vk_stage2_links : stage == 3 ? vk_stage3_links : stage == 4 ? vk_stage4_links : stage == 5 ? vk_stage5_links : stage == 6 ? vk_stage6_links : stage == 7 ? vk_stage7_links : stage == 8 ? vk_stage8_links : stage == 9 ? vk_stage9_links : stage == 10 ? vk_stage10_links : stage == 11 ? vk_stage11_links : 0;
+    return stage>=12 && stage<=18 ? late_links[stage-12] : stage == 1 ? vk_stage1_links : stage == 2 ? vk_stage2_links : stage == 3 ? vk_stage3_links : stage == 4 ? vk_stage4_links : stage == 5 ? vk_stage5_links : stage == 6 ? vk_stage6_links : stage == 7 ? vk_stage7_links : stage == 8 ? vk_stage8_links : stage == 9 ? vk_stage9_links : stage == 10 ? vk_stage10_links : stage == 11 ? vk_stage11_links : 0;
 }
 
 VKByte vk_stage_room_count(VKByte stage)
 {
-    return stage == 1 ? VK_STAGE1_ROOM_COUNT : stage == 2 ? VK_STAGE2_ROOM_COUNT : stage == 3 ? VK_STAGE3_ROOM_COUNT : stage == 4 ? VK_STAGE4_ROOM_COUNT : stage == 5 ? VK_STAGE5_ROOM_COUNT : stage == 6 ? VK_STAGE6_ROOM_COUNT : stage == 7 ? VK_STAGE7_ROOM_COUNT : stage == 8 ? VK_STAGE8_ROOM_COUNT : stage == 9 ? VK_STAGE9_ROOM_COUNT : stage == 10 ? VK_STAGE10_ROOM_COUNT : stage == 11 ? VK_STAGE11_ROOM_COUNT : 0;
+    return stage>=12 && stage<=18 ? late_counts[stage-12] : stage == 1 ? VK_STAGE1_ROOM_COUNT : stage == 2 ? VK_STAGE2_ROOM_COUNT : stage == 3 ? VK_STAGE3_ROOM_COUNT : stage == 4 ? VK_STAGE4_ROOM_COUNT : stage == 5 ? VK_STAGE5_ROOM_COUNT : stage == 6 ? VK_STAGE6_ROOM_COUNT : stage == 7 ? VK_STAGE7_ROOM_COUNT : stage == 8 ? VK_STAGE8_ROOM_COUNT : stage == 9 ? VK_STAGE9_ROOM_COUNT : stage == 10 ? VK_STAGE10_ROOM_COUNT : stage == 11 ? VK_STAGE11_ROOM_COUNT : 0;
 }
 
 int vk_room_try_edge(VKByte stage, VKByte *room, VKPlayer *player, int direction)

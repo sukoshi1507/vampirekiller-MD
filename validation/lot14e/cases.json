@@ -1,0 +1,1432 @@
+{
+  "scenarios": 208,
+  "progression_images": 37440,
+  "static_scenarios": 104,
+  "static_renders": 18720,
+  "cases": [
+    {
+      "raw": 9,
+      "pose": 0,
+      "y": 96,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 9,
+      "pose": 0,
+      "y": 96,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 9,
+      "pose": 0,
+      "y": 232,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 9,
+      "pose": 0,
+      "y": 232,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 9,
+      "pose": 33,
+      "y": 0,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 9,
+      "pose": 33,
+      "y": 0,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 9,
+      "pose": 33,
+      "y": 96,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 9,
+      "pose": 33,
+      "y": 96,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 9,
+      "pose": 33,
+      "y": 240,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 9,
+      "pose": 33,
+      "y": 240,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 9,
+      "pose": 34,
+      "y": 0,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 9,
+      "pose": 34,
+      "y": 0,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 9,
+      "pose": 34,
+      "y": 96,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 9,
+      "pose": 34,
+      "y": 96,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 9,
+      "pose": 34,
+      "y": 240,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 9,
+      "pose": 34,
+      "y": 240,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 9,
+      "pose": 35,
+      "y": 0,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 9,
+      "pose": 35,
+      "y": 0,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 9,
+      "pose": 35,
+      "y": 96,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 9,
+      "pose": 35,
+      "y": 96,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 9,
+      "pose": 35,
+      "y": 240,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 9,
+      "pose": 35,
+      "y": 240,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 9,
+      "pose": 36,
+      "y": 0,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 9,
+      "pose": 36,
+      "y": 0,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 9,
+      "pose": 36,
+      "y": 96,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 9,
+      "pose": 36,
+      "y": 96,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 9,
+      "pose": 36,
+      "y": 240,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 9,
+      "pose": 36,
+      "y": 240,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 9,
+      "pose": 37,
+      "y": 96,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 9,
+      "pose": 37,
+      "y": 96,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 9,
+      "pose": 37,
+      "y": 239,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 9,
+      "pose": 37,
+      "y": 239,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 9,
+      "pose": 38,
+      "y": 96,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 9,
+      "pose": 38,
+      "y": 96,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 9,
+      "pose": 38,
+      "y": 239,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 9,
+      "pose": 38,
+      "y": 239,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 11,
+      "pose": 71,
+      "y": 0,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 11,
+      "pose": 71,
+      "y": 0,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 11,
+      "pose": 71,
+      "y": 96,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 11,
+      "pose": 71,
+      "y": 96,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 11,
+      "pose": 71,
+      "y": 240,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 11,
+      "pose": 71,
+      "y": 240,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 11,
+      "pose": 72,
+      "y": 0,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 11,
+      "pose": 72,
+      "y": 0,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 11,
+      "pose": 72,
+      "y": 96,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 11,
+      "pose": 72,
+      "y": 96,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 11,
+      "pose": 72,
+      "y": 240,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 11,
+      "pose": 72,
+      "y": 240,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 11,
+      "pose": 73,
+      "y": 0,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 11,
+      "pose": 73,
+      "y": 0,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 11,
+      "pose": 73,
+      "y": 96,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 11,
+      "pose": 73,
+      "y": 96,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 11,
+      "pose": 73,
+      "y": 240,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 11,
+      "pose": 73,
+      "y": 240,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 11,
+      "pose": 74,
+      "y": 0,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 11,
+      "pose": 74,
+      "y": 0,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 11,
+      "pose": 74,
+      "y": 96,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 11,
+      "pose": 74,
+      "y": 96,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 11,
+      "pose": 74,
+      "y": 240,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 11,
+      "pose": 74,
+      "y": 240,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 13,
+      "pose": 103,
+      "y": 96,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 13,
+      "pose": 103,
+      "y": 96,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 13,
+      "pose": 103,
+      "y": 239,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 13,
+      "pose": 103,
+      "y": 239,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 13,
+      "pose": 104,
+      "y": 96,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 13,
+      "pose": 104,
+      "y": 96,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 13,
+      "pose": 104,
+      "y": 239,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 13,
+      "pose": 104,
+      "y": 239,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 13,
+      "pose": 106,
+      "y": 96,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 13,
+      "pose": 106,
+      "y": 96,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 13,
+      "pose": 106,
+      "y": 239,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 13,
+      "pose": 106,
+      "y": 239,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 13,
+      "pose": 107,
+      "y": 96,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 13,
+      "pose": 107,
+      "y": 96,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 13,
+      "pose": 107,
+      "y": 239,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 13,
+      "pose": 107,
+      "y": 239,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 15,
+      "pose": 109,
+      "y": 96,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 15,
+      "pose": 109,
+      "y": 96,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 15,
+      "pose": 109,
+      "y": 239,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 15,
+      "pose": 109,
+      "y": 239,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 15,
+      "pose": 109,
+      "y": 247,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 15,
+      "pose": 109,
+      "y": 247,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 15,
+      "pose": 109,
+      "y": 255,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 15,
+      "pose": 109,
+      "y": 255,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 15,
+      "pose": 110,
+      "y": 96,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 15,
+      "pose": 110,
+      "y": 96,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 15,
+      "pose": 110,
+      "y": 239,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 15,
+      "pose": 110,
+      "y": 239,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 15,
+      "pose": 110,
+      "y": 247,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 15,
+      "pose": 110,
+      "y": 247,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 15,
+      "pose": 110,
+      "y": 255,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 15,
+      "pose": 110,
+      "y": 255,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 15,
+      "pose": 141,
+      "y": 96,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 15,
+      "pose": 141,
+      "y": 96,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 15,
+      "pose": 141,
+      "y": 239,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 15,
+      "pose": 141,
+      "y": 239,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 15,
+      "pose": 141,
+      "y": 249,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 15,
+      "pose": 141,
+      "y": 249,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 15,
+      "pose": 141,
+      "y": 255,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 15,
+      "pose": 141,
+      "y": 255,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 16,
+      "pose": 95,
+      "y": 0,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 16,
+      "pose": 95,
+      "y": 0,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 16,
+      "pose": 95,
+      "y": 96,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 16,
+      "pose": 95,
+      "y": 96,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 16,
+      "pose": 95,
+      "y": 240,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 16,
+      "pose": 95,
+      "y": 240,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 16,
+      "pose": 96,
+      "y": 0,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 16,
+      "pose": 96,
+      "y": 0,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 16,
+      "pose": 96,
+      "y": 96,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 16,
+      "pose": 96,
+      "y": 96,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 16,
+      "pose": 96,
+      "y": 240,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 16,
+      "pose": 96,
+      "y": 240,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 16,
+      "pose": 97,
+      "y": 0,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 16,
+      "pose": 97,
+      "y": 0,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 16,
+      "pose": 97,
+      "y": 96,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 16,
+      "pose": 97,
+      "y": 96,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 16,
+      "pose": 97,
+      "y": 240,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 16,
+      "pose": 97,
+      "y": 240,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 16,
+      "pose": 98,
+      "y": 0,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 16,
+      "pose": 98,
+      "y": 0,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 16,
+      "pose": 98,
+      "y": 96,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 16,
+      "pose": 98,
+      "y": 96,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 16,
+      "pose": 98,
+      "y": 240,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 16,
+      "pose": 98,
+      "y": 240,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 18,
+      "pose": 78,
+      "y": 96,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 18,
+      "pose": 78,
+      "y": 96,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 18,
+      "pose": 78,
+      "y": 229,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 18,
+      "pose": 78,
+      "y": 229,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 18,
+      "pose": 78,
+      "y": 245,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 18,
+      "pose": 78,
+      "y": 245,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 18,
+      "pose": 79,
+      "y": 96,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 18,
+      "pose": 79,
+      "y": 96,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 18,
+      "pose": 79,
+      "y": 229,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 18,
+      "pose": 79,
+      "y": 229,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 18,
+      "pose": 79,
+      "y": 245,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 18,
+      "pose": 79,
+      "y": 245,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 27,
+      "pose": 155,
+      "y": 96,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 27,
+      "pose": 155,
+      "y": 96,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 27,
+      "pose": 155,
+      "y": 239,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 27,
+      "pose": 155,
+      "y": 239,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 27,
+      "pose": 156,
+      "y": 96,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 27,
+      "pose": 156,
+      "y": 96,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 27,
+      "pose": 156,
+      "y": 239,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 27,
+      "pose": 156,
+      "y": 239,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 27,
+      "pose": 157,
+      "y": 96,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 27,
+      "pose": 157,
+      "y": 96,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 27,
+      "pose": 157,
+      "y": 239,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 27,
+      "pose": 157,
+      "y": 239,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 27,
+      "pose": 158,
+      "y": 96,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 27,
+      "pose": 158,
+      "y": 96,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 27,
+      "pose": 158,
+      "y": 239,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 27,
+      "pose": 158,
+      "y": 239,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 27,
+      "pose": 159,
+      "y": 96,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 27,
+      "pose": 159,
+      "y": 96,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 27,
+      "pose": 159,
+      "y": 239,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 27,
+      "pose": 159,
+      "y": 239,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 27,
+      "pose": 160,
+      "y": 96,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 27,
+      "pose": 160,
+      "y": 96,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 27,
+      "pose": 160,
+      "y": 239,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 27,
+      "pose": 160,
+      "y": 239,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 27,
+      "pose": 161,
+      "y": 96,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 27,
+      "pose": 161,
+      "y": 96,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 27,
+      "pose": 161,
+      "y": 239,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 27,
+      "pose": 161,
+      "y": 239,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 27,
+      "pose": 162,
+      "y": 96,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 27,
+      "pose": 162,
+      "y": 96,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 27,
+      "pose": 162,
+      "y": 239,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 27,
+      "pose": 162,
+      "y": 239,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 36,
+      "pose": 0,
+      "y": 96,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 36,
+      "pose": 0,
+      "y": 96,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 36,
+      "pose": 0,
+      "y": 232,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 36,
+      "pose": 0,
+      "y": 232,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 38,
+      "pose": 1,
+      "y": 96,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 38,
+      "pose": 1,
+      "y": 96,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 38,
+      "pose": 1,
+      "y": 239,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 38,
+      "pose": 1,
+      "y": 239,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 14,
+      "pattern": 0,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 14,
+      "pattern": 0,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 14,
+      "pattern": 1,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 14,
+      "pattern": 1,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 14,
+      "pattern": 2,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 14,
+      "pattern": 2,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 14,
+      "pattern": 3,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 14,
+      "pattern": 3,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 14,
+      "pattern": 4,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 14,
+      "pattern": 4,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 14,
+      "pattern": 5,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 14,
+      "pattern": 5,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 14,
+      "pattern": 6,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 14,
+      "pattern": 6,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 14,
+      "pattern": 7,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 14,
+      "pattern": 7,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 14,
+      "pattern": 8,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 14,
+      "pattern": 8,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 14,
+      "pattern": 9,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 14,
+      "pattern": 9,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 14,
+      "pattern": 10,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 14,
+      "pattern": 10,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 14,
+      "pattern": 11,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 14,
+      "pattern": 11,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 14,
+      "pattern": 12,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 14,
+      "pattern": 12,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 14,
+      "pattern": 13,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 14,
+      "pattern": 13,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 14,
+      "pattern": 14,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 14,
+      "pattern": 14,
+      "AI_loop": true,
+      "images": 360
+    },
+    {
+      "raw": 14,
+      "pattern": 15,
+      "AI_loop": false,
+      "images": null
+    },
+    {
+      "raw": 14,
+      "pattern": 15,
+      "AI_loop": true,
+      "images": 360
+    }
+  ]
+}

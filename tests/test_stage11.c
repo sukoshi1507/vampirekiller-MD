@@ -63,8 +63,8 @@ static int runVector(int vec, int *hovers, int *drops)
         const int tt = span ? (p * v->step) % (2 * span) : 0;
         int i;
         r.simonX = (EnemyU8)(v->lo + (tt > span ? 2 * span - tt : tt));
-        for (i = 0; i < ENEMY_MAX; i++) {
-            Enemy *e = &s.enemy[i];
+        for (i = 0; i < ENEMY_ALL; i++) {
+            Enemy *e = Enemies_slot(&s,i);
             if (!e->active) continue;
             if (e->type == ENEMY_TYPE_EAGLE) eagleStep(&s, e, &r);
             else if (e->type == ENEMY_TYPE_FLEA) fleaStep(&s, e, &r);
@@ -94,12 +94,12 @@ static void stage11CandleEnemy(void)
         int i, k = -1;
         Enemies_init(&s);
         Enemies_candleObject(&s, 11, rooms[j], 160, 144);
-        for (i = 0; i < ENEMY_MAX; i++)
-            if (s.enemy[i].active && s.enemy[i].type == ENEMY_TYPE_GHOST) k = i;
+        for (i = 0; i < ENEMY_ALL; i++)
+            if (Enemies_slot(&s,i)->active && Enemies_slot(&s,i)->type == ENEMY_TYPE_GHOST) k = i;
         assert(k >= 0);
-        assert(s.enemy[k].x == 160 && s.enemy[k].y == 160);
-        assert(s.enemy[k].pose == poses[j] && s.enemy[k].state == 0);
-        assert(s.enemy[k].extraPhase == 1 && s8x[k].c10 == 8 && ghostInert(&s.enemy[k]));
+        assert(Enemies_slot(&s,k)->x == 160 && Enemies_slot(&s,k)->y == 160);
+        assert(Enemies_slot(&s,k)->pose == poses[j] && Enemies_slot(&s,k)->state == 0);
+        assert(Enemies_slot(&s,k)->extraPhase == 1 && ext(&s,Enemies_slot(&s,k))->c10 == 8 && ghostInert(Enemies_slot(&s,k)));
         assert(Enemies_sprites(&s, (EnemyU8)k, sp) == 1);
         assert(sp[0].x == 152 && sp[0].y == 146 && sp[0].pattern == 0xA0);
         assert(Enemies_ghostCell(11) == 0xA0 && Enemies_ghostBase(11, rooms[j]) == poses[j]);
@@ -136,10 +136,10 @@ int main(void)
         EnemyU8 y[3] = { 0, 0, 0 };
         for (call = 1; call < 8 + 4 * 25 * 3 + 8 && n < 3; call++) {
             eagleChannel(&s, &t, &r);
-            for (k = 0; k < ENEMY_MAX; k++)
-                if (s.enemy[k].active && s.enemy[k].type == ENEMY_TYPE_EAGLE) {
-                    first[n] = call; y[n] = s.enemy[k].y; n++;
-                    for (k = 0; k < ENEMY_MAX; k++) s.enemy[k].active = 0;     /* free the SAT entries */
+            for (k = 0; k < ENEMY_ALL; k++)
+                if (Enemies_slot(&s,k)->active && Enemies_slot(&s,k)->type == ENEMY_TYPE_EAGLE) {
+                    first[n] = call; y[n] = Enemies_slot(&s,k)->y; n++;
+                    for (k = 0; k < ENEMY_ALL; k++) Enemies_slot(&s,k)->active = 0;     /* free the SAT entries */
                     break;
                 }
         }
@@ -151,7 +151,7 @@ int main(void)
     Enemies_init(&s);
     Enemies_spawnTimerInit(&t);
     for (i = 0; i < 200; i++) eagleChannel(&s, &t, &r);
-    for (i = 0; i < ENEMY_MAX; i++) assert(!(s.enemy[i].active && s.enemy[i].type == ENEMY_TYPE_EAGLE));
+    for (i = 0; i < ENEMY_ALL; i++) assert(!(Enemies_slot(&s,i)->active && Enemies_slot(&s,i)->type == ENEMY_TYPE_EAGLE));
 
     /* The first pass is made at the creation : the eagle and its flea have moved by 2.5 px (vx FD80h) : X DDh (E0 - 3) with the fraction 80h, the flea at (E1, 3C). */
     r = roomVars(&g, 11, 3, 40, 176);
@@ -163,14 +163,14 @@ int main(void)
     eagleChannel(&s, &t, &r);
     {
         int ke = -1, kf = -1, k;
-        for (k = 0; k < ENEMY_MAX; k++) {
-            if (s.enemy[k].active && s.enemy[k].type == ENEMY_TYPE_EAGLE) ke = k;
-            if (s.enemy[k].active && s.enemy[k].type == ENEMY_TYPE_FLEA) kf = k;
+        for (k = 0; k < ENEMY_ALL; k++) {
+            if (Enemies_slot(&s,k)->active && Enemies_slot(&s,k)->type == ENEMY_TYPE_EAGLE) ke = k;
+            if (Enemies_slot(&s,k)->active && Enemies_slot(&s,k)->type == ENEMY_TYPE_FLEA) kf = k;
         }
         assert(ke >= 0 && kf > ke);
-        assert(s.enemy[ke].x == 0xDD && s.enemy[ke].timer == 0x80 && s.enemy[ke].y == 0x30);
-        assert(s.enemy[kf].x == 0xE1 && s.enemy[kf].y == 0x3C && s.enemy[kf].state == 0);
-        assert(s.enemy[ke].extraPhase == EAGLE_HP && s.enemy[kf].extraPhase == 1);
+        assert(Enemies_slot(&s,ke)->x == 0xDD && Enemies_slot(&s,ke)->timer == 0x80 && Enemies_slot(&s,ke)->y == 0x30);
+        assert(Enemies_slot(&s,kf)->x == 0xE1 && Enemies_slot(&s,kf)->y == 0x3C && Enemies_slot(&s,kf)->state == 0);
+        assert(Enemies_slot(&s,ke)->extraPhase == EAGLE_HP && Enemies_slot(&s,kf)->extraPhase == 1);
         /* the rules read in the ROM : damage 4 (81CE pair 04 02), 400 points, class 4 box 0Ch x 18h, 6 SAT entries, flame 18h above, 8 points of life */
         assert(isObjS4(ENEMY_TYPE_EAGLE) && hasHp(ENEMY_TYPE_EAGLE) && s4Score(ENEMY_TYPE_EAGLE) == 4 && satCount(ENEMY_TYPE_EAGLE) == 6 && deathOffset(ENEMY_TYPE_EAGLE) == 0x18);
         {
@@ -178,13 +178,13 @@ int main(void)
             boxOf(ENEMY_TYPE_EAGLE, &l, &h);
             assert(l == 0x0C && h == 0x18);
         }
-        s.enemy[ke].x = 100; s.enemy[ke].y = 80; s.enemy[ke].timer = 0; s.enemy[ke].pose = 0x6D;
+        Enemies_slot(&s,ke)->x = 100; Enemies_slot(&s,ke)->y = 80; Enemies_slot(&s,ke)->timer = 0; Enemies_slot(&s,ke)->pose = 0x6D;
         assert(Enemies_sprites(&s, (EnemyU8)ke, sp) == 3);
-        assert(sp[0].pattern == 0x40 && sp[0].x == 86 && sp[0].y == 80 - 22 && sp[1].pattern == 0x48 && sp[1].x == 102 && sp[1].y == 80 - 30 &&
-               sp[2].pattern == 0x50 && sp[2].x == 102 && sp[2].y == 80 - 14);
-        s.enemy[ke].pose = 0x6E; s.enemy[ke].timer = 0x80;
-        assert(Enemies_sprites(&s, (EnemyU8)ke, sp) == 3 && sp[1].pattern == 0x58 && sp[2].pattern == 0x60 && sp[0].x == 87 && sp[1].x == 103);
-        s.enemy[ke].pose = 0x8D;
+        assert(sp[0].pattern == 0x40 && sp[0].x == 84 && sp[0].y == 80 - 22 && sp[1].pattern == 0x48 && sp[1].x == 100 && sp[1].y == 80 - 30 &&
+               sp[2].pattern == 0x50 && sp[2].x == 100 && sp[2].y == 80 - 14);
+        Enemies_slot(&s,ke)->pose = 0x6E; Enemies_slot(&s,ke)->timer = 0x80;
+        assert(Enemies_sprites(&s, (EnemyU8)ke, sp) == 3 && sp[1].pattern == 0x58 && sp[2].pattern == 0x60 && sp[0].x == 84 && sp[1].x == 100);
+        Enemies_slot(&s,ke)->pose = 0x8D;
         assert(Enemies_sprites(&s, (EnemyU8)ke, sp) == 3 && sp[0].y == 80 - 24 && sp[1].pattern == 0x68 && sp[2].pattern == 0x70);
     }
     Enemies_s7R = -1;

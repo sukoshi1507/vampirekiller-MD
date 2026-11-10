@@ -27,10 +27,10 @@ int ten_record(int slot, unsigned char *b, int *sprites)
 {
     int i, k = 0, n; Enemy *e = &state10.enemy[0]; S8Ext *q; EnemySprite sat[ENEMY_SPRITES];
     if (slot >= 0) {
-        for (i = 1; i < ENEMY_MAX; i++)
-            if (state10.enemy[i].active && state10.enemy[i].type == ENEMY_TYPE_10_SHOT && ext(&state10, &state10.enemy[i])->c10 == slot) { k = i; break; }
+        for (i = 1; i < ENEMY_ALL; i++)
+            if (Enemies_slot(&state10,i)->active && Enemies_slot(&state10,i)->type == ENEMY_TYPE_10_SHOT && ext(&state10, Enemies_slot(&state10,i))->c10 == slot) { k = i; break; }
         if (!k) return 0;
-        e = &state10.enemy[k];
+        e = Enemies_slot(&state10,k);
     }
     q = ext(&state10, e); memset(b, 0, 32);
     b[0] = e->active ? (slot < 0 ? 0x10 : 9) : 0;

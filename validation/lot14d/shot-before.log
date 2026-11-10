@@ -1,0 +1,12 @@
+Legacy IX revisit 5 0 360 images/7C800+8D700 raw32/SAT positions/Simon/sounds PASS
+Legacy IX revisit 5 1 360 images/7C800+8D700 raw32/SAT positions/Simon/sounds PASS
+Legacy IX revisit 33 0 360 images/7C800+8D700 raw32/SAT positions/Simon/sounds PASS
+Legacy IX revisit 33 1 360 images/7C800+8D700 raw32/SAT positions/Simon/sounds PASS
+Traceback (most recent call last):
+  File "/workspace/base-d/vampirekiller-MD/tools/verify_legacy_revisit.py", line 54, in <module>
+    if __name__=='__main__':main()
+                            ^^^^^^
+  File "/workspace/base-d/vampirekiller-MD/tools/verify_legacy_revisit.py", line 49, in main
+    assert bytes(raw)==bytes(m[0xD700+128*i:0xD720+128*i]),('shoot D70032',direction,p,i,bytes(raw).hex(),bytes(m[0xD700+128*i:0xD720+128*i]).hex())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ('shoot D70032', -1, 0, 0, '0100009c00ba01000000fd030000000000000000000000000000000000000000', '0100009c00bd01000000fd030000000000000000000000000000000000000000')

@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "/workspace/base-d/vampirekiller-MD/tools/verify_touch09.py", line 38, in <module>
+    if __name__=='__main__':main()
+                            ^^^^^^
+  File "/workspace/base-d/vampirekiller-MD/tools/verify_touch09.py", line 25, in main
+    assert lib.touch09_points()==score,('points',bodies,kind,guard,frame,lib.touch09_points(),score)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ('points', 1, 3, 0, 0, 100, 300)

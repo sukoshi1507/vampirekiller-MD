@@ -1,24 +1,7 @@
 #include "wall.h"
 #include "enemies.h"   /* Enemies_randomR: the common LD A,R generator (research/hasard-R.md) */
 
-/* 9300: C70C for row C (+5) and hits - 1 (capped at 7). 7, 8 and 9 are random
- * picks (92D6): 7 -> 3 or 5, 8 -> 4 or 5, 9 -> 3 or 4. */
-static const VKByte result_table[4][8] = {
-    { 0, 7, 7, 7, 8, 8, 5, 6 },
-    { 0, 3, 3, 1, 5, 5, 5, 6 },
-    { 9, 9, 0, 5, 5, 5, 2, 6 },
-    { 5, 5, 5, 5, 0, 3, 5, 6 }
-};
-/* 9320: frame (C70B) shown at the end of the animation for each C70C. */
-static const VKByte result_frame[7] = { 1, 4, 4, 0, 0, 3, 3 };
-
-const VKByte vk_wall_objects[9] = { 0x0E, 0x12, 0x03, 0x04, 0x0A, 0x16, 0x1E, 0x1D, 0x1B };
-
-const VKByte vk_shop_prices[9][4] = {
-    { 0x0E, 0x20, 0x15, 0x60 }, { 0x12, 0x30, 0x20, 0x60 }, { 0x03, 0x20, 0x10, 0x60 },
-    { 0x04, 0x20, 0x10, 0x80 }, { 0x0A, 0x40, 0x20, 0x80 }, { 0x16, 0x40, 0x15, 0x80 },
-    { 0x1E, 0x30, 0x10, 0x50 }, { 0x1D, 0x20, 0x10, 0x80 }, { 0x1B, 0x50, 0x30, 0x90 }
-};
+#include "generated/trade_data.inc"
 
 #define SOUND_HEARTS_UP 0x0F         /* 9344 */
 #define SOUND_HEARTS_DOWN 0x1D       /* 934E */
@@ -32,15 +15,15 @@ static int bcd(VKByte v) { return (v >> 4) * 10 + (v & 15); }
 
 static VKByte item_of(const VKWall *w, int slot)
 {
-    if (w->stage >= VK_CANDLE_STAGES || w->room >= VK_CANDLE_ROOMS) return 0;
-    return vk_wall_items[w->stage][w->room][slot];
+    if (w->stage >= VK_TRADE_STAGES || w->room >= VK_TRADE_ROOMS || (w->stage<12 && w->room>=VK_CANDLE_ROOMS)) return 0;
+    return vk_trade_wall_items[w->stage][w->room][slot];
 }
 
 void vk_wall_begin(VKWall *w)
 {
     int s;
     for (s = 0; s < VK_WALL_RECORDS; s++) w->obj[s].state = 0;
-    for (s = 0; s < VK_CANDLE_STAGES; s++) vk_wall_reset_stage(w, (VKByte)s);
+    for (s = 0; s < VK_TRADE_STAGES; s++) vk_wall_reset_stage(w, (VKByte)s);
     w->stage = w->room = 0xFF;
     w->c70c = w->c70b = 0;
     w->d012 = 0;
@@ -55,12 +38,13 @@ void vk_wall_begin(VKWall *w)
 void vk_wall_reset_stage(VKWall *w, VKByte stage)
 {
     int r, s;
-    if (stage >= VK_CANDLE_STAGES) return;
+    if (stage >= VK_TRADE_STAGES) return;
     /* 5AAF clears DE00-DEBF, then writes the items: the counts start at 0. */
-    for (r = 0; r < VK_CANDLE_ROOMS; r++)
+    for (r = 0; r < (stage<12?VK_CANDLE_ROOMS:VK_TRADE_ROOMS); r++)
     {
-        for (s = 0; s < VK_WALL_RECORDS; s++) w->count[stage][r][s] = 0;
-        w->gone[stage][r] = 0;
+        for (s = 0; s < VK_WALL_RECORDS; s++) *(stage<12?&w->count[stage][r][s]:&w->late_count[stage-12][r][s]) = 0;
+        *(stage<12?&w->gone[stage][r]:&w->late_gone[stage-12][r]) = 0;
+        if(stage>=12)w->late_block_gone[stage-12][r]=0;
     }
 }
 
@@ -68,8 +52,9 @@ void vk_wall_reset_stage(VKWall *w, VKByte stage)
 static VKByte *count_of(VKWall *w, int i)
 {
     static VKByte none;
-    if (w->stage >= VK_CANDLE_STAGES || w->room >= VK_CANDLE_ROOMS) { none = 0; return &none; }
-    return &w->count[w->stage][w->room][i];
+    if (w->stage >= VK_TRADE_STAGES || w->room >= VK_TRADE_ROOMS || (w->stage<12 && w->room>=VK_CANDLE_ROOMS)) { none = 0; return &none; }
+    if(w->stage<12)return &w->count[w->stage][w->room][i];
+    return &w->late_count[w->stage-12][w->room][i];
 }
 
 /* 91EA -> 924C: shown (82h), the map tiles under it saved (8757, nothing to do
@@ -88,7 +73,7 @@ static void show(VKWall *w, int i)
 static int make(VKWall *w, VKByte x, VKByte y, VKByte entry, VKByte flag)
 {
     const VKByte b = (VKByte)((entry & 0x3C) >> 2);
-    const VKByte item = b < 9 ? vk_wall_objects[b] : 0;
+    const VKByte item = b < VK_WALL_OBJECT_COUNT ? vk_wall_objects[b] : 0;
     int i;
     for (i = 0; i < VK_WALL_RECORDS; i++)
     {
@@ -111,19 +96,27 @@ void vk_wall_enter(VKWall *w, VKByte stage, VKByte room)
     int i;
     w->stage = stage;
     w->room = room;
-    for (i = 0; i < VK_WALL_RECORDS; i++) w->obj[i].state = 0;
-    if (stage >= VK_CANDLE_STAGES || room >= VK_CANDLE_ROOMS) return;
-    for (i = vk_wall_first[stage][room]; i < vk_wall_first[stage][room + 1]; i++)
+    for (i = 0; i < VK_WALL_RECORDS; i++) {
+        unsigned k;VKByte *p=(VKByte *)&w->obj[i];for(k=0;k<sizeof(w->obj[i]);k++)p[k]=0;
+    }
+    if (stage >= VK_TRADE_STAGES || room >= VK_TRADE_ROOMS || (stage<12 && room>=VK_CANDLE_ROOMS)) return;
+    for (i = vk_trade_wall_first[stage][room]; i < vk_trade_wall_first[stage][room + 1]; i++)
     {
-        const int bit = i - vk_wall_first[stage][room];
-        const VKWallDef *def = &vk_wall_defs[i];
-        if (w->gone[stage][room] & (1u << bit)) continue;   /* 5B23: flag 0, skipped */
+        const int bit = i - vk_trade_wall_first[stage][room];
+        const VKWallDef *def = &vk_trade_wall_defs[i];
+        if ((stage<12?w->gone[stage][room]:w->late_gone[stage-12][room]) & (1u << bit)) continue;   /* 5B23: flag 0, skipped */
         make(w, def->x, def->y, def->code, (VKByte)(0x80 | (bit + 1)));
     }
 }
 
+int vk_wall_block_present(const VKWall *w,VKByte stage,VKByte room,int candle)
+{
+    if(stage<12)return 1;
+    return stage<VK_TRADE_STAGES && room<VK_TRADE_ROOMS && candle>=0 && candle<8 && !(w->late_block_gone[stage-12][room]&(1u<<candle));
+}
 int vk_wall_block(VKWall *w, int candle, const VKCandleDef *def)
 {
+    if(!vk_wall_block_present(w,w->stage,w->room,candle))return -1;
     /* 8814: DE = the block's Y and X (POP DE), entry = +9. */
     return make(w, def->x, def->y, def->content, (VKByte)(candle + 1));
 }
@@ -163,7 +156,7 @@ static void pick_result(VKWall *w, int i, VKByte count)
     VKByte n = (VKByte)(count - 1);
     VKByte r;
     if (n >= 8) n = 7;
-    r = result_table[w->obj[i].row & 3][n];
+    r = vk_trade_result[w->obj[i].row & 3][n];
     if (r >= 7)
     {
         /* 92E8: LD A,R, RRA: bit 0 set gives H (first of the pair), else L. Traced: 137 calls, bit 0 set 75 times (55 %), bit 7 never set. */
@@ -171,7 +164,7 @@ static void pick_result(VKWall *w, int i, VKByte count)
         r = pairs[r - 7][(Enemies_randomR() & 1) ? 0 : 1];
     }
     w->c70c = r;
-    w->c70b = result_frame[r];
+    w->c70b = vk_trade_frame[r];
 }
 
 static void sound(VKWallEvents *ev, VKByte s)
@@ -209,12 +202,13 @@ static void dispatch(VKWall *w, VKCandles *c, int i, VKWallEvents *ev)
         ev->redraw |= (VKByte)(1u << i);
         if (w->obj[i].flag & 0x80)
         {
-            if (w->stage < VK_CANDLE_STAGES && w->room < VK_CANDLE_ROOMS)
-                w->gone[w->stage][w->room] |= (VKByte)(1u << ((w->obj[i].flag & 0x7F) - 1));
+            if (w->stage < VK_TRADE_STAGES && w->room < VK_TRADE_ROOMS)
+                *(w->stage<12?&w->gone[w->stage][w->room]:&w->late_gone[w->stage-12][w->room]) |= (VKByte)(1u << ((w->obj[i].flag & 0x7F) - 1));
         }
         else
         {
             vk_candles_block_gone(c, w->obj[i].flag - 1);
+            if(w->stage>=12 && w->stage<VK_TRADE_STAGES && w->room<VK_TRADE_ROOMS)w->late_block_gone[w->stage-12][w->room]|=(VKByte)(1u<<(w->obj[i].flag-1));
             ev->block_gone = w->obj[i].flag;
         }
         sound(ev, SOUND_GONE);
@@ -291,7 +285,7 @@ static void open_shop(VKWall *w, const VKCandles *c)
     w->sale = item_of(w, w->slot & 1);
     *count |= 0x80;
     w->price = 0;
-    for (k = 0; k < 9; k++)
+    for (k = 0; k < VK_SHOP_PRICE_COUNT; k++)
     {
         if (vk_shop_prices[k][0] != w->sale) continue;
         w->price = vk_shop_prices[k][(c->c702 & 0x80) ? 2 : (c->c702 & 0x40) ? 3 : 1];
@@ -315,9 +309,8 @@ int vk_shop_step(VKWall *w, VKCandles *c, VKByte keys, VKWallEvents *ev)
         w->timeout = VK_SHOP_TIMEOUT;
         sound(ev, SOUND_SHOP);
         w->bought = 0;
-        /* PROVISIONAL: C709 at the opening is not traced; the key that struck the
-         * last blow does not count as a new press. */
-        w->keys = keys;
+        /* 440A/9387 never read 951F: C709 survives the opening and room loads.
+         * Its first read is the next WAIT frame (LOT08 executed-ROM tests). */
         w->shop = VK_SHOP_WAIT;
         break;
     case VK_SHOP_WAIT:

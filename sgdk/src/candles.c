@@ -1,4 +1,9 @@
 #include "candles.h"
+static VKCandleAirborne airborne_pool;
+static int pick(VKCandles *c,VKDrop *d);
+static void fallback_reset(VKCandles *c);
+static void fallback_init(VKCandles *c,VKDrop *d,VKByte kind,VKByte x,VKByte y);
+void vk_candles_airborne(VKCandleAirborne callback){airborne_pool=callback;}
 
 /* Whip reach from Simon (8450): 20, or 24 with the chain whip (C416 = 1); the
  * candle is touched when the whip point is within 20 (24) of the candle centre
@@ -52,6 +57,7 @@ static const VKByte *room_map(const VKGame *game)
 void vk_candles_begin(VKCandles *c)
 {
     int s, r;
+    fallback_reset(c);
     c->stage = c->room = 0xFF;
     c->spare = c->count = 0;
     c->lit = 0;
@@ -71,7 +77,7 @@ void vk_candles_begin(VKCandles *c)
     c->hud_weapon = 0;
     c->c702 = 0;
     for (s = 0; s < VK_CANDLE_STAGES; s++)
-        for (r = 0; r < VK_CANDLE_ROOMS; r++)
+        for (r = 0; r < VK_CANDLE_ROOM_LIMIT(s); r++)
             VK_CANDLE_OUT(c, s, r) = VK_CANDLE_TAKEN(c, s, r) = 0;
 }
 
@@ -79,7 +85,7 @@ void vk_candles_reset_stage(VKCandles *c, VKByte stage)
 {
     int r;
     if (stage >= VK_CANDLE_STAGES) return;
-    for (r = 0; r < VK_CANDLE_ROOMS; r++) VK_CANDLE_OUT(c, stage, r) = VK_CANDLE_TAKEN(c, stage, r) = 0;
+    for (r = 0; r < VK_CANDLE_ROOM_LIMIT(stage); r++) VK_CANDLE_OUT(c, stage, r) = VK_CANDLE_TAKEN(c, stage, r) = 0;
     c->stage = c->room = 0xFF;
 }
 
@@ -173,7 +179,7 @@ void vk_candles_weapon_lost(VKCandles *c)
 void vk_candles_relight(VKCandles *c)
 {
     c->lit = (VKByte)((1u << c->count) - 1);
-    if (c->stage < VK_CANDLE_STAGES && c->room < VK_CANDLE_ROOMS) VK_CANDLE_OUT(c, c->stage, c->room) = 0;
+    if (c->stage < VK_CANDLE_STAGES && c->room < VK_CANDLE_ROOM_LIMIT(c->stage)) VK_CANDLE_OUT(c, c->stage, c->room) = 0;
     c->stage = c->room = 0xFF;   /* the next vk_candles_enter writes the blocks again */
 }
 
@@ -186,7 +192,7 @@ static VKDrop *free_drop(VKCandles *c)
 {
     int i;
     for (i = 0; i < VK_DROP_MAX; i++)
-        if (c->drop[i].state == VK_DROP_NONE) return &c->drop[i];
+        if (c->drop[i].state == VK_DROP_NONE) { c->drop[i].catchable=0;return &c->drop[i]; }
     return 0;
 }
 
@@ -195,10 +201,11 @@ void vk_candles_enter(VKCandles *c, const VKGame *game)
     const VKByte stage = vk_candles_stage_of(game);
     int i;
     if (stage == c->stage && game->room == c->room) return;
+    fallback_reset(c);
     c->stage = stage;
     c->room = game->room;
     for (i = 0; i < VK_DROP_MAX; i++) c->drop[i].state = VK_DROP_NONE;
-    if (stage >= VK_CANDLE_STAGES || game->room >= VK_CANDLE_ROOMS)
+    if (stage >= VK_CANDLE_STAGES || game->room >= VK_CANDLE_ROOM_LIMIT(stage))
     {
         c->spare = c->count = c->lit = 0;
         return;
@@ -316,7 +323,7 @@ int vk_candles_hit(VKCandles *c, int i)
      * load, until 9358 clears it (vk_candles_block_gone). */
     if (def->mode == VK_CANDLE_HIDDEN_BLOCK && def->kind == VK_OBJ_BLOCK_CONTENT)
         return VK_CANDLE_EVENT_HIT | VK_CANDLE_EVENT_WALL;
-    if (c->stage < VK_CANDLE_STAGES && c->room < VK_CANDLE_ROOMS)
+    if (c->stage < VK_CANDLE_STAGES && c->room < VK_CANDLE_ROOM_LIMIT(c->stage))
         VK_CANDLE_OUT(c, c->stage, c->room) |= (VKByte)(1u << i);
     kind = drop_kind(c, def->kind);
     /* A candle of object 0 or 0x15 (898F): no C800 flame (8996), but 8A37 still
@@ -363,6 +370,11 @@ int vk_candles_hit(VKCandles *c, int i)
         block_object(c, def, kind);
         return VK_CANDLE_EVENT_HIT;
     }
+    if(airborne_pool){
+        if(airborne_pool(kind,def->x,def->y))return VK_CANDLE_EVENT_HIT;
+        d=free_drop(c);if(d)fallback_init(c,d,kind,def->x,def->y);
+        return VK_CANDLE_EVENT_HIT;
+    }
     d = free_drop(c);
     if (!d) return VK_CANDLE_EVENT_HIT;
     d->state = VK_DROP_BURST;
@@ -380,7 +392,13 @@ int vk_candles_hit(VKCandles *c, int i)
 
 void vk_candles_drop(VKCandles *c, VKByte x, VKByte y, VKByte kind)
 {
-    VKDrop *d = free_drop(c);        /* 8A37: no free C500 slot, no object */
+    VKDrop *d;
+    /* 8992 bypasses8A29, but still goes through89BF and its C500 fallback. */
+    if(airborne_pool && kind && kind!=VK_OBJ_NOTHING){
+        if(airborne_pool(kind,x,y))return;
+        d=free_drop(c);if(d)fallback_init(c,d,kind,x,y);return;
+    }
+    d = free_drop(c);        /* 8A37: no free C500 slot, no object */
     if (!d) return;
     d->state = VK_DROP_BURST;
     d->x = x;
@@ -413,6 +431,12 @@ void vk_candles_death_drop(VKCandles *c, VKByte kind, int x, int y)
     else d->state = VK_DROP_BURST;
 }
 
+/* 9C03/9C4E ->89E3: landing emits C50083, not another airborne flame. */
+void vk_candles_loot_rest(VKCandles *c,VKByte kind,VKByte x,VKByte y,VKByte tick)
+{
+ VKDrop *d=free_drop(c);if(!d)return;d->state=VK_DROP_REST;d->x=x;d->y=y;d->kind=kind;d->timer=rest_timer(kind);d->fixed=0;d->content=0;d->catchable=0x80;d->ax=2;d->vx=(short)((2*tick-(c->clock+1))&31);
+}
+
 /* 8AF8: lands when the tile under X + 8, Y + 16 is a floor (tile 1..9) or past
  * Y + 16 = DB. */
 static int drop_landed(const VKByte *map, const VKDrop *d)
@@ -436,6 +460,9 @@ static void land_drop(VKDrop *d)
  * the stage limit), +12 (timer) + 1, vx - ax (the sway: ax flips every 32 updates, 9BF0), X + vx, Y + 1/2 px (vy = 80h: y + 1 at every even
  * +12), then 99E5: out for Y >= E4, X >= F1 or X < 7. Landing (9C03): the object 83 at (X & F8, (Y - 16) & F8). Traced in 40 hearts of stages 1-9
  * (research/death-flame.md): X, Y, vx and +12 of every pass, 36 landings and 14 exits. */
+/* Historical standalone decor facade without an engine pool adapter.
+ * Production candle hits use89BF through airborne_pool; its allocation failure
+ * uses candle_fallback.inc. This facade is not a C800 equivalence claim. */
 static void heart_begin(VKCandles *c, VKDrop *d, int X)
 {
     d->state = VK_DROP_FALL;
@@ -573,6 +600,11 @@ static void step_drop(VKCandles *c, VKDrop *d, const VKByte *map)
         if (d->timer == HEART_SWAY) { d->timer = 0; d->ax = (short)-d->ax; }
         return;
     }
+    if(d->state==VK_DROP_REST && (d->catchable&0x80)){
+        if(d->ax>0){d->ax--;return;}
+        if(d->timer!=0xFF && ((c->clock+d->vx)&31)==0 && --d->timer==0)d->state=VK_DROP_NONE;
+        return;
+    }
     if (d->state == VK_DROP_REST && d->timer != 0xFF && (c->clock & 31) == 0)
     {
         if (--d->timer == 0) d->state = VK_DROP_NONE;
@@ -592,7 +624,7 @@ static int touches_drop(const VKPlayer *p, const VKDrop *d)
  * held the chest, is cleared: it does not come back. */
 static void mark_taken(VKCandles *c, const VKDrop *d)
 {
-    if (!d->fixed || c->stage >= VK_CANDLE_STAGES || c->room >= VK_CANDLE_ROOMS) return;
+    if (!d->fixed || c->stage >= VK_CANDLE_STAGES || c->room >= VK_CANDLE_ROOM_LIMIT(c->stage)) return;
     if (d->fixed & 0x80) VK_CANDLE_OUT(c, c->stage, c->room) |= (VKByte)(1u << ((d->fixed & 0x7F) - 1));
     else VK_CANDLE_TAKEN(c, c->stage, c->room) |= (VKByte)(1u << (d->fixed - 1));
 }
@@ -600,7 +632,7 @@ static void mark_taken(VKCandles *c, const VKDrop *d)
 void vk_candles_white_key_taken(VKCandles *c)
 {
     int i;
-    if (c->stage >= VK_CANDLE_STAGES || c->room >= VK_CANDLE_ROOMS) return;
+    if (c->stage >= VK_CANDLE_STAGES || c->room >= VK_CANDLE_ROOM_LIMIT(c->stage)) return;
     for (i = 0; i < c->count; i++)
     {
         const VKCandleDef *def = vk_candles_def(c, i);
@@ -642,7 +674,7 @@ static int pick(VKCandles *c, VKDrop *d)
 
 void vk_candles_block_gone(VKCandles *c, int i)
 {
-    if (c->stage < VK_CANDLE_STAGES && c->room < VK_CANDLE_ROOMS && i >= 0 && i < c->count)
+    if (c->stage < VK_CANDLE_STAGES && c->room < VK_CANDLE_ROOM_LIMIT(c->stage) && i >= 0 && i < c->count)
         VK_CANDLE_OUT(c, c->stage, c->room) |= (VKByte)(1u << i);
 }
 
@@ -696,8 +728,7 @@ int vk_candles_give(VKCandles *c, VKByte kind)
         if (kind == 0x03) c->c701 = (VKByte)((c->c701 & ~VK_ITEM_BIT_04) | VK_ITEM_BIT_03);
         return VK_CANDLE_EVENT_PICK;
     }
-    /* 8DA1: C701 bit 4 cleared (no more armor, enemies.c), bit 5 set. The D700
-     * projectiles it guards against (8610) are not ported. */
+    /* 8DA1: C701 bit4 cleared, bit5 set;8610 interception in actors/enemies. */
     if (kind == 0x04)
     {
         c->c701 = (VKByte)((c->c701 & ~VK_ITEM_BIT_03) | VK_ITEM_BIT_04);
@@ -728,8 +759,15 @@ int vk_candles_give(VKCandles *c, VKByte kind)
     /* 8E42 (13: 5000 points), 8E4B (14: 1000 points) through 44EC; the score is added
      * by main.c, the effect 10 by vk_candles_sound. */
     if (kind == 0x13 || kind == 0x14) return VK_CANDLE_EVENT_ITEM;
-    /* PROVISIONAL: the other effects (C702 bit 0 of 0E, object 12) are not ported;
-     * none of them is found or sold in stages 0-2. */
+    /* 8E16: the candle is sold in stage14/6. C702 bit0 is inventory, not a
+     * new timer. LOT08 compares every purchase against8D30, including this bit.
+     * White outlines are drawn by item_reveal_view.c; the late candle loader
+     * and persistence of non-wall blocks still belong to LOT11. */
+    if (kind == 0x0E)
+    {
+        c->c702 |= 1;
+        return VK_CANDLE_EVENT_ITEM;
+    }
     return VK_CANDLE_EVENT_NONE;
 }
 
@@ -746,6 +784,8 @@ VKByte vk_candles_sound(VKByte kind)
     default: return kind < 0x1F ? 0x12 : 0;                    /* 8D8A, 8E30 */
     }
 }
+
+#include "candle_fallback.inc"
 
 int vk_candles_tick(VKCandles *c, VKGame *game, const VKWhip *whip, int *hit_index)
 {
@@ -770,6 +810,14 @@ int vk_candles_tick(VKCandles *c, VKGame *game, const VKWhip *whip, int *hit_ind
     {
         VKDrop *d = &c->drop[i];
         if (d->state == VK_DROP_NONE) continue;
+        if(airborne_pool && c==fallback_owner && (d->catchable&0x40)){
+            VKByte *b=fallback_raw[i];
+            if(fallback_pass){
+                if((b[0]&128) && whip->timer==0 && touches_drop(&game->player,d))b[3]=1;
+                events|=fallback_step(c,d,map);
+            }
+            continue;
+        }
         step_drop(c, d, map);
         if (c->ghost_pending) { c->ghost_pending = 0; events |= VK_CANDLE_EVENT_GHOST; }
         /* 7FE2: pickups only out of an attack (C422 = 0), of the objects whose

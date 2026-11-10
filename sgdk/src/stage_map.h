@@ -16,6 +16,7 @@
 
 /* Draws the map into tiles (VK_MAP_BYTES, cells in order, 4 bits a pixel): stage is
  * vk_candles_stage_of, room and px, py those of Simon (D001, C427, C425). */
+void vk_stage_map_panel(VKByte *tiles);
 void vk_stage_map_render(VKByte *tiles, const VKCandles *c, VKByte stage, VKByte room,
                          VKByte px, VKByte py);
 

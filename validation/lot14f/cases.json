@@ -1,0 +1,170 @@
+[
+  {
+    "bodies": 1,
+    "projectile": 3,
+    "guard": 0,
+    "images": 360,
+    "points": 300
+  },
+  {
+    "bodies": 0,
+    "projectile": 0,
+    "guard": 0,
+    "images": 360,
+    "points": 0
+  },
+  {
+    "bodies": 0,
+    "projectile": 0,
+    "guard": 17,
+    "images": 360,
+    "points": 0
+  },
+  {
+    "bodies": 0,
+    "projectile": 3,
+    "guard": 0,
+    "images": 360,
+    "points": 100
+  },
+  {
+    "bodies": 0,
+    "projectile": 3,
+    "guard": 17,
+    "images": 360,
+    "points": 100
+  },
+  {
+    "bodies": 0,
+    "projectile": 4,
+    "guard": 0,
+    "images": 360,
+    "points": 100
+  },
+  {
+    "bodies": 0,
+    "projectile": 4,
+    "guard": 17,
+    "images": 360,
+    "points": 100
+  },
+  {
+    "bodies": 0,
+    "projectile": 9,
+    "guard": 0,
+    "images": 360,
+    "points": 100
+  },
+  {
+    "bodies": 0,
+    "projectile": 9,
+    "guard": 17,
+    "images": 360,
+    "points": 100
+  },
+  {
+    "bodies": 1,
+    "projectile": 0,
+    "guard": 0,
+    "images": 360,
+    "points": 200
+  },
+  {
+    "bodies": 1,
+    "projectile": 0,
+    "guard": 17,
+    "images": 360,
+    "points": 200
+  },
+  {
+    "bodies": 1,
+    "projectile": 3,
+    "guard": 17,
+    "images": 360,
+    "points": 300
+  },
+  {
+    "bodies": 1,
+    "projectile": 4,
+    "guard": 0,
+    "images": 360,
+    "points": 300
+  },
+  {
+    "bodies": 1,
+    "projectile": 4,
+    "guard": 17,
+    "images": 360,
+    "points": 300
+  },
+  {
+    "bodies": 1,
+    "projectile": 9,
+    "guard": 0,
+    "images": 360,
+    "points": 300
+  },
+  {
+    "bodies": 1,
+    "projectile": 9,
+    "guard": 17,
+    "images": 360,
+    "points": 300
+  },
+  {
+    "bodies": 2,
+    "projectile": 0,
+    "guard": 0,
+    "images": 360,
+    "points": 400
+  },
+  {
+    "bodies": 2,
+    "projectile": 0,
+    "guard": 17,
+    "images": 360,
+    "points": 400
+  },
+  {
+    "bodies": 2,
+    "projectile": 3,
+    "guard": 0,
+    "images": 360,
+    "points": 500
+  },
+  {
+    "bodies": 2,
+    "projectile": 3,
+    "guard": 17,
+    "images": 360,
+    "points": 500
+  },
+  {
+    "bodies": 2,
+    "projectile": 4,
+    "guard": 0,
+    "images": 360,
+    "points": 500
+  },
+  {
+    "bodies": 2,
+    "projectile": 4,
+    "guard": 17,
+    "images": 360,
+    "points": 500
+  },
+  {
+    "bodies": 2,
+    "projectile": 9,
+    "guard": 0,
+    "images": 360,
+    "points": 500
+  },
+  {
+    "bodies": 2,
+    "projectile": 9,
+    "guard": 17,
+    "images": 360,
+    "points": 500
+  }
+]

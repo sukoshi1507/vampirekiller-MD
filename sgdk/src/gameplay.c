@@ -20,6 +20,7 @@ extern const VKByte vk_courtyard_neighbors[3][4];
 /* Collision map of a castle room (stage 1 hall or stage 2), NULL if none. */
 static const VKByte *vk_castle_map(VKByte stage, VKByte room)
 {
+    if(stage>=12 && stage<=18)return vk_late_room_map(stage,room);
     if (stage == 1 && room < VK_STAGE1_ROOM_COUNT) return vk_stage1_collision[room];
     if (stage == 2 && room < VK_STAGE2_ROOM_COUNT) return vk_stage2_collision[room];
     if (stage == 3 && room < VK_STAGE3_ROOM_COUNT) return vk_stage3_collision[room];
@@ -223,7 +224,7 @@ void vk_game_enter_stage(VKGame *game, VKByte stage)
     game->room = 0;
     game->collision_verified = 1;   /* Map data verified; not a gameplay-fidelity claim. */
     vk_player_reset(&game->player);
-    if (stage >= 1 && stage <= 11)
+    if (stage >= 1 && stage <= 18)
     {
         game->player.x = kStageEntries[stage - 1].x;
         game->player.y = kStageEntries[stage - 1].y;
@@ -636,7 +637,7 @@ int vk_game_debug_room(VKGame *game, VKByte room)
  * rooms must not reset the current game or read a nonexistent collision table. */
 int vk_game_debug_start(VKGame *game, VKByte stage, VKByte room)
 {
-    if (stage < 1 || stage > 11 || room >= vk_stage_room_count(stage)) return 0;
+    if (stage < 1 || stage > 18 || room >= vk_stage_room_count(stage)) return 0;
     VKGame candidate = *game;
     vk_game_enter_stage(&candidate, stage);
     if (room != 0 && !vk_game_debug_room(&candidate, room)) return 0;

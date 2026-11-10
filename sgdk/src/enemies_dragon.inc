@@ -146,6 +146,7 @@ static Enemy *dragonSpawn(EnemyState *s, EnemyU8 x, EnemyU8 y)
 static Enemy *dragonFire(EnemyState *s, const Enemy *src, EnemyS16 vy, EnemyS16 vx, EnemyU8 x, EnemyU8 y)
 {
     Enemy *e = newObject(s, ENEMY_TYPE_FIREBALL);
+    (void)src;
     if (!e) return 0;
     e->state = 1;
     e->vy = vy;
@@ -156,8 +157,7 @@ static Enemy *dragonFire(EnemyState *s, const Enemy *src, EnemyS16 vy, EnemyS16 
     e->y = y;
     e->sub = 0;
     e->timer = 0;
-    if (e > src) e->age = 0;
-    else { fireballStep(e); e->age = 1; }
+    e->age = 0;
     return e;
 }
 

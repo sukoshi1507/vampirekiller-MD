@@ -3,8 +3,8 @@
 #define VK_STAGE12_SECRET_H
 #include "generated/stage12_foundations.h"
 #define VK_STAGE12_SECRET_DELAY 0x40
-#define VK_STAGE12_SECRET_EFFECT 15
-/* Action 1 requests the ROM effect 15; action 2 requests room change to destination. */
+#define VK_STAGE12_SECRET_EFFECT 0x15
+/* Action 1 requests the ROM effect 0x15 (decimal21); action 2 requests room change to destination. */
 typedef struct { VKByte active, timer, destination; } VKStage12SecretState;
 void vk_stage12_secret_reset(VKStage12SecretState *s);
 /* Input is the current player C425/C427 and freshly pressed UP. Only state 2 may enter. */

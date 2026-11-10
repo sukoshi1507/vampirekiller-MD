@@ -1,4 +1,5 @@
 #include "boss.h"
+#include "player.h"
 #include "enemies.h"   /* Enemies_randomR: the common LD A,R generator (research/hasard-R.md) */
 
 /* A1A2: angle from the distances (index: (dy >> 2 & 38h) + (dx >> 5 & 7)); A1E2: sine. */
@@ -15,20 +16,36 @@ static const VKBossU8 sine_table[64] = {
     0xED,0xEF,0xF1,0xF3,0xF5,0xF7,0xF8,0xFA,0xFB,0xFC,0xFD,0xFE,0xFE,0xFF,0xFF,0xFF
 };
 
-#define HI(v) ((VKBossU8)((v) >> 8))
+int (*vk_boss15_pool)(int slot,int count);
+static VKBossU8 boss15_clock;
+void vk_boss_clock_init(void) { boss15_clock=0; }
 
-static int has_boss(int stage) { return stage == VK_BOSS_STAGE || stage == VK_BOSS6_STAGE || stage == VK_BOSS9_STAGE; }
+#define HI(v) ((VKBossU8)((v) >> 8))
+int vk_boss_shot_count(const VKBoss *b){return b->kind==4?VK_BOSS_MAX_SHOTS:VK_BOSS_SHOTS;}
+const VKBossShot *vk_boss_shot_data(const VKBoss *b,int i)
+{
+    if(i<0 || i>=vk_boss_shot_count(b))return 0;
+    return i<VK_BOSS_SHOTS?&b->shot[i]:&b->extra_shot[i-VK_BOSS_SHOTS];
+}
+static VKBossShot *boss_shot(VKBoss *b,int i)
+{
+    return i<VK_BOSS_SHOTS?&b->shot[i]:&b->extra_shot[i-VK_BOSS_SHOTS];
+}
+static int boss15_floor(const VKBoss *b,int x,int y);
+static void boss15_shots_pass(VKBoss *b,int sx,int sy,int difficulty);
+
+static int has_boss(int stage) { return stage == 18 || stage == VK_BOSS_STAGE || stage == VK_BOSS6_STAGE || stage == VK_BOSS9_STAGE || stage == VK_BOSS12_STAGE || stage == VK_BOSS15_STAGE; }
 /* 636F: the boss room of the stage (CE00 = 1, 2, 3); 7718: the door room, whose link on the side of the door leads to it. */
-int vk_boss_room_of(int stage) { return stage == VK_BOSS9_STAGE ? VK_BOSS9_ROOM : VK_BOSS_ROOM; }
+int vk_boss_room_of(int stage) { return stage == 18 ? 9 : stage == VK_BOSS15_STAGE ? VK_BOSS15_ROOM : stage == VK_BOSS12_STAGE ? VK_BOSS12_ROOM : stage == VK_BOSS9_STAGE ? VK_BOSS9_ROOM : VK_BOSS_ROOM; }
 int vk_boss_door(int stage, int room)
 {
-    return has_boss(stage) && room == (stage == VK_BOSS9_STAGE ? VK_BOSS9_DOOR_ROOM : VK_BOSS_DOOR_ROOM);
+    return has_boss(stage) && room == (stage == 18 ? 8 : stage == VK_BOSS15_STAGE ? VK_BOSS15_DOOR_ROOM : stage == VK_BOSS12_STAGE ? VK_BOSS12_DOOR_ROOM : stage == VK_BOSS9_STAGE ? VK_BOSS9_DOOR_ROOM : VK_BOSS_DOOR_ROOM);
 }
 int vk_boss_room(int stage, int room) { return has_boss(stage) && room == vk_boss_room_of(stage); }
 /* 77D1: the door of stage 3 is on the right (right link, X 10, trace: Y 176); the ones of stages 6 and 9 are on the left
  * (left link, X F6h = 246), and Y is not written (trace: 128, the floor of the door room, then the fall). */
-int vk_boss_entry_x(int stage) { return stage == VK_BOSS6_STAGE || stage == VK_BOSS9_STAGE ? 246 : 10; }
-int vk_boss_entry_y(int stage) { return stage == VK_BOSS6_STAGE || stage == VK_BOSS9_STAGE ? -1 : 176; }
+int vk_boss_entry_x(int stage) { return (stage == 18 || stage == VK_BOSS6_STAGE || stage == VK_BOSS9_STAGE || stage == VK_BOSS15_STAGE) ? 246 : 10; }
+int vk_boss_entry_y(int stage) { return (stage == 18 || stage == VK_BOSS6_STAGE || stage == VK_BOSS9_STAGE || stage == VK_BOSS12_STAGE || stage == VK_BOSS15_STAGE) ? -1 : 176; }
 
 void vk_boss_reset(VKBoss *b)
 {
@@ -42,8 +59,11 @@ void vk_boss_begin_stage(VKBoss *b, int stage)
 {
     vk_boss_reset(b);
     b->in_room = 1;
-    b->kind = (VKBossU8)(stage == VK_BOSS9_STAGE ? 2 : stage == VK_BOSS6_STAGE);
+    b->kind = (VKBossU8)(stage == 18 ? 5 : stage == VK_BOSS15_STAGE ? 4 : stage == VK_BOSS12_STAGE ? 3 : stage == VK_BOSS9_STAGE ? 2 : stage == VK_BOSS6_STAGE);
+    if(b->kind==4)b->p12=boss15_clock;
 }
+
+void vk_boss_set_collision(VKBoss *b,const unsigned char *map) { b->collision=map; }
 
 void vk_boss_begin(VKBoss *b) { vk_boss_begin_stage(b, VK_BOSS_STAGE); }
 
@@ -288,14 +308,14 @@ static void shots_pass(VKBoss *b)
     for (i = 0; i < VK_BOSS_SHOTS; i++)
     {
         VKBossShot *s = &b->shot[i];
-        if (!s->active) continue;
+        if (s->active!=1) continue;
         if (b->kind == 2)                /* 9E90: the line moves by its slope, vy is pulled towards it by 30h (A549) */
         {
             b->shot_tgt[i] = (unsigned short)(b->shot_tgt[i] + b->shot_slope[i]);
             s->vy = add_vy(s->vy, HI(s->y) < HI(b->shot_tgt[i]) ? 0x30 : -0x30);
             s->anim++;
         }
-        else if (b->kind) s->anim++;     /* 9E78 */
+        else if (b->kind == 1) s->anim++;     /* 9E78 */
         s->y = (unsigned short)(s->y + (unsigned short)s->vy);
         s->x = (unsigned short)(s->x + (unsigned short)s->vx);
         if (b->kind)
@@ -316,13 +336,16 @@ static void orb_pass(VKBoss *b)
     static const VKBossU8 frames[4] = { 0x8F, 0x90, 0x91, 0x90 };
     if (b->orb_state == 0)
     {
-        if (--b->orb_wait == 0) b->orb_state = 1;
+        if (--b->orb_wait == 0) {
+            b->orb_state = 1;
+            if(b->kind==3 || b->kind==4)b->orb_y++; /* B7AD enables 99B9 in this pass. */
+        }
         return;
     }
     b->orb_pose = frames[(b->orb_anim >> 1) & 3];
     b->orb_anim++;
     if (b->orb_state != 1) return;
-    if (b->orb_y >= (b->kind == 1 ? 0xB0 : 0xC0))
+    if (b->kind==4 ? boss15_floor(b,0x78,b->orb_y) : b->orb_y >= (b->kind == 1 ? 0xB0 : 0xC0))
     {
         b->orb_pose = 0x8F;
         b->orb_landed = 1;
@@ -360,7 +383,7 @@ static int script_pass(VKBoss *b, int energy)
         {
             b->script_wait = 0x96;
             b->script = 4;
-            return VK_BOSS_EV_MUSIC;
+            return VK_BOSS_EV_MUSIC | ((b->kind==3 || b->kind==4) ? VK_BOSS_EV_STOP : 0);
         }
         if (!b->orb_landed || --b->script_wait) return 0;
         b->script = 6;                   /* too late: no healing */
@@ -542,16 +565,32 @@ static int room9_pass(VKBoss *b, int simon_x, int simon_y, int d012)
     return 0;
 }
 
+#include "boss12.inc"
+#include "boss15.inc"
+
 int vk_boss_frame(VKBoss *b, int simon_x, int simon_y, int d012, int frozen, int energy)
 {
     int events = 0;
-    if (!b->in_room) return 0;
+    if (!b->in_room || b->kind==5) return 0; /* Stage18 is stepped by dracula.c through actors.c. */
     b->phase ^= 1;
     if (b->phase) return 0;
     b->tick++;
     if (b->flash_wait && --b->flash_wait == 0) events |= VK_BOSS_EV_FLASH;
     if (b->ending)
     {
+        if(b->kind<3)boss12_bursts_pass(b);
+        if(b->kind==3 || b->kind==4) {
+            int script_events;
+            if(b->script==0) {
+                int i;boss12_flame(b,0,0);boss12_flame(b,1,0);
+                for(i=0;i<vk_boss_shot_count(b);i++)boss12_shot_disappear(b,i);
+            }
+            script_events=script_pass(b,energy);
+            boss12_flames_pass(b);boss12_bursts_pass(b);
+            if(b->orb)orb_pass(b); /* Orb +7E=0: it is not frozen by D010. */
+            if(script_events&VK_BOSS_EV_EXIT) {b->ending=0;b->orb_taken=0;b->in_room=0;}
+            return events|script_events;
+        }
         if (b->orb && !frozen) orb_pass(b);
         return events | script_pass(b, energy);
     }
@@ -559,14 +598,24 @@ int vk_boss_frame(VKBoss *b, int simon_x, int simon_y, int d012, int frozen, int
     {
         b->ending = 1;
         b->script = 0;
+        if(b->kind<3)boss12_bursts_pass(b);
+        if(b->kind==3 || b->kind==4) {
+            if(b->kind==3 && b->walker[1].alive==1)boss12_rider(b,simon_x,simon_y,d012);
+            boss12_flames_pass(b);boss12_bursts_pass(b);
+        }
         return events;
     }
+    if(b->kind==3 && !b->room_step)boss12_init(b); /* BA26 runs before 98E5. */
+    if(b->kind==4)boss15_room(b); /* Room script runs even during D010. */
+    boss12_bursts_pass(b); /* +7E=0, including while D010 freezes the fighters. */
     if (frozen) return events;           /* 98E5 */
-    if (b->kind == 2) events |= room9_pass(b, simon_x, simon_y, d012);
+    if(b->kind==4)boss15_body(b);
+    else if (b->kind == 3) events |= room12_pass(b,simon_x,simon_y,d012);
+    else if (b->kind == 2) events |= room9_pass(b, simon_x, simon_y, d012);
     else if (b->kind) events |= room_pass(b, simon_x, simon_y, d012);
     else if (!b->alive) spawn(b);
     else boss_pass(b, simon_x, simon_y, d012);
-    shots_pass(b);
+    if(b->kind==4)boss15_shots_pass(b,simon_x,simon_y,d012);else shots_pass(b);
     if (b->fired) { b->fired = 0; events |= VK_BOSS_EV_FIRE; }
     return events;
 }
@@ -601,6 +650,13 @@ int vk_boss_touch_x(const VKBoss *b, int simon_x, int simon_y, int state)
 {
     int i;
     if (b->ending || !b->energy) return -1;
+    if(b->kind==4)return b->walker[0].alive && contact_box(simon_x,simon_y,state,HI(b->walker[0].x),HI(b->walker[0].y),0x30,8)?HI(b->walker[0].x):-1;
+    if(b->kind==3) {
+        for(i=0;i<2;i++)if(b->walker[i].alive &&
+            contact_box(simon_x,simon_y,state,HI(b->walker[i].x),HI(b->walker[i].y),i?0x10:0x28,i?8:5))
+            return HI(b->walker[i].x);
+        return -1;
+    }
     if (b->kind == 2)
     {
         for (i = 0; i < VK_BOSS9_WALKERS; i++)
@@ -630,6 +686,8 @@ int vk_boss_whip_touches(const VKBoss *b, int simon_x, int simon_y, int facing_l
                 return 1;
         return 0;
     }
+    if(b->kind==4)return b->walker[0].alive && whip_box(simon_x,simon_y,facing_left,state,chain,HI(b->walker[0].x),HI(b->walker[0].y),0x30,8);
+    if(b->kind==3)return b->walker[0].alive && whip_box(simon_x,simon_y,facing_left,state,chain,HI(b->walker[0].x),HI(b->walker[0].y),0x28,5);
     if (!b->alive) return 0;
     return whip_box(simon_x, simon_y, facing_left, state, chain, HI(b->x), HI(b->y), 0x18, 0x0C);
 }
@@ -643,6 +701,16 @@ int vk_boss_target(const VKBoss *b, int i, int *x, int *y, int *h, int *l)
         *x = HI(b->walker[i].x); *y = HI(b->walker[i].y); *h = W9_H; *l = W9_L;
         return 1;
     }
+    /* LOT06 provisoire: full thrown-weapon path against stage15 has not
+     * been retraced; shared target adapter uses the traced class7 dimensions. */
+    if(b->kind==4) {
+        if(i || !b->walker[0].alive || b->walker[0].armed)return 0;
+        *x=HI(b->walker[0].x);*y=HI(b->walker[0].y);*h=0x30;*l=8;return 1;
+    }
+    if(b->kind==3) {
+        if(i<0 || i>=2 || !b->walker[i].alive || b->walker[i].armed)return 0;
+        *x=HI(b->walker[i].x);*y=HI(b->walker[i].y);*h=i?0x10:0x28;*l=i?8:5;return 1;
+    }
     if (i || !b->alive || b->armed) return 0;
     *x = HI(b->x); *y = HI(b->y); *h = 0x18; *l = 0x0C;
     return 1;
@@ -650,7 +718,7 @@ int vk_boss_target(const VKBoss *b, int i, int *x, int *y, int *h, int *l)
 
 void vk_boss_set_armed(VKBoss *b, int i)
 {
-    if (b->kind == 2) { if (i < VK_BOSS9_WALKERS) b->walker[i].armed = 1; }
+    if (b->kind == 2 || b->kind == 3 || b->kind==4) { if (i >= 0 && i < VK_BOSS9_WALKERS) b->walker[i].armed = 1; }
     else b->armed = 1;
 }
 
@@ -663,7 +731,7 @@ void vk_boss_rearm(VKBoss *b)
 int vk_boss_hit(VKBoss *b, int c416)
 {
     /* 7E2C: table 7E59 (C416 = 0 or 2) or 7E60 [type - 11h]: 12h and 13h 8 and 0Ch, 14h 4 and 6. */
-    const int damage = b->kind == 2 ? ((c416 == 0 || c416 == 2) ? 4 : 6) : ((c416 == 0 || c416 == 2) ? 8 : 12);
+    const int damage = (b->kind == 2 || b->kind == 3 || b->kind==4) ? ((c416 == 0 || c416 == 2) ? 4 : 6) : ((c416 == 0 || c416 == 2) ? 8 : 12);
     int i;
     if (!b->alive) return 0;
     b->energy = (VKBossU8)(b->energy > damage ? b->energy - damage : 0);
@@ -671,42 +739,42 @@ int vk_boss_hit(VKBoss *b, int c416)
     /* 7E17: C445 = 14h, 7806 empties the objects. */
     b->energy = 0;
     b->alive = 0;
-    b->walker[0].alive = b->walker[1].alive = 0;
+    if(b->kind==3 || b->kind==4) {
+        boss12_flame(b,0,24);
+        if(b->kind==3 && b->walker[1].alive==1)b->walker[1].wait=8; /* 9AB3 before CE0B is set. */
+    } else b->walker[0].alive = b->walker[1].alive = 0;
     b->flash_wait = 0x14;
-    for (i = 0; i < VK_BOSS_SHOTS; i++) b->shot[i].active = 0;
+    for (i = 0; i < vk_boss_shot_count(b); i++) {
+        if(b->kind==3 || b->kind==4)boss12_shot_disappear(b,i);else b->shot[i].active=0;
+    }
     return 1;
 }
 
-int vk_boss_shot_touches(const VKBoss *b, int simon_x, int simon_y, int state)
+int vk_boss_shot_touches(const VKBoss *b,int sx,int sy,int state)
 {
-    int i;
-    for (i = 0; i < VK_BOSS_SHOTS; i++)
-        if (b->shot[i].active &&
-            contact_box(simon_x, simon_y, state, HI(b->shot[i].x), HI(b->shot[i].y), 6, b->kind ? 6 : 3))
-            return i;
+    int i;for(i=0;i<vk_boss_shot_count(b);i++) {
+        const VKBossShot *s=vk_boss_shot_data(b,i);
+        if(s->active==1 && contact_box(sx,sy,state,HI(s->x),HI(s->y),b->kind==4?12:6,(b->kind==0||b->kind==3)?3:6))return i;
+    }
     return -1;
 }
-
-int vk_boss_shot_whip_touches(const VKBoss *b, int simon_x, int simon_y, int facing_left, int state, int chain)
+int vk_boss_shot_whip_touches(const VKBoss *b,int sx,int sy,int left,int state,int chain)
 {
-    int i;
-    for (i = 0; i < VK_BOSS_SHOTS; i++)
-        if (b->shot[i].active &&
-            whip_box(simon_x, simon_y, facing_left, state, chain, HI(b->shot[i].x), HI(b->shot[i].y), 6, b->kind ? 6 : 3))
-            return i;
+    int i;for(i=0;i<vk_boss_shot_count(b);i++) {
+        const VKBossShot *s=vk_boss_shot_data(b,i);
+        if(s->active==1 && whip_box(sx,sy,left,state,chain,HI(s->x),HI(s->y),b->kind==4?12:6,(b->kind==0||b->kind==3)?3:6))return i;
+    }
     return -1;
 }
-
-int vk_boss_shot_target(const VKBoss *b, int i, int *x, int *y, int *h, int *l)
+int vk_boss_shot_target(const VKBoss *b,int i,int *x,int *y,int *h,int *l)
 {
-    if (i < 0 || i >= VK_BOSS_SHOTS || !b->shot[i].active) return 0;
-    *x = HI(b->shot[i].x); *y = HI(b->shot[i].y); *h = 6; *l = b->kind ? 6 : 3;
-    return 1;
+    const VKBossShot *s=vk_boss_shot_data(b,i);if(!s || s->active!=1)return 0;
+    *x=HI(s->x);*y=HI(s->y);*h=b->kind==4?12:6;*l=(b->kind==0||b->kind==3)?3:6;return 1;
 }
-
-void vk_boss_shot_kill(VKBoss *b, int i)
+void vk_boss_shot_kill(VKBoss *b,int i)
 {
-    b->shot[i].active = 0;
+    if(i<0 || i>=vk_boss_shot_count(b))return;
+    if(b->kind==3||b->kind==4)boss12_shot_disappear(b,i);else boss_shot(b,i)->active=0;
 }
 
 int vk_boss_orb_touch(VKBoss *b, int simon_x, int simon_y, int state)
@@ -718,6 +786,18 @@ int vk_boss_orb_touch(VKBoss *b, int simon_x, int simon_y, int state)
     return 1;
 }
 
+static int shared_flames(const VKBoss *b,VKBossSprite *out,int n)
+{
+    int i;
+    if(b->kind>2)return n;
+    for(i=0;i<vk_boss_shot_count(b);i++){
+        const VKBossShot *s=vk_boss_shot_data(b,i);const int second=((s->anim+1)&4)!=0;
+        if(s->active!=2)continue;
+        out[n].x=(short)((s->x>>8)-8);out[n].y=(short)((s->y>>8)-(second?14:15));
+        out[n].tile=(unsigned short)(VK_BOSS_SHARED_FLAME_TILE+(second?4:0));out[n].size=2;n++;
+    }
+    return n;
+}
 int vk_boss_sprites(const VKBoss *b, VKBossSprite out[VK_BOSS_MAX_SPRITES])
 {
     /* Cells: 40, 48, 50, 58 (pose 4E), 60, 68, 70 (pose 4F); offsets of the SAT in the
@@ -727,6 +807,8 @@ int vk_boss_sprites(const VKBoss *b, VKBossSprite out[VK_BOSS_MAX_SPRITES])
         { -20, -16, 16 }, { -20, 0, 20 }, { -4, -8, 24 }
     };
     int n = 0, i;
+    if(b->kind==4 && !b->orb)return boss15_sprites(b,out);
+    if(b->kind==3 && !b->orb)return boss12_sprites(b,out);
     if (b->kind == 2 && !b->orb)
     {
         /* Cells at (X - 8, Y - 46 + 16 part) (SAT Y - 47, + 1), 3 per walker; fireball in (X - 6, Y - 14). */
@@ -746,7 +828,7 @@ int vk_boss_sprites(const VKBoss *b, VKBossSprite out[VK_BOSS_MAX_SPRITES])
             }
         }
         for (i = 0; i < VK_BOSS_SHOTS; i++)
-            if (b->shot[i].active)
+            if (b->shot[i].active==1)
             {
                 out[n].x = (short)(HI(b->shot[i].x) - 6);
                 out[n].y = (short)(HI(b->shot[i].y) - 14);
@@ -754,7 +836,7 @@ int vk_boss_sprites(const VKBoss *b, VKBossSprite out[VK_BOSS_MAX_SPRITES])
                 out[n].size = 2;
                 n++;
             }
-        return n;
+        return shared_flames(b,out,n);
     }
     if (b->kind == 1 && !b->orb)
     {
@@ -769,7 +851,7 @@ int vk_boss_sprites(const VKBoss *b, VKBossSprite out[VK_BOSS_MAX_SPRITES])
             n++;
         }
         for (i = 0; i < VK_BOSS_SHOTS; i++)
-            if (b->shot[i].active)
+            if (b->shot[i].active==1)
             {
                 const int pose = 0x27 + ((b->shot[i].anim & 2) ? 1 : 0) + ((b->shot[i].vx < 0) ? 0 : 2);
                 out[n].x = (short)(HI(b->shot[i].x) - 8);
@@ -778,7 +860,7 @@ int vk_boss_sprites(const VKBoss *b, VKBossSprite out[VK_BOSS_MAX_SPRITES])
                 out[n].size = 2;
                 n++;
             }
-        return n;
+        return shared_flames(b,out,n);
     }
     if (b->orb)
     {
@@ -791,7 +873,7 @@ int vk_boss_sprites(const VKBoss *b, VKBossSprite out[VK_BOSS_MAX_SPRITES])
             out[n].size = 4;
             n++;
         }
-        return n;
+        return shared_flames(b,out,n);
     }
     if (b->alive)
     {
@@ -806,7 +888,7 @@ int vk_boss_sprites(const VKBoss *b, VKBossSprite out[VK_BOSS_MAX_SPRITES])
         }
     }
     for (i = 0; i < VK_BOSS_SHOTS; i++)
-        if (b->shot[i].active)
+        if (b->shot[i].active==1)
         {
             out[n].x = (short)(HI(b->shot[i].x) - 8);
             out[n].y = (short)(HI(b->shot[i].y) - 12);
@@ -814,5 +896,34 @@ int vk_boss_sprites(const VKBoss *b, VKBossSprite out[VK_BOSS_MAX_SPRITES])
             out[n].size = 2;
             n++;
         }
-    return n;
+    return shared_flames(b,out,n);
+}
+
+/* 81CE: body15h gives 3000 points; class6 contact doubles base3 to 6. */
+int vk_boss_score(const VKBoss *b) {return b->kind==4?70:b->kind==3?30:VK_BOSS_SCORE;}
+int vk_boss_touch_damage(const VKBoss *b,int sx,int sy,int state)
+{
+    if(b->kind==4)return 6;
+    if(b->kind!=3)return VK_BOSS_DAMAGE_CONTACT;
+    if(b->walker[0].alive && contact_box(sx,sy,state,HI(b->walker[0].x),HI(b->walker[0].y),0x28,5))return 6;
+    return 2;
+}
+int vk_boss_rider_whip(const VKBoss *b,int sx,int sy,int left,int state,int chain)
+{
+    const VKBossWalker *w=&b->walker[1];
+    return b->kind==3 && !b->ending && b->energy && w->alive && whip_box(sx,sy,left,state,chain,HI(w->x),HI(w->y),0x10,8);
+}
+/* 7DE6/8066 then 9AB3: rider18h recoils for eight passes, it is not deleted. */
+int vk_boss_rider_hit(VKBoss *b,int power)
+{
+    VKBossWalker *w=&b->walker[1];
+    if(b->kind!=3 || w->alive!=1 || b->ending || !b->energy)return 0;
+    w->armed=1;w->turns=(VKBossU8)(w->turns-power);
+    if(w->turns==0 || (w->turns&0x80)) {w->wait=8;return 2;}
+    return 0;
+}
+
+void vk_boss_shot_shield(VKBoss *b,int i)
+{
+    if(i>=0 && i<vk_boss_shot_count(b))boss12_shot_disappear(b,i);
 }

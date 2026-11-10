@@ -14,6 +14,8 @@
 
 /* B63F + 2 x D000 -> nibble tables (B665, B668, B66B, B66E, B673, B677, B67C, B681): the pose base of each room, 0 = none.
  * Indexes 0 to 4 of 00 9B 9D 9F A1 (B642). Stages 4 to 9 (B665, B668, B66B: 6 rooms each for the stages 4 to 6). */
+/* LOT11: the same1B handler is used by D002=3..5 (executed8AF0). */
+#include "generated/late_ghost.h"
 static EnemyU8 ghostBase(EnemyU8 stage, EnemyU8 room)
 {
     static const EnemyU8 st4[6] = { 0x9F, 0x9D, 0x9F, 0x9D, 0x9F, 0x9F };
@@ -23,6 +25,7 @@ static EnemyU8 ghostBase(EnemyU8 stage, EnemyU8 room)
     static const EnemyU8 st8[8] = { 0x9F, 0x9F, 0x00, 0x9B, 0x9B, 0x9F, 0x9F, 0x9B };
     static const EnemyU8 st11[6] = { 0x9B, 0xA1, 0x00, 0x00, 0x00, 0xA1 };
     static const EnemyU8 st9[10] = { 0x9F, 0x9F, 0x9F, 0x9F, 0x00, 0xA1, 0x9B, 0x9B, 0x00, 0x00 };
+    if(stage>=12 && stage<=18 && room<12)return late_ghost_base[stage-12][room];
     if (stage == 4 && room < 6) return st4[room];
     if (stage == 5 && room < 6) return st5[room];
     if (stage == 6 && room < 6) return st6[room];
@@ -151,7 +154,7 @@ void Enemies_candleObject(EnemyState *s, EnemyU8 stage, EnemyU8 room, EnemyU8 x,
 {
     Enemy *e;
     S8Ext *q;
-    if (stage < 4 || stage > 11 || stage == 10) return; /* D002 = 1 : object 1A, D002 = 2 : object 1C, D002 = 3 : object 1B (stage 11, 4 candles of object 15 ; none in the stage 10) */
+    if (stage < 4 || stage > 18 || stage == 10) return; /* D002 = 1 : object 1A, D002 = 2 : object 1C, D002 = 3 : object 1B (stage 11, 4 candles of object 15 ; none in the stage 10) */
     ghostCell = Enemies_ghostCell(stage);
     e = newObject(s, ENEMY_TYPE_GHOST);
     if (!e) return;

@@ -36,6 +36,8 @@ void vk_hud_show_frame(void);
 /* Draws the bar cells, the labels and the status line (last values) after a
  * scene or room load. */
 void vk_hud_show(void);
+/* Credits temporarily reuse play-mode VRAM; force HUD textures to reload. */
+void vk_hud_invalidate_tiles(void);
 /* Score, stage, hearts and lives of the top line; redraws the fields that
  * changed. */
 void vk_hud_status(u32 score, u16 stage, u16 hearts, u16 lives);

@@ -1,0 +1,418 @@
+{
+  "scenarios": 54,
+  "AI_images": 12960,
+  "static_scenarios": 18,
+  "static_render_passes": 3240,
+  "cases": [
+    {
+      "boss": 0,
+      "type": 12,
+      "pose": 133,
+      "AI": false,
+      "objects": 7,
+      "passes": 180,
+      "images": null
+    },
+    {
+      "boss": 0,
+      "type": 12,
+      "pose": 133,
+      "AI": true,
+      "objects": 7,
+      "passes": 180,
+      "images": 360
+    },
+    {
+      "boss": 0,
+      "type": 12,
+      "pose": 134,
+      "AI": false,
+      "objects": 7,
+      "passes": 180,
+      "images": null
+    },
+    {
+      "boss": 0,
+      "type": 12,
+      "pose": 134,
+      "AI": true,
+      "objects": 7,
+      "passes": 180,
+      "images": 360
+    },
+    {
+      "boss": 0,
+      "type": 4,
+      "pose": 3,
+      "AI": false,
+      "objects": 8,
+      "passes": 180,
+      "images": null
+    },
+    {
+      "boss": 0,
+      "type": 4,
+      "pose": 3,
+      "AI": true,
+      "objects": 8,
+      "passes": 180,
+      "images": 360
+    },
+    {
+      "boss": 0,
+      "type": 9,
+      "pose": 3,
+      "AI": false,
+      "objects": 8,
+      "passes": 180,
+      "images": null
+    },
+    {
+      "boss": 0,
+      "type": 9,
+      "pose": 3,
+      "AI": true,
+      "objects": 8,
+      "passes": 180,
+      "images": 360
+    },
+    {
+      "boss": 1,
+      "type": 12,
+      "pose": 133,
+      "AI": false,
+      "objects": 1,
+      "passes": 180,
+      "images": null
+    },
+    {
+      "boss": 1,
+      "type": 12,
+      "pose": 133,
+      "AI": true,
+      "objects": 1,
+      "passes": 180,
+      "images": 360
+    },
+    {
+      "boss": 1,
+      "type": 12,
+      "pose": 134,
+      "AI": false,
+      "objects": 1,
+      "passes": 180,
+      "images": null
+    },
+    {
+      "boss": 1,
+      "type": 12,
+      "pose": 134,
+      "AI": true,
+      "objects": 1,
+      "passes": 180,
+      "images": 360
+    },
+    {
+      "boss": 1,
+      "type": 4,
+      "pose": 3,
+      "AI": false,
+      "objects": 8,
+      "passes": 180,
+      "images": null
+    },
+    {
+      "boss": 1,
+      "type": 4,
+      "pose": 3,
+      "AI": true,
+      "objects": 8,
+      "passes": 180,
+      "images": 360
+    },
+    {
+      "boss": 1,
+      "type": 9,
+      "pose": 3,
+      "AI": false,
+      "objects": 8,
+      "passes": 180,
+      "images": null
+    },
+    {
+      "boss": 1,
+      "type": 9,
+      "pose": 3,
+      "AI": true,
+      "objects": 8,
+      "passes": 180,
+      "images": 360
+    },
+    {
+      "type": 3,
+      "x": 6,
+      "y": 144,
+      "frozen": true,
+      "images": 360
+    },
+    {
+      "type": 3,
+      "x": 7,
+      "y": 144,
+      "frozen": true,
+      "images": 360
+    },
+    {
+      "type": 3,
+      "x": 240,
+      "y": 144,
+      "frozen": true,
+      "images": 360
+    },
+    {
+      "type": 3,
+      "x": 241,
+      "y": 144,
+      "frozen": true,
+      "images": 360
+    },
+    {
+      "type": 3,
+      "x": 96,
+      "y": 227,
+      "frozen": true,
+      "images": 360
+    },
+    {
+      "type": 3,
+      "x": 96,
+      "y": 228,
+      "frozen": true,
+      "images": 360
+    },
+    {
+      "type": 4,
+      "x": 6,
+      "y": 144,
+      "frozen": true,
+      "images": 360
+    },
+    {
+      "type": 4,
+      "x": 7,
+      "y": 144,
+      "frozen": true,
+      "images": 360
+    },
+    {
+      "type": 4,
+      "x": 240,
+      "y": 144,
+      "frozen": true,
+      "images": 360
+    },
+    {
+      "type": 4,
+      "x": 241,
+      "y": 144,
+      "frozen": true,
+      "images": 360
+    },
+    {
+      "type": 4,
+      "x": 96,
+      "y": 227,
+      "frozen": true,
+      "images": 360
+    },
+    {
+      "type": 4,
+      "x": 96,
+      "y": 228,
+      "frozen": true,
+      "images": 360
+    },
+    {
+      "type": 9,
+      "x": 6,
+      "y": 144,
+      "frozen": true,
+      "images": 360
+    },
+    {
+      "type": 9,
+      "x": 7,
+      "y": 144,
+      "frozen": true,
+      "images": 360
+    },
+    {
+      "type": 9,
+      "x": 240,
+      "y": 144,
+      "frozen": true,
+      "images": 360
+    },
+    {
+      "type": 9,
+      "x": 241,
+      "y": 144,
+      "frozen": true,
+      "images": 360
+    },
+    {
+      "type": 9,
+      "x": 96,
+      "y": 227,
+      "frozen": true,
+      "images": 360
+    },
+    {
+      "type": 9,
+      "x": 96,
+      "y": 228,
+      "frozen": true,
+      "images": 360
+    },
+    {
+      "type": 3,
+      "pose": 3,
+      "AI": false,
+      "images": null,
+      "render_passes": 180
+    },
+    {
+      "type": 3,
+      "pose": 3,
+      "AI": true,
+      "images": 360,
+      "render_passes": 180
+    },
+    {
+      "type": 4,
+      "pose": 3,
+      "AI": false,
+      "images": null,
+      "render_passes": 180
+    },
+    {
+      "type": 4,
+      "pose": 3,
+      "AI": true,
+      "images": 360,
+      "render_passes": 180
+    },
+    {
+      "type": 4,
+      "pose": 75,
+      "AI": false,
+      "images": null,
+      "render_passes": 180
+    },
+    {
+      "type": 4,
+      "pose": 75,
+      "AI": true,
+      "images": 360,
+      "render_passes": 180
+    },
+    {
+      "type": 4,
+      "pose": 76,
+      "AI": false,
+      "images": null,
+      "render_passes": 180
+    },
+    {
+      "type": 4,
+      "pose": 76,
+      "AI": true,
+      "images": 360,
+      "render_passes": 180
+    },
+    {
+      "type": 4,
+      "pose": 77,
+      "AI": false,
+      "images": null,
+      "render_passes": 180
+    },
+    {
+      "type": 4,
+      "pose": 77,
+      "AI": true,
+      "images": 360,
+      "render_passes": 180
+    },
+    {
+      "type": 9,
+      "pose": 3,
+      "AI": false,
+      "images": null,
+      "render_passes": 180
+    },
+    {
+      "type": 9,
+      "pose": 3,
+      "AI": true,
+      "images": 360,
+      "render_passes": 180
+    },
+    {
+      "type": 9,
+      "pose": 99,
+      "AI": false,
+      "images": null,
+      "render_passes": 180
+    },
+    {
+      "type": 9,
+      "pose": 99,
+      "AI": true,
+      "images": 360,
+      "render_passes": 180
+    },
+    {
+      "type": 9,
+      "pose": 100,
+      "AI": false,
+      "images": null,
+      "render_passes": 180
+    },
+    {
+      "type": 9,
+      "pose": 100,
+      "AI": true,
+      "images": 360,
+      "render_passes": 180
+    },
+    {
+      "type": 9,
+      "pose": 101,
+      "AI": false,
+      "images": null,
+      "render_passes": 180
+    },
+    {
+      "type": 9,
+      "pose": 101,
+      "AI": true,
+      "images": 360,
+      "render_passes": 180
+    },
+    {
+      "type": 9,
+      "pose": 102,
+      "AI": false,
+      "images": null,
+      "render_passes": 180
+    },
+    {
+      "type": 9,
+      "pose": 102,
+      "AI": true,
+      "images": 360,
+      "render_passes": 180
+    }
+  ]
+}

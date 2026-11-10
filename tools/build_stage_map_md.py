@@ -1,17 +1,24 @@
 #!/usr/bin/env python3
 """Tables of the stage map (object 0F) read from the ROM: research/stage-map.md."""
 import sys
+import argparse
+from probe import ROOT,load_rom,reference_rom
 from pathlib import Path
 
-STAGES = 11
+STAGES = 19
 BANK2 = 0x4000                       # 8000-9FFF of the ROM map at file offset 4000
 
 
 def main():
-    rom = Path(sys.argv[1]).read_bytes()
-    out = Path(sys.argv[2])
+    parser=argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('rom',nargs='?',type=Path,default=reference_rom())
+    parser.add_argument('out',nargs='?',type=Path,default=ROOT/'sgdk/src/generated')
+    parser.add_argument('--check',action='store_true');args=parser.parse_args()
+    rom = load_rom(args.rom)
+    out = args.out
     at = lambda addr, n: rom[addr - BANK2:addr - BANK2 + n]
     counts = at(0x95F6, STAGES)
+    assert max(counts)<=12
     rooms = []
     for stage in range(STAGES):
         low, high = at(0x9695 + 2 * stage, 2)
@@ -34,8 +41,10 @@ def main():
         code.append(nested(data, [int(d) for d in dims[1:-1].split('][')]))
         code.append('};')
     head.append('#endif')
-    (out / 'stage_map_md.h').write_text('\n'.join(head) + '\n')
-    (out / 'stage_map_md.c').write_text('\n'.join(code) + '\n')
+    for name,text in [('stage_map_md.h','\n'.join(head)+'\n'),('stage_map_md.c','\n'.join(code)+'\n')]:
+        if args.check:assert (out/name).read_text()==text,name
+        else:(out/name).write_text(text)
+    print('Stage map:19 ROM tables', 'CHECK PASS' if args.check else 'generated')
 
 
 def nested(data, dims):

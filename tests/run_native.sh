@@ -69,9 +69,9 @@ ${CC:-cc} -std=c99 -Wall -Wextra -Werror -Isgdk/src tests/test_wall.c sgdk/src/w
     sgdk/src/gameplay.c sgdk/src/player.c sgdk/src/room_manager.c sgdk/src/generated/player_assets.c \
     sgdk/src/generated/stage1_collision.c sgdk/src/generated/candles_md.c $MAPS -o "$BIN"
 "$BIN"
-${CC:-cc} -std=c99 -Wall -Wextra -Werror -Isgdk/src tests/test_stage_map.c sgdk/src/stage_map.c sgdk/src/candles.c sgdk/src/whip.c \
+${CC:-cc} -std=c99 -Wall -Wextra -Werror -Isgdk/src tests/test_stage_map.c sgdk/src/stage_map.c sgdk/src/item_effects.c sgdk/src/wall.c sgdk/src/enemies.c sgdk/src/candles.c sgdk/src/whip.c \
     sgdk/src/gameplay.c sgdk/src/player.c sgdk/src/room_manager.c sgdk/src/generated/player_assets.c \
-    sgdk/src/generated/stage1_collision.c sgdk/src/generated/candles_md.c sgdk/src/generated/stage_map_md.c $MAPS -o "$BIN"
+    sgdk/src/generated/stage1_collision.c sgdk/src/generated/candles_md.c sgdk/src/generated/stage_map_md.c sgdk/src/generated/stage1[2-8]_foundations.c $MAPS -o "$BIN"
 "$BIN"
 ${CC:-cc} -std=c99 -Wall -Wextra -Werror -Isgdk/src -Itests/native_include -Itests tests/test_stage8.c sgdk/src/gameplay.c \
     sgdk/src/player.c sgdk/src/room_manager.c sgdk/src/generated/intro_assets.c sgdk/src/generated/player_assets.c sgdk/src/generated/stage1_collision.c $MAPS -o "$BIN"
@@ -100,6 +100,11 @@ echo 'Native gameplay, physics, whip, room manager, enemy, health, item, candle,
 # Archived MSX2 Z80 raw object slots for the unfinished stage 12.
 sh ./tests/run_stage12_object_records.sh
 sh ./tests/run_stage12_secret.sh
+sh ./tests/run_secret_trace.sh
+sh ./tests/run_loot_trace.sh
+sh ./tests/run_candle_loot_trace.sh
+sh ./tests/run_item_trace.sh
+sh ./tests/run_late_runtime.sh
 # Safe per-room access to original stage-12 Z80 object slots; no object effects inferred.
 sh ./tests/run_stage12_object_view.sh
 # Candle field mapping independently checked against 275 Z80 precedents (stages 0..11).
@@ -145,3 +150,46 @@ sh ./tests/run_enemy10_helpers.sh
 
 # Executed Z80 vs C type-10 gameplay and returning projectile.
 sh ./tests/run_enemy10_trace.sh
+
+sh ./tests/run_enemy09_trace.sh
+
+sh ./tests/run_enemy12_trace.sh
+
+sh ./tests/run_late_channels_trace.sh
+
+sh ./tests/run_late_pools_trace.sh
+sh ./tests/run_mixed_pools.sh
+sh ./tests/run_sat_alias.sh
+sh ./tests/run_d700_alias.sh
+sh ./tests/run_c800_sat.sh
+sh ./tests/run_legacy_revisit.sh
+sh ./tests/run_touch09.sh
+sh ./tests/run_boss15_pools.sh
+
+# Stage12 boss, actual Z80 fight, boxes and end-of-stage script.
+sh ./tests/run_boss12_trace.sh
+
+# Stage15 body, projectiles, collision and ending versus actual Z80.
+sh ./tests/run_boss15_trace.sh
+
+# Stage18 Dracula and credits: standalone logic versus actual Z80.
+sh ./tests/run_dracula_trace.sh
+
+# Late walls/merchants versus actual Z80, all74 rooms.
+sh ./tests/run_trade_trace.sh
+
+# Optional compiled-ROM regression: explicit core path, SGDK ROM must exist.
+if [ -n "${VK_MD_CORE:-}" ]; then
+    sh ./tests/run_dracula_md.sh
+    sh ./tests/run_trade_md.sh
+    sh ./tests/run_secret_md.sh
+    sh ./tests/run_item_md.sh
+    sh ./tests/run_late_runtime_md.sh
+    sh ./tests/run_loot_md.sh
+    sh ./tests/run_candle_loot_md.sh
+    sh ./tests/run_mixed_pools_md.sh
+    sh ./tests/run_touch09_md.sh
+    sh ./tests/run_c800_sat_md.sh
+    sh ./tests/run_legacy_revisit_md.sh
+    sh ./tests/run_late_scenarios.sh
+fi

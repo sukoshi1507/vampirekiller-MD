@@ -1,0 +1,10 @@
+{
+  "passed": true,
+  "scope": "RAM entry into stage18/room9; no traversal validation",
+  "frames": 24793,
+  "room_pixels": 17408,
+  "credits_pixels": 57344,
+  "score": 160000,
+  "completions": 2,
+  "core": "/workspace/emulators/genesis-plus-gx/genesis_plus_gx_libretro.so"
+}

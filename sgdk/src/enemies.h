@@ -29,7 +29,9 @@ typedef signed char EnemyS8;
 typedef unsigned short EnemyU16;
 typedef short EnemyS16;
 
-#define ENEMY_MAX 7          /* ennemis simultanes : les 7 blocs C800..CB00 de la ROM (5F35, premier bloc libre) */
+#define ENEMY_MAX 7
+#define ENEMY_PROJECTILE_MAX 8
+#define ENEMY_ALL (ENEMY_MAX+ENEMY_PROJECTILE_MAX)          /* ennemis simultanes : les 7 blocs C800..CB00 de la ROM (5F35, premier bloc libre) */
 #define ENEMY_SPRITES 4      /* entrees SAT d'un ennemi de type A ou B (2 cellules 16x16, 2 couches chacune) */
 #define ENEMY_TYPE4_SPRITES 2 /* entrees SAT d'un ennemi de type 4 (une cellule 16x16, 2 couches) */
 
@@ -78,25 +80,32 @@ typedef enum {
     ENEMY_TYPE_DEATH = 16,   /* objet 1E, flamme de mort creee par 9A3E a la mort d'un ennemi (enemies_death.inc) */
     ENEMY_TYPE_FISH3 = 17,   /* objet 03 et 21h du stage 10 (homme-poisson qui crache, routine A310, enemies_fish3.inc) */
     ENEMY_TYPE_EAGLE = 18,   /* objet 0F du stage 11 (aigle qui porte une puce 23h, routine B1C3, enemies_stage11.inc) */
+    ENEMY_TYPE_12 = 23,      /* BE50/BE70, stage16 fixed entries */
+    ENEMY_TYPE_09 = 22,      /* C800 type 09h, AF4A/AF5F */
     ENEMY_TYPE_10 = 20,       /* MSX type 10h, ADDE/ADF8, returning projectile */
     ENEMY_TYPE_10_SHOT = 21,  /* D700 type 09h, A07B/9EC5 */
+    ENEMY_TYPE_LOOT_HEART = 25, /* C80024, occupies2 SAT slots until pickup/landing */
+    ENEMY_TYPE_LOOT_FLAME = 26, /* C80026 */
+    ENEMY_TYPE_SHIELD_SPARK = 24, /* D700 type12,9A1A:16-pass flame, no drop */
     ENEMY_TYPE_DRAGON = 19   /* objet 0E du stage 11 salle 5 (dragon a quatre morceaux, routine A9B7, enemies_dragon.inc) */
 } EnemyType;
 
 /* Un bloc qui tient une flamme de mort (objet 1E, creee a la mort d'un ennemi) n'est pas un ennemi vivant. */
-#define Enemy_alive(e) ((e).active && (e).type != ENEMY_TYPE_DEATH)
+#define Enemy_alive(e) ((e).active && (e).type != ENEMY_TYPE_DEATH && (e).type != ENEMY_TYPE_SHIELD_SPARK && (e).type != ENEMY_TYPE_LOOT_HEART && (e).type != ENEMY_TYPE_LOOT_FLAME)
 
-/* Objets laisses par la mort d'un ennemi (9ABE, research/death-flame.md), remis a candles.c : main.c vide la file a chaque image
- * (vk_candles_death_drop). kind 1 : le coeur (objet 24) cree a la fin de la flamme de mort, en (x, y) de la flamme ; kind 2 ou 13h : une
- * flamme d'objet 26 a la place de la flamme de mort (objet 02 : grand coeur, 13h : 5000 points), en (x, y) de l'ennemi tue. */
+/* Enemy-derived24/26 keep their Enemy slot while airborne. Landing alone emits
+ * this queue to candles.c; landed=1 gives final C500 coordinates. Legacy events
+ * with landed=0 retain the old API. main.c consumes it each image. */
 #define ENEMY_DROP_MAX 8
 typedef struct {
     unsigned char kind;
     short x;                 /* X de l'objet MSX (comme Enemy.x des flammes) */
     unsigned char y;         /* Y de l'objet MSX */
+    unsigned char landed;    /* LOT12: x/y are final C500 floor coordinates */
 } EnemyDrop;
 extern EnemyDrop Enemies_drops[ENEMY_DROP_MAX];
 extern unsigned char Enemies_dropCount;
+extern unsigned char Enemies_lootPick;
 
 /* Un ennemi actif. x est la coordonnee SAT (pixels, signee pour le hors-ecran).
  * Type 5 : x et y sont l'objet MSX (X comme C427, Y = bas du corps comme C425), sub la
@@ -241,6 +250,8 @@ void Enemies_init(EnemyState *s);
  * les fouets 1A-1D (C440). c431 = C431 (bit 2 : minuteries F0h). Les autres objets sont sans
  * effet ici. */
 void Enemies_item(EnemyState *s, EnemyU8 kind, EnemyU8 c431);
+/* 8610 before object movement: one sound0B per intercepted D700 projectile. */
+int Enemies_shield(EnemyState *s,const EnemyRoomVars *v,EnemyU8 *inventory);
 /* 8AD0 : une bougie d'objet 15 s'eteint apres 16 passes ; l'objet 1A (stages 4 a 6, groupe D002 = 1) ou 1C (stages 7 a 9, D002 = 2) est cree
  * en (x, y + 16) de la bougie (B4D2). Sans effet hors de ces stages (le groupe 3, objet 1B du stage 10, est inatteignable : aucune bougie 15). */
 /* Pose de base (9B, 9D, 9F ou A1, 0 si aucune) de l'objet 1A / 1C dans une salle des stages 4 a 9 : choisit les tuiles de la salle. */
@@ -295,6 +306,7 @@ int Enemies_spawnTimerTick(EnemySpawnTimer *t, const EnemyRoomVars *v, EnemyStat
  * *pushX reçoit le deplacement de Simon de cette image (px, signe) ; 0 hors recul.
  * Retourne 1 si un contact a ete compte cette image (energie -2, -6 pour le type 5), 0 sinon. */
 /* God mode (port addition, Konami code while paused): no contact damage nor recoil. */
+extern EnemyU8 Enemies_itemSoundCount,Enemies_itemSounds[2];
 extern EnemyU8 Enemies_god;
 /* Stage 7 : valeur de LD A,R (B216, B29E, B4AD) des objets 0B et 0D, 0 a 255 pour une valeur fixe (tests, scenario), -1 pour le
  * generateur du port. */
@@ -395,4 +407,20 @@ int Enemies_sprites(const EnemyState *s, EnemyU8 index, EnemySprite out[ENEMY_SP
 /* 1 si l'ennemi est visible a l'ecran (x dans 0..255 : limites de sortie gerees par update). */
 int Enemies_isVisible(const Enemy *e);
 
+/* 898F/89BF: return1 on C800 allocation,0 on failure (C500 fallback). */
+int Enemies_candleLoot(EnemyState *s,unsigned char kind,unsigned char x,unsigned char y);
+
+/* Public C800 layout remains166. D700 is a separate eight-object pool.
+ * Logical indices0..6=C800,7..14=D700; only the renderer/general interactions
+ * use the combined view. Production D700 constructors never consume C800. */
+typedef void (*EnemyLootHandler)(EnemyState *s,EnemyU8 kind);
+void Enemies_loot_handler(EnemyLootHandler callback);
+void Enemies_sat_render(EnemyState *s);
+void Enemies_sat_boss(EnemyU8 on);
+/* count0 releases;1 success,0 SAT exhaustion,-1 occupied physical slot. */
+int Enemies_boss15_reserve(EnemyState *s,int slot,int count);
+unsigned long Enemies_sat_mask(EnemyState *s);
+extern Enemy vk_projectiles[ENEMY_PROJECTILE_MAX];
+Enemy *Enemies_slot(EnemyState *s,EnemyU8 index);
+const Enemy *Enemies_object(const EnemyState *s,EnemyU8 index);
 #endif /* VK_ENEMIES_H */

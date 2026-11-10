@@ -1,0 +1,6 @@
+{
+  "loader": "probe.load_rom(probe.reference_rom())",
+  "bytes": 131072,
+  "sha256": "99eabaaeb2b6c02220e131043d5a6401d0d8c5f413d89204547adcc04d65e7e2",
+  "rom_instructions_modified": false
+}

@@ -51,7 +51,7 @@ static void replay(const StepCase *c, int n, int type)
     EnemyRoomVars v = { 0 };
     memset(&s, 0, sizeof s);
     for (i = 0; i < n; i++) {
-        Enemy *e = &s.enemy[0];
+        Enemy *e = Enemies_slot(&s,0);
         S8Ext *q = &s8x[0];
         if (c[i].room != lastRoom) {
             assert(vk_game_debug_start(&g, 8, c[i].room)); vk_game_room_map(&g); lastRoom = c[i].room;
@@ -97,27 +97,27 @@ int main(void)
     Enemies_init(&s); Enemies_spawnTimerInit(&t);
     v = roomVars(&g, 2, 16, 144);
     Enemies_frame(&s, &t, &v);
-    e = &s.enemy[0];
+    e = Enemies_slot(&s,0);
     assert(e->active && e->type == ENEMY_TYPE_HOPPER && e->x == 208 && e->y == 80 && e->extraPhase == 4);
-    assert(s8x[0].vx == -0x240 && s8x[0].mobile == 1);
+    assert(ext(&s,Enemies_slot(&s,0))->vx == -0x240 && ext(&s,Enemies_slot(&s,0))->mobile == 1);
     Enemies_frame(&s, &t, &v);   /* B344 falls into B364: the creation already counts one in +12 (ROM, stage 7 Z80 vectors) */
-    assert(e->x == 0xCD && e->timer == 0xC0 && s8x[0].c12 == 2 && e->pose == 0x48);
+    assert(e->x == 0xCD && e->timer == 0xC0 && ext(&s,Enemies_slot(&s,0))->c12 == 2 && e->pose == 0x48);
     Enemies_frame(&s, &t, &v); Enemies_frame(&s, &t, &v);
-    assert(e->x == 0xCB && e->timer == 0x80 && s8x[0].c12 == 3);
+    assert(e->x == 0xCB && e->timer == 0x80 && ext(&s,Enemies_slot(&s,0))->c12 == 3);
 
     /* Room 5: the leaper 0C of the list (80, 80), pose 89, 18h passes of waiting, then the first leap (A7BD):
      * Simon (244, 144) is lower and to the right: vx +200h, vy +220h (table A81B, +18 & 3 = 0). */
     Enemies_init(&s); Enemies_spawnTimerInit(&t);
     v = roomVars(&g, 5, 244, 144);
     Enemies_frame(&s, &t, &v);
-    e = &s.enemy[0];
+    e = Enemies_slot(&s,0);
     assert(e->active && e->type == ENEMY_TYPE_LEAPER && e->x == 80 && e->y == 80 && e->pose == 0x89 && e->extraPhase == 1);
-    assert(s8x[0].c10 == 0x18 && !s8x[0].mobile);
+    assert(ext(&s,Enemies_slot(&s,0))->c10 == 0x18 && !ext(&s,Enemies_slot(&s,0))->mobile);
     for (n = 0; n < 46; n++) Enemies_frame(&s, &t, &v);
-    assert(e->state == 0 && s8x[0].c10 == 1 && !s8x[0].mobile);       /* 23 passes done */
+    assert(e->state == 0 && ext(&s,Enemies_slot(&s,0))->c10 == 1 && !ext(&s,Enemies_slot(&s,0))->mobile);       /* 23 passes done */
     Enemies_frame(&s, &t, &v);                                         /* frame 47: not a pass */
     Enemies_frame(&s, &t, &v);                                         /* frame 48: pass 24, the leap and its first move */
-    assert(e->state == 1 && s8x[0].mobile && s8x[0].vx == 0x200 && e->vy == 0x220);
+    assert(e->state == 1 && ext(&s,Enemies_slot(&s,0))->mobile && ext(&s,Enemies_slot(&s,0))->vx == 0x200 && e->vy == 0x220);
     assert(e->x == 82 && e->timer == 0 && e->y == 82 && e->sub == 0x20);
 
     /* Fixed list of rooms 6 and 7: statue + leaper, hopper. */
@@ -125,71 +125,71 @@ int main(void)
     v = roomVars(&g, 6, 16, 144);
     Enemies_frame(&s, &t, &v);
     n = 0; k = 0;
-    for (slot = 0; slot < ENEMY_MAX; slot++) {
-        if (s.enemy[slot].active && s.enemy[slot].type == ENEMY_TYPE_STATUE) { n++; assert(s.enemy[slot].x == 144 && s.enemy[slot].y == 144); }
-        if (s.enemy[slot].active && s.enemy[slot].type == ENEMY_TYPE_LEAPER) { k++; assert(s.enemy[slot].x == 80 && s.enemy[slot].y == 192); }
+    for (slot = 0; slot < ENEMY_ALL; slot++) {
+        if (Enemies_slot(&s,slot)->active && Enemies_slot(&s,slot)->type == ENEMY_TYPE_STATUE) { n++; assert(Enemies_slot(&s,slot)->x == 144 && Enemies_slot(&s,slot)->y == 144); }
+        if (Enemies_slot(&s,slot)->active && Enemies_slot(&s,slot)->type == ENEMY_TYPE_LEAPER) { k++; assert(Enemies_slot(&s,slot)->x == 80 && Enemies_slot(&s,slot)->y == 192); }
     }
     assert(n == 1 && k == 1);
     Enemies_init(&s); Enemies_spawnTimerInit(&t);
     v = roomVars(&g, 7, 16, 144);
     Enemies_frame(&s, &t, &v);
-    assert(s.enemy[0].active && s.enemy[0].type == ENEMY_TYPE_HOPPER && s.enemy[0].x == 128 && s.enemy[0].y == 192);
+    assert(Enemies_slot(&s,0)->active && Enemies_slot(&s,0)->type == ENEMY_TYPE_HOPPER && Enemies_slot(&s,0)->x == 128 && Enemies_slot(&s,0)->y == 192);
 
     /* The throw (B4A9, 9F61): 10h passes of windup, then a bone in (X, Y - 10h), vx +-180h toward Simon, vy -500h or
      * -800h (R register, random), moved in the same pass: trace R f1970 gives X 66.80, Y 78.50, vy F850. */
     Enemies_init(&s); Enemies_spawnTimerInit(&t);
     v = roomVars(&g, 2, 16, 144);
     Enemies_frame(&s, &t, &v);
-    e = &s.enemy[0];
-    e->x = 0x68; e->y = 0x90; e->timer = 0; e->sub = 0; e->state = 2; s8x[0].c10 = 1; s8x[0].mobile = 0;
+    e = Enemies_slot(&s,0);
+    e->x = 0x68; e->y = 0x90; e->timer = 0; e->sub = 0; e->state = 2; ext(&s,Enemies_slot(&s,0))->c10 = 1; ext(&s,Enemies_slot(&s,0))->mobile = 0;
     Enemies_frame(&s, &t, &v);
     k = -1;
-    for (slot = 0; slot < ENEMY_MAX; slot++) if (s.enemy[slot].active && s.enemy[slot].type == ENEMY_TYPE_BONE) k = slot;
-    assert(k >= 0 && e->state == 0 && s8x[0].mobile);
-    assert(s8x[k].vx == -0x180 && s.enemy[k].x == 0x66 && s.enemy[k].timer == 0x80 && s.enemy[k].pose == 0x4B);
-    assert(s.enemy[k].vy == -0x7B0 || s.enemy[k].vy == -0x4B0);
-    assert(s.enemy[k].y == (s.enemy[k].vy == -0x7B0 ? 0x78 : 0x7B));
+    for (slot = 0; slot < ENEMY_ALL; slot++) if (Enemies_slot(&s,slot)->active && Enemies_slot(&s,slot)->type == ENEMY_TYPE_BONE) k = slot;
+    assert(k >= 0 && e->state == 0 && ext(&s,Enemies_slot(&s,0))->mobile);
+    assert(ext(&s,Enemies_slot(&s,k))->vx == -0x180 && Enemies_slot(&s,k)->x == 0x66 && Enemies_slot(&s,k)->timer == 0x80 && Enemies_slot(&s,k)->pose == 0x4B);
+    assert(Enemies_slot(&s,k)->vy == -0x7B0 || Enemies_slot(&s,k)->vy == -0x4B0);
+    assert(Enemies_slot(&s,k)->y == (Enemies_slot(&s,k)->vy == -0x7B0 ? 0x78 : 0x7B));
 
     /* Contacts: hopper and leaper -2 (81CE base 1, doubled), bone -1 (7F3D, 462B with B = 1), no armor. */
     Enemies_init(&s); Enemies_spawnTimerInit(&t);
     v = roomVars(&g, 2, 100, 144);
-    s.enemy[0].active = 1; s.enemy[0].type = ENEMY_TYPE_HOPPER; s.enemy[0].x = 104; s.enemy[0].y = 144; s.enemy[0].extraPhase = 4;
-    s.enemy[0].age = 1;   /* next frame is not a pass */
-    s8x[0].mobile = 0; s8x[0].vx = 0;
-    assert(Enemies_touches(&s.enemy[0], &v));
+    Enemies_slot(&s,0)->active = 1; Enemies_slot(&s,0)->type = ENEMY_TYPE_HOPPER; Enemies_slot(&s,0)->x = 104; Enemies_slot(&s,0)->y = 144; Enemies_slot(&s,0)->extraPhase = 4;
+    Enemies_slot(&s,0)->age = 1;   /* next frame is not a pass */
+    ext(&s,Enemies_slot(&s,0))->mobile = 0; ext(&s,Enemies_slot(&s,0))->vx = 0;
+    assert(Enemies_touches(Enemies_slot(&s,0), &v));
     assert(Enemies_frame(&s, &t, &v) == 1 && s.energy == 30);
     Enemies_init(&s); Enemies_spawnTimerInit(&t);
-    s.enemy[0].active = 1; s.enemy[0].type = ENEMY_TYPE_LEAPER; s.enemy[0].x = 104; s.enemy[0].y = 144; s.enemy[0].extraPhase = 1;
-    s.enemy[0].age = 1; s8x[0].mobile = 0; s8x[0].c10 = 9; s8x[0].vx = 0;
+    Enemies_slot(&s,0)->active = 1; Enemies_slot(&s,0)->type = ENEMY_TYPE_LEAPER; Enemies_slot(&s,0)->x = 104; Enemies_slot(&s,0)->y = 144; Enemies_slot(&s,0)->extraPhase = 1;
+    Enemies_slot(&s,0)->age = 1; ext(&s,Enemies_slot(&s,0))->mobile = 0; ext(&s,Enemies_slot(&s,0))->c10 = 9; ext(&s,Enemies_slot(&s,0))->vx = 0;
     assert(Enemies_frame(&s, &t, &v) == 1 && s.energy == 30);
     Enemies_init(&s); Enemies_spawnTimerInit(&t);
-    s.enemy[0].active = 1; s.enemy[0].type = ENEMY_TYPE_BONE; s.enemy[0].x = 104; s.enemy[0].y = 144; s.enemy[0].age = 1;
-    s8x[0].mobile = 0; s8x[0].vx = 0;
-    assert(Enemies_frame(&s, &t, &v) == 1 && s.energy == 31 && !s.enemy[0].active);   /* the bone is destroyed by the contact */
+    Enemies_slot(&s,0)->active = 1; Enemies_slot(&s,0)->type = ENEMY_TYPE_BONE; Enemies_slot(&s,0)->x = 104; Enemies_slot(&s,0)->y = 144; Enemies_slot(&s,0)->age = 1;
+    ext(&s,Enemies_slot(&s,0))->mobile = 0; ext(&s,Enemies_slot(&s,0))->vx = 0;
+    assert(Enemies_frame(&s, &t, &v) == 1 && s.energy == 31 && !Enemies_slot(&s,0)->active);   /* the bone is destroyed by the contact */
 
     /* Whip (7DAD, 7DE6): the hopper has 4 hit points (1 per hit, 2 with the chain), 200 points; the leaper 1, 100 points;
      * the bone dies at the first hit, 100 points. Simon (100, 144) turned right: the whip reaches X 120. */
     Enemies_init(&s); Enemies_spawnTimerInit(&t);
-    s.enemy[0].active = 1; s.enemy[0].type = ENEMY_TYPE_HOPPER; s.enemy[0].x = 120; s.enemy[0].y = 144; s.enemy[0].extraPhase = 4;
+    Enemies_slot(&s,0)->active = 1; Enemies_slot(&s,0)->type = ENEMY_TYPE_HOPPER; Enemies_slot(&s,0)->x = 120; Enemies_slot(&s,0)->y = 144; Enemies_slot(&s,0)->extraPhase = 4;
     for (k = 0; k < 3; k++) {
-        assert(Enemies_whipHitStage4(&s, 100, 144, 0, 0, 0, &hits) == 0 && hits == 1 && s.enemy[0].active);
+        assert(Enemies_whipHitStage4(&s, 100, 144, 0, 0, 0, &hits) == 0 && hits == 1 && Enemies_slot(&s,0)->active);
         Enemies_rearm(&s);
     }
     assert(Enemies_whipHitStage4(&s, 100, 144, 0, 0, 0, &hits) == 1 && !Enemy_alive(s.enemy[0]) && Enemies_killScore == 2);
-    s.enemy[0].active = 1; s.enemy[0].type = ENEMY_TYPE_HOPPER; s.enemy[0].x = 120; s.enemy[0].y = 144; s.enemy[0].extraPhase = 4;   /* the flame of the kill took the block */
-    assert(Enemies_whipHitStage4(&s, 100, 144, 0, 0, 1, &hits) == 0 && s.enemy[0].active);
+    Enemies_slot(&s,0)->active = 1; Enemies_slot(&s,0)->type = ENEMY_TYPE_HOPPER; Enemies_slot(&s,0)->x = 120; Enemies_slot(&s,0)->y = 144; Enemies_slot(&s,0)->extraPhase = 4;   /* the flame of the kill took the block */
+    assert(Enemies_whipHitStage4(&s, 100, 144, 0, 0, 1, &hits) == 0 && Enemies_slot(&s,0)->active);
     Enemies_rearm(&s);
     assert(Enemies_whipHitStage4(&s, 100, 144, 0, 0, 1, &hits) == 1 && Enemies_killScore == 2);
-    s.enemy[0].active = 1; s.enemy[0].type = ENEMY_TYPE_LEAPER; s.enemy[0].extraPhase = 1; s.enemy[0].x = 120; s.enemy[0].y = 138;
+    Enemies_slot(&s,0)->active = 1; Enemies_slot(&s,0)->type = ENEMY_TYPE_LEAPER; Enemies_slot(&s,0)->extraPhase = 1; Enemies_slot(&s,0)->x = 120; Enemies_slot(&s,0)->y = 138;
     assert(Enemies_whipHitStage4(&s, 100, 144, 0, 0, 0, &hits) == 1 && Enemies_killScore == 1);
-    s.enemy[0].active = 1; s.enemy[0].type = ENEMY_TYPE_BONE; s.enemy[0].extraPhase = 0; s.enemy[0].x = 120; s.enemy[0].y = 134;
+    Enemies_slot(&s,0)->active = 1; Enemies_slot(&s,0)->type = ENEMY_TYPE_BONE; Enemies_slot(&s,0)->extraPhase = 0; Enemies_slot(&s,0)->x = 120; Enemies_slot(&s,0)->y = 134;
     assert(Enemies_whipHitStage4(&s, 100, 144, 0, 0, 0, &hits) == 1 && Enemies_killScore == 1);
 
     /* Thrown weapons (82A4, 8066): the axe (4) kills the hopper at once, the dagger (1) does not. */
-    s.enemy[0].active = 1; s.enemy[0].type = ENEMY_TYPE_HOPPER; s.enemy[0].extraPhase = 4; s.enemy[0].x = 120; s.enemy[0].y = 144;
+    Enemies_slot(&s,0)->active = 1; Enemies_slot(&s,0)->type = ENEMY_TYPE_HOPPER; Enemies_slot(&s,0)->extraPhase = 4; Enemies_slot(&s,0)->x = 120; Enemies_slot(&s,0)->y = 144;
     Enemies_shotPower[0] = 1;
-    assert(Enemies_shotHit(&s, touchSlot0, 0, &slot, &score) == 1 && s.enemy[0].active && (s.enemy[0].extraPhase & 0x0F) == 3);
-    s.enemy[0].extraPhase = 4;
+    assert(Enemies_shotHit(&s, touchSlot0, 0, &slot, &score) == 1 && Enemies_slot(&s,0)->active && (Enemies_slot(&s,0)->extraPhase & 0x0F) == 3);
+    Enemies_slot(&s,0)->extraPhase = 4;
     Enemies_shotPower[0] = 4;
     assert(Enemies_shotHit(&s, touchSlot0, 0, &slot, &score) == 1 && !Enemy_alive(s.enemy[0]) && score == 2);
 
@@ -198,15 +198,15 @@ int main(void)
     {
         EnemySprite sp[ENEMY_SPRITES];
         memset(&s, 0, sizeof s);
-        s.enemy[0].active = 1; s.enemy[0].type = ENEMY_TYPE_HOPPER; s.enemy[0].x = 100; s.enemy[0].y = 144; s.enemy[0].pose = 0x47;
+        Enemies_slot(&s,0)->active = 1; Enemies_slot(&s,0)->type = ENEMY_TYPE_HOPPER; Enemies_slot(&s,0)->x = 100; Enemies_slot(&s,0)->y = 144; Enemies_slot(&s,0)->pose = 0x47;
         assert(Enemies_sprites(&s, 0, sp) == 2 && sp[0].pattern == 0x64 && sp[1].pattern == 0x68 && sp[0].x == 92 && sp[0].y == 113 && sp[1].y == 129);
-        s.enemy[0].pose = 0x4A;
+        Enemies_slot(&s,0)->pose = 0x4A;
         assert(Enemies_sprites(&s, 0, sp) == 2 && sp[0].pattern == 0x7C && sp[1].pattern == 0x80);
-        s.enemy[0].type = ENEMY_TYPE_LEAPER; s.enemy[0].pose = 0x8B;
+        Enemies_slot(&s,0)->type = ENEMY_TYPE_LEAPER; Enemies_slot(&s,0)->pose = 0x8B;
         assert(Enemies_sprites(&s, 0, sp) == 1 && sp[0].pattern == 0x94 && sp[0].x == 92 && sp[0].y == 130);
-        s.enemy[0].type = ENEMY_TYPE_BONE; s.enemy[0].pose = 0x4B;
+        Enemies_slot(&s,0)->type = ENEMY_TYPE_BONE; Enemies_slot(&s,0)->pose = 0x4B;
         assert(Enemies_sprites(&s, 0, sp) == 1 && sp[0].pattern == 0x98 && sp[0].x == 96);
-        s.enemy[0].pose = 0x4C;
+        Enemies_slot(&s,0)->pose = 0x4C;
         assert(Enemies_sprites(&s, 0, sp) == 1 && sp[0].pattern == 0x9C && sp[0].x == 92);
     }
     printf("stage 8 objects (hopper 0B, leaper 0C, bone): %d + %d + %d trace transitions, spawn, throw, contact, whip, shots, sprites PASS\n",

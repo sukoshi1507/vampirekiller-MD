@@ -1,0 +1,210 @@
+C800 SAT 34 executed constructor/pose layouts CHECK PASS
+C800 SAT 9 0x0 96 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 9 0x0 96 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 9 0x0 232 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 9 0x0 232 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 9 0x21 0 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 9 0x21 0 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 9 0x21 96 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 9 0x21 96 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 9 0x21 240 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 9 0x21 240 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 9 0x22 0 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 9 0x22 0 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 9 0x22 96 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 9 0x22 96 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 9 0x22 240 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 9 0x22 240 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 9 0x23 0 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 9 0x23 0 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 9 0x23 96 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 9 0x23 96 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 9 0x23 240 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 9 0x23 240 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 9 0x24 0 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 9 0x24 0 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 9 0x24 96 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 9 0x24 96 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 9 0x24 240 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 9 0x24 240 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 9 0x25 96 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 9 0x25 96 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 9 0x25 239 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 9 0x25 239 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 9 0x26 96 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 9 0x26 96 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 9 0x26 239 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 9 0x26 239 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 11 0x47 0 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 11 0x47 0 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 11 0x47 96 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 11 0x47 96 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 11 0x47 240 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 11 0x47 240 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 11 0x48 0 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 11 0x48 0 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 11 0x48 96 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 11 0x48 96 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 11 0x48 240 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 11 0x48 240 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 11 0x49 0 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 11 0x49 0 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 11 0x49 96 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 11 0x49 96 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 11 0x49 240 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 11 0x49 240 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 11 0x4a 0 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 11 0x4a 0 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 11 0x4a 96 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 11 0x4a 96 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 11 0x4a 240 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 11 0x4a 240 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 13 0x67 96 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 13 0x67 96 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 13 0x67 239 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 13 0x67 239 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 13 0x68 96 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 13 0x68 96 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 13 0x68 239 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 13 0x68 239 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 13 0x6a 96 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 13 0x6a 96 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 13 0x6a 239 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 13 0x6a 239 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 13 0x6b 96 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 13 0x6b 96 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 13 0x6b 239 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 13 0x6b 239 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 15 0x6d 96 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 15 0x6d 96 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 15 0x6d 239 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 15 0x6d 239 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 15 0x6d 247 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 15 0x6d 247 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 15 0x6d 255 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 15 0x6d 255 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 15 0x6e 96 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 15 0x6e 96 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 15 0x6e 239 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 15 0x6e 239 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 15 0x6e 247 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 15 0x6e 247 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 15 0x6e 255 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 15 0x6e 255 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 15 0x8d 96 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 15 0x8d 96 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 15 0x8d 239 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 15 0x8d 239 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 15 0x8d 249 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 15 0x8d 249 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 15 0x8d 255 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 15 0x8d 255 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 16 0x5f 0 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 16 0x5f 0 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 16 0x5f 96 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 16 0x5f 96 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 16 0x5f 240 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 16 0x5f 240 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 16 0x60 0 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 16 0x60 0 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 16 0x60 96 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 16 0x60 96 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 16 0x60 240 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 16 0x60 240 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 16 0x61 0 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 16 0x61 0 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 16 0x61 96 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 16 0x61 96 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 16 0x61 240 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 16 0x61 240 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 16 0x62 0 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 16 0x62 0 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 16 0x62 96 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 16 0x62 96 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 16 0x62 240 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 16 0x62 240 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 18 0x4e 96 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 18 0x4e 96 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 18 0x4e 229 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 18 0x4e 229 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 18 0x4e 245 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 18 0x4e 245 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 18 0x4f 96 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 18 0x4f 96 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 18 0x4f 229 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 18 0x4f 229 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 18 0x4f 245 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 18 0x4f 245 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 27 0x9b 96 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 27 0x9b 96 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 27 0x9b 239 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 27 0x9b 239 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 27 0x9c 96 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 27 0x9c 96 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 27 0x9c 239 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 27 0x9c 239 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 27 0x9d 96 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 27 0x9d 96 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 27 0x9d 239 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 27 0x9d 239 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 27 0x9e 96 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 27 0x9e 96 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 27 0x9e 239 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 27 0x9e 239 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 27 0x9f 96 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 27 0x9f 96 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 27 0x9f 239 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 27 0x9f 239 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 27 0xa0 96 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 27 0xa0 96 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 27 0xa0 239 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 27 0xa0 239 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 27 0xa1 96 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 27 0xa1 96 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 27 0xa1 239 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 27 0xa1 239 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 27 0xa2 96 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 27 0xa2 96 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 27 0xa2 239 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 27 0xa2 239 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 36 0x0 96 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 36 0x0 96 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 36 0x0 232 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 36 0x0 232 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 38 0x1 96 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 38 0x1 96 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 38 0x1 239 0 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+C800 SAT 38 0x1 239 1 180 renders/frozen AI360 images/SAT/IX32/Simon/sounds PASS
+Dragon dynamic SAT 0 0 180 renders/frozen AI360 images/IX32/sprites/Simon/sounds PASS
+Dragon dynamic SAT 0 1 180 renders/frozen AI360 images/IX32/sprites/Simon/sounds PASS
+Dragon dynamic SAT 1 0 180 renders/frozen AI360 images/IX32/sprites/Simon/sounds PASS
+Dragon dynamic SAT 1 1 180 renders/frozen AI360 images/IX32/sprites/Simon/sounds PASS
+Dragon dynamic SAT 2 0 180 renders/frozen AI360 images/IX32/sprites/Simon/sounds PASS
+Dragon dynamic SAT 2 1 180 renders/frozen AI360 images/IX32/sprites/Simon/sounds PASS
+Dragon dynamic SAT 3 0 180 renders/frozen AI360 images/IX32/sprites/Simon/sounds PASS
+Dragon dynamic SAT 3 1 180 renders/frozen AI360 images/IX32/sprites/Simon/sounds PASS
+Dragon dynamic SAT 4 0 180 renders/frozen AI360 images/IX32/sprites/Simon/sounds PASS
+Dragon dynamic SAT 4 1 180 renders/frozen AI360 images/IX32/sprites/Simon/sounds PASS
+Dragon dynamic SAT 5 0 180 renders/frozen AI360 images/IX32/sprites/Simon/sounds PASS
+Dragon dynamic SAT 5 1 180 renders/frozen AI360 images/IX32/sprites/Simon/sounds PASS
+Dragon dynamic SAT 6 0 180 renders/frozen AI360 images/IX32/sprites/Simon/sounds PASS
+Dragon dynamic SAT 6 1 180 renders/frozen AI360 images/IX32/sprites/Simon/sounds PASS
+Dragon dynamic SAT 7 0 180 renders/frozen AI360 images/IX32/sprites/Simon/sounds PASS
+Dragon dynamic SAT 7 1 180 renders/frozen AI360 images/IX32/sprites/Simon/sounds PASS
+Dragon dynamic SAT 8 0 180 renders/frozen AI360 images/IX32/sprites/Simon/sounds PASS
+Dragon dynamic SAT 8 1 180 renders/frozen AI360 images/IX32/sprites/Simon/sounds PASS
+Dragon dynamic SAT 9 0 180 renders/frozen AI360 images/IX32/sprites/Simon/sounds PASS
+Dragon dynamic SAT 9 1 180 renders/frozen AI360 images/IX32/sprites/Simon/sounds PASS
+Dragon dynamic SAT 10 0 180 renders/frozen AI360 images/IX32/sprites/Simon/sounds PASS
+Dragon dynamic SAT 10 1 180 renders/frozen AI360 images/IX32/sprites/Simon/sounds PASS
+Dragon dynamic SAT 11 0 180 renders/frozen AI360 images/IX32/sprites/Simon/sounds PASS
+Dragon dynamic SAT 11 1 180 renders/frozen AI360 images/IX32/sprites/Simon/sounds PASS
+Dragon dynamic SAT 12 0 180 renders/frozen AI360 images/IX32/sprites/Simon/sounds PASS
+Dragon dynamic SAT 12 1 180 renders/frozen AI360 images/IX32/sprites/Simon/sounds PASS
+Dragon dynamic SAT 13 0 180 renders/frozen AI360 images/IX32/sprites/Simon/sounds PASS
+Dragon dynamic SAT 13 1 180 renders/frozen AI360 images/IX32/sprites/Simon/sounds PASS
+Dragon dynamic SAT 14 0 180 renders/frozen AI360 images/IX32/sprites/Simon/sounds PASS
+Dragon dynamic SAT 14 1 180 renders/frozen AI360 images/IX32/sprites/Simon/sounds PASS
+Dragon dynamic SAT 15 0 180 renders/frozen AI360 images/IX32/sprites/Simon/sounds PASS
+Dragon dynamic SAT 15 1 180 renders/frozen AI360 images/IX32/sprites/Simon/sounds PASS
+C800 SAT MD PASS {'frames': 910, 'alias_mask': 12, 'constructor_mask': 15, 'glyph_pixels': 46, 'continuation_each': 360, 'scope': 'stage13/0 controlled RAM fixtures, no natural traversal', 'passed': True}

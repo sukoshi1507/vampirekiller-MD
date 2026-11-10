@@ -26,11 +26,12 @@ def decode(item):
 
 
 def validated():
-    text = OLD.read_text().split('const VKCandleDef vk_fixed_object_defs[71] = {', 1)[1].split('};', 1)[0]
+    text = re.split(r'const VKCandleDef vk_fixed_object_defs\[\d+\] = \{',OLD.read_text(),maxsplit=1)[1].split('};',1)[0]
     pat = re.compile(r'\{\s*(\d+),\s*(\d+),\s*(\d+),\s*0x([\da-fA-F]+),\s*0x([\da-fA-F]+)\s*\},\s*/\* stage (\d+) room (\d+) \*/')
     existing = defaultdict(list)
     for m in pat.finditer(text):
         x,y,mode,kind,content,stage,room = m.groups()
+        if int(stage)>11:continue
         existing[int(stage),int(room)].append((int(x),int(y),int(mode),int(kind,16),int(content,16)))
     records = json.loads(REF.read_text())
     earlier = defaultdict(list)

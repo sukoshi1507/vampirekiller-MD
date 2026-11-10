@@ -1,0 +1,46 @@
+{
+  "cases": [
+    {
+      "kind": 5,
+      "moving": 0,
+      "images": 360
+    },
+    {
+      "kind": 5,
+      "moving": 1,
+      "images": 360
+    },
+    {
+      "kind": 33,
+      "moving": 0,
+      "images": 360
+    },
+    {
+      "kind": 33,
+      "moving": 1,
+      "images": 360
+    },
+    {
+      "kind": 33,
+      "moving": 2,
+      "images": 360
+    },
+    {
+      "kind": 33,
+      "moving": 3,
+      "images": 360
+    },
+    {
+      "shoot_direction": -1,
+      "images": 360,
+      "freeze_after_pass": 1
+    },
+    {
+      "shoot_direction": 1,
+      "images": 360,
+      "freeze_after_pass": 1
+    }
+  ],
+  "images": 2880,
+  "scope": "controlled RAM/constructors, no natural traversal"
+}

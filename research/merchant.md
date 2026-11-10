@@ -1,4 +1,6 @@
-# Objets muraux et marchand (stages 0-2)
+# Objets muraux et marchand (référence initiale stages 0-2)
+
+Extension LOT08 stages12..18, preuves exécutées et limites : [trade-late.md](trade-late.md).
 
 Code ROM lu en banque 2 (`9179`-`954F`) ; prix et fenêtre confirmés par trace openMSX
 (`scratchpad/objects-0F-10-11/trace_marchand_*`, hors dépôt). Port : `sgdk/src/wall.c`

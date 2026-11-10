@@ -1,0 +1,76 @@
+{
+  "build_exit": 0,
+  "build_warnings": 0,
+  "native_exit": 0,
+  "core_groups": 10,
+  "new_differential_cases": 8,
+  "new_differential_images": 2880,
+  "legacy_fish3_vectors": 45,
+  "legacy_fish3_passes": 9958,
+  "legacy_fish3_shots": 26,
+  "core": {
+    "frames": 912,
+    "cases": [
+      {
+        "direction": -1,
+        "first_x": 189,
+        "frozen_continuation": 360
+      },
+      {
+        "direction": 1,
+        "first_x": 195,
+        "frozen_continuation": 360
+      }
+    ],
+    "scope": "stage10/6 RAM fixtures; no natural traversal",
+    "passed": true
+  },
+  "stage10_checks": 17,
+  "stage10_images": 2002,
+  "stages": [
+    {
+      "stage": 12,
+      "frames": 5909,
+      "checks": 41
+    },
+    {
+      "stage": 13,
+      "frames": 5858,
+      "checks": 40
+    },
+    {
+      "stage": 14,
+      "frames": 4129,
+      "checks": 28
+    },
+    {
+      "stage": 15,
+      "frames": 5066,
+      "checks": 35
+    },
+    {
+      "stage": 16,
+      "frames": 5014,
+      "checks": 34
+    },
+    {
+      "stage": 17,
+      "frames": 5890,
+      "checks": 40
+    },
+    {
+      "stage": 18,
+      "frames": 17890,
+      "checks": 37
+    }
+  ],
+  "stage_assertions": 255,
+  "stage_images": 49756,
+  "rom_checksum": "B2D5",
+  "rom_sha256": "faab29d40da07575101ac73a6c3a44343f926a9d0e9dcf7b36e9ccc620692f49",
+  "remaining": [
+    "C800 other species SAT alias",
+    "boss SAT integration",
+    "all simultaneous score/sound09 combinations"
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "native_exit": 0,
+  "build_exit": 0,
+  "build_warnings": 0,
+  "core_groups": 9,
+  "new_scenarios": 4,
+  "static_render_scenarios": 2,
+  "AI_scenarios": 2,
+  "AI_images": 1440,
+  "render_passes_per_scenario": 360,
+  "stage_assertions": 255,
+  "stage_images": 49752,
+  "stages": [
+    {
+      "stage": 12,
+      "frames": 5909,
+      "checks": 41
+    },
+    {
+      "stage": 13,
+      "frames": 5858,
+      "checks": 40
+    },
+    {
+      "stage": 14,
+      "frames": 4129,
+      "checks": 28
+    },
+    {
+      "stage": 15,
+      "frames": 5064,
+      "checks": 35
+    },
+    {
+      "stage": 16,
+      "frames": 5014,
+      "checks": 34
+    },
+    {
+      "stage": 17,
+      "frames": 5890,
+      "checks": 40
+    },
+    {
+      "stage": 18,
+      "frames": 17888,
+      "checks": 37
+    }
+  ],
+  "rom_checksum": "F1F8",
+  "compiled_rom_sha256": "ae5d861ef287c72f6253febeb6fe47ed313bb8eb15876440235f322324efc93a",
+  "scope": "C8001E alias, bounds99E5; remaining reserves in report"
+}

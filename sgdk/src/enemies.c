@@ -41,6 +41,7 @@
  * section « Contact selon la posture de Simon »).
  */
 #include "enemies.h"
+#include "item_shield.h"
 #include "player.h"
 #include "generated/enemy_rooms.h"
 #include "generated/late_fixed_enemies.h"
@@ -158,6 +159,104 @@ static EnemyU8 poseOf(EnemyU16 age)
     return 0;
 }
 
+/*75ED then7EBC: preserve both requests without changing EnemyState166. */
+EnemyU8 Enemies_itemSoundCount,Enemies_itemSounds[2];
+static void contactSound(EnemyState *s,EnemyU8 id){
+ if(Enemies_itemSoundCount>=2)__builtin_trap();
+ Enemies_itemSounds[Enemies_itemSoundCount++]=id;s->itemSound=id;
+}
+Enemy vk_projectiles[ENEMY_PROJECTILE_MAX];
+static EnemyLootHandler loot_handler;
+void Enemies_loot_handler(EnemyLootHandler callback){loot_handler=callback;}
+#include "generated/c800_sat.h"
+/* SAT18 bitmap: C800 scans0..13, D700 scans17..10 (four overlapping entries).
+ * PROVISIONAL: boss-owned SAT, damage-driven palette changes and legacy
+ * species without extracted rows remain outside the late normal/frozen proofs.
+ * These are logical reservations, not raw VRAM. */
+static unsigned long sat_used,c800_sat[ENEMY_MAX],d700_sat[ENEMY_PROJECTILE_MAX];
+static EnemyU8 sat_boss,renderStage;
+/* LOT14G: boss15 owns physical C800[0] and D700 slots in this same allocator. */
+static unsigned long boss15_sat[9];
+static int isProjectile(EnemyU8 type);
+static EnemyU8 satCount(EnemyU8 type);
+static unsigned long *sat_owner(int i){return i<ENEMY_MAX?&c800_sat[i]:&d700_sat[i-ENEMY_MAX];}
+static unsigned long sat_reserve(int projectile,int count){
+ int i;unsigned long mask=0;
+ for(i=projectile?17:0;projectile?i>=(sat_boss?16:10):i<14;projectile?i--:i++){
+  unsigned long bit=1UL<<i;if(sat_used&bit)continue;sat_used|=bit;mask|=bit;if(--count==0)return mask;
+ }
+ return 0; /* already marked free entries remain reserved, exactly5F61/9FCA */
+}
+static void sat_sync(EnemyState *s){
+ int i;for(i=0;i<ENEMY_ALL;i++)if(!Enemies_slot(s,(EnemyU8)i)->active){sat_used&=~*sat_owner(i);*sat_owner(i)=0;}
+ for(i=0;i<ENEMY_ALL;i++)if(Enemies_slot(s,(EnemyU8)i)->active && !*sat_owner(i)){
+  EnemyU8 type=Enemies_slot(s,(EnemyU8)i)->type;*sat_owner(i)=sat_reserve(isProjectile(type),isProjectile(type)?2:satCount(type));
+ }
+}
+/* count=0 releases; slot0 is the body, slots1..8 are physical D700 indices.
+ * Persistent masks retain holes: do not recompute them from active counts. */
+int Enemies_boss15_reserve(EnemyState *s,int slot,int count){
+ unsigned long mask;int i,n=0;
+ if(slot<0 || slot>8)return 0;
+ sat_sync(s);mask=boss15_sat[slot];
+ for(i=0;i<18;i++)n+=(int)((mask>>i)&1);
+ if(n==count)return 1;
+ if(mask){sat_used&=~mask;boss15_sat[slot]=0;}
+ if(!count)return 1;
+ if(slot ? vk_projectiles[slot-1].active : s->enemy[0].active)return -1;
+ mask=sat_reserve(slot!=0,count);if(!mask)return 0;
+ boss15_sat[slot]=mask;return 1;
+}
+/* Executed6445 ->64EC/64E5: 1E/0C pose85/86 has one coloured
+ * SAT entry and one colour-zero entry forced toE1 by651B.
+ * C800 puts colour8 first; D700 puts it second (descending SAT refs).
+ * PROVISIONAL: boss ownership, damage colours and unlisted legacy species. */
+void Enemies_sat_render(EnemyState *s){
+ int i; sat_sync(s);
+ for(i=0;i<ENEMY_ALL;i++){
+  Enemy *e=Enemies_slot(s,(EnemyU8)i);unsigned long mask=*sat_owner(i);int j;
+  if(!e->active || !mask)continue;
+  sat_used|=mask;
+  if(i>=ENEMY_MAX){
+   EnemySprite sprites[ENEMY_SPRITES];int n=Enemies_sprites(s,(EnemyU8)i,sprites);
+   if(!n || (EnemyU8)(sprites[n-1].y-1)!=0xE0)continue;
+   /*9F6D colours: bones42/0C and return shots42/05 both have
+    * nonzero layers. Fireballs/0C have00/08, only the lower ref frees. */
+   if(e->type==ENEMY_TYPE_BONE || e->type==ENEMY_TYPE_10_SHOT){sat_used&=~mask;continue;}
+  }else{
+   unsigned int row;int found=0;
+   if(e->type==ENEMY_TYPE_DRAGON){
+    EnemySprite sprites[ENEMY_SPRITES];int entry=0;Enemies_sprites(s,(EnemyU8)i,sprites);
+    /*AACD/AB0E: four dynamic cells, each has colours02/4C. */
+    for(j=0;j<18 && entry<8;j++)if(mask&(1UL<<j)){
+     if((EnemyU8)(sprites[entry/2].y-1)==0xE0)sat_used&=~(1UL<<j);
+     entry++;
+    }
+    continue;
+   }
+   for(row=0;row<sizeof(c800_sat_layouts)/sizeof(c800_sat_layouts[0]);row++){
+    const VKC800SATLayout *layout=&c800_sat_layouts[row];int entry=0;
+    if(layout->type!=e->type || layout->pose!=e->pose)continue;
+    for(j=0;j<18 && entry<layout->count;j++)if(mask&(1UL<<j)){
+     if((layout->visible&(1U<<entry)) && (EnemyU8)(e->y+layout->dy[entry])==0xE0)sat_used&=~(1UL<<j);
+     entry++;
+    }
+    found=1;break;
+   }
+   if(found)continue;
+   if(e->type!=ENEMY_TYPE_DEATH)continue;
+   if((EnemyU8)(e->y-(e->pose==0x86?15:16))!=0xE0)continue;
+  }
+  for(j=0;j<18;j++)
+   if(mask&(1UL<<j)){sat_used&=~(1UL<<j);break;}
+ }
+}
+void Enemies_sat_boss(EnemyU8 on){sat_boss=on;}
+unsigned long Enemies_sat_mask(EnemyState *s){sat_sync(s);return sat_used;}
+Enemy *Enemies_slot(EnemyState *s,EnemyU8 i){return i<ENEMY_MAX?&s->enemy[i]:i<ENEMY_ALL?&vk_projectiles[i-ENEMY_MAX]:0;}
+const Enemy *Enemies_object(const EnemyState *s,EnemyU8 i){return i<ENEMY_MAX?&s->enemy[i]:i<ENEMY_ALL?&vk_projectiles[i-ENEMY_MAX]:0;}
+static int objectIndex(const EnemyState *s,const Enemy *e){int i;for(i=0;i<ENEMY_MAX;i++)if(e==&s->enemy[i])return i;for(i=0;i<ENEMY_PROJECTILE_MAX;i++)if(e==&vk_projectiles[i])return ENEMY_MAX+i;return -1;}
+
 static void clearEnemy(Enemy *e)
 {
     e->active = 0;
@@ -180,7 +279,8 @@ static void clearEnemy(Enemy *e)
 void Enemies_setRoom(EnemyState *s)
 {
     EnemyU8 i;
-    for (i = 0; i < ENEMY_MAX; i++) clearEnemy(&s->enemy[i]);
+    for (i = 0; i < ENEMY_ALL; i++) clearEnemy(Enemies_slot(s,i));
+    {int j;sat_used=0;sat_boss=0;for(j=0;j<9;j++)boss15_sat[j]=0;for(j=0;j<ENEMY_MAX;j++)c800_sat[j]=0;for(j=0;j<ENEMY_PROJECTILE_MAX;j++)d700_sat[j]=0;}
     s->parity = 0;
     s->type4Count = ENEMY_TYPE4_COUNT;   /* 9CA9 : CF06 = 08, CF07 = 00 */
     s->type4Side = ENEMY_SIDE_RIGHT;
@@ -199,6 +299,7 @@ static void deathInit(void);     /* enemies_death.inc : CF40 et la file des obje
 void Enemies_init(EnemyState *s)
 {
     Enemies_setRoom(s);
+    renderStage=0;
     deathInit();                     /* CF40 = 0 au debut de la partie (44C6) */
     fish3Reset();
     s8Reset();                       /* octets d'objet du stage 8 : memoire effacee au debut de la partie (44C6) */
@@ -212,6 +313,7 @@ void Enemies_init(EnemyState *s)
     s->itemPhase = 0;
     s->contactScore = 0;
     s->itemSound = 0;
+    Enemies_itemSoundCount=Enemies_itemSounds[0]=Enemies_itemSounds[1]=0;
     s->fishSoundCount = 0;
     s->tick = 0;
     s->silhouette = 0;
@@ -247,21 +349,21 @@ int Enemies_useTimeStop(EnemyState *s, EnemyU8 *hearts, EnemyU8 c431, EnemyU8 c7
     return 1;
 }
 
+static void crossClear(EnemyState *s);
+
 void Enemies_item(EnemyState *s, EnemyU8 kind, EnemyU8 c431)
 {
     const EnemyU8 timer = (c431 & 0x04) ? ENEMY_ITEM_TIMER_LONG : ENEMY_ITEM_TIMER;
-    EnemyU8 i;
     switch (kind) {
     case 0x03:                       /* 8D98 : C701 bit 4 (bit 5 efface), C441 = 10h */
         s->armor = ENEMY_ARMOR_HITS;
         break;
-    case 0x04:                       /* 8DA1 : C701 bit 4 efface (plus d'armure, candles.c), bit 5 mis ;
-                                      * C441 = 10h (8DA8) ne sert qu'aux projectiles D700 (8610), non portes */
+    case 0x04:                       /* 8DA1: C441=10h, D700 interception8610 */
         s->armor = ENEMY_ARMOR_HITS;
         break;
     case 0x05:                       /* 8DBB -> 7806 : tous les objets C800 et D700 detruits
                                       * (9A3A, sans points) ; 8DC5 : C43E = 18h, eclair */
-        for (i = 0; i < ENEMY_MAX; i++) clearEnemy(&s->enemy[i]);
+        crossClear(s);
         s->flash = ENEMY_FLASH_START;
         break;
     case 0x07:                       /* 8DDE : 4605 avec B = 08 */
@@ -536,29 +638,30 @@ static EnemyU8 roomFlags(const EnemyRoomVars *v)
 }
 
 /* Objets des stages 4 a 6, mis a jour par Enemies_frame (objets 06, 08, 07, 0A et la boule de la statue). */
+static int isLoot(EnemyU8 type){return type==ENEMY_TYPE_LOOT_HEART || type==ENEMY_TYPE_LOOT_FLAME;}
 static int isObjS4(EnemyU8 type)
 {
-    return type == ENEMY_TYPE_6 || type == ENEMY_TYPE_8 || type == ENEMY_TYPE_7 ||
+    return isLoot(type) || type == ENEMY_TYPE_6 || type == ENEMY_TYPE_8 || type == ENEMY_TYPE_7 ||
            type == ENEMY_TYPE_STATUE || type == ENEMY_TYPE_FIREBALL ||
            type == ENEMY_TYPE_HOPPER || type == ENEMY_TYPE_LEAPER || type == ENEMY_TYPE_BONE ||
-           type == ENEMY_TYPE_FLEA || type == ENEMY_TYPE_GHOST || type == ENEMY_TYPE_FISH3 || type == ENEMY_TYPE_EAGLE || type == ENEMY_TYPE_DRAGON || type == ENEMY_TYPE_10 || type == ENEMY_TYPE_10_SHOT;
+           type == ENEMY_TYPE_FLEA || type == ENEMY_TYPE_GHOST || type == ENEMY_TYPE_FISH3 || type == ENEMY_TYPE_EAGLE || type == ENEMY_TYPE_DRAGON || type == ENEMY_TYPE_12 || type == ENEMY_TYPE_09 || type == ENEMY_TYPE_10 || type == ENEMY_TYPE_10_SHOT;
 }
 
 /* Objets D700 (boules et os) : boite 8318 / 8358, degat 1 sans armure, detruits par le contact et le fouet. */
 static int isProjectile(EnemyU8 type)
 {
-    return type == ENEMY_TYPE_FIREBALL || type == ENEMY_TYPE_BONE || type == ENEMY_TYPE_10_SHOT;
+    return type == ENEMY_TYPE_FIREBALL || type == ENEMY_TYPE_BONE || type == ENEMY_TYPE_10_SHOT || type == ENEMY_TYPE_SHIELD_SPARK;
 }
 
 /* Boite de contact, du fouet et des armes (L, H de 8378 / 8390 / 8318 / 8358, classes 82CB et 830D). */
 static void boxOf(EnemyU8 type, int *l, int *h)
 {
     switch (type) {
-    case ENEMY_TYPE_8: case ENEMY_TYPE_7: case ENEMY_TYPE_LEAPER: case ENEMY_TYPE_FLEA: case ENEMY_TYPE_GHOST: case ENEMY_TYPE_DRAGON:
+    case ENEMY_TYPE_LOOT_HEART: case ENEMY_TYPE_LOOT_FLAME: case ENEMY_TYPE_8: case ENEMY_TYPE_7: case ENEMY_TYPE_LEAPER: case ENEMY_TYPE_FLEA: case ENEMY_TYPE_GHOST: case ENEMY_TYPE_DRAGON:
         *l = 0x08; *h = 0x10; break;   /* classe 2 de 82CB (objet 1C compris) */
     case ENEMY_TYPE_EAGLE: *l = 0x0C; *h = 0x18; break;   /* classe 4 de 82CB : 83FA */
     case ENEMY_TYPE_FIREBALL: *l = 0x03; *h = 0x06; break;
-    case ENEMY_TYPE_10: *l = 0x0C; *h = 0x18; break;
+    case ENEMY_TYPE_12: case ENEMY_TYPE_10: *l = 0x0C; *h = 0x18; break;
     case ENEMY_TYPE_10_SHOT: *l = 0x06; *h = 0x0C; break;
     case ENEMY_TYPE_BONE: *l = 0x06; *h = 0x0C; break;
     default: *l = 0x05; *h = 0x18; break;   /* 06, 0A, 0B : classe 1 */
@@ -570,13 +673,13 @@ static int hasHp(EnemyU8 type)
 {
     return type == ENEMY_TYPE_6 || type == ENEMY_TYPE_7 || type == ENEMY_TYPE_STATUE ||
            type == ENEMY_TYPE_HOPPER || type == ENEMY_TYPE_LEAPER || type == ENEMY_TYPE_FLEA || type == ENEMY_TYPE_GHOST ||
-           type == ENEMY_TYPE_FISH3 || type == ENEMY_TYPE_EAGLE || type == ENEMY_TYPE_DRAGON || type == ENEMY_TYPE_10;
+           type == ENEMY_TYPE_FISH3 || type == ENEMY_TYPE_EAGLE || type == ENEMY_TYPE_DRAGON || type == ENEMY_TYPE_12 || type == ENEMY_TYPE_09 || type == ENEMY_TYPE_10;
 }
 
 /* Une image pour un ennemi deja actif. */
 static void advance(Enemy *e, EnemyU8 frozen)
 {
-    if (e->type == ENEMY_TYPE_5 || e->type == ENEMY_TYPE_2 || e->type == ENEMY_TYPE_SPLASH || e->type == ENEMY_TYPE_DEATH ||
+    if (e->type == ENEMY_TYPE_5 || e->type == ENEMY_TYPE_2 || e->type == ENEMY_TYPE_SPLASH || (e->type == ENEMY_TYPE_DEATH || e->type == ENEMY_TYPE_SHIELD_SPARK) ||
         isObjS4(e->type))
         return;                            /* mis a jour par Enemies_frame (carte, Simon) */
     if (e->exiting) {          /* masque a l'image suivant la limite (observe 1126, 1208) */
@@ -620,8 +723,8 @@ static void advance(Enemy *e, EnemyU8 frozen)
 void Enemies_update(EnemyState *s)
 {
     EnemyU8 i;
-    for (i = 0; i < ENEMY_MAX; i++) {
-        if (s->enemy[i].active) advance(&s->enemy[i], s->frozen);
+    for (i = 0; i < ENEMY_ALL; i++) {
+        if (Enemies_slot(s,i)->active) advance(Enemies_slot(s,i), s->frozen);
     }
 }
 
@@ -647,6 +750,7 @@ static int romContact(const EnemyRoomVars *v, int objX, int objY, int l, int h)
  * + 15 pour le type 4), les types 2 et 5 en coordonnees d'objet. */
 int Enemies_touches(const Enemy *e, const EnemyRoomVars *v)
 {
+    if (e->type == ENEMY_TYPE_09 && !e->state) return 0;
     if (isObjS4(e->type)) {
         int l, h;
         boxOf(e->type, &l, &h);   /* 06, 0A, 0B : 8378 ; 08, 07, 0C : 8390 ; boule 8318 ; os 8358 */
@@ -673,13 +777,13 @@ int Enemies_whipHit(EnemyState *s, int left, int top, int right, int bottom)
 {
     EnemyU8 i;
     int killed = 0;
-    for (i = 0; i < ENEMY_MAX; i++) {
-        Enemy *e = &s->enemy[i];
+    for (i = 0; i < ENEMY_ALL; i++) {
+        Enemy *e = Enemies_slot(s,i);
         int ex, ey, eh;
         if (!e->active || e->exiting || e->type == ENEMY_TYPE_5 || e->romBox ||
             isObjS4(e->type) ||
             e->type == ENEMY_TYPE_2 || e->type == ENEMY_TYPE_4 || e->type == ENEMY_TYPE_SPLASH ||
-            e->type == ENEMY_TYPE_DEATH) continue;
+            (e->type == ENEMY_TYPE_DEATH || e->type == ENEMY_TYPE_SHIELD_SPARK)) continue;
         ex = e->x + ENEMY_SCREEN_TO_GAME_X;
         ey = e->y;
         eh = ENEMY_TYPE1_ROW_H;
@@ -787,6 +891,7 @@ int Enemies_whipHitType2(EnemyState *s, int simonX, int simonY, int facingLeft, 
     return killed;
 }
 
+static void projectileKill(EnemyState *s,Enemy *e);
 static Enemy *newObject(EnemyState *s, EnemyU8 type);
 static int ghostInert(const Enemy *e);   /* enemies_ghost.inc : +E = 0, ni contact ni fouet */
 
@@ -797,18 +902,18 @@ EnemyU8 Enemies_killScore;
 /* 81CE : points (centaines) de l'objet detruit, premier octet de la paire. Objet D700 : 822A, 100 points. */
 static EnemyU8 s4Score(EnemyU8 type)
 {
-    return type == ENEMY_TYPE_DRAGON ? 10 : type == ENEMY_TYPE_EAGLE ? 4 : (type == ENEMY_TYPE_STATUE || type == ENEMY_TYPE_10) ? 3 : isProjectile(type) || type == ENEMY_TYPE_LEAPER || type == ENEMY_TYPE_GHOST ? 1 : 2;   /* 81CE, 822A */
+    return type == ENEMY_TYPE_12 ? 20 : type == ENEMY_TYPE_DRAGON ? 10 : type == ENEMY_TYPE_EAGLE ? 4 : (type == ENEMY_TYPE_STATUE || type == ENEMY_TYPE_10) ? 3 : isProjectile(type) || type == ENEMY_TYPE_LEAPER || type == ENEMY_TYPE_GHOST ? 1 : 2;   /* 81CE, 822A */
 }
 
-#define ENEMY_T6_HP_MASK 0x0F
+#define ENEMY_T6_HP_MASK 0x7F
 #define ENEMY_T6_HIT 0x80          /* +E bit 0 efface : deja touche, 999F le remet */
 #define ENEMY_STAGE4_DAMAGE 4      /* 81CE : base 2, doublee */
 
 void Enemies_rearm(EnemyState *s)
 {
     EnemyU8 i;
-    for (i = 0; i < ENEMY_MAX; i++)
-        if (hasHp(s->enemy[i].type)) s->enemy[i].extraPhase &= (EnemyU8)~ENEMY_T6_HIT;
+    for (i = 0; i < ENEMY_ALL; i++)
+        if (hasHp(Enemies_slot(s,i)->type)) Enemies_slot(s,i)->extraPhase &= (EnemyU8)~ENEMY_T6_HIT;
 }
 
 int Enemies_whipHitStage4(EnemyState *s, int simonX, int simonY, int facingLeft, int crouched, int chain, int *hits)
@@ -821,11 +926,11 @@ int Enemies_whipHitStage4(EnemyState *s, int simonX, int simonY, int facingLeft,
     *hits = 0;
     Enemies_killScore = 0;
     if (whipX < 0 || whipX > 255) return 0;
-    for (i = 0; i < ENEMY_MAX; i++) {
-        Enemy *e = &s->enemy[i];
+    for (i = 0; i < ENEMY_ALL; i++) {
+        Enemy *e = Enemies_slot(s,i);
         int l, h, d;
         if (!e->active || e->exiting) continue;
-        if (!isObjS4(e->type) || ghostInert(e)) continue;
+        if (!isObjS4(e->type) || isLoot(e->type) || ghostInert(e) || (e->type == ENEMY_TYPE_09 && !e->state)) continue;
         boxOf(e->type, &l, &h);                  /* 84A7 : L de la classe + 0Ch (10h avec la chaine) ; boule 8320, os 8360 */
         l += chain ? 16 : 12;
         d = whipX - e->x;
@@ -837,7 +942,7 @@ int Enemies_whipHitStage4(EnemyState *s, int simonX, int simonY, int facingLeft,
         }
         e->active = 0;
         Enemies_killScore = (EnemyU8)(Enemies_killScore + s4Score(e->type));
-        deathFlame(s, e);       /* en dernier : la flamme prend ce bloc */
+        if(isProjectile(e->type))projectileKill(s,e);else deathFlame(s, e);       /* 9A1A / 9A3E */
         killed++;
     }
     return killed;
@@ -1004,6 +1109,7 @@ static void statueFire(EnemyState *s, const Enemy *statue)
 {
     Enemy *e = newObject(s, ENEMY_TYPE_FIREBALL);
     if (!e) return;
+    if(renderStage>=12)e->romBox=2;
     e->dx = (EnemyS8)((statue->pose & 1) ? 1 : -1);          /* A271 : BIT 0 de +B */
     e->x = statue->x;
     e->y = (EnemyU8)(statue->y - 0x14);
@@ -1011,8 +1117,7 @@ static void statueFire(EnemyState *s, const Enemy *statue)
      * (trace R2 : X et compteur de la statue changent aux memes images). Un emplacement apres celui de la
      * statue est vu par la boucle de Enemies_frame dans cette image (age 0 -> 1, impair) ; sinon on la
      * deplace ici (age 1, saute ensuite). Avant, age 1 pour les deux : la boule marchait une image avant. */
-    if (e > statue) e->age = 0;
-    else { fireballStep(e); e->age = 1; }
+    e->age = 0;
 }
 
 static void statueStep(EnemyState *s, Enemy *e, const EnemyRoomVars *v)
@@ -1041,6 +1146,7 @@ static void statueStep(EnemyState *s, Enemy *e, const EnemyRoomVars *v)
 /* 9E31 : 9E77 ne fait rien, puis 99B9 et 99E5. */
 static void fireballStep(Enemy *e)
 {
+    if(e->romBox==3)e->romBox=2;
     if (e->state) {          /* tir vise du dragon du stage 11 (enemies_dragon.inc) : vx 16 bits dans (pose, anim), vy, fractions dans timer et sub, 99B9 puis 99E5 */
         const int vx = (EnemyS16)((e->pose << 8) | e->anim);
         const int x16 = ((EnemyU8)e->x << 8) + e->timer + vx, y16 = (e->y << 8) + e->sub + e->vy;
@@ -1061,21 +1167,32 @@ static void fireballStep(Enemy *e)
  * valeur de l'objet precedent du meme bloc (99F6 n'efface que +0 et +E). Pour un os, c12 est l'octet +C de
  * l'emplacement D700 (c10 : numero de cet emplacement, 0 a 7). La fraction de Y est dans sub, celle de X dans
  * timer, vy dans vy, Y dans y, X dans x, la pose dans pose, les points de vie dans extraPhase. */
-typedef struct { EnemyS16 vx; EnemyU8 mobile, c10, c11, c12, c18, c1e; } S8Ext;
+typedef struct { EnemyS16 vx; EnemyU8 mobile, c10, c11, c12, c18, c1e, c14; } S8Ext;
+#include "loot.inc"
+static VKLoot enemyLoot[ENEMY_MAX];
+static void lootSync(Enemy *e,VKLoot *l){
+ const VKByte *b=l->raw;e->active=b[0]!=0;e->state=b[1];e->sub=b[2];e->y=b[3];e->timer=b[4];e->x=b[5];e->vy=(EnemyS16)(b[7]|((EnemyU16)b[8]<<8));e->pose=b[11];e->anim=b[12];e->extraPhase=b[13];
+}
+static void lootSpawn(EnemyState *s,Enemy *e,int type,int kind){VKLoot *l=&enemyLoot[e-s->enemy];vk_loot_init(l,type,(VKByte)e->x,e->y,kind);e->type=type==36?ENEMY_TYPE_LOOT_HEART:ENEMY_TYPE_LOOT_FLAME;e->age=1;lootSync(e,l);}
 static S8Ext s8x[ENEMY_MAX];
+static S8Ext s8q[ENEMY_PROJECTILE_MAX];
 static EnemyU8 s8BoneC[8];       /* +C des 8 emplacements D700, persistent */
 static EnemyU8 s7Random(void);   /* enemies_stage7.inc : LD A,R, fixable par les tests */
 
-static S8Ext *ext(const EnemyState *s, const Enemy *e) { return &s8x[e - s->enemy]; }
+static S8Ext *ext(const EnemyState *s,const Enemy *e){int i=objectIndex(s,e);if(i<0 || i>=ENEMY_ALL)__builtin_trap();return i<ENEMY_MAX?&s8x[i]:&s8q[i-ENEMY_MAX];}
 
 static void s8Reset(void)
 {
     EnemyU8 i;
     for (i = 0; i < ENEMY_MAX; i++) {
+        enemyLoot[i].raw[0]=0;
         s8x[i].vx = 0;
-        s8x[i].mobile = s8x[i].c10 = s8x[i].c11 = s8x[i].c12 = s8x[i].c18 = s8x[i].c1e = 0;
+        s8x[i].mobile = s8x[i].c10 = s8x[i].c11 = s8x[i].c12 = s8x[i].c18 = s8x[i].c1e = s8x[i].c14 = 0;
     }
     for (i = 0; i < 8; i++) s8BoneC[i] = 0;
+    for(i=0;i<ENEMY_PROJECTILE_MAX;i++){
+        s8q[i].vx=0;s8q[i].mobile=s8q[i].c10=s8q[i].c11=s8q[i].c12=s8q[i].c18=s8q[i].c1e=s8q[i].c14=0;
+    }
 }
 
 /* A56C et A653 : vx = DE ; A653 y ajoute D012 x 32 dans le sens de la vitesse, sauf pour 0. */
@@ -1155,8 +1272,8 @@ static void boneSpawn(EnemyState *s, const Enemy *src, int vy, int vx)
     /* Emplacement D700 : le premier libre parmi 8 (9F97). */
     for (slot = 0; slot < 8; slot++) {
         used = 0;
-        for (i = 0; i < ENEMY_MAX; i++)
-            if (s->enemy[i].active && isProjectile(s->enemy[i].type) && &s->enemy[i] != e && s8x[i].c10 == slot) used = 1;
+        for (i = 0; i < ENEMY_ALL; i++)
+            if (Enemies_slot(s,i)->active && isProjectile(Enemies_slot(s,i)->type) && Enemies_slot(s,i) != e && ext(s,Enemies_slot(s,i))->c10 == slot) used = 1;
         if (!used) break;
     }
     if (slot > 7) slot = 7;
@@ -1171,8 +1288,7 @@ static void boneSpawn(EnemyState *s, const Enemy *src, int vy, int vx)
     e->pose = 3;
     /* 9E31 suit 98E5 : l'os est deplace dans la passe de sa creation. Un emplacement apres celui du lanceur est vu
      * par la boucle de Enemies_frame dans cette image (age 0 -> 1) ; sinon on le deplace ici (age 1, saute ensuite). */
-    if (e > src) e->age = 0;
-    else { boneStep(s, e); e->age = 1; }
+    e->age = 0;
 }
 
 static void boneStep(EnemyState *s, Enemy *e)
@@ -1187,6 +1303,7 @@ static void boneStep(EnemyState *s, Enemy *e)
 }
 
 #include "enemies_type10.inc"
+#include "enemies_type09.inc"
 
 /* B37E : trois etats, 0 marche, 1 saut, 2 lancer. */
 static void hopperStep(EnemyState *s, Enemy *e, const EnemyRoomVars *v)
@@ -1364,6 +1481,28 @@ static void leaperStep(EnemyState *s, Enemy *e, const EnemyRoomVars *v)
 #include "enemies_stage7.inc"
 #include "enemies_ghost.inc"
 #include "enemies_death.inc"
+/* 9A1A: free the old D700 block, allocate a type0C flame at first free. */
+static void projectileKill(EnemyState *s,Enemy *e)
+{
+ EnemyS16 x=e->x;EnemyU8 y=e->y;Enemy *f;e->active=0;
+ f=newObject(s,ENEMY_TYPE_SHIELD_SPARK);if(!f)return;
+ f->x=x;f->y=y;f->state=0;f->extraPhase=0;f->anim=16;f->pose=0x85;f->age=1;
+ f->sub=f->timer=0;f->vy=0;f->dx=0;ext(s,f)->vx=0;ext(s,f)->mobile=1;s8BoneC[ext(s,f)->c10]=16;
+}
+
+static void crossClear(EnemyState *s)
+{
+ int i;for(i=0;i<ENEMY_MAX;i++){
+  Enemy *e=&s->enemy[i];if(!e->active)continue;
+  if(isProjectile(e->type)){e->active=0;continue;}
+  if(isLoot(e->type)){
+   EnemyU8 kind;vk_loot_pick(&enemyLoot[i],&kind);lootSync(e,&enemyLoot[i]);
+   if(loot_handler)loot_handler(s,kind);else Enemies_lootPick=kind;
+  }else{int saved=deathCross;e->active=0;deathCross=1;deathFlame(s,e);deathCross=saved;}
+ }
+ for(i=0;i<ENEMY_PROJECTILE_MAX;i++)if(vk_projectiles[i].active)projectileKill(s,&vk_projectiles[i]);
+}
+
 
 static void type6Spawn(EnemyState *s, EnemyU8 x, EnemyU8 y)
 {
@@ -1381,13 +1520,13 @@ static void type6Spawn(EnemyState *s, EnemyU8 x, EnemyU8 y)
 int Enemies_shotHit(EnemyState *s, ShotTouch touch, const void *ctx, int *slot, int *score)
 {
     EnemyU8 i;
-    for (i = 0; i < ENEMY_MAX; i++) {
-        Enemy *e = &s->enemy[i];
+    for (i = 0; i < ENEMY_ALL; i++) {
+        Enemy *e = Enemies_slot(s,i);
         int x, y, h, l, k;
-        if (!e->active || e->exiting || e->type == ENEMY_TYPE_SPLASH || e->type == ENEMY_TYPE_DEATH) continue;
+        if (!e->active || e->exiting || isLoot(e->type) || e->type == ENEMY_TYPE_SPLASH || (e->type == ENEMY_TYPE_DEATH || e->type == ENEMY_TYPE_SHIELD_SPARK)) continue;
         /* 82CB puis 8388 / 83AA / 83E2 : classe de l'objet, D = X, E = Y de l'objet MSX. */
         if (isObjS4(e->type)) {
-            if (ghostInert(e)) continue;
+            if (ghostInert(e) || (e->type == ENEMY_TYPE_09 && !e->state)) continue;
             x = e->x; y = e->y;
             boxOf(e->type, &l, &h);
             if (e->extraPhase & ENEMY_T6_HIT) continue;      /* +E bit 0 (7DBF, 8033) */
@@ -1396,7 +1535,7 @@ int Enemies_shotHit(EnemyState *s, ShotTouch touch, const void *ctx, int *slot, 
                 if (!touch(ctx, k, x, y, h, l)) continue;
                 *slot = k;
                 if (isProjectile(e->type)) {                 /* 7F79 -> 822A, 9A1A */
-                    e->active = 0;
+                    projectileKill(s,e);
                     *score = 1;
                     return 1;
                 }
@@ -1407,7 +1546,7 @@ int Enemies_shotHit(EnemyState *s, ShotTouch touch, const void *ctx, int *slot, 
                 } else {
                     e->active = 0;
                     *score = s4Score(e->type);
-                    deathFlame(s, e);       /* en dernier : la flamme prend ce bloc */
+                    if(isProjectile(e->type))projectileKill(s,e);else deathFlame(s, e);       /* 9A1A / 9A3E */
                 }
                 return 1;
             }
@@ -1425,7 +1564,7 @@ int Enemies_shotHit(EnemyState *s, ShotTouch touch, const void *ctx, int *slot, 
             e->active = 0;
             *slot = k;
             *score = e->type == ENEMY_TYPE_2 ? 2 : 1;
-            deathFlame(s, e);       /* en dernier : la flamme prend ce bloc */
+            if(isProjectile(e->type))projectileKill(s,e);else deathFlame(s, e);       /* 9A1A / 9A3E */
             return 1;
         }
     }
@@ -1435,26 +1574,29 @@ int Enemies_shotHit(EnemyState *s, ShotTouch touch, const void *ctx, int *slot, 
 /* Entrees SAT d'un objet (table 6057 + type) : 4 pour les types 1, 2 et 5, 2 pour le type 4 et la goutte. */
 static EnemyU8 satCount(EnemyU8 type)
 {
+    if(isLoot(type))return 2;
     if (isProjectile(type)) return 0;            /* objet D700 : ses entrees SAT (D67C) sont a part */
     return (EnemyU8)((type == ENEMY_TYPE_4 || type == ENEMY_TYPE_SPLASH || type == ENEMY_TYPE_8 || type == ENEMY_TYPE_7 ||
                       type == ENEMY_TYPE_LEAPER || type == ENEMY_TYPE_FLEA || type == ENEMY_TYPE_GHOST ||
-                      type == ENEMY_TYPE_DEATH) ? 2 : type == ENEMY_TYPE_EAGLE ? 6 : type == ENEMY_TYPE_DRAGON ? 8 : 4);   /* table 6057 */
+                      type == ENEMY_TYPE_DEATH) ? 2 : type == ENEMY_TYPE_EAGLE ? 6 : (type == ENEMY_TYPE_DRAGON || type == ENEMY_TYPE_12) ? 8 : 4);   /* table 6057 */
 }
 
 /* 5F1D : premier bloc libre, puis assez d'entrees SAT libres parmi les 14 ; sinon rien. */
-static Enemy *newObject(EnemyState *s, EnemyU8 type)
+static Enemy *newObject(EnemyState *s,EnemyU8 type)
 {
-    EnemyU8 i, used = 0;
-    Enemy *slot = 0;
-    for (i = 0; i < ENEMY_MAX; i++) {
-        if (s->enemy[i].active) used = (EnemyU8)(used + satCount(s->enemy[i].type));
-        else if (!slot) slot = &s->enemy[i];
-    }
-    if (!slot || used + satCount(type) > ENEMY_SAT_SLOTS) return 0;
-    clearEnemy(slot);
-    slot->active = 1;
-    slot->type = type;
-    return slot;
+ int i;Enemy *slot=0;unsigned long mask;
+ sat_sync(s);
+ if(isProjectile(type)){
+  for(i=0;i<ENEMY_PROJECTILE_MAX;i++)if(!vk_projectiles[i].active && !boss15_sat[i+1]){
+   int k,busy=0;for(k=0;k<ENEMY_MAX;k++)if(s->enemy[k].active && isProjectile(s->enemy[k].type) && ext(s,&s->enemy[k])->c10==i)busy=1;
+   if(!busy){slot=&vk_projectiles[i];break;}
+  }
+ }else for(i=0;i<ENEMY_MAX;i++)if(!s->enemy[i].active && !(i==0 && boss15_sat[0])){slot=&s->enemy[i];break;}
+ if(!slot)return 0;
+ mask=sat_reserve(isProjectile(type),isProjectile(type)?2:satCount(type));if(!mask)return 0;
+ *sat_owner(objectIndex(s,slot))=mask;clearEnemy(slot);slot->active=1;slot->type=type;
+ if(isProjectile(type)){ext(s,slot)->c10=(EnemyU8)i;if(type==ENEMY_TYPE_FIREBALL && renderStage>=12)slot->romBox=2;}
+ return slot;
 }
 
 /* Goutte (9C66) : CF30 + 1 ; impaire, vers la droite a -5 px, paire, vers la gauche a -6 px.
@@ -1572,6 +1714,7 @@ static void fishSpawn(EnemyState *s, EnemyU8 x, const EnemyRoomVars *v)
 #include "enemies_fish3.inc"
 #include "enemies_stage11.inc"
 #include "enemies_dragon.inc"
+#include "enemies_type12.inc"
 
 /* Canal 9D4B (bit 1 du drapeau), un appel par passe de l'etat 5 (une image sur deux, a partir
  * de la premiere) : 9CC3 sur CF02/CF03 comme le canal 9D97 (DEC CF10 partage, puis CF02 tous
@@ -1612,7 +1755,9 @@ static void type2Frame(EnemyState *s, EnemySpawnTimer *t, const EnemyRoomVars *v
             Enemy *e = &s->enemy[i];
             if (!e->active) continue;
             /* Type 2 fige par D010 ; la goutte (+7E = 0, 9C84) tombe toujours. */
-            if (e->type == ENEMY_TYPE_FISH3) { if (!s->frozen) fish3Step(s, e, v); }
+            /* Channels/fixed lists run after shared C800: only newborn fish3
+             * need their first A310 here. Existing objects were visited above. */
+            if (e->type == ENEMY_TYPE_FISH3 && !e->age) { if (!s->frozen) fish3Step(s, e, v); e->age=1; }
             else if (e->type == ENEMY_TYPE_2) { if (!s->frozen) fishStep(s, e, v); }
             else if (e->type == ENEMY_TYPE_SPLASH && e->age) {   /* 9CA3 : gravite seule */
                 fallSpeed(e);
@@ -1654,10 +1799,16 @@ static EnemyU8 fireballCell = 0x60;   /* cellule de la boule (D700 type 1, motif
 
 int Enemies_frame(EnemyState *s, EnemySpawnTimer *t, const EnemyRoomVars *v)
 {
+    EnemyU8 guardWarning=0;
+    Enemies_itemSoundCount=0;
     EnemyRoomVars w = *v;
+    renderStage=v->stage;
     EnemyU8 i;
     int hit = 0;
 
+    /* 6B27/75C0 precedes98E5/5EB8: the channel gate sees C440 AFTER
+     * decrement, including the very last pass. Use the channel's30Hz phase. */
+    if(s->parity==0 && s->spawnPause)s->spawnPause--;
     s->fishSoundCount = 0; /* une nouvelle image, les requêtes précédentes ont été consommées */
     fleaBase = v->stage == 9 ? 0xA4 : 0x80;
     fireballCell = v->stage == 11 ? 0x9C : 0x60;
@@ -1673,6 +1824,11 @@ int Enemies_frame(EnemyState *s, EnemySpawnTimer *t, const EnemyRoomVars *v)
         s->timeStopEnd = 1;
     }
 
+    /* 75C0/75E2 precede7E67: expiration is visible to this pass's contact. */
+    if(s->itemPhase){
+        if(s->killTimer)s->killTimer--;
+        if(s->guardTimer && --s->guardTimer==ENEMY_GUARD_WARNING)guardWarning=0x17;
+    }
     Enemies_update(s);
     if (v->map) {
         for (i = 0; i < ENEMY_MAX; i++) {
@@ -1680,24 +1836,34 @@ int Enemies_frame(EnemyState *s, EnemySpawnTimer *t, const EnemyRoomVars *v)
             /* Le type 4 vole : sa hauteur suit kType4Y, sans chute. */
             if (e->active && !e->exiting && !s->frozen && e->type != ENEMY_TYPE_4 &&
                 e->type != ENEMY_TYPE_5 && e->type != ENEMY_TYPE_2 && e->type != ENEMY_TYPE_SPLASH &&
-                e->type != ENEMY_TYPE_DEATH && !isObjS4(e->type))
+                e->type != ENEMY_TYPE_DEATH && e->type != ENEMY_TYPE_SHIELD_SPARK && !isObjS4(e->type))
                 fall(e, v->map, v->stage);
         }
     }
-    /* Type 5 : une mise a jour une image sur deux, a partir de l'image qui suit la creation. */
-    for (i = 0; i < ENEMY_MAX; i++) {
-        Enemy *e = &s->enemy[i];
-        if (!e->active || e->type != ENEMY_TYPE_5) continue;
-        /* D010 : la panthere (creee par 61BB -> 5F35, +7E = 1) est figee ; la phase de ses
-         * mises a jour (passe de 30 Hz) continue. */
-        if ((++e->age & 1) && !s->frozen) pantherStep(e, v);
-    }
-    for (i = 0; i < ENEMY_MAX; i++) {
-        Enemy *e = &s->enemy[i];
-        if (!e->active || !isObjS4(e->type) || e->type == ENEMY_TYPE_FISH3) continue;   /* l'homme-poisson : type2Frame, dans la passe de sa creation */
-        if (e->type == ENEMY_TYPE_10_SHOT) continue;
-        if ((++e->age & 1) && !s->frozen) {
-            if (e->type == ENEMY_TYPE_10) type10Step(s, e, v);
+    /* Shared98E5 traversal.9B90 can return an earlier IX, so legacy
+     * panther/fish3 AI must be revisited too, without advancing frame phase. */
+    {
+        int revisit_until=-1;
+        for(i=0;i<ENEMY_MAX;i++){
+            Enemy *e=&s->enemy[i];int again=i<=revisit_until;
+            if(!e->active)continue;
+            if(isLoot(e->type) && (s->itemPhase || again)){
+                VKByte floor[3];VKLoot *l=&enemyLoot[i];int event=vk_loot_step(l,v->map,v->stage,(VKByte)(s->tick+(s->itemPhase?1:0)),floor);
+                lootSync(e,l);
+                if(event==1 && Enemies_dropCount<ENEMY_DROP_MAX){dropPush(floor[0],floor[1],floor[2]);Enemies_drops[Enemies_dropCount-1].landed=1;}
+            }else if((e->type==ENEMY_TYPE_DEATH) && (again || (++e->age&1))){
+                int next=deathStep(s,e);
+                if(next<i){revisit_until=i;i=next;}
+            }else if(e->type==ENEMY_TYPE_5 && (again || (++e->age&1)) && !s->frozen){
+                pantherStep(e,v);
+            }else if(e->type==ENEMY_TYPE_FISH3 && (again || !(s->type2Frames&1))){
+                if(!s->frozen)fish3Step(s,e,v);
+                e->age=1; /* prevents a second update in type2Frame */
+            }else if(isObjS4(e->type) && !isLoot(e->type) && !isProjectile(e->type) && e->type!=ENEMY_TYPE_FISH3 && (again || (++e->age&1))){
+            if(!s->frozen){
+            if (e->type == ENEMY_TYPE_12) type12Step(s,e,v);
+            else if (e->type == ENEMY_TYPE_09) type09Step(s,e,v);
+            else if (e->type == ENEMY_TYPE_10) type10Step(s, e, v);
             else if (e->type == ENEMY_TYPE_6) type6Step(e, v);
             else if (e->type == ENEMY_TYPE_8) type8Step(e, v);
             else if (e->type == ENEMY_TYPE_7) batStep(e, v);
@@ -1710,16 +1876,11 @@ int Enemies_frame(EnemyState *s, EnemySpawnTimer *t, const EnemyRoomVars *v)
             else if (e->type == ENEMY_TYPE_DRAGON) dragonStep(s, e, v);
             else if (e->type == ENEMY_TYPE_GHOST) ghostStep(s, e, v);
             else fireballStep(e);
+            }
+            /*98E5 still calls99E5 when992F suppresses the AI. */
+            if(s4Remove(e))e->active=0;
+            }
         }
-    }
-    for (i = 0; i < ENEMY_MAX; i++) {
-        Enemy *e = &s->enemy[i];
-        if (e->active && e->type == ENEMY_TYPE_10_SHOT && (++e->age & 1) && !s->frozen) type10ShotStep(s, e);
-    }
-    /* Flamme de mort (9B71) : 992F ne la fige pas (+7E = 0 en trace), une mise a jour toutes les 2 images. */
-    for (i = 0; i < ENEMY_MAX; i++) {
-        Enemy *e = &s->enemy[i];
-        if (e->active && e->type == ENEMY_TYPE_DEATH && (++e->age & 1)) deathStep(e);
     }
 
     /* Une passe de l'etat 5 sur deux images, a partir de la premiere image de jeu de la
@@ -1732,7 +1893,7 @@ int Enemies_frame(EnemyState *s, EnemySpawnTimer *t, const EnemyRoomVars *v)
         if (roomFlags(v) & ENEMY_FLAG_TYPE4) type4Channel(s, t, v);
         if (((v->stage >= 4 && v->stage <= 6) || v->stage == 8 || v->stage == 9) && (roomFlags(v) & 0x20)) type8Channel(s, t, v, ENEMY_TYPE_8);
         if (v->stage == 6 && (roomFlags(v) & 0x10)) type8Channel(s, t, v, ENEMY_TYPE_7);
-        if (v->stage == 11 && (roomFlags(v) & 0x40)) eagleChannel(s, t, v);   /* 9DE7 */
+        if ((v->stage == 11 || (v->stage >= 12 && v->stage <= 18)) && (roomFlags(v) & 0x40)) eagleChannel(s, t, v);   /* 9DE7 */
     }
     s->parity ^= 1;
 
@@ -1756,17 +1917,8 @@ int Enemies_frame(EnemyState *s, EnemySpawnTimer *t, const EnemyRoomVars *v)
         }
     }
 
-    /* 6154 / 5F1D : creation fixe des stages 12..18, premier passage en salle.
-     * Les types 0Bh, 0Dh, 0Eh utilisent les routines ROM B37E, B248, A9B7
-     * deja implantees pour les stages 7..11. On reutilise exclusivement ces
-     * routines; le type 10h utilise ADDE/ADF8; 09h et 12h restent non crees.
-     * Ne branche PAS la progression des stages : ce chemin n'est actif que si
-     * un appelant fournit explicitement un stage 12..18 dans EnemyRoomVars.
-     * Identification des routines et initialisations : stage7-enemies.md,
-     * stage8-enemies.md, stage11-enemies.md, table ROM 9942.
-     * Attente : verification des sprites / banques et de l'IA en traces pour
-     * les salles tardives avant d'autoriser le rendu Mega Drive.
-     */
+    /* 6154/5F1D: fixed entries12..18, including09 and12. The late ROM
+     * maps/objects and generated sprite banks are connected by LOT11. */
     if (v->stage >= 12 && v->stage <= 18 &&
         v->room < vk_late_enemy_room_counts[v->stage - 12] &&
         s->type5Timer < ENEMY_TYPE5_DELAY) {
@@ -1781,6 +1933,8 @@ int Enemies_frame(EnemyState *s, EnemySpawnTimer *t, const EnemyRoomVars *v)
                 else if (type == 0x0D) fleaSpawn(s, x, y);
                 else if (type == 0x0E) dragonSpawn(s, x, y);
                 else if (type == 0x10) type10Spawn(s, x, y);
+                else if (type == 0x09) type09Spawn(s,x,y);
+                else if (type == 0x12) type12Spawn(s,x,y);
             }
         }
     }
@@ -1792,26 +1946,45 @@ int Enemies_frame(EnemyState *s, EnemySpawnTimer *t, const EnemyRoomVars *v)
      * avec C434 (objet 09) ces gardes sont sautees et le contact detruit l'ennemi.
      * D010 (objet 0A) ne coupe ni le contact ni le fouet (seuls 98F9 et 9E3E le lisent). */
     s->contactScore = 0;
-    s->itemSound = 0;
-    if (s->killTimer || (!Enemies_god && s->recoil == 0 && s->invuln == 0 && s->guardTimer == 0)) {
-        for (i = 0; i < ENEMY_MAX; i++) {
-            Enemy *e = &s->enemy[i];
-            if (!e->active || e->exiting) continue;
-            if (e->type == ENEMY_TYPE_SPLASH || e->type == ENEMY_TYPE_DEATH || ghostInert(e)) continue;   /* goutte, flamme de mort, objet 1C attendant : +E = 0, ni contact ni fouet */
-            EnemyU8 damage = e->type == ENEMY_TYPE_10 ? 6 : e->type == ENEMY_TYPE_DRAGON ? DRAGON_DAMAGE : (e->type == ENEMY_TYPE_6 || e->type == ENEMY_TYPE_8 || e->type == ENEMY_TYPE_GHOST || e->type == ENEMY_TYPE_FISH3 || e->type == ENEMY_TYPE_EAGLE || e->type == ENEMY_TYPE_10) ? ENEMY_STAGE4_DAMAGE :
+    /* 9E31 follows the complete C800 pass, including newly created shots. */
+    for(i=0;i<ENEMY_ALL;i++){
+        Enemy *e=Enemies_slot(s,i);
+        if(!e->active || !isProjectile(e->type) || !(++e->age&1))continue;
+        if(e->type==ENEMY_TYPE_SHIELD_SPARK){e->pose=(e->anim&4)?0x86:0x85;if(--e->anim==0)e->active=0;s8BoneC[ext(s,e)->c10]=e->anim;}
+        else if(!s->frozen){
+            if(e->type==ENEMY_TYPE_BONE)boneStep(s,e);
+            else if(e->type==ENEMY_TYPE_10_SHOT)type10ShotStep(s,e);
+            else fireballStep(e);
+        }
+        /* 9E49/9E4C applies99E5 even when992F skipped the AI. */
+        if(s4Remove(e))e->active=0;
+    }
+
+    s->itemSound = guardWarning;
+    if(guardWarning)contactSound(s,guardWarning);
+    { int contact_pool;for(contact_pool=0;contact_pool<2;contact_pool++)
+    if (s->killTimer || (s->recoil == 0 && s->invuln == 0 && s->guardTimer == 0 && v->simonState < 5)) {
+        for (i = 0; i < ENEMY_ALL; i++) {
+            Enemy *e = Enemies_slot(s,i);
+            if (!e->active || e->exiting || isProjectile(e->type)!=contact_pool) continue;
+            if (e->type == ENEMY_TYPE_SPLASH || (e->type == ENEMY_TYPE_DEATH || e->type == ENEMY_TYPE_SHIELD_SPARK) || ghostInert(e)) continue;   /* goutte, flamme de mort, objet 1C attendant : +E = 0, ni contact ni fouet */
+            EnemyU8 damage = e->type == ENEMY_TYPE_10 ? 6 : e->type == ENEMY_TYPE_DRAGON ? DRAGON_DAMAGE : (e->type == ENEMY_TYPE_6 || e->type == ENEMY_TYPE_8 || e->type == ENEMY_TYPE_GHOST || e->type == ENEMY_TYPE_FISH3 || e->type == ENEMY_TYPE_EAGLE || e->type == ENEMY_TYPE_12 || e->type == ENEMY_TYPE_10) ? ENEMY_STAGE4_DAMAGE :
                              (e->type == ENEMY_TYPE_7 || e->type == ENEMY_TYPE_STATUE ||
                               e->type == ENEMY_TYPE_HOPPER || e->type == ENEMY_TYPE_LEAPER || e->type == ENEMY_TYPE_FLEA) ? 2 :   /* 81CE : base 1, doublee */
                              isProjectile(e->type) ? 1 :                                       /* 7F3D : 462B avec B = 1 */
                              e->type == ENEMY_TYPE_5 ? ENEMY_TYPE5_DAMAGE :
                              e->type == ENEMY_TYPE_2 ? ENEMY_TYPE2_DAMAGE : ENEMY_CONTACT_DAMAGE;
+            if(isLoot(e->type) && !s->itemPhase)continue;
+            if (!isLoot(e->type) && Enemies_god && !s->killTimer)continue;
             if (!Enemies_touches(e, v)) continue;
+            if(isLoot(e->type)){vk_loot_pick(&enemyLoot[i],&Enemies_lootPick);lootSync(e,&enemyLoot[i]);if(loot_handler){loot_handler(s,Enemies_lootPick);Enemies_lootPick=0;}break;}
             if (s->killTimer) {
                 /* 7EB0 : 81AB (points de la table 81CE, comme au fouet), 9A3E, effet 0D ;
                  * un seul ennemi par passe (JP 509F). */
-                s->contactScore = isObjS4(e->type) ? s4Score(e->type) : (EnemyU8)(e->type == ENEMY_TYPE_2 ? 2 : 1);
-                s->itemSound = 0x0D;
-                if (isProjectile(e->type)) clearEnemy(e);    /* D700 : 822A, pas de flamme */
-                else { e->active = 0; deathFlame(s, e); }
+                /*7E67 and7EE4 each award points.822A (D700) has no0D request. */
+                s->contactScore=(EnemyU8)(s->contactScore+(isProjectile(e->type)?1:isObjS4(e->type)?s4Score(e->type):(EnemyU8)(e->type==ENEMY_TYPE_2?2:1)));
+                if (isProjectile(e->type)) e->active=0;
+                else { e->active = 0; deathFlame(s, e);contactSound(s,0x0D); }
                 break;
             }
             /* 8179 : avec C701 bit 4 (objet 03) et Simon tourne vers l'ennemi
@@ -1845,6 +2018,8 @@ int Enemies_frame(EnemyState *s, EnemySpawnTimer *t, const EnemyRoomVars *v)
         }
     }
 
+    }
+
     /* 75C0-75E9 : C440, C434 et C43A baissent a chaque passe de la routine de Simon,
      * comme C42D (une image sur deux). C43A tombe a 10h : effet 17. */
     s->itemPhase ^= 1;
@@ -1859,9 +2034,7 @@ int Enemies_frame(EnemyState *s, EnemySpawnTimer *t, const EnemyRoomVars *v)
             s->border = (s->flash & 2) ? ENEMY_FLASH_COLOR : 0;
             s->flash--;
         }
-        if (s->spawnPause) s->spawnPause--;
-        if (s->killTimer) s->killTimer--;
-        if (s->guardTimer && --s->guardTimer == ENEMY_GUARD_WARNING) s->itemSound = 0x17;
+
         /* 790C et 78CC remplissent D400/D600 apres ces baisses ; la passe suivante les
          * envoie en VRAM (trace openMSX, research/castle-candles.md 9.8). L'objet ramasse
          * plus loin (step_candles, comme 7FE2) attend donc la passe suivante. */
@@ -1913,8 +2086,8 @@ int Enemies_sprites(const EnemyState *s, EnemyU8 index, EnemySprite out[ENEMY_SP
     const Enemy *e;
     EnemyU8 pose, t, k;
 
-    if (index >= ENEMY_MAX) return 0;
-    e = &s->enemy[index];
+    if (index >= ENEMY_ALL) return 0;
+    e = Enemies_object(s,index);
     if (!e->active) return 0;
 
     if (e->type == ENEMY_TYPE_5) {
@@ -1956,6 +2129,7 @@ int Enemies_sprites(const EnemyState *s, EnemyU8 index, EnemySprite out[ENEMY_SP
 
     if (e->type == ENEMY_TYPE_FISH3) return fish3Sprites(e, out);
     if (e->type == ENEMY_TYPE_EAGLE) return eagleSprites(e, out);
+    if (e->type == ENEMY_TYPE_12) return type12Sprites(e,out);
     if (e->type == ENEMY_TYPE_DRAGON) return dragonSprites(s, e, out);
 
     if (e->type == ENEMY_TYPE_6) {
@@ -2016,13 +2190,30 @@ int Enemies_sprites(const EnemyState *s, EnemyU8 index, EnemySprite out[ENEMY_SP
         return 1;
     }
 
+    if (e->type == ENEMY_TYPE_09) {
+        if(!e->pose){ /* Constructor placeholder: E8/02 + E8/45 at X-4,Y-8. */
+            out[0].x=(EnemyU8)(e->x-4);out[0].y=(EnemyU8)(e->y-7);out[0].pattern=4;out[0].bank=4;return 1;
+        }
+        const int asleep = !e->state;
+        const int n = asleep ? 2 : 4;
+        const EnemyU8 base = (EnemyU8)(asleep ? 0x80+8*(e->pose-0x25) : 0x40+16*(e->pose-0x21));
+        for(k=0;k<n;k++) {
+            out[k].x=(EnemyS16)(e->x-8);
+            out[k].y=(EnemyU8)(e->y-(asleep ? 14 : k<2 ? 31:15));
+            out[k].pattern=(EnemyU8)(base+4*k);out[k].bank=1;
+        }
+        return n;
+    }
+    if((e->type==ENEMY_TYPE_BONE || e->type==ENEMY_TYPE_10_SHOT) && e->pose==3){
+        out[0].x=(EnemyU8)(e->x-8);out[0].y=(EnemyU8)(e->y-11);out[0].pattern=0xF0;out[0].bank=1;return 1;
+    }
     if (e->type == ENEMY_TYPE_10 || e->type == ENEMY_TYPE_10_SHOT) {
         const int shot = e->type == ENEMY_TYPE_10_SHOT;
         const EnemyU8 base = shot ? (EnemyU8)(0x80 + 8 * (e->pose - 0x63)) : (EnemyU8)(0x40 + 16 * (e->pose - 0x5F));
         const int n = shot ? 2 : 4;
         for (k = 0; k < n; k++) {
             out[k].y = (EnemyU8)(e->y - (shot ? 14 : (k < 2 ? 31 : 15)));
-            out[k].x = (EnemyS16)(e->x - 8);
+            out[k].x = shot ? (EnemyU8)(e->x - 8) : (EnemyS16)(e->x - 8);
             out[k].pattern = (EnemyU8)(base + 4*k);
             out[k].bank = 1;
         }
@@ -2038,7 +2229,12 @@ int Enemies_sprites(const EnemyState *s, EnemyU8 index, EnemySprite out[ENEMY_SP
         return 1;
     }
 
-    if (e->type == ENEMY_TYPE_DEATH) {
+    if(isLoot(e->type)){
+        const VKLoot *l=&enemyLoot[index];const int heart=e->type==ENEMY_TYPE_LOOT_HEART;
+        out[0].x=(EnemyS16)(e->x-(heart?4:8));out[0].y=(EnemyU8)(e->y-(heart?7:14));
+        out[0].bank=4;out[0].pattern=(EnemyU8)(heart?0:l->colour==8?1:l->colour==1?2:3);return 1;
+    }
+    if ((e->type == ENEMY_TYPE_DEATH || e->type == ENEMY_TYPE_SHIELD_SPARK)) {
         /* Trace (stages 1, 2, 4, 6, 7, 8, 9) : une entree SAT (X-8, Y-16) en pose 85 (motif F4), (X-8, Y-15) en pose 86 (motif F8),
          * couleur 8 sur les 16 lignes ; la seconde entree de l'objet est hors ecran. */
         const int b = e->pose == ENEMY_DEATH_POSE_B;
@@ -2063,7 +2259,7 @@ int Enemies_sprites(const EnemyState *s, EnemyU8 index, EnemySprite out[ENEMY_SP
         /* Trace (stage 8 salle 2) : poses 4B, 4C, 4D, motifs 90, 98, A0 ; SAT (X-4, Y-15) pour 4B, (X-8, Y-15) sinon. */
         const EnemyU8 pose = e->pose < 0x4B ? 0x4B : e->pose;
         out[0].y = (EnemyU8)(e->y - 14);
-        out[0].x = (EnemyS16)(e->x - (pose == 0x4B ? 4 : 8));
+        out[0].x = (EnemyU8)(e->x - (pose == 0x4B ? 4 : 8));
         out[0].pattern = (EnemyU8)(0x98 + 4 * (pose - 0x4B));
         out[0].bank = 1;
         return 1;
@@ -2076,7 +2272,8 @@ int Enemies_sprites(const EnemyState *s, EnemyU8 index, EnemySprite out[ENEMY_SP
         out[0].x = (EnemyS16)(e->anim ? e->x - (e->dx > 0 ? 5 : 11) : e->x - 4);
         /* Le tir vise du dragon (stage 11, etat 1) : SAT (X - 4, Y - 13) (trace R5, 27 echantillons : un pixel de moins ou de plus selon la fraction). */
         if (e->state) { out[0].y = (EnemyU8)(e->y - 12); out[0].x = (EnemyS16)(e->x - 4); }
-        out[0].pattern = fireballCell;
+        if(e->romBox==2) { out[0].y=(EnemyU8)(e->y-11);out[0].x=(EnemyU8)(e->x-8); }
+        out[0].pattern = e->romBox==2 ? 0xF0 : fireballCell;
         out[0].bank = 1;
         return 1;
     }
@@ -2122,4 +2319,50 @@ int Enemies_sprites(const EnemyState *s, EnemyU8 index, EnemySprite out[ENEMY_SP
         out[k].bank = 0;
     }
     return ENEMY_SPRITES;
+}
+
+/* 8610: no facing-of-projectile test, no immunity/state test. A zero armor
+ * counter wraps toFF. Even after the last charge all8 slots are still scanned. */
+int Enemies_shield(EnemyState *s,const EnemyRoomVars *v,EnemyU8 *inventory)
+{
+    EnemyU8 i,slot;int sounds=0;
+    if(!(*inventory&0x20))return 0;
+    /* 8610 scans physical D700 slots, independently of the shared C array. */
+    for(slot=0;slot<8;slot++){
+        Enemy *e=0;EnemyU8 raw,target,j;
+        for(i=0;i<ENEMY_ALL;i++)if(Enemies_slot(s,i)->active && isProjectile(Enemies_slot(s,i)->type) && ext(s,Enemies_slot(s,i))->c10==slot){e=Enemies_slot(s,i);break;}
+        if(!e)continue;
+        if(!e->active || !isProjectile(e->type) || e->type==ENEMY_TYPE_SHIELD_SPARK)continue;
+        raw=e->type==ENEMY_TYPE_FIREBALL?3:e->type==ENEMY_TYPE_BONE?4:9;
+        if(!vk_item_shield_touch(raw,(VKByte)v->simonX,(VKByte)v->simonY,v->facingLeft,(VKByte)e->x,e->y))continue;
+        /* 9A1A frees the old slot, then9F6D allocates the first free D700. */
+        for(target=0;target<8;target++){
+            for(j=0;j<ENEMY_ALL;j++)if(Enemies_slot(s,j)!=e && Enemies_slot(s,j)->active && isProjectile(Enemies_slot(s,j)->type) && ext(s,Enemies_slot(s,j))->c10==target)break;
+            if(j==ENEMY_ALL)break;
+        }
+        if(objectIndex(s,e)>=ENEMY_MAX){
+            EnemyS16 x=e->x;EnemyU8 y=e->y;e->active=0;
+            e=newObject(s,ENEMY_TYPE_SHIELD_SPARK);
+            if(!e){sounds++;if(--s->armor==0)*inventory&=(EnemyU8)~0x20;continue;}
+            e->x=x;e->y=y;
+        }
+        ext(s,e)->c10=target;
+        e->type=ENEMY_TYPE_SHIELD_SPARK;e->state=0;e->extraPhase=0;e->anim=16;e->pose=0x85;e->age=1;
+        e->sub=0;e->vy=0;e->dx=0;e->timer=0;ext(s,e)->vx=0;ext(s,e)->mobile=1;s8BoneC[ext(s,e)->c10]=16;
+        sounds++;if(--s->armor==0)*inventory&=(EnemyU8)~0x20;
+    }
+    return sounds;
+}
+
+/* 89BF uses5F1F with B=content and DE=(candleX+8,candleY+16). */
+int Enemies_candleLoot(EnemyState *s,unsigned char kind,unsigned char x,unsigned char y)
+{
+ Enemy *e=newObject(s,kind==1?ENEMY_TYPE_DEATH:ENEMY_TYPE_LOOT_FLAME);
+ if(!e)return 0;
+ e->x=(EnemyU8)(x+8);e->y=(EnemyU8)(y+16);
+ if(kind==1){
+  VKLoot *l=&enemyLoot[e-s->enemy];vk_loot_init(l,30,(VKByte)e->x,e->y,1);
+  e->state=1;e->anim=16;e->pose=0x85;e->extraPhase=1;e->age=1;
+ }else lootSpawn(s,e,38,kind);
+ return 1;
 }

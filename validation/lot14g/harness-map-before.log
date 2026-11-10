@@ -1,0 +1,14 @@
+Boss15 shared pool -1 False 360 images PASS
+Boss15 shared pool -1 True 360 images PASS
+Boss15 shared pool 0 False 360 images PASS
+Boss15 shared pool 0 True 360 images PASS
+Boss15 shared pool 1 False 360 images PASS
+Boss15 shared pool 1 True 360 images PASS
+Traceback (most recent call last):
+  File "/workspace/base-d/vampirekiller-MD/tools/verify_boss15_pools.py", line 53, in <module>
+    if __name__=='__main__':main()
+                            ^^^^^^
+  File "/workspace/base-d/vampirekiller-MD/tools/verify_boss15_pools.py", line 33, in main
+    assert bytes(raw)==bytes(m[0xC800+128*i:0xC820+128*i]),('ordinary IX32',freed,p,i,bytes(raw).hex(),bytes(m[0xC800+128*i:0xC820+128*i]).hex())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ('ordinary IX32', 2, 21, 1, '2601007800280100080000010001020000000000000000000000000000000002', '0001007800280100080000010001000000000000000000000000000000000002')

@@ -27,6 +27,9 @@ Script (une commande par ligne, `#` = commentaire ; "image" = un appel a retro_r
   dump [LABEL]           lecture RAM -> dumps.json / dumps.csv
   shot [NOM]             capture -> NOM.png (defaut : frame-<image>.png)
   poke SYMBOLE[+OFF] VALEUR [8|16|32]   ecrit la RAM (defaut 8 bits)
+  write SYM+OFF BITS EXPR ecrit une valeur RAM evaluee (fixture explicite)
+  when EXPR :: COMMAND   execute COMMAND si EXPR vraie
+  repeat N FICHIER        rejoue un fichier relatif N fois (0..20000)
   set NOM EXPR           memorise une valeur (utilisable ensuite dans les EXPR)
   echo EXPR              affiche une valeur
   include FICHIER        execute un autre script (chemin relatif au script courant)
@@ -34,7 +37,7 @@ Les EXPR sont du Python evalue sur l'etat : frame, front_mode, game.area, game.r
 game.player.x/.y/.facing/.mode/.crouched/.on_stairs..., game.recoil/.recoil_count/.recoil_dir,
 player (copie affichee),
 whip.timer/.facing/.x/.y, enemies.energy/.invuln/.recoil/.alive (nb actifs),
-enemies.enemy[i].active/.type/.x/.y/.dx/.age/.romBox/.timer (i < 7; .active is 0 for a death flame, .flame 1),
+enemies.enemy[i].active/.type/.x/.y/.dx/.age/.romBox/.timer (i < 7; death flame: .active=0/.flame=1; airborne loot: .active=0/.loot=1),
 enemies.timeStop/.frozen (objet 0A : C43B, D010 ; l'objet est C701 bit 6, ram8('vk_candles+322') & 0x40), target (test_target), flames[0..1],
 health.lives/.phase/.timer/.fell (C410 ; phase 0 vivant, 1 mort, 2 reapparition, 3 fin de partie),
 ram8/ram16/ram32(addr|'symbole'), et les noms memorises par `set`.
@@ -67,8 +70,8 @@ FRONT_MODES = ['LOGO', 'TITLE', 'CASTLE', 'COURTYARD', 'INTERIOR', 'VIEWER', 'TE
 # Blocs d'ennemis (ENEMY_MAX de enemies.h : les 7 blocs C800..CB00 de la ROM).
 ENEMY_SLOTS = 7
 # Tailles attendues (octets) des globales decodees : garde-fou contre une derive des structures.
-EXPECTED_SIZES = {'player': 15, 'game': 36, 'whip': 6, 'enemy_state': 166,
-                  'test_target': 18, 'courtyard_flame': 36, 'front_mode': 2, 'health': 6}
+EXPECTED_SIZES = {'player': 15, 'game': 36, 'whip': 6, 'enemy_state': 166, 'vk_projectiles': 144,
+                  'test_target': 18, 'courtyard_flame': 36, 'front_mode': 2, 'health': 6, 'vk_candles': 522, 'items': 20, 'vk_walls': 693}
 # Noms C actuels des globales partagees (sgdk/src/frontend.h, actors.h) ; les scenarios
 # gardent les noms courts. test_target et courtyard_flame sont statiques (room_view.c).
 SYMBOL_ALIASES = {'game': 'vk_game', 'player': 'vk_player', 'whip': 'vk_whip',
@@ -258,7 +261,8 @@ class Game_View:
                 address, size = lookup(symbols, name)
             except KeyError:
                 continue
-            if size is not None and size != expected:
+            # GCC may round an odd-sized global up to an even size (trailing padding only).
+            if size is not None and size != expected and not (expected % 2 and size == expected + 1):
                 raise RuntimeError(f'{name}: taille {size} au lieu de {expected} octets : '
                                    'mettre a jour le decodage dans tools/md_harness.py')
             self.addr[name] = address
@@ -301,8 +305,8 @@ class Game_View:
         if 'enemy_state' in A:
             a = A['enemy_state']
             enemies = []
-            for i in range(ENEMY_SLOTS):
-                e = a + 18 * i
+            for i in range(ENEMY_SLOTS+8):
+                e = a + 18 * i if i<ENEMY_SLOTS else A['vk_projectiles']+18*(i-ENEMY_SLOTS)
                 enemies.append({'active': m.rd8(e), 'exiting': m.rd8(e + 1), 'type': m.rd8(e + 2),
                                 'extraPhase': m.rd8(e + 3), 'x': s16(m.rd16(e + 4)), 'y': m.rd8(e + 6),
                                 'dx': s8(m.rd8(e + 7)), 'sub': m.rd8(e + 8), 'age': m.rd16(e + 10),
@@ -312,11 +316,13 @@ class Game_View:
             # A block holding a death flame (object 1E, type 16) is not a living enemy: `active` is 0 for the scenarios, `flame` is 1
             # (the flame still takes the block on the MSX, enemies_death.inc).
             for e in enemies:
-                e['flame'] = int(e['active'] and e['type'] == 16)
+                e['loot'] = int(e['active'] and e['type'] in (25,26))
+                if e['loot']:e['active']=0
+                e['flame'] = int(e['active'] and e['type'] in (16,24))
                 if e['flame']:
                     e['active'] = 0
             b = a + 18 * ENEMY_SLOTS
-            state['enemies'] = {'enemy': enemies, 'alive': sum(1 for e in enemies if e['active']),
+            state['enemies'] = {'enemy': enemies[:ENEMY_SLOTS], 'projectiles':enemies[ENEMY_SLOTS:], 'alive': sum(1 for e in enemies if e['active']),
                                 'energy': m.rd8(b), 'invuln': m.rd8(b + 1), 'invulnPhase': m.rd8(b + 2),
                                 'recoil': m.rd8(b + 3), 'recoilDir': s8(m.rd8(b + 4)),
                                 'parity': m.rd8(b + 5), 'type4Count': m.rd16(b + 6),
@@ -491,6 +497,19 @@ class Harness:
             address = (lookup(self.symbols, name)[0] if not name.isdigit() and not name.startswith('0x')
                        else int(name, 0)) + (int(offset, 0) if offset else 0)
             m.wr(address, int(args[1], 0), int(args[2]) if len(args) > 2 else 8)
+        elif cmd == 'write':
+            # Expression-valued RAM fixture: write SYMBOL BITS EXPR (never code).
+            target,bits,expr=line.split(None,3)[1:]
+            name,_,offset=target.partition('+')
+            address=lookup(self.symbols,name)[0]+(int(offset,0) if offset else 0)
+            m.wr(address,int(self.eval(expr)),int(bits))
+        elif cmd == 'when':
+            expr,command=line.split(None,1)[1].split(' :: ',1)
+            if self.eval(expr):self.run_line(command,number)
+        elif cmd == 'repeat':
+            count=int(args[0]);path=(self.script_dir/args[1]).resolve()
+            if not 0<=count<=20000:raise ValueError('repeat outside0..20000')
+            for _ in range(count):self.run_script(path.read_text().splitlines(),path.parent)
         elif cmd == 'set':
             self.vars[args[0]] = self.eval(line.split(None, 2)[2])
         elif cmd == 'include':
@@ -592,7 +611,7 @@ def main(argv=None):
         harness.checks.append({'frame': harness.machine.frame, 'expr': 'script', 'ok': False,
                                'error': str(exc)})
         try:
-            harness.shot('error')
+            harness.shot('error');harness.dump('failure')
         except RuntimeError:
             pass
         status = 2

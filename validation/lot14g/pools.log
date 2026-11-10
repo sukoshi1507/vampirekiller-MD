@@ -1,0 +1,8 @@
+Boss15 shared pool -1 False 360 images PASS
+Boss15 shared pool -1 True 360 images PASS
+Boss15 shared pool 0 False 360 images PASS
+Boss15 shared pool 0 True 360 images PASS
+Boss15 shared pool 1 False 360 images PASS
+Boss15 shared pool 1 True 360 images PASS
+Boss15 shared pool 2 False 360 images PASS
+Boss15 shared pool 2 True 360 images PASS

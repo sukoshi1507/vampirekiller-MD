@@ -1,7 +1,9 @@
+#include <stddef.h>
 /* Native tests of wall.c: wall objects and merchant (research/merchant.md). */
 #include <assert.h>
 #include <stdio.h>
 #include "wall.h"
+_Static_assert(sizeof(VKWall)==693 && offsetof(VKWall,shop)==348,"LOT08 wall offsets must not follow candle stage count");
 #include "enemies.h"
 
 /* Courtyard tables of the intro generator, not linked in native tests. */

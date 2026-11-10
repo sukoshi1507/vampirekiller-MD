@@ -6,6 +6,7 @@
 /* The stage map on plane A; what it covers comes back at the close. */
 void vk_stage_map_open(void);
 void vk_stage_map_close(void);
+void vk_stage_map_tick(bool pressed);
 bool vk_stage_map_is_open(void);
 
 #endif

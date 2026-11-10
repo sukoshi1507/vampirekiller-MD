@@ -1,0 +1,63 @@
+{
+  "native_exit": 0,
+  "build_exit": 0,
+  "post_comments_build_exit": 0,
+  "compiled_rom_sha256": "d57bccc6d24bc536cbb18b0824fa4e5248e472ca74bd69281736756f5c7dc9dc",
+  "rom_bytes": 1310720,
+  "rom_excluded": true,
+  "scenarios": [
+    {
+      "stage": 12,
+      "frames": 5908,
+      "checks": 41,
+      "passed": true
+    },
+    {
+      "stage": 13,
+      "frames": 5857,
+      "checks": 40,
+      "passed": true
+    },
+    {
+      "stage": 14,
+      "frames": 4128,
+      "checks": 28,
+      "passed": true
+    },
+    {
+      "stage": 15,
+      "frames": 5064,
+      "checks": 35,
+      "passed": true
+    },
+    {
+      "stage": 16,
+      "frames": 5013,
+      "checks": 34,
+      "passed": true
+    },
+    {
+      "stage": 17,
+      "frames": 5889,
+      "checks": 40,
+      "passed": true
+    },
+    {
+      "stage": 18,
+      "frames": 17887,
+      "checks": 37,
+      "passed": true
+    }
+  ],
+  "scenario_images": 49746,
+  "scenario_checks": 255,
+  "pure_loot_images": 10800,
+  "integrated_loot_images": 3960,
+  "extended_contact_images": 11520,
+  "limits": [
+    "No continuous natural traversal proof",
+    "Candle-derived airborne C800 reservations still provisional",
+    "Shared seven-slot pool: mixed C800/D700 saturation not generally proved",
+    "Late room freeze20 and alternate C41A maps remain provisional"
+  ]
+}

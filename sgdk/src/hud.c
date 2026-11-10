@@ -106,6 +106,7 @@ static void digits2(char *text, u16 v)
 /* The label and status tiles stay in VRAM (no scene or room loads there):
  * composed once, then only their cells are set again. */
 static bool tiles_ready;
+void vk_hud_invalidate_tiles(void){tiles_ready=FALSE;}
 
 static void show_labels(void)
 {

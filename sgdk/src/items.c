@@ -15,12 +15,14 @@
 
 static const VKStageItems *stage_items(const VKGame *game)
 {
-    if (game->area != VK_AREA_INTERIOR || game->stage < 1 || game->stage > 11) return 0;
+    if (game->area != VK_AREA_INTERIOR || game->stage < 1 || game->stage > 18) return 0;
+    if(game->stage>=12)return game->room<12?&kLateRoomItems[game->stage-12][game->room]:0;
     return &kStageItems[game->stage - 1];
 }
 
 void vk_items_begin(VKItems *items)
 {
+    int i;for(i=0;i<7;i++)items->late_keys_taken[i]=0;
     items->keys = 0;
     items->white_key_taken = 0;
     items->white_key_revealed = 0;
@@ -31,6 +33,7 @@ void vk_items_begin(VKItems *items)
 
 void vk_items_new_life(VKItems *items)
 {
+    int i;for(i=0;i<7;i++)items->late_keys_taken[i]=0;
     items->keys &= 0x80;
     if (items->door == VK_DOOR_CLOSED)
     {
@@ -46,6 +49,7 @@ void vk_items_enter_room(VKItems *items)
 
 void vk_items_enter_stage(VKItems *items)
 {
+    int i;for(i=0;i<7;i++)items->late_keys_taken[i]=0;
     items->white_key_taken = 0;
     items->white_key_revealed = 0;
     items->door = VK_DOOR_CLOSED;
@@ -72,7 +76,7 @@ int vk_items_key_shown(const VKItems *items, const VKGame *game)
     VKByte x, y;
     const VKStageItems *s = stage_items(game);
     return s && (!s->key_hidden || items->white_key_revealed) &&
-        !items->white_key_taken && vk_items_key_place(game, &x, &y);
+        !(game->stage>=12 ? (items->late_keys_taken[game->stage-12]&(1u<<game->room)) : items->white_key_taken) && vk_items_key_place(game, &x, &y);
 }
 
 int vk_items_door_lift(const VKItems *items)
@@ -149,6 +153,7 @@ VKItemEvent vk_items_tick(VKItems *items, VKGame *game)
         touches_key(p, key_x, key_y))
     {
         items->white_key_taken = 1;
+        if(game->stage>=12)items->late_keys_taken[game->stage-12]|=1u<<game->room;
         items->keys |= VK_KEY_WHITE;
         return VK_ITEM_KEY_TAKEN;
     }

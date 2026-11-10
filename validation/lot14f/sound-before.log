@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "/workspace/base-d/vampirekiller-MD/tools/verify_touch09.py", line 39, in <module>
+    if __name__=='__main__':main()
+                            ^^^^^^
+  File "/workspace/base-d/vampirekiller-MD/tools/verify_touch09.py", line 27, in main
+    sounds=(C.c_ubyte*8)();n=lib.touch09_sounds(sounds);assert list(sounds)[:n]==h.sounds,('sounds',bodies,kind,guard,frame,list(sounds)[:n],h.sounds)
+                                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ('sounds', 0, 3, 0, 0, [13], [])

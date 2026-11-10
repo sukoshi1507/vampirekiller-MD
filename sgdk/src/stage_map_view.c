@@ -2,6 +2,7 @@
 #include "frontend.h"
 #include "candle_view.h"
 #include "stage_map.h"
+#include "item_effects.h"
 
 #define FIRST_ROW 4                  /* 9585: black from Y = 32, the HUD stays */
 #define ROWS 24
@@ -21,7 +22,7 @@ static u16 saved_cells[ROWS][COLS];
 static u16 saved_tiles[MAP_TILE_MAX * TILE_WORDS];
 static u8 slot[MAP_TILE_MAX];        /* tile of each distinct tile of the map */
 static u16 slots;
-static bool map_open;
+static VKItemMapState map_state;
 
 /* Interrupts off (the V-Int also drives the VDP): the tiles the HUD does not use. */
 static void find_slots(void)
@@ -82,8 +83,8 @@ void vk_stage_map_open(void)
 {
     u16 r, c;
     u16 count;
-    vk_stage_map_render((VKByte *)tiles, &vk_candles, vk_candles_stage_of(&vk_game), vk_game.room,
-                        vk_player.x, vk_player.y);
+    if(vk_item_map_step(&map_state,&vk_candles,64,0,1)!=VK_ITEM_MAP_OPEN)return;
+    vk_stage_map_panel((VKByte *)tiles);
     SYS_disableInts();
     find_slots();
     SYS_enableInts();
@@ -100,7 +101,7 @@ void vk_stage_map_open(void)
     for (r = 0; r < ROWS; r++)
         VDP_setTileMapDataRow(BG_A, cells[r], (u16)(FIRST_ROW + r), 0, COLS, CPU);
     SYS_enableInts();
-    map_open = TRUE;
+
 }
 
 void vk_stage_map_close(void)
@@ -111,10 +112,25 @@ void vk_stage_map_close(void)
     for (r = 0; r < ROWS; r++)
         VDP_setTileMapDataRow(BG_A, saved_cells[r], (u16)(FIRST_ROW + r), 0, COLS, CPU);
     SYS_enableInts();
-    map_open = FALSE;
+    map_state.phase=0;
 }
 
 bool vk_stage_map_is_open(void)
 {
-    return map_open;
+    return map_state.phase!=0;
+}
+
+void vk_stage_map_tick(bool pressed)
+{
+    const int event=vk_item_map_step(&map_state,&vk_candles,64,0,pressed);
+    u16 count,r;
+    if(event==VK_ITEM_MAP_CLOSE){vk_stage_map_close();return;}
+    if(event!=VK_ITEM_MAP_DRAW)return;
+    map_state.phase=1; /* 95A8 increments CF38 only after the drawing returns. */
+    vk_stage_map_render((VKByte *)tiles,&vk_candles,vk_candles_stage_of(&vk_game),vk_game.room,vk_player.x,vk_player.y);
+    count=make_tiles();SYS_disableInts();
+    for(r=0;r<count;r++)VDP_loadTileData(&tiles[r*8],MAP_TILE_INDEX+slot[r],1,CPU);
+    for(r=0;r<ROWS;r++)VDP_setTileMapDataRow(BG_A,cells[r],FIRST_ROW+r,0,COLS,CPU);
+    SYS_enableInts();
+    map_state.phase=2;
 }

@@ -1,0 +1,23 @@
+{
+  "frames": 1374,
+  "cases": [
+    {
+      "content": 1,
+      "hearts": 1,
+      "sound": 15,
+      "post_pick_images": 360
+    },
+    {
+      "content": 2,
+      "hearts": 5,
+      "sound": 15,
+      "post_pick_images": 360
+    },
+    {
+      "fallback": "seven C800 occupied",
+      "hearts": 5,
+      "sound": 15,
+      "post_pick_images": 360
+    }
+  ]
+}

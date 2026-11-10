@@ -33,6 +33,7 @@ typedef struct {
     VKByte timer;                    /* frames since the door opened */
     VKByte white_key_revealed;       /* the whip opened its hidden block (candles.c) */
     VKByte attacking;                /* C422 != 0: set by the caller before vk_items_tick */
+    VKWord late_keys_taken[7];      /* LOT11: one stream flag per late room, appended. */
 } VKItems;
 
 void vk_items_begin(VKItems *items);

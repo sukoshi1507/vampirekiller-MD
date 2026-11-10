@@ -25,8 +25,8 @@ int main(void)
     vk_stage_map_render(tiles, &c, 1, 0, 136, 192);
     assert(pixel(VK_MAP_X, VK_MAP_Y) == 3 && pixel(VK_MAP_X + VK_MAP_W - 1, VK_MAP_Y + VK_MAP_H - 1) == 3);
     assert(pixel(VK_MAP_X, VK_MAP_Y + VK_MAP_H) == 0);       /* under the 126 lines */
-    /* 984B: Simon, red with opaque black corners (y = (192 - 64) / 8). */
-    assert(pixel(place[1] + 17, place[0] + 16) == 0 && pixel(place[1] + 18, place[0] + 16) == 8);
+    /* 984B/498A: packed DX rounds down to an even pixel. Simon, red with opaque black corners (y = (192 - 64) / 8). */
+    assert(pixel(place[1] + 16, place[0] + 16) == 0 && pixel(place[1] + 17, place[0] + 16) == 8);
     assert(pixel(place[1] + 18, place[0] + 17) == 8);
     /* 9874: the arrow points right. */
     assert(pixel(180 + 3, 78) == 8 && pixel(180, 78) == 0 && pixel(180 + 6, 78 + 3) == 8);

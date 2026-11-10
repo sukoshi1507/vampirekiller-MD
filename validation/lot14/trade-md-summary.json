@@ -1,0 +1,88 @@
+{
+  "frames": 3744,
+  "sizes": {
+    "vk_enemies": 166,
+    "vk_game": 36,
+    "vk_candles": 522,
+    "vk_walls": 693
+  },
+  "cases": [
+    {
+      "stage": 12,
+      "room": 4,
+      "sale": 29,
+      "price_bcd": 32,
+      "frozen_images": 300,
+      "position": [
+        16,
+        160
+      ]
+    },
+    {
+      "stage": 13,
+      "room": 4,
+      "sale": 18,
+      "price_bcd": 48,
+      "frozen_images": 300,
+      "position": [
+        16,
+        160
+      ]
+    },
+    {
+      "stage": 14,
+      "room": 6,
+      "sale": 14,
+      "price_bcd": 32,
+      "frozen_images": 300,
+      "position": [
+        16,
+        160
+      ]
+    },
+    {
+      "stage": 17,
+      "room": 8,
+      "sale": 3,
+      "price_bcd": 32,
+      "frozen_images": 300,
+      "position": [
+        16,
+        160
+      ]
+    },
+    {
+      "stage": 17,
+      "room": 9,
+      "sale": 22,
+      "price_bcd": 64,
+      "frozen_images": 300,
+      "position": [
+        16,
+        160
+      ]
+    },
+    {
+      "stage": 18,
+      "room": 1,
+      "sale": 27,
+      "price_bcd": 80,
+      "frozen_images": 300,
+      "position": [
+        16,
+        160
+      ]
+    },
+    {
+      "stage": 18,
+      "room": 8,
+      "sale": 22,
+      "price_bcd": 64,
+      "frozen_images": 300,
+      "position": [
+        20,
+        160
+      ]
+    }
+  ]
+}

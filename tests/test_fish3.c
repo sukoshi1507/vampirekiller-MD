@@ -4,7 +4,7 @@
  * - fish3_vectors (tests/fish3_vectors.h, tools/gen_fish3_vectors.py) : the ROM routines A2E0 or A2C7, A310, 99B9 and 99E5 run pass by pass in a
  *   Z80 emulator on the maps of the stage 10 (object 03 in the rooms 1 to 5 from the water, object 21h in the rooms 6 to 8), Simon moved by a
  *   scripted triangle wave ; the port must give the same state, place, pose, speeds and counters at every pass, and the shot (D700 type 1) at
- *   the pass the ROM makes it (the port has already moved it by 3 px).
+ *   the pass the ROM makes it (constructor position before the separate D700 pass).
  * - kTrace : the openMSX trace R of the stage 10, room 6, the object 21h (48, 176) : the pass where Simon reaches its height and the next ones.
  * - the rules read in the ROM : 2 points of life, damage 4 (81CE pair 02 02), 200 points, box 5 x 18h, sprites.
  * enemies.c is included to reach the per-object state (s8x, f3).
@@ -30,16 +30,16 @@ static EnemyRoomVars roomVars(VKGame *g, int stage, int room, int sx, int sy)
 static int findFish(const EnemyState *s)
 {
     int i;
-    for (i = 0; i < ENEMY_MAX; i++)
-        if (s->enemy[i].active && s->enemy[i].type == ENEMY_TYPE_FISH3) return i;
+    for (i = 0; i < ENEMY_ALL; i++)
+        if (Enemies_object(s,i)->active && Enemies_object(s,i)->type == ENEMY_TYPE_FISH3) return i;
     return -1;
 }
 
 static int findBall(const EnemyState *s)
 {
     int i;
-    for (i = 0; i < ENEMY_MAX; i++)
-        if (s->enemy[i].active && s->enemy[i].type == ENEMY_TYPE_FIREBALL) return i;
+    for (i = 0; i < ENEMY_ALL; i++)
+        if (Enemies_object(s,i)->active && Enemies_object(s,i)->type == ENEMY_TYPE_FIREBALL) return i;
     return -1;
 }
 
@@ -56,18 +56,18 @@ static int runVector(const Fish3Vector *v, int *fires)
     if (v->type == 3) fish3Spawn(&s, (EnemyU8)v->x, &r);
     else fish3SpawnFixed(&s, (EnemyU8)v->x, (EnemyU8)v->y);
     k = findFish(&s);
-    assert(k >= 0 && s.enemy[k].x == v->x && s.enemy[k].y == v->y);
+    assert(k >= 0 && Enemies_slot(&s,k)->x == v->x && Enemies_slot(&s,k)->y == v->y);
     /* A2F9 : seules les créations par A2E0 (type 03) déclenchent 08. */
     if (v->type == 3) assert(s.fishSoundCount == 1 && s.fishSounds[0] == 0x08);
     else assert(s.fishSoundCount == 0);
     for (p = 0; p < v->passes; p++) {
         const int *row = &fish3_rows[(v->first + p) * 13];
         const int tt = span ? (p * v->step) % (2 * span) : 0;
-        const Enemy *e = &s.enemy[k];
+        const Enemy *e = Enemies_slot(&s,k);
         const int wasAir = e->active && e->state == 0;
         s.fishSoundCount = 0; /* horloge des appels A4E8 de cette passe */
         r.simonX = (EnemyU8)(v->lo + (tt > span ? 2 * span - tt : tt));
-        fish3Step(&s, &s.enemy[k], &r);
+        fish3Step(&s, Enemies_slot(&s,k), &r);
         if (s.fishSoundCount) {
             assert(s.fishSoundCount == 1);
             if (s.fishSounds[0] == 0x07) {
@@ -94,8 +94,8 @@ static int runVector(const Fish3Vector *v, int *fires)
             const int dir = (s8x[k].vx & 0x8000) ? -1 : 1;
             seenFire = 1;
             (*fires)++;
-            if (b < 0 || s.enemy[b].x != row[11] + 3 * dir || s.enemy[b].y != row[12] || s.enemy[b].dx != dir || row[10] != 1) {
-                printf("type %02X room %d pass %d : ROM shot type %d (%d,%d), port %d (%d,%d) dx %d\n", v->type, v->room, p, row[10], row[11], row[12], b, b < 0 ? 0 : s.enemy[b].x, b < 0 ? 0 : s.enemy[b].y, b < 0 ? 0 : s.enemy[b].dx);
+            if (b < 0 || Enemies_slot(&s,b)->x != row[11] || Enemies_slot(&s,b)->y != row[12] || Enemies_slot(&s,b)->dx != dir || row[10] != 1) {
+                printf("type %02X room %d pass %d : ROM shot type %d (%d,%d), port %d (%d,%d) dx %d\n", v->type, v->room, p, row[10], row[11], row[12], b, b < 0 ? 0 : Enemies_slot(&s,b)->x, b < 0 ? 0 : Enemies_slot(&s,b)->y, b < 0 ? 0 : Enemies_slot(&s,b)->dx);
                 bad++;
             }
         }
@@ -141,7 +141,7 @@ static void test_stage10_interactions(void)
     Enemies_init(&s);
     fish3SpawnFixed(&s, 100, 112);
     k = findFish(&s);
-    assert(k >= 0 && Enemies_touches(&s.enemy[k], &r));
+    assert(k >= 0 && Enemies_touches(Enemies_slot(&s,k), &r));
     s.frozen = 1; /* hold position so only the contact path is exercised */
     assert(Enemies_frame(&s, &t, &r) == 1);
     assert(s.energy == ENEMY_ENERGY_MAX - 4 && s.recoil && s.invuln == ENEMY_INVULN_START);
@@ -152,15 +152,15 @@ static void test_stage10_interactions(void)
     fish3SpawnFixed(&s, 100, 112);
     k = findFish(&s);
     assert(Enemies_whipHitStage4(&s, 80, 130, 0, 0, 0, &hits) == 0 && hits == 1);
-    assert(s.enemy[k].active && (s.enemy[k].extraPhase & ENEMY_T6_HP_MASK) == 1);
+    assert(Enemies_slot(&s,k)->active && (Enemies_slot(&s,k)->extraPhase & ENEMY_T6_HP_MASK) == 1);
     Enemies_rearm(&s);
     assert(Enemies_whipHitStage4(&s, 80, 130, 0, 0, 0, &hits) == 1 && hits == 1);
-    assert(s.enemy[k].type != ENEMY_TYPE_FISH3 && Enemies_killScore == 2);
+    assert(Enemies_slot(&s,k)->type != ENEMY_TYPE_FISH3 && Enemies_killScore == 2);
     Enemies_init(&s);
     fish3SpawnFixed(&s, 100, 112);
     k = findFish(&s);
     assert(Enemies_whipHitStage4(&s, 76, 130, 0, 0, 1, &hits) == 1 && hits == 1);
-    assert(s.enemy[k].type != ENEMY_TYPE_FISH3 && Enemies_killScore == 2);
+    assert(Enemies_slot(&s,k)->type != ENEMY_TYPE_FISH3 && Enemies_killScore == 2);
 
     /* 8048 : knife 1 point, axe 4 points; shot slot 0, 8066/8083. */
     Enemies_init(&s);
@@ -168,11 +168,11 @@ static void test_stage10_interactions(void)
     k = findFish(&s);
     Enemies_shotPower[0] = 1;
     assert(Enemies_shotHit(&s, fish3AlwaysTouch, NULL, &slot, &score) && slot == 0 && score == 0);
-    assert(s.enemy[k].active && (s.enemy[k].extraPhase & ENEMY_T6_HP_MASK) == 1);
+    assert(Enemies_slot(&s,k)->active && (Enemies_slot(&s,k)->extraPhase & ENEMY_T6_HP_MASK) == 1);
     Enemies_rearm(&s);
     Enemies_shotPower[0] = 4;
     assert(Enemies_shotHit(&s, fish3AlwaysTouch, NULL, &slot, &score) && slot == 0 && score == 2);
-    assert(s.enemy[k].type != ENEMY_TYPE_FISH3);
+    assert(Enemies_slot(&s,k)->type != ENEMY_TYPE_FISH3);
 
     /* 717C/992F : while frozen the fixed type 21h cannot advance. */
     Enemies_init(&s);
@@ -182,11 +182,11 @@ static void test_stage10_interactions(void)
     hearts = 8;
     assert(Enemies_useTimeStop(&s, &hearts, 0, ENEMY_TIME_STOP_ITEM));
     assert(hearts == 3 && s.frozen);
-    { Enemy saved = s.enemy[k];
+    { Enemy saved = (*Enemies_slot(&s,k));
       int i;
       for (i = 0; i < 12; i++) (void)Enemies_frame(&s, &t, &r);
-      assert(s.enemy[k].active && s.enemy[k].x == saved.x && s.enemy[k].y == saved.y &&
-             s.enemy[k].pose == saved.pose && s.enemy[k].state == saved.state);
+      assert(Enemies_slot(&s,k)->active && Enemies_slot(&s,k)->x == saved.x && Enemies_slot(&s,k)->y == saved.y &&
+             Enemies_slot(&s,k)->pose == saved.pose && Enemies_slot(&s,k)->state == saved.state);
     }
     Enemies_shotPower[0] = 1; /* restore the knife power for following ROM vectors */
     Enemies_god = 1;
@@ -218,16 +218,16 @@ int main(void)
     Enemies_god = 1;
     fish3SpawnFixed(&s, 48, 176);
     k = findFish(&s);
-    assert(k >= 0 && s.enemy[k].state == 1 && s.enemy[k].pose == 0x12 && s8x[k].mobile == 0 && s8x[k].c10 == 2 && s8x[k].c11 == 0x10 && f3[k].c1b == 1);
-    for (i = 0; i < 6; i++) { fish3Step(&s, &s.enemy[k], &r); assert(s.enemy[k].x == 48 && s8x[k].mobile == 0 && s.enemy[k].state == 1 && s.enemy[k].pose == 0x12); }
+    assert(k >= 0 && Enemies_slot(&s,k)->state == 1 && Enemies_slot(&s,k)->pose == 0x12 && s8x[k].mobile == 0 && s8x[k].c10 == 2 && s8x[k].c11 == 0x10 && f3[k].c1b == 1);
+    for (i = 0; i < 6; i++) { fish3Step(&s, Enemies_slot(&s,k), &r); assert(Enemies_slot(&s,k)->x == 48 && s8x[k].mobile == 0 && Enemies_slot(&s,k)->state == 1 && Enemies_slot(&s,k)->pose == 0x12); }
     r.simonY = 168;                                          /* Y - 8 < 168 is false : still waiting */
-    fish3Step(&s, &s.enemy[k], &r);
+    fish3Step(&s, Enemies_slot(&s,k), &r);
     assert(s8x[k].mobile == 0);
     r.simonY = 174;
     for (i = 0; i < 5; i++) {
         const int *t = kTrace[i];
-        fish3Step(&s, &s.enemy[k], &r);
-        assert(s.enemy[k].state == t[0] && s.enemy[k].x == t[1] && s.enemy[k].timer == t[2] && (s8x[k].vx & 0xFFFF) == t[3] && s.enemy[k].pose == t[4] &&
+        fish3Step(&s, Enemies_slot(&s,k), &r);
+        assert(Enemies_slot(&s,k)->state == t[0] && Enemies_slot(&s,k)->x == t[1] && Enemies_slot(&s,k)->timer == t[2] && (s8x[k].vx & 0xFFFF) == t[3] && Enemies_slot(&s,k)->pose == t[4] &&
                s8x[k].c10 == t[5] && s8x[k].c11 == t[6] && s8x[k].mobile == t[7]);
     }
 
@@ -236,30 +236,30 @@ int main(void)
     Enemies_init(&s);
     fish3Spawn(&s, 96, &r);
     k = findFish(&s);
-    hp = (EnemyU8)(s.enemy[k].extraPhase & ENEMY_T6_HP_MASK);
+    hp = (EnemyU8)(Enemies_slot(&s,k)->extraPhase & ENEMY_T6_HP_MASK);
     assert(hp == 2 && hasHp(ENEMY_TYPE_FISH3) && isObjS4(ENEMY_TYPE_FISH3) && s4Score(ENEMY_TYPE_FISH3) == 2 && satCount(ENEMY_TYPE_FISH3) == 4);
-    assert(s.enemy[k].x == 96 && s.enemy[k].y == 0xC8 && s.enemy[k].pose == 0x12 && (s.enemy[k].vy & 0xFFFF) == 0xF480);
+    assert(Enemies_slot(&s,k)->x == 96 && Enemies_slot(&s,k)->y == 0xC8 && Enemies_slot(&s,k)->pose == 0x12 && (Enemies_slot(&s,k)->vy & 0xFFFF) == 0xF480);
     {   /* the two drops of the dive (A2E0) */
         int drops = 0;
-        for (i = 0; i < ENEMY_MAX; i++) drops += s.enemy[i].active && s.enemy[i].type == ENEMY_TYPE_SPLASH;
+        for (i = 0; i < ENEMY_ALL; i++) drops += Enemies_slot(&s,i)->active && Enemies_slot(&s,i)->type == ENEMY_TYPE_SPLASH;
         assert(drops == 2);
     }
-    s.enemy[k].pose = 0x11; s.enemy[k].x = 100; s.enemy[k].y = 160;
+    Enemies_slot(&s,k)->pose = 0x11; Enemies_slot(&s,k)->x = 100; Enemies_slot(&s,k)->y = 160;
     assert(Enemies_sprites(&s, (EnemyU8)k, sp) == 2 && sp[0].pattern == 0x4C && sp[1].pattern == 0x50 && sp[0].x == 92 && sp[0].y == 160 - 31 && sp[1].y == 160 - 15 && sp[0].bank == 1);
-    s.enemy[k].pose = 0x14;
+    Enemies_slot(&s,k)->pose = 0x14;
     assert(Enemies_sprites(&s, (EnemyU8)k, sp) == 2 && sp[0].pattern == 0x64 && sp[1].pattern == 0x68);
-    s.enemy[k].pose = 0x13;
+    Enemies_slot(&s,k)->pose = 0x13;
     assert(Enemies_sprites(&s, (EnemyU8)k, sp) == 2 && sp[0].pattern == 0x54 && sp[1].pattern == 0x5C);
 
     {   /* the shot: SAT (X - 5, Y - 12) to the right, (X - 11, Y - 12) to the left (trace R), the ball of the statue (anim 0) keeps X - 4 */
         Enemy *ball = newObject(&s, ENEMY_TYPE_FIREBALL);
         assert(ball);
         ball->x = 100; ball->y = 80; ball->anim = 3; ball->dx = 1;
-        assert(Enemies_sprites(&s, (EnemyU8)(ball - s.enemy), sp) == 1 && sp[0].x == 95 && sp[0].y == 80 - 11 && sp[0].pattern == 0x60);
+        assert(Enemies_sprites(&s, (EnemyU8)objectIndex(&s,ball), sp) == 1 && sp[0].x == 95 && sp[0].y == 80 - 11 && sp[0].pattern == 0x60);
         ball->dx = -1;
-        assert(Enemies_sprites(&s, (EnemyU8)(ball - s.enemy), sp) == 1 && sp[0].x == 89);
+        assert(Enemies_sprites(&s, (EnemyU8)objectIndex(&s,ball), sp) == 1 && sp[0].x == 89);
         ball->anim = 0;
-        assert(Enemies_sprites(&s, (EnemyU8)(ball - s.enemy), sp) == 1 && sp[0].x == 96);
+        assert(Enemies_sprites(&s, (EnemyU8)objectIndex(&s,ball), sp) == 1 && sp[0].x == 96);
         fireballStep(ball);
         assert(ball->x == 96);
     }

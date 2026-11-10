@@ -1,0 +1,54 @@
+D700 alias 0 12 0x85 0 objects 7 180passes / AI360 images,8 raw32/SAT/sprites/Simon/sounds PASS
+D700 alias 0 12 0x85 1 objects 7 180passes / AI360 images,8 raw32/SAT/sprites/Simon/sounds PASS
+D700 alias 0 12 0x86 0 objects 7 180passes / AI360 images,8 raw32/SAT/sprites/Simon/sounds PASS
+D700 alias 0 12 0x86 1 objects 7 180passes / AI360 images,8 raw32/SAT/sprites/Simon/sounds PASS
+D700 alias 0 4 0x3 0 objects 8 180passes / AI360 images,8 raw32/SAT/sprites/Simon/sounds PASS
+D700 alias 0 4 0x3 1 objects 8 180passes / AI360 images,8 raw32/SAT/sprites/Simon/sounds PASS
+D700 alias 0 9 0x3 0 objects 8 180passes / AI360 images,8 raw32/SAT/sprites/Simon/sounds PASS
+D700 alias 0 9 0x3 1 objects 8 180passes / AI360 images,8 raw32/SAT/sprites/Simon/sounds PASS
+D700 alias 1 12 0x85 0 objects 1 180passes / AI360 images,8 raw32/SAT/sprites/Simon/sounds PASS
+D700 alias 1 12 0x85 1 objects 1 180passes / AI360 images,8 raw32/SAT/sprites/Simon/sounds PASS
+D700 alias 1 12 0x86 0 objects 1 180passes / AI360 images,8 raw32/SAT/sprites/Simon/sounds PASS
+D700 alias 1 12 0x86 1 objects 1 180passes / AI360 images,8 raw32/SAT/sprites/Simon/sounds PASS
+D700 alias 1 4 0x3 0 objects 8 180passes / AI360 images,8 raw32/SAT/sprites/Simon/sounds PASS
+D700 alias 1 4 0x3 1 objects 8 180passes / AI360 images,8 raw32/SAT/sprites/Simon/sounds PASS
+D700 alias 1 9 0x3 0 objects 8 180passes / AI360 images,8 raw32/SAT/sprites/Simon/sounds PASS
+D700 alias 1 9 0x3 1 objects 8 180passes / AI360 images,8 raw32/SAT/sprites/Simon/sounds PASS
+D700 frozen bounds 3 6 144 360 images/8 raw32/sprites/Simon/sounds PASS
+D700 frozen bounds 3 7 144 360 images/8 raw32/sprites/Simon/sounds PASS
+D700 frozen bounds 3 240 144 360 images/8 raw32/sprites/Simon/sounds PASS
+D700 frozen bounds 3 241 144 360 images/8 raw32/sprites/Simon/sounds PASS
+D700 frozen bounds 3 96 227 360 images/8 raw32/sprites/Simon/sounds PASS
+D700 frozen bounds 3 96 228 360 images/8 raw32/sprites/Simon/sounds PASS
+D700 frozen bounds 4 6 144 360 images/8 raw32/sprites/Simon/sounds PASS
+D700 frozen bounds 4 7 144 360 images/8 raw32/sprites/Simon/sounds PASS
+D700 frozen bounds 4 240 144 360 images/8 raw32/sprites/Simon/sounds PASS
+D700 frozen bounds 4 241 144 360 images/8 raw32/sprites/Simon/sounds PASS
+D700 frozen bounds 4 96 227 360 images/8 raw32/sprites/Simon/sounds PASS
+D700 frozen bounds 4 96 228 360 images/8 raw32/sprites/Simon/sounds PASS
+D700 frozen bounds 9 6 144 360 images/8 raw32/sprites/Simon/sounds PASS
+D700 frozen bounds 9 7 144 360 images/8 raw32/sprites/Simon/sounds PASS
+D700 frozen bounds 9 240 144 360 images/8 raw32/sprites/Simon/sounds PASS
+D700 frozen bounds 9 241 144 360 images/8 raw32/sprites/Simon/sounds PASS
+D700 frozen bounds 9 96 227 360 images/8 raw32/sprites/Simon/sounds PASS
+D700 frozen bounds 9 96 228 360 images/8 raw32/sprites/Simon/sounds PASS
+D700 pose alias 3 0x3 0 180passes/AI360 images/8 raw32/SAT/sprites PASS
+D700 pose alias 3 0x3 1 180passes/AI360 images/8 raw32/SAT/sprites PASS
+D700 pose alias 4 0x3 0 180passes/AI360 images/8 raw32/SAT/sprites PASS
+D700 pose alias 4 0x3 1 180passes/AI360 images/8 raw32/SAT/sprites PASS
+D700 pose alias 4 0x4b 0 180passes/AI360 images/8 raw32/SAT/sprites PASS
+D700 pose alias 4 0x4b 1 180passes/AI360 images/8 raw32/SAT/sprites PASS
+D700 pose alias 4 0x4c 0 180passes/AI360 images/8 raw32/SAT/sprites PASS
+D700 pose alias 4 0x4c 1 180passes/AI360 images/8 raw32/SAT/sprites PASS
+D700 pose alias 4 0x4d 0 180passes/AI360 images/8 raw32/SAT/sprites PASS
+D700 pose alias 4 0x4d 1 180passes/AI360 images/8 raw32/SAT/sprites PASS
+D700 pose alias 9 0x3 0 180passes/AI360 images/8 raw32/SAT/sprites PASS
+D700 pose alias 9 0x3 1 180passes/AI360 images/8 raw32/SAT/sprites PASS
+D700 pose alias 9 0x63 0 180passes/AI360 images/8 raw32/SAT/sprites PASS
+D700 pose alias 9 0x63 1 180passes/AI360 images/8 raw32/SAT/sprites PASS
+D700 pose alias 9 0x64 0 180passes/AI360 images/8 raw32/SAT/sprites PASS
+D700 pose alias 9 0x64 1 180passes/AI360 images/8 raw32/SAT/sprites PASS
+D700 pose alias 9 0x65 0 180passes/AI360 images/8 raw32/SAT/sprites PASS
+D700 pose alias 9 0x65 1 180passes/AI360 images/8 raw32/SAT/sprites PASS
+D700 pose alias 9 0x66 0 180passes/AI360 images/8 raw32/SAT/sprites PASS
+D700 pose alias 9 0x66 1 180passes/AI360 images/8 raw32/SAT/sprites PASS

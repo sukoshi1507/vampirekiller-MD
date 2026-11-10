@@ -1,0 +1,9 @@
+{
+  "frames": 910,
+  "alias_mask": 12,
+  "constructor_mask": 15,
+  "glyph_pixels": 46,
+  "continuation_each": 360,
+  "scope": "stage13/0 controlled RAM fixtures, no natural traversal",
+  "passed": true
+}

@@ -1,0 +1,107 @@
+{
+  "partial_delivery": true,
+  "native_suite_exit": 0,
+  "sgdk_build_exit": 0,
+  "controlled_differential_cases": 24,
+  "controlled_differential_images": 8640,
+  "scenario_assertions": 272,
+  "scenario_images": 51760,
+  "touch09_core": {
+    "frames": 912,
+    "cases": [
+      {
+        "body": true,
+        "score": 300,
+        "sounds": [
+          23,
+          13
+        ],
+        "continuation": 360
+      },
+      {
+        "body": false,
+        "score": 100,
+        "sounds": [],
+        "continuation": 360
+      }
+    ],
+    "scope": "stage13/3 controlled RAM fixtures; no natural traversal",
+    "passed": true
+  },
+  "boss_coexist": {
+    "passed": true,
+    "reference": {
+      "C800_types": [
+        22,
+        38,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "D700_types": [
+        8,
+        8,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "C500_fallback": "00000000000000000000000000000000",
+      "all18_SAT_reserved_before_free": true,
+      "free_third": true
+    },
+    "native": {
+      "ordinary_C800_types": [
+        26
+      ],
+      "sprite_count_before": 8,
+      "sprite_count_after": 9,
+      "continuation": 360,
+      "min_sprites_continuation": 8
+    },
+    "scope": "actual stage15/9 candle; controlled freeze and Simon position; no natural traversal"
+  },
+  "known_boss_full_sat_gap_exit": 1,
+  "known_boss_full_sat_gap": {
+    "passed": false,
+    "reference": {
+      "C800_types": [
+        22,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "D700_types": [
+        8,
+        8,
+        8,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "C500_fallback": "01602000020200000000000000000000",
+      "all18_SAT_reserved_before_free": true,
+      "free_third": false
+    },
+    "native": {
+      "ordinary_C800_types": [
+        26
+      ],
+      "sprite_count_before": 9,
+      "sprite_count_after": 10,
+      "continuation": 0,
+      "min_sprites_continuation": 10
+    },
+    "scope": "actual stage15/9 candle; controlled freeze and Simon position; no natural traversal"
+  },
+  "rom_build_sha256": "6f9b40c48fd072bb123625b62bf588ca80c8d9f0ba5aa3663dae1965b0d89022"
+}

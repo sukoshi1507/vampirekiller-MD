@@ -1,0 +1,8 @@
+{
+  "frames": 23510,
+  "rooms": 74,
+  "collision_bytes": 56832,
+  "stable_frames_per_room": 300,
+  "door11_to12": true,
+  "scope": "RAM room entry, real compiled loading and door buttons; not full traversal"
+}

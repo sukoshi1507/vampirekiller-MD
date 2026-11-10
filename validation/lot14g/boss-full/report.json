@@ -1,0 +1,36 @@
+{
+  "passed": true,
+  "reference": {
+    "C800_types": [
+      22,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "D700_types": [
+      8,
+      8,
+      8,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "C500_fallback": "01602000020202000000000000000000",
+    "all18_SAT_reserved_before_free": true,
+    "free_third": false
+  },
+  "native": {
+    "ordinary_C800_types": [],
+    "sprite_count_before": 9,
+    "sprite_count_after": 9,
+    "C500_initial": "01602000020202000000000000000000",
+    "continuation": 360,
+    "min_sprites_continuation": 9
+  },
+  "scope": "actual stage15/9 candle; controlled freeze and Simon position; no natural traversal"
+}

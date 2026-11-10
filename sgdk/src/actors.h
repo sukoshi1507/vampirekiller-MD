@@ -1,7 +1,11 @@
 #ifndef VK_ACTORS_H
 #define VK_ACTORS_H
+#define LOOT_TILE_INDEX 1440
 
 #include "boss.h"
+#include "dracula.h"
+const VKDracula *vk_dracula_state(void);
+int vk_dracula_cinematic(void);
 #include <genesis.h>
 #include "player.h"
 #include "enemies.h"
@@ -61,6 +65,7 @@
 
 /* Hall enemies (enemies.c). Energy and invulnerability live here across rooms. */
 extern EnemyState vk_enemies;
+void vk_step_projectile_shield(void);
 /* Thrown weapons, slots C450 and C460 (weapons.c). */
 extern VKWeapons vk_weapons;
 /* Records C598 and C59F of the moving platforms. */

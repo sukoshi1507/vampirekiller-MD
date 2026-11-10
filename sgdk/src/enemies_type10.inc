@@ -17,9 +17,9 @@ static void type10ShotSpawn(EnemyState *s, const Enemy *src, const EnemyRoomVars
     Enemy *e;
     S8Ext *q;
     for (slot = 0; slot < 8; slot++) {
-        for (i = 0; i < ENEMY_MAX; i++)
-            if (s->enemy[i].active && isProjectile(s->enemy[i].type) && ext(s, &s->enemy[i])->c10 == slot) break;
-        if (i == ENEMY_MAX) break;
+        for (i = 0; i < ENEMY_ALL; i++)
+            if (Enemies_slot(s,i)->active && isProjectile(Enemies_slot(s,i)->type) && ext(s, Enemies_slot(s,i))->c10 == slot) break;
+        if (i == ENEMY_ALL) break;
     }
     if (slot == 8) return;
     e = newObject(s, ENEMY_TYPE_10_SHOT);

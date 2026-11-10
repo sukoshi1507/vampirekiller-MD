@@ -45,18 +45,18 @@ int main(void)
             int j, ok;
             r.simonX = (EnemyU8)(v->lo + (tt > span ? 2 * span - tt : tt));
             /* the C800 loop (the dragon, then its shot is made and moved at once), then the D700 loop for the older shots */
-            for (n = 0; n < ENEMY_MAX; n++) if (s.enemy[n].active && s.enemy[n].type == ENEMY_TYPE_FIREBALL) s.enemy[n].age = 7;   /* older shots */
+            for (n = 0; n < ENEMY_ALL; n++) if (Enemies_slot(&s,n)->active && Enemies_slot(&s,n)->type == ENEMY_TYPE_FIREBALL) Enemies_slot(&s,n)->age = 7;   /* older shots */
             dragonStep(&s, d, &r);
-            for (n = 0; n < ENEMY_MAX; n++)
-                if (s.enemy[n].active && s.enemy[n].type == ENEMY_TYPE_FIREBALL && (s.enemy[n].age == 7 || s.enemy[n].age == 0)) fireballStep(&s.enemy[n]);
+            for (n = 0; n < ENEMY_ALL; n++)
+                if (Enemies_slot(&s,n)->active && Enemies_slot(&s,n)->type == ENEMY_TYPE_FIREBALL && (Enemies_slot(&s,n)->age == 7 || Enemies_slot(&s,n)->age == 0)) fireballStep(Enemies_slot(&s,n));
             ok = d->state == row[0] && d->x == row[1] && d->y == row[2] && x->c0c == row[3] && x->t18 == row[4] && x->i19 == row[5];
             for (j = 0; j < 8; j++) ok = ok && x->tgt[j] == row[6 + j];
             for (j = 0; j < 8; j++) ok = ok && x->ent[j][0] == row[14 + 4 * j] && x->ent[j][1] == row[15 + 4 * j] && x->ent[j][2] == row[16 + 4 * j] && x->ent[j][3] == row[17 + 4 * j];
             if (!ok) { fprintf(stderr, "vector %d pass %d : state ROM %d port %d, X %d/%d, Y %d/%d, +C %d/%d\n", i, p, row[0], d->state, row[1], d->x, row[2], d->y, row[3], x->c0c); bad++; break; }
             if (row[46]) {      /* the first D700 block of the ROM : the oldest live shot */
                 int found = 0;
-                for (n = 0; n < ENEMY_MAX; n++) {
-                    const Enemy *b = &s.enemy[n];
+                for (n = 0; n < ENEMY_ALL; n++) {
+                    const Enemy *b = Enemies_slot(&s,n);
                     if (b->active && b->type == ENEMY_TYPE_FIREBALL && b->x == row[47] && b->y == row[48] && b->vy == (EnemyS16)row[50] &&
                         (EnemyS16)((b->pose << 8) | b->anim) == (EnemyS16)row[49]) found = 1;
                 }

@@ -1,0 +1,90 @@
+{
+  "native_exit": 0,
+  "build_exit": 0,
+  "rebuild_exit": 0,
+  "build_warnings": 0,
+  "core_groups": 8,
+  "differential_cases": 660,
+  "differential_images": 237600,
+  "real_candle_cases": 622,
+  "unique_positive_candles": 299,
+  "late_candle_cases": 252,
+  "core_candle": {
+    "frames": 1374,
+    "cases": [
+      {
+        "content": 1,
+        "hearts": 1,
+        "sound": 15,
+        "post_pick_images": 360
+      },
+      {
+        "content": 2,
+        "hearts": 5,
+        "sound": 15,
+        "post_pick_images": 360
+      },
+      {
+        "fallback": "seven C800 occupied",
+        "hearts": 5,
+        "sound": 15,
+        "post_pick_images": 360
+      }
+    ]
+  },
+  "scenarios": [
+    {
+      "stage": 12,
+      "checks": 41,
+      "frames": 5907,
+      "passed": true
+    },
+    {
+      "stage": 13,
+      "checks": 40,
+      "frames": 5856,
+      "passed": true
+    },
+    {
+      "stage": 14,
+      "checks": 28,
+      "frames": 4128,
+      "passed": true
+    },
+    {
+      "stage": 15,
+      "checks": 35,
+      "frames": 5064,
+      "passed": true
+    },
+    {
+      "stage": 16,
+      "checks": 34,
+      "frames": 5013,
+      "passed": true
+    },
+    {
+      "stage": 17,
+      "checks": 40,
+      "frames": 5889,
+      "passed": true
+    },
+    {
+      "stage": 18,
+      "checks": 37,
+      "frames": 17885,
+      "passed": true
+    }
+  ],
+  "scenario_checks": 255,
+  "scenario_images": 49742,
+  "compiled_rom_sha256": "a872bece3a448cbebd22d305b18163773246b4eb5ce604cc4a2e2048811ee2a3",
+  "compiled_rom_bytes": 1310720,
+  "rom_excluded": true,
+  "limits": [
+    "Mixed C800/D700 and other AI revisits require LOT14",
+    "Atomic SAT counts do not prove partial allocation cases",
+    "Natural continuous traversal/full fights require LOT15",
+    "Late freeze20/C41A and general audit require LOT16"
+  ]
+}

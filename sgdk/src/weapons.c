@@ -294,3 +294,11 @@ int vk_weapons_frame_index(const VKShot *s)
     default: return s->pattern == 0xF8 ? 12 : (s->pattern == 0xF4 ? 11 : 10);
     }
 }
+
+int vk_weapons_frame_clocked(VKWeapons *w,const VKWeaponSimon *simon,VKByte weapon,
+                            const VKByte *map,VKByte stage,VKWeaponEvents *ev,
+                            VKByte tick,VKByte phase)
+{
+    w->phase=(VKByte)(phase^1);w->tick=(VKByte)(tick-(phase==0));
+    return vk_weapons_frame(w,simon,weapon,map,stage,ev);
+}

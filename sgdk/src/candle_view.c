@@ -278,6 +278,16 @@ u16 vk_candle_view_sprites(void)
     {
         const VKDrop *d = &c->drop[i];
         VKByte object;
+        if(d->state && (d->catchable&0x40)){
+            VKByte sp[4];const VKByte *raw=vk_candles_fallback_record(c,i);
+            if(vk_candles_fallback_sprite(c,i,sp)){
+                u16 tile;
+                if(sp[2]>=0xF4)tile=DEATH_FLAME_TILE_INDEX+(sp[2]==0xF8?4:0);
+                else tile=LOOT_TILE_INDEX+(sp[2]==0xE8?0:sp[3]==8?4:sp[3]==1?8:12);
+                set_sprite(n++,sp[0],sp[1],TILE_ATTR_FULL(PAL2,TRUE,FALSE,FALSE,tile));
+            }
+            if(!raw || raw[0]!=0x84)continue;
+        }
         if (d->state == VK_DROP_BURST)
         {
             burst_sprite(&n, i, d);

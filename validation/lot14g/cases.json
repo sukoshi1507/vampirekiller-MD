@@ -1,0 +1,114 @@
+[
+  {
+    "freed_shot": -1,
+    "pickup": false,
+    "images": 360,
+    "ordinary_C800_slots_compared": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6
+    ],
+    "C500_comparison": "raw16 fallback"
+  },
+  {
+    "freed_shot": -1,
+    "pickup": true,
+    "images": 360,
+    "ordinary_C800_slots_compared": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6
+    ],
+    "C500_comparison": "raw16 fallback"
+  },
+  {
+    "freed_shot": 0,
+    "pickup": false,
+    "images": 360,
+    "ordinary_C800_slots_compared": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6
+    ],
+    "C500_comparison": "raw16 fallback"
+  },
+  {
+    "freed_shot": 0,
+    "pickup": true,
+    "images": 360,
+    "ordinary_C800_slots_compared": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6
+    ],
+    "C500_comparison": "raw16 fallback"
+  },
+  {
+    "freed_shot": 1,
+    "pickup": false,
+    "images": 360,
+    "ordinary_C800_slots_compared": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6
+    ],
+    "C500_comparison": "raw16 fallback"
+  },
+  {
+    "freed_shot": 1,
+    "pickup": true,
+    "images": 360,
+    "ordinary_C800_slots_compared": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6
+    ],
+    "C500_comparison": "raw16 fallback"
+  },
+  {
+    "freed_shot": 2,
+    "pickup": false,
+    "images": 360,
+    "ordinary_C800_slots_compared": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6
+    ],
+    "C500_comparison": "VKDrop allocation,x,y,kind,counter"
+  },
+  {
+    "freed_shot": 2,
+    "pickup": true,
+    "images": 360,
+    "ordinary_C800_slots_compared": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6
+    ],
+    "C500_comparison": "VKDrop allocation,x,y,kind,counter"
+  }
+]

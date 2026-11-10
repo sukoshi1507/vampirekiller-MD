@@ -1,0 +1,13 @@
+{
+  "frames": 564,
+  "C800": 6,
+  "D700_peak": 2,
+  "third_shot": "SAT denied",
+  "shield_charge": [
+    16,
+    14
+  ],
+  "sound": 11,
+  "continuation": 360,
+  "passed": true
+}

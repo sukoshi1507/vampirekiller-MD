@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "enemies.c"
+_Static_assert(sizeof(EnemyDrop)==6, "EnemyDrop layout");
 
 static EnemyRoomVars roomVars(int sx, int sy)
 {
@@ -256,15 +257,15 @@ static void drops(void)
     for (i = 0; i < 31; i++) Enemies_frame(&s, &t, &r);
     assert(s.enemy[k].active && Enemies_dropCount == 0);
     Enemies_frame(&s, &t, &r);
-    assert(!s.enemy[k].active && Enemies_dropCount == 1);
-    assert(Enemies_drops[0].kind == 1 && Enemies_drops[0].x == 0x87 && Enemies_drops[0].y == 0x90);
+    assert(s.enemy[k].active && s.enemy[k].type==ENEMY_TYPE_LOOT_HEART && Enemies_dropCount==0);
+    assert(s.enemy[k].x==0x89 && s.enemy[k].y==0x90); /*9B90 then99B9: +2,+0.5 at birth*/
     /* R & 3F = 0 (R = 0, 40h): no flame, a flame 26 of the object 02 where the enemy died. */
     for (n = 0; n < 2; n++) {
         Enemies_s7R = n ? 0x40 : 0;
         Enemies_init(&s);
         deathFlame(&s, &d);
-        assert(findFlame(&s) < 0 && Enemies_dropCount == 1);
-        assert(Enemies_drops[0].kind == 2 && Enemies_drops[0].x == 0x87 && Enemies_drops[0].y == 0x90);
+        assert(findFlame(&s)<0 && Enemies_dropCount==0);
+        assert(s.enemy[0].active && s.enemy[0].type==ENEMY_TYPE_LOOT_FLAME && enemyLoot[0].raw[31]==2);
     }
     /* The 32nd death (CF40 & 1F = 0): the object 13h whatever R is; CF40 is cleared by Enemies_init only. */
     Enemies_s7R = 1;
@@ -272,7 +273,8 @@ static void drops(void)
     for (i = 1; i <= 64; i++) {
         deathFlame(&s, &d);
         if (i % 32 == 0) {
-            assert(findFlame(&s) < 0 && Enemies_dropCount == 1 && Enemies_drops[0].kind == 0x13);
+            assert(findFlame(&s)<0 && Enemies_dropCount==0 && s.enemy[0].type==ENEMY_TYPE_LOOT_FLAME && enemyLoot[0].raw[31]==0x13);
+            s.enemy[0].active=0;
         } else {
             assert(Enemies_dropCount == 0);
             k = findFlame(&s);
@@ -288,10 +290,10 @@ static void drops(void)
         for (i = 1; i <= total; i++) {
             Enemies_dropCount = 0;
             deathFlame(&s, &d);
-            if (i % 32 == 0) { Enemies_dropCount = 0; continue; }
+            if (i % 32 == 0) { Enemies_dropCount = 0;s.enemy[0].active=0; continue; }
             k = findFlame(&s);
             if (k >= 0) { if (s.enemy[k].state) hearts++; else none++; s.enemy[k].active = 0; }
-            else big++;
+            else {big++;s.enemy[0].active=0;}
         }
         assert(big > 40 && big < 160);                  /* 6200 / 64 = 97 */
         assert(hearts > 1300 && hearts < 1700);         /* 6200 * (1/4 - 1/64) = 1453 */

@@ -68,7 +68,8 @@ def main():
     for token in ('kind == 0x12', 'kind == 0x0A', 'kind == 0x04',
                   'kind == 0x10 || kind == 0x11', 'kind == 0x1E || kind == 0x0F'):
         assert token in candles
-    assert 'vk_shop_prices[9][4]' in wall
+    assert 'VK_SHOP_PRICE_COUNT' in wall
+    assert '#define VK_SHOP_PRICE_COUNT 9' in (ROOT/'sgdk/src/generated/trade_data.h').read_text()
     assert 'vk_candles_give(c, w->sale)' in wall
     assert 'VK_ITEM_HIGH_JUMP' in gameplay
     assert 'vk_late_enemy_flags' in enemies

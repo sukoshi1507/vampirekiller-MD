@@ -39,7 +39,7 @@ unsigned char vk_late_enemy_port_status(unsigned char stage, unsigned char room,
     if (!e.valid) return 3;
     type = (unsigned char)(e.raw_type & 0x7f);
     if (!type) return 0;
-    if (type == 0x0b || type == 0x0d || type == 0x0e || type == 0x10) return 1;
+    if (type == 0x0b || type == 0x0d || type == 0x0e || type == 0x10 || type == 0x09 || type == 0x12) return 1;
     return 2;
 }
 unsigned char vk_late_enemy_missing_count(unsigned char stage) {

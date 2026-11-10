@@ -8,7 +8,7 @@
 int main(void)
 {
     int stage;
-    for (stage=1; stage<=11; ++stage) {
+    for (stage=1; stage<=18; ++stage) {
         VKGame g={0}; VKItems it; VKCandles c;
         const VKStageItems *s=&kStageItems[stage-1];
         int t,found=0,oldx;
@@ -59,10 +59,23 @@ int main(void)
         vk_items_new_life(&it);assert(!it.white_key_revealed);
         printf("stage %d: entry, key, door guards, animation, exit and reset PASS\n",stage);
     }
+    /* Multiple late white keys have independent stream flags (stage16/17). */
+    for(stage=16;stage<=17;stage++){
+        VKGame g={0};VKItems it;int room,n=0;vk_game_enter_stage(&g,stage);vk_items_begin(&it);
+        for(room=0;room<vk_stage_room_count(stage);room++){
+            VKByte x,y;g.room=room;vk_items_enter_room(&it);
+            if(!vk_items_key_place(&g,&x,&y))continue;
+            it.white_key_revealed=1;g.player.x=x+8;g.player.y=y+2;
+            assert(vk_items_tick(&it,&g)==VK_ITEM_KEY_TAKEN);n++;
+        }
+        assert(n==(stage==16?3:2));
+        for(room=0;room<vk_stage_room_count(stage);room++){g.room=room;it.white_key_revealed=1;assert(!vk_items_key_shown(&it,&g));}
+        vk_items_new_life(&it);g.room=stage==16?5:10;assert(vk_items_key_shown(&it,&g));
+    }
     {
         int stage, room, count = 0;
         VKGame g = {0};
-        for (stage = 1; stage <= 11; stage++) {
+        for (stage = 1; stage <= 18; stage++) {
             for (room = 0; room < vk_stage_room_count(stage); room++) {
                 assert(vk_game_debug_start(&g, stage, room));
                 assert(g.area == VK_AREA_INTERIOR && g.stage == stage && g.room == room);
@@ -73,9 +86,9 @@ int main(void)
             assert(g.stage == stage && g.room == vk_stage_room_count(stage)-1);
         }
         assert(!vk_game_debug_start(&g, 0, 0));
-        assert(!vk_game_debug_start(&g, 12, 0));
-        assert(!vk_game_debug_start(&g, 18, 0));
-        assert(g.stage == 11 && g.room == 5);
+        assert(!vk_game_debug_start(&g, 19, 0));
+        assert(!vk_game_debug_start(&g, 255, 0));
+        assert(g.stage == 18 && g.room == 9);
         printf("Debug selection: %d playable rooms and invalid selections PASS\n", count);
     }
     return 0;

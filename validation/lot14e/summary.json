@@ -1,0 +1,69 @@
+{
+  "build_exit": 0,
+  "build_warnings": 0,
+  "native_exit": 0,
+  "core_groups": 11,
+  "generated_layouts": 34,
+  "new_cases": 208,
+  "progression_cases": 104,
+  "progression_images": 37440,
+  "static_cases": 104,
+  "static_renders": 18720,
+  "core": {
+    "frames": 910,
+    "alias_mask": 12,
+    "constructor_mask": 15,
+    "glyph_pixels": 46,
+    "continuation_each": 360,
+    "scope": "stage13/0 controlled RAM fixtures, no natural traversal",
+    "passed": true
+  },
+  "stage10_checks": 17,
+  "stage10_images": 2002,
+  "stages": [
+    {
+      "stage": 12,
+      "frames": 5909,
+      "checks": 41
+    },
+    {
+      "stage": 13,
+      "frames": 5858,
+      "checks": 40
+    },
+    {
+      "stage": 14,
+      "frames": 4129,
+      "checks": 28
+    },
+    {
+      "stage": 15,
+      "frames": 5066,
+      "checks": 35
+    },
+    {
+      "stage": 16,
+      "frames": 5014,
+      "checks": 34
+    },
+    {
+      "stage": 17,
+      "frames": 5890,
+      "checks": 40
+    },
+    {
+      "stage": 18,
+      "frames": 17891,
+      "checks": 37
+    }
+  ],
+  "stage_assertions": 255,
+  "stage_images": 49757,
+  "rom_checksum": "0ECA",
+  "rom_sha256": "2767b1a5da6ebe2ca5041fe702b925bdeec2ce88a46290d661594d0dba9b655d",
+  "remaining": [
+    "boss SAT integration",
+    "score/sound09 and damage colours",
+    "legacy1..11 alias audit in LOT16"
+  ]
+}

@@ -1,0 +1,1529 @@
+Enemies tests: PASS
+test_health: OK
+test_items: OK
+test_candles: OK
+weapons: PASS
+room freeze tests: OK
+Stage 11: 6 ROM rooms, 12 edges, 25 candles, 4 object-15, key/door, 3 fixed enemies, no platforms PASS
+Stage 7 : 4122 passes against the ROM, 0 differences
+Stage 7 tests: PASS
+Safe arrivals 79/73; staircase mounts exercised 504; vertical crossings 144
+73 rooms: 316 directional entries checked, 156 directed passages exercised PASS
+Stage 1: approach and exit PASS; next stage loaded
+Stage 2: approach and exit PASS; next stage loaded
+Stage 3: approach and exit PASS; next stage loaded
+Stage 4: approach and exit PASS; next stage loaded
+Stage 5: approach and exit PASS; next stage loaded
+Stage 6: approach and exit PASS; next stage loaded
+Stage 7: approach and exit PASS; next stage loaded
+Stage 8: approach and exit PASS; next stage loaded
+Stage 9: approach and exit PASS; next stage loaded
+Stage 10: approach and exit PASS; next stage loaded
+Stage 11: approach and exit PASS (title dispatch remains in main)
+stage 1: entry, key, door guards, animation, exit and reset PASS
+stage 2: entry, key, door guards, animation, exit and reset PASS
+stage 3: entry, key, door guards, animation, exit and reset PASS
+stage 4: entry, key, door guards, animation, exit and reset PASS
+stage 5: entry, key, door guards, animation, exit and reset PASS
+stage 6: entry, key, door guards, animation, exit and reset PASS
+stage 7: entry, key, door guards, animation, exit and reset PASS
+stage 8: entry, key, door guards, animation, exit and reset PASS
+stage 9: entry, key, door guards, animation, exit and reset PASS
+stage 10: entry, key, door guards, animation, exit and reset PASS
+stage 11: entry, key, door guards, animation, exit and reset PASS
+stage 12: entry, key, door guards, animation, exit and reset PASS
+stage 13: entry, key, door guards, animation, exit and reset PASS
+stage 14: entry, key, door guards, animation, exit and reset PASS
+stage 15: entry, key, door guards, animation, exit and reset PASS
+stage 16: entry, key, door guards, animation, exit and reset PASS
+stage 17: entry, key, door guards, animation, exit and reset PASS
+stage 18: entry, key, door guards, animation, exit and reset PASS
+Debug selection: 153 playable rooms and invalid selections PASS
+boss: PASS
+wall: PASS
+stage 8 objects (hopper 0B, leaper 0C, bone): 14 + 25 + 6 trace transitions, spawn, throw, contact, whip, shots, sprites PASS
+stage 9 boss: 18 walker transitions, 47 fireball transitions, creation, aim, damage, boxes, sprites, defeat PASS
+stage 9 objects (hopper 0B, bone, statue 0A, flea 0D, fixed list): 24 + 6 trace transitions, spawns, sprites PASS
+object 1A / 1C (candles of object 15): 99 vectors, 28734 passes against the ROM routines, trace and rules PASS
+object 03 / 21h (fishman of the stage 10): 45 vectors, 9958 passes against the ROM routines, 26 shots, trace and rules PASS
+Stage 11 object 1B: openMSX G/G5 poses, ROM B4D2 initialization and sprite cells PASS
+object 0F / 23h (eagle and flea of the stage 11): 42 vectors, 10920 passes against the ROM routines, channel and rules PASS
+object 0E (dragon of the stage 11): 10 vectors, 4000 passes, 432 aims against the ROM routines, rules PASS
+death flame (object 1E): positions of 13 types, 16 passes of the trace, 32 frames, rules and sprites PASS
+Native gameplay, physics, whip, room manager, enemy, health, item, candle, weapon, PSG, room freeze, wall, stage map, stage 8 object, stage 9 object, stage 10 fishman, stage 11 objects, death flame and boss and stage 1-11 tests: PASS
+Stage 12 Z80 raw objects: 30 candles, 5 type-83 slots, 1 unclassified slot: PASS
+Stage 12 secret passage: 10 ROM entries, 16px bounds and 64-state countdown: PASS
+SecretBB9A:228 stage/room probes; 10 BBCD records;stage counts {12: 10, 13: 0, 14: 0, 15: 0, 16: 0, 17: 0, 18: 0} CHECK PASS
+Secret6382/BB31:62 late rooms clear stale passage data PASS
+Secret6DA9:held-UP without new edge rejected at all10 points PASS
+Secret85A6:crusher interrupts state7 at zero C42D;8 energy lost,route cancelled PASS
+Secret7E77/7EF4:states5..8 contact rejected with zero invulnerability PASS
+Secret 12 0 6 scenarios x360 images PASS
+Secret 12 1 6 scenarios x360 images PASS
+Secret 12 2 6 scenarios x360 images PASS
+Secret 12 3 6 scenarios x360 images PASS
+Secret 12 4 6 scenarios x360 images PASS
+Secret 12 5 6 scenarios x360 images PASS
+Secret 12 7 6 scenarios x360 images PASS
+Secret 12 8 6 scenarios x360 images PASS
+Secret 12 10 6 scenarios x360 images PASS
+Secret 12 11 6 scenarios x360 images PASS
+Secret 13 0 6 scenarios x360 images PASS
+Secret 14 0 6 scenarios x360 images PASS
+Secret 15 0 6 scenarios x360 images PASS
+Secret 16 0 6 scenarios x360 images PASS
+Secret 17 0 6 scenarios x360 images PASS
+Secret 18 0 6 scenarios x360 images PASS
+Secret 8192 bounds; 34560 images; 29491200 sprite pixels;10 passages,none13..18 PASS
+Loot1E/24/26 executed constructor masks CHECK PASS
+Loot (12, 0, 36, 88, 64, 33) 360 images IX32 PASS
+Loot (12, 0, 36, 128, 128, 97) 360 images IX32 PASS
+Loot (12, 0, 36, 232, 160, 6) 360 images IX32 PASS
+Loot (12, 0, 38, 88, 64, 23) 360 images IX32 PASS
+Loot (12, 0, 38, 128, 128, 27) 360 images IX32 PASS
+Loot (12, 0, 38, 232, 160, 29) 360 images IX32 PASS
+Loot (13, 0, 36, 88, 64, 33) 360 images IX32 PASS
+Loot (13, 0, 36, 128, 128, 97) 360 images IX32 PASS
+Loot (13, 0, 36, 232, 160, 6) 360 images IX32 PASS
+Loot (13, 0, 38, 88, 64, 23) 360 images IX32 PASS
+Loot (13, 0, 38, 128, 128, 27) 360 images IX32 PASS
+Loot (13, 0, 38, 232, 160, 23) 360 images IX32 PASS
+Loot (16, 0, 36, 88, 64, 97) 360 images IX32 PASS
+Loot (16, 0, 36, 128, 128, 97) 360 images IX32 PASS
+Loot (16, 0, 36, 232, 160, 6) 360 images IX32 PASS
+Loot (16, 0, 38, 88, 64, 27) 360 images IX32 PASS
+Loot (16, 0, 38, 128, 128, 27) 360 images IX32 PASS
+Loot (16, 0, 38, 232, 160, 23) 360 images IX32 PASS
+Loot (17, 6, 36, 88, 64, 1) 360 images IX32 PASS
+Loot (17, 6, 36, 128, 128, 97) 360 images IX32 PASS
+Loot (17, 6, 36, 232, 160, 1) 360 images IX32 PASS
+Loot (17, 6, 38, 88, 64, 21) 360 images IX32 PASS
+Loot (17, 6, 38, 128, 128, 27) 360 images IX32 PASS
+Loot (17, 6, 38, 232, 160, 21) 360 images IX32 PASS
+Loot (18, 8, 36, 88, 64, 33) 360 images IX32 PASS
+Loot (18, 8, 36, 128, 128, 97) 360 images IX32 PASS
+Loot (18, 8, 36, 232, 160, 6) 360 images IX32 PASS
+Loot (18, 8, 38, 88, 64, 23) 360 images IX32 PASS
+Loot (18, 8, 38, 128, 128, 27) 360 images IX32 PASS
+Loot (18, 8, 38, 232, 160, 23) 360 images IX32 PASS
+Loot1E/24/26 executed constructor masks CHECK PASS
+Candle loot (0, 0, 0, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (0, 0, 0, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (0, 0, 1, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (0, 0, 1, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (0, 1, 0, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (0, 1, 0, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (0, 1, 1, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (0, 1, 1, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (0, 2, 0, 26, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (0, 2, 0, 26, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (0, 2, 0, 26, 1, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (0, 2, 0, 26, 1, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (1, 0, 0, 9, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (1, 0, 0, 9, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (1, 0, 1, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (1, 0, 1, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (1, 1, 0, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (1, 1, 0, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (1, 1, 1, 6, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (1, 1, 1, 6, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (1, 1, 2, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (1, 1, 2, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (1, 1, 3, 9, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (1, 1, 3, 9, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (1, 2, 0, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (1, 2, 0, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (1, 2, 2, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (1, 2, 2, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (1, 2, 3, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (1, 2, 3, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (1, 3, 0, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (1, 3, 0, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (1, 3, 1, 26, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (1, 3, 1, 26, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (1, 3, 1, 26, 1, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (1, 3, 1, 26, 1, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (1, 3, 2, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (1, 3, 2, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (1, 3, 3, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (1, 3, 3, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (1, 4, 1, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (1, 4, 1, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (1, 4, 2, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (1, 4, 2, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (1, 4, 3, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (1, 4, 3, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (1, 5, 1, 26, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (1, 5, 1, 26, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (1, 5, 1, 26, 1, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (1, 5, 1, 26, 1, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (1, 6, 0, 16, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (1, 6, 0, 16, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (1, 6, 1, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (1, 6, 1, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (1, 7, 0, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (1, 7, 0, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (2, 0, 0, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (2, 0, 0, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (2, 0, 1, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (2, 0, 1, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (2, 1, 6, 7, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (2, 1, 6, 7, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (2, 2, 0, 8, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (2, 2, 0, 8, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (2, 2, 1, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (2, 2, 1, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (2, 2, 2, 5, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (2, 2, 2, 5, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (2, 2, 3, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (2, 2, 3, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (2, 3, 0, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (2, 3, 0, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (2, 3, 1, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (2, 3, 1, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (2, 3, 2, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (2, 3, 2, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (2, 3, 3, 9, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (2, 3, 3, 9, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (2, 4, 1, 9, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (2, 4, 1, 9, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (2, 4, 2, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (2, 4, 2, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (2, 5, 0, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (2, 5, 0, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (2, 5, 1, 16, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (2, 5, 1, 16, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (3, 0, 0, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (3, 0, 0, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (3, 0, 1, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (3, 0, 1, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (3, 0, 2, 9, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (3, 0, 2, 9, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (3, 1, 0, 20, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (3, 1, 0, 20, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (3, 1, 1, 8, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (3, 1, 1, 8, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (3, 2, 0, 26, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (3, 2, 0, 26, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (3, 2, 0, 26, 1, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (3, 2, 0, 26, 1, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (3, 3, 0, 26, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (3, 3, 0, 26, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (3, 3, 0, 26, 1, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (3, 3, 0, 26, 1, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (3, 3, 1, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (3, 3, 1, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (3, 3, 2, 9, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (3, 3, 2, 9, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (3, 3, 3, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (3, 3, 3, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (3, 3, 4, 16, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (3, 3, 4, 16, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (3, 5, 0, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (3, 5, 0, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (3, 5, 1, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (3, 5, 1, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (4, 0, 0, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (4, 0, 0, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (4, 0, 1, 8, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (4, 0, 1, 8, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (4, 1, 0, 6, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (4, 1, 0, 6, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (4, 1, 1, 9, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (4, 1, 1, 9, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (4, 1, 2, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (4, 1, 2, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (4, 2, 1, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (4, 2, 1, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (4, 2, 2, 7, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (4, 2, 2, 7, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (4, 2, 3, 8, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (4, 2, 3, 8, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (4, 3, 0, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (4, 3, 0, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (4, 3, 1, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (4, 3, 1, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (4, 4, 1, 7, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (4, 4, 1, 7, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (4, 4, 2, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (4, 4, 2, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (4, 5, 0, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (4, 5, 0, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (4, 5, 1, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (4, 5, 1, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (5, 0, 1, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (5, 0, 1, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (5, 0, 2, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (5, 0, 2, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (5, 1, 0, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (5, 1, 0, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (5, 1, 1, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (5, 1, 1, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (5, 2, 0, 6, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (5, 2, 0, 6, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (5, 2, 1, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (5, 2, 1, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (5, 3, 0, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (5, 3, 0, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (5, 4, 0, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (5, 4, 0, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (5, 4, 2, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (5, 4, 2, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (5, 4, 3, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (5, 4, 3, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (5, 4, 4, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (5, 4, 4, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (5, 5, 2, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (5, 5, 2, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (5, 5, 4, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (5, 5, 4, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (6, 0, 0, 9, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (6, 0, 0, 9, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (6, 1, 0, 26, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (6, 1, 0, 26, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (6, 1, 0, 26, 1, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (6, 1, 0, 26, 1, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (6, 1, 2, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (6, 1, 2, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (6, 1, 5, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (6, 1, 5, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (6, 2, 0, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (6, 2, 0, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (6, 2, 1, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (6, 2, 1, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (6, 2, 2, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (6, 2, 2, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (6, 3, 0, 6, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (6, 3, 0, 6, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (6, 3, 1, 26, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (6, 3, 1, 26, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (6, 3, 1, 26, 1, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (6, 3, 1, 26, 1, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (6, 4, 0, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (6, 4, 0, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (6, 4, 2, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (6, 4, 2, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (6, 5, 0, 7, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (6, 5, 0, 7, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (6, 5, 1, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (6, 5, 1, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (6, 5, 2, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (6, 5, 2, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (6, 5, 3, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (6, 5, 3, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (7, 0, 0, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (7, 0, 0, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (7, 1, 0, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (7, 1, 0, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (7, 1, 1, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (7, 1, 1, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (7, 1, 3, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (7, 1, 3, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (7, 1, 4, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (7, 1, 4, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (7, 2, 0, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (7, 2, 0, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (7, 2, 1, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (7, 2, 1, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (7, 2, 2, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (7, 2, 2, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (7, 2, 3, 16, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (7, 2, 3, 16, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (7, 3, 0, 9, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (7, 3, 0, 9, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (7, 4, 0, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (7, 4, 0, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (7, 4, 1, 20, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (7, 4, 1, 20, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (7, 4, 2, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (7, 4, 2, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (7, 4, 3, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (7, 4, 3, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (7, 5, 1, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (7, 5, 1, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (7, 6, 0, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (7, 6, 0, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (7, 6, 2, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (7, 6, 2, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (7, 7, 0, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (7, 7, 0, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (7, 7, 1, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (7, 7, 1, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (7, 7, 2, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (7, 7, 2, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (7, 8, 0, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (7, 8, 0, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (7, 8, 1, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (7, 8, 1, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (8, 1, 0, 12, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (8, 1, 0, 12, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (8, 1, 1, 26, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (8, 1, 1, 26, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (8, 1, 1, 26, 1, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (8, 1, 1, 26, 1, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (8, 1, 2, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (8, 1, 2, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (8, 2, 0, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (8, 2, 0, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (8, 2, 1, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (8, 2, 1, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (8, 2, 2, 16, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (8, 2, 2, 16, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (8, 3, 0, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (8, 3, 0, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (8, 4, 0, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (8, 4, 0, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (8, 4, 1, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (8, 4, 1, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (8, 4, 2, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (8, 4, 2, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (8, 5, 0, 13, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (8, 5, 0, 13, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (8, 5, 2, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (8, 5, 2, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (9, 1, 0, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (9, 1, 0, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (9, 2, 2, 8, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (9, 2, 2, 8, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (9, 2, 3, 12, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (9, 2, 3, 12, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (9, 4, 0, 8, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (9, 4, 0, 8, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (9, 4, 1, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (9, 4, 1, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (9, 5, 0, 5, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (9, 5, 0, 5, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (9, 5, 1, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (9, 5, 1, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (9, 6, 0, 8, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (9, 6, 0, 8, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (9, 6, 1, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (9, 6, 1, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (9, 6, 2, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (9, 6, 2, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (9, 7, 0, 20, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (9, 7, 0, 20, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (9, 7, 1, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (9, 7, 1, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (9, 7, 2, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (9, 7, 2, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (9, 7, 3, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (9, 7, 3, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (9, 8, 0, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (9, 8, 0, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (9, 8, 1, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (9, 8, 1, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (10, 0, 0, 9, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (10, 0, 0, 9, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (10, 0, 1, 6, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (10, 0, 1, 6, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (10, 1, 0, 16, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (10, 1, 0, 16, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (10, 1, 1, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (10, 1, 1, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (10, 1, 2, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (10, 1, 2, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (10, 2, 0, 5, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (10, 2, 0, 5, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (10, 2, 1, 9, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (10, 2, 1, 9, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (10, 3, 0, 8, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (10, 3, 0, 8, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (10, 3, 2, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (10, 3, 2, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (10, 4, 0, 20, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (10, 4, 0, 20, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (10, 4, 1, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (10, 4, 1, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (10, 5, 0, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (10, 5, 0, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (10, 5, 1, 13, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (10, 5, 1, 13, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (10, 5, 2, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (10, 5, 2, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (10, 6, 0, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (10, 6, 0, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (10, 6, 1, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (10, 6, 1, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (10, 6, 2, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (10, 6, 2, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (10, 6, 3, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (10, 6, 3, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (10, 7, 0, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (10, 7, 0, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (10, 7, 1, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (10, 7, 1, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (10, 7, 2, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (10, 7, 2, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (10, 7, 3, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (10, 7, 3, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (10, 7, 4, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (10, 7, 4, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (10, 7, 5, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (10, 7, 5, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (10, 8, 0, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (10, 8, 0, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (11, 0, 0, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (11, 0, 0, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (11, 2, 0, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (11, 2, 0, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (11, 2, 1, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (11, 2, 1, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (11, 2, 2, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (11, 2, 2, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (11, 4, 0, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (11, 4, 0, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (11, 4, 1, 26, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (11, 4, 1, 26, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (11, 4, 1, 26, 1, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (11, 4, 1, 26, 1, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (12, 0, 0, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (12, 0, 0, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (12, 1, 0, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (12, 1, 0, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (12, 1, 1, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (12, 1, 1, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (12, 2, 1, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (12, 2, 1, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (12, 3, 0, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (12, 3, 0, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (12, 3, 1, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (12, 3, 1, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (12, 3, 3, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (12, 3, 3, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (12, 4, 0, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (12, 4, 0, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (12, 5, 0, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (12, 5, 0, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (12, 7, 0, 12, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (12, 7, 0, 12, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (12, 8, 0, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (12, 8, 0, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (12, 8, 2, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (12, 8, 2, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (12, 9, 0, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (12, 9, 0, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (12, 9, 1, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (12, 9, 1, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (12, 10, 0, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (12, 10, 0, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (12, 10, 1, 8, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (12, 10, 1, 8, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (12, 10, 2, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (12, 10, 2, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (13, 0, 0, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (13, 0, 0, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (13, 0, 1, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (13, 0, 1, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (13, 0, 2, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (13, 0, 2, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (13, 1, 0, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (13, 1, 0, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (13, 1, 1, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (13, 1, 1, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (13, 2, 0, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (13, 2, 0, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (13, 2, 1, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (13, 2, 1, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (13, 3, 0, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (13, 3, 0, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (13, 3, 1, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (13, 3, 1, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (13, 3, 2, 16, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (13, 3, 2, 16, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (13, 4, 0, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (13, 4, 0, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (13, 4, 1, 7, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (13, 4, 1, 7, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (13, 5, 0, 9, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (13, 5, 0, 9, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (13, 5, 1, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (13, 5, 1, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (13, 5, 2, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (13, 5, 2, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (13, 7, 0, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (13, 7, 0, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (13, 7, 1, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (13, 7, 1, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (13, 7, 2, 26, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (13, 7, 2, 26, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (13, 7, 2, 26, 1, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (13, 7, 2, 26, 1, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (13, 8, 0, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (13, 8, 0, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (13, 8, 1, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (13, 8, 1, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (13, 9, 0, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (13, 9, 0, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (13, 10, 0, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (13, 10, 0, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (13, 10, 1, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (13, 10, 1, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (14, 0, 0, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (14, 0, 0, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (14, 0, 1, 26, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (14, 0, 1, 26, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (14, 0, 1, 26, 1, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (14, 0, 1, 26, 1, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (14, 1, 0, 12, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (14, 1, 0, 12, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (14, 1, 1, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (14, 1, 1, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (14, 2, 0, 7, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (14, 2, 0, 7, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (14, 2, 1, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (14, 2, 1, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (14, 3, 0, 5, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (14, 3, 0, 5, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (14, 4, 1, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (14, 4, 1, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (14, 4, 2, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (14, 4, 2, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (14, 6, 0, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (14, 6, 0, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (14, 6, 1, 5, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (14, 6, 1, 5, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (14, 6, 2, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (14, 6, 2, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (14, 7, 1, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (14, 7, 1, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (14, 7, 2, 20, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (14, 7, 2, 20, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (14, 7, 3, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (14, 7, 3, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (14, 7, 4, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (14, 7, 4, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (15, 0, 0, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (15, 0, 0, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (15, 0, 1, 16, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (15, 0, 1, 16, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (15, 1, 0, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (15, 1, 0, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (15, 1, 1, 16, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (15, 1, 1, 16, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (15, 1, 2, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (15, 1, 2, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (15, 1, 3, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (15, 1, 3, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (15, 2, 0, 16, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (15, 2, 0, 16, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (15, 2, 1, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (15, 2, 1, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (15, 2, 2, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (15, 2, 2, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (15, 2, 3, 9, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (15, 2, 3, 9, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (15, 3, 0, 9, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (15, 3, 0, 9, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (15, 3, 1, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (15, 3, 1, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (15, 5, 0, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (15, 5, 0, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (15, 5, 1, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (15, 5, 1, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (15, 6, 0, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (15, 6, 0, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (15, 6, 1, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (15, 6, 1, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (15, 9, 0, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (15, 9, 0, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (15, 9, 1, 7, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (15, 9, 1, 7, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (15, 9, 2, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (15, 9, 2, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (15, 9, 3, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (15, 9, 3, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (16, 0, 1, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (16, 0, 1, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (16, 5, 0, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (16, 5, 0, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (16, 6, 0, 8, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (16, 6, 0, 8, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (16, 6, 1, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (16, 6, 1, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (16, 6, 2, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (16, 6, 2, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (16, 6, 3, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (16, 6, 3, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (16, 9, 0, 13, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (16, 9, 0, 13, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (16, 9, 1, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (16, 9, 1, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (17, 0, 0, 17, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (17, 0, 0, 17, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (17, 0, 1, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (17, 0, 1, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (17, 0, 2, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (17, 0, 2, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (17, 1, 0, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (17, 1, 0, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (17, 1, 1, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (17, 1, 1, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (17, 2, 0, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (17, 2, 0, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (17, 2, 1, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (17, 2, 1, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (17, 3, 0, 16, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (17, 3, 0, 16, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (17, 3, 1, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (17, 3, 1, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (17, 3, 2, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (17, 3, 2, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (17, 4, 0, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (17, 4, 0, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (17, 4, 1, 6, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (17, 4, 1, 6, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (17, 4, 2, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (17, 4, 2, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (17, 4, 3, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (17, 4, 3, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (17, 4, 4, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (17, 4, 4, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (17, 5, 1, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (17, 5, 1, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (17, 5, 3, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (17, 5, 3, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (17, 6, 0, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (17, 6, 0, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (17, 6, 1, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (17, 6, 1, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (17, 11, 0, 20, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (17, 11, 0, 20, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (18, 1, 0, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (18, 1, 0, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (18, 1, 1, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (18, 1, 1, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (18, 2, 0, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (18, 2, 0, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (18, 2, 1, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (18, 2, 1, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (18, 3, 0, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (18, 3, 0, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (18, 3, 3, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (18, 3, 3, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (18, 3, 4, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (18, 3, 4, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (18, 4, 3, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (18, 4, 3, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (18, 5, 0, 26, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (18, 5, 0, 26, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (18, 5, 0, 26, 1, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (18, 5, 0, 26, 1, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (18, 6, 1, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (18, 6, 1, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (18, 6, 2, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (18, 6, 2, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (18, 7, 0, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (18, 7, 0, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (18, 7, 1, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (18, 7, 1, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (18, 7, 2, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (18, 7, 2, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (18, 7, 3, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (18, 7, 3, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (18, 8, 1, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (18, 8, 1, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (18, 8, 2, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (18, 8, 2, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (18, 8, 4, 2, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (18, 8, 4, 2, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (18, 8, 5, 1, 0, 'floor') 360 images IX32/persistence/hearts/sounds PASS
+Candle loot (18, 8, 5, 1, 0, 'air') 360 images IX32/persistence/hearts/sounds PASS
+Candle guards 1 guard 15 360 images IX32/Simon/inventory/sound PASS
+Candle guards 1 guard 31 360 images IX32/Simon/inventory/sound PASS
+Candle guards 1 recoil 15 360 images IX32/Simon/inventory/sound PASS
+Candle guards 1 recoil 31 360 images IX32/Simon/inventory/sound PASS
+Candle guards 1 invuln 15 360 images IX32/Simon/inventory/sound PASS
+Candle guards 1 invuln 31 360 images IX32/Simon/inventory/sound PASS
+Candle guards 1 attack 15 360 images IX32/Simon/inventory/sound PASS
+Candle guards 1 attack 31 360 images IX32/Simon/inventory/sound PASS
+Candle guards 2 guard 15 360 images IX32/Simon/inventory/sound PASS
+Candle guards 2 guard 31 360 images IX32/Simon/inventory/sound PASS
+Candle guards 2 recoil 15 360 images IX32/Simon/inventory/sound PASS
+Candle guards 2 recoil 31 360 images IX32/Simon/inventory/sound PASS
+Candle guards 2 invuln 15 360 images IX32/Simon/inventory/sound PASS
+Candle guards 2 invuln 31 360 images IX32/Simon/inventory/sound PASS
+Candle guards 2 attack 15 360 images IX32/Simon/inventory/sound PASS
+Candle guards 2 attack 31 360 images IX32/Simon/inventory/sound PASS
+Candle heart reallocation into earlier hole,360 images/all7 C80032 PASS
+Fallback pool 1 floor 360 images C50016/all7 C80032/SAT PASS
+Fallback pool 1 air 360 images C50016/all7 C80032/SAT PASS
+Fallback pool 2 floor 360 images C50016/all7 C80032/SAT PASS
+Fallback pool 2 air 360 images C50016/all7 C80032/SAT PASS
+Fallback pool 3 floor 360 images C50016/all7 C80032/SAT PASS
+Fallback pool 3 air 360 images C50016/all7 C80032/SAT PASS
+Fallback pool 19 floor 360 images C50016/all7 C80032/SAT PASS
+Fallback pool 19 air 360 images C50016/all7 C80032/SAT PASS
+Fallback pool 26 floor 360 images C50016/all7 C80032/SAT PASS
+Fallback pool 26 air 360 images C50016/all7 C80032/SAT PASS
+Fallback SAT 1 floor 360 images C50016/all7 C80032/SAT PASS
+Fallback SAT 1 air 360 images C50016/all7 C80032/SAT PASS
+Fallback SAT 2 floor 360 images C50016/all7 C80032/SAT PASS
+Fallback SAT 2 air 360 images C50016/all7 C80032/SAT PASS
+Fallback SAT 3 floor 360 images C50016/all7 C80032/SAT PASS
+Fallback SAT 3 air 360 images C50016/all7 C80032/SAT PASS
+Fallback SAT 19 floor 360 images C50016/all7 C80032/SAT PASS
+Fallback SAT 19 air 360 images C50016/all7 C80032/SAT PASS
+Fallback SAT 26 floor 360 images C50016/all7 C80032/SAT PASS
+Fallback SAT 26 air 360 images C50016/all7 C80032/SAT PASS
+Both C800/C500 full,360 images,unchanged reservations/no invented drop PASS
+Candle loot 660 scenarios 237600 images PASS
+Item data:12 projectile box selections;19 stages of hidden blocks CHECK PASS
+Stage map:19 ROM tables CHECK PASS
+Items inventory/timers 22880 images,44 scenarios PASS
+Items shield geometry 67584 executed8264 comparisons PASS
+Items8610 3 0 16 32 360 images PASS
+Items8610 3 1 1 32 360 images PASS
+Items8610 3 0 0 32 360 images PASS
+Items8610 3 1 16 0 360 images PASS
+Items8610 4 0 16 32 360 images PASS
+Items8610 4 1 1 32 360 images PASS
+Items8610 4 0 0 32 360 images PASS
+Items8610 4 1 16 0 360 images PASS
+Items8610 9 0 16 32 360 images PASS
+Items8610 9 1 1 32 360 images PASS
+Items8610 9 0 0 32 360 images PASS
+Items8610 9 1 16 0 360 images PASS
+Items8610 relocation (2,) 360 images,all8 physical prefixes PASS
+Items8610 relocation (0, 3) 360 images,all8 physical prefixes PASS
+Items8610 relocation (1, 2, 3) 360 images,all8 physical prefixes PASS
+Items boss shield 0 full disappearance prefix PASS
+Items boss shield 1 full disappearance prefix PASS
+Items boss shield 2 full disappearance prefix PASS
+Items boss shield 3 full disappearance prefix PASS
+Items boss shield 4 full disappearance prefix PASS
+Items0C recoil 0 -1 360 images PASS
+Items0C recoil 0 1 360 images PASS
+Items0C recoil 8 -1 360 images PASS
+Items0C recoil 8 1 360 images PASS
+Integrated loot 36 floor 360 images,IX32/C500/pickup/guards/sounds PASS
+Integrated loot 36 air 360 images,IX32/C500/pickup/guards/sounds PASS
+Integrated loot 36 guard 360 images,IX32/C500/pickup/guards/sounds PASS
+Integrated loot 36 invuln 360 images,IX32/C500/pickup/guards/sounds PASS
+Integrated loot 36 recoil 360 images,IX32/C500/pickup/guards/sounds PASS
+Integrated loot 38 floor 360 images,IX32/C500/pickup/guards/sounds PASS
+Integrated loot 38 air 360 images,IX32/C500/pickup/guards/sounds PASS
+Integrated loot 38 guard 360 images,IX32/C500/pickup/guards/sounds PASS
+Integrated loot 38 invuln 360 images,IX32/C500/pickup/guards/sounds PASS
+Integrated loot 38 recoil 360 images,IX32/C500/pickup/guards/sounds PASS
+Integrated loot seven-slot capacity/SAT gating,360 images PASS
+Items08/09/books late type 9 contact outcomes PASS
+Items08/09/books late type 18 contact outcomes PASS
+Items08/09/books late type 11 contact outcomes PASS
+Items08/09/books late type 13 contact outcomes PASS
+Items08/09/books late type 14 contact outcomes PASS
+Items08/09/books late type 16 contact outcomes PASS
+Items08/09/books late type 15 contact outcomes PASS
+Items08/09/books late type 35 contact outcomes PASS
+Items extended contact 9 8 360 images, all C800 prefixes/energy PASS
+Items extended contact 9 9 360 images, all C800 prefixes/energy PASS
+Items extended contact 9 16 360 images, all C800 prefixes/energy PASS
+Items extended contact 9 17 360 images, all C800 prefixes/energy PASS
+Items extended contact 18 8 360 images, all C800 prefixes/energy PASS
+Items extended contact 18 9 360 images, all C800 prefixes/energy PASS
+Items extended contact 18 16 360 images, all C800 prefixes/energy PASS
+Items extended contact 18 17 360 images, all C800 prefixes/energy PASS
+Items extended contact 11 8 360 images, all C800 prefixes/energy PASS
+Items extended contact 11 9 360 images, all C800 prefixes/energy PASS
+Items extended contact 11 16 360 images, all C800 prefixes/energy PASS
+Items extended contact 11 17 360 images, all C800 prefixes/energy PASS
+Items extended contact 13 8 360 images, all C800 prefixes/energy PASS
+Items extended contact 13 9 360 images, all C800 prefixes/energy PASS
+Items extended contact 13 16 360 images, all C800 prefixes/energy PASS
+Items extended contact 13 17 360 images, all C800 prefixes/energy PASS
+Items extended contact 14 8 360 images, all C800 prefixes/energy PASS
+Items extended contact 14 9 360 images, all C800 prefixes/energy PASS
+Items extended contact 14 16 360 images, all C800 prefixes/energy PASS
+Items extended contact 14 17 360 images, all C800 prefixes/energy PASS
+Items extended contact 16 8 360 images, all C800 prefixes/energy PASS
+Items extended contact 16 9 360 images, all C800 prefixes/energy PASS
+Items extended contact 16 16 360 images, all C800 prefixes/energy PASS
+Items extended contact 16 17 360 images, all C800 prefixes/energy PASS
+Items extended contact 15 8 360 images, all C800 prefixes/energy PASS
+Items extended contact 15 9 360 images, all C800 prefixes/energy PASS
+Items extended contact 15 16 360 images, all C800 prefixes/energy PASS
+Items extended contact 15 17 360 images, all C800 prefixes/energy PASS
+Items extended contact 35 8 360 images, all C800 prefixes/energy PASS
+Items extended contact 35 9 360 images, all C800 prefixes/energy PASS
+Items extended contact 35 16 360 images, all C800 prefixes/energy PASS
+Items extended contact 35 17 360 images, all C800 prefixes/energy PASS
+Extended contact: all active and inactive C800 prefixes compared, including24/26 reservations
+Late1B 12 7 160 112 32 400 images,32-byte prefix/SAT PASS
+Late1B 12 7 160 112 224 400 images,32-byte prefix/SAT PASS
+Late1B 12 8 144 112 32 400 images,32-byte prefix/SAT PASS
+Late1B 12 8 144 112 224 400 images,32-byte prefix/SAT PASS
+Late1B 12 9 160 112 32 400 images,32-byte prefix/SAT PASS
+Late1B 12 9 160 112 224 400 images,32-byte prefix/SAT PASS
+Late1B 14 1 192 144 32 400 images,32-byte prefix/SAT PASS
+Late1B 14 1 192 144 224 400 images,32-byte prefix/SAT PASS
+Late1B 14 4 64 32 32 400 images,32-byte prefix/SAT PASS
+Late1B 14 4 64 32 224 400 images,32-byte prefix/SAT PASS
+Late1B 16 0 128 96 32 400 images,32-byte prefix/SAT PASS
+Late1B 16 0 128 96 224 400 images,32-byte prefix/SAT PASS
+Late1B 16 0 176 144 32 400 images,32-byte prefix/SAT PASS
+Late1B 16 0 176 144 224 400 images,32-byte prefix/SAT PASS
+Late1B 17 3 192 144 32 400 images,32-byte prefix/SAT PASS
+Late1B 17 3 192 144 224 400 images,32-byte prefix/SAT PASS
+Late1B 17 5 128 48 32 400 images,32-byte prefix/SAT PASS
+Late1B 17 5 128 48 224 400 images,32-byte prefix/SAT PASS
+Late1B 17 5 224 48 32 400 images,32-byte prefix/SAT PASS
+Late1B 17 5 224 48 224 400 images,32-byte prefix/SAT PASS
+Late1B 17 9 128 80 32 400 images,32-byte prefix/SAT PASS
+Late1B 17 9 128 80 224 400 images,32-byte prefix/SAT PASS
+Late1B 18 3 224 64 32 400 images,32-byte prefix/SAT PASS
+Late1B 18 3 224 64 224 400 images,32-byte prefix/SAT PASS
+Late1B 18 4 32 32 32 400 images,32-byte prefix/SAT PASS
+Late1B 18 4 32 32 224 400 images,32-byte prefix/SAT PASS
+Late1B 18 4 144 96 32 400 images,32-byte prefix/SAT PASS
+Late1B 18 4 144 96 224 400 images,32-byte prefix/SAT PASS
+Late1B 18 4 64 144 32 400 images,32-byte prefix/SAT PASS
+Late1B 18 4 64 144 224 400 images,32-byte prefix/SAT PASS
+Items870C 92 blocks; 94208 outline pixels PASS
+Items F2 stage 0 all rooms pixel PASS
+Items F2 stage 1 all rooms pixel PASS
+Items F2 stage 2 all rooms pixel PASS
+Items F2 stage 3 all rooms pixel PASS
+Items F2 stage 4 all rooms pixel PASS
+Items F2 stage 5 all rooms pixel PASS
+Items F2 stage 6 all rooms pixel PASS
+Items F2 stage 7 all rooms pixel PASS
+Items F2 stage 8 all rooms pixel PASS
+Items F2 stage 9 all rooms pixel PASS
+Items F2 stage 10 all rooms pixel PASS
+Items F2 stage 11 all rooms pixel PASS
+Items F2 stage 12 all rooms pixel PASS
+Items F2 stage 13 all rooms pixel PASS
+Items F2 stage 14 all rooms pixel PASS
+Items F2 stage 15 all rooms pixel PASS
+Items F2 stage 16 all rooms pixel PASS
+Items F2 stage 17 all rooms pixel PASS
+Items F2 stage 18 all rooms pixel PASS
+Items F2 4088448 pixels PASS
+Items F2 lifecycle 2160 images;third use displayed,blocked contexts PASS
+Items1E holy water 1 50 8 1 0 360 images PASS
+Items1E holy water 1 50 8 0 1 360 images PASS
+Items1E holy water 0 50 8 1 0 360 images PASS
+Items1E holy water 1 4 8 0 1 360 images PASS
+Items1E holy water 1 50 0 1 0 360 images PASS
+Late runtime:74 executed collision maps and ROM links CHECK PASS
+Late1B:74 executed room pose bases CHECK PASS
+candles=457 fixed=138
+Late graphics: 222976 source pixels, native SAT placement checked; max128 tiles/room
+Late runtime stage 12 all rooms/candles/keys/entry/respawn PASS
+Late runtime stage 13 all rooms/candles/keys/entry/respawn PASS
+Late runtime stage 14 all rooms/candles/keys/entry/respawn PASS
+Late runtime stage 15 all rooms/candles/keys/entry/respawn PASS
+Late runtime stage 16 all rooms/candles/keys/entry/respawn PASS
+Late runtime stage 17 all rooms/candles/keys/entry/respawn PASS
+Late runtime stage 18 all rooms/candles/keys/entry/respawn PASS
+Late runtime: 56832 collision bytes; 10 white-key rooms; 182 whip/reentry cases; 65520 images PASS
+Stage 12 object view: 12 rooms, 36 raw records, safe indexing: PASS
+Stage 12: 30 candle defs; byte-field interpretation agrees with 275 old Z80 candle defs: PASS
+Stage 12 30 candle defs vs Z80 raw slots: PASS
+Stage 12: 5 fixed objects; 71 historic Z80 fixed objects match: PASS
+test_stage12_fixed_objects: OK (5 records, 12 rooms)
+test_stage12_scene: OK (12 rooms, 30 candles, 5 fixed, 36 raw slots)
+stage13 scene/object test: PASS
+stage14 scene/object test: PASS
+stage15 scene/object test: PASS
+stage16 scene/object test: PASS
+stage17 scene/object test: PASS
+stage18 scene/object test: PASS
+late-stage Z80 enemy data: 74 room flags, 93 fixed records, 7 stages PASS
+late fixed spawn: 74 rooms, 93 known types spawned, 0 unknown kept inactive
+late stages 12..18: opt-in known-type fixed spawn and unsupported-type guard PASS
+enemy coverage: 74 rooms, 93 existing constructors, 0 unported entries PASS\ntype 10h: ROM dispatch 9942->ADF8 and byte signatures PASS; no frame trace
+Enemy 10h: 18 instructions on conditional firing path verified in ROM; static only PASS
+Enemy 10h: 39 helper instructions checked in ROM, 65536 distance pairs, 8-slot search mapped; static semantics only PASS
+14:0:0:left 300 frames PASS; 1 projectiles
+14:0:0:right 300 frames PASS; 0 projectiles
+14:0:0:fire_left 300 frames PASS; 1 projectiles
+14:0:0:fire_right 300 frames PASS; 1 projectiles
+14:0:0:difficulty 300 frames PASS; 1 projectiles
+14:1:0:left 300 frames PASS; 1 projectiles
+14:1:0:right 300 frames PASS; 1 projectiles
+14:1:0:fire_left 300 frames PASS; 1 projectiles
+14:1:0:fire_right 300 frames PASS; 3 projectiles
+14:1:0:difficulty 300 frames PASS; 1 projectiles
+14:1:1:left 300 frames PASS; 1 projectiles
+14:1:1:right 300 frames PASS; 0 projectiles
+14:1:1:fire_left 300 frames PASS; 1 projectiles
+14:1:1:fire_right 300 frames PASS; 1 projectiles
+14:1:1:difficulty 300 frames PASS; 1 projectiles
+14:2:0:left 300 frames PASS; 1 projectiles
+14:2:0:right 300 frames PASS; 0 projectiles
+14:2:0:fire_left 300 frames PASS; 1 projectiles
+14:2:0:fire_right 300 frames PASS; 1 projectiles
+14:2:0:difficulty 300 frames PASS; 1 projectiles
+14:4:0:left 300 frames PASS; 1 projectiles
+14:4:0:right 300 frames PASS; 0 projectiles
+14:4:0:fire_left 300 frames PASS; 1 projectiles
+14:4:0:fire_right 300 frames PASS; 1 projectiles
+14:4:0:difficulty 300 frames PASS; 1 projectiles
+14:4:1:left 300 frames PASS; 0 projectiles
+14:4:1:right 300 frames PASS; 1 projectiles
+14:4:1:fire_left 300 frames PASS; 1 projectiles
+14:4:1:fire_right 300 frames PASS; 1 projectiles
+14:4:1:difficulty 300 frames PASS; 1 projectiles
+14:5:0:left 300 frames PASS; 1 projectiles
+14:5:0:right 300 frames PASS; 0 projectiles
+14:5:0:fire_left 300 frames PASS; 1 projectiles
+14:5:0:fire_right 300 frames PASS; 1 projectiles
+14:5:0:difficulty 300 frames PASS; 1 projectiles
+14:6:0:left 300 frames PASS; 0 projectiles
+14:6:0:right 300 frames PASS; 1 projectiles
+14:6:0:fire_left 300 frames PASS; 1 projectiles
+14:6:0:fire_right 300 frames PASS; 1 projectiles
+14:6:0:difficulty 300 frames PASS; 1 projectiles
+14:6:1:left 300 frames PASS; 1 projectiles
+14:6:1:right 300 frames PASS; 0 projectiles
+14:6:1:fire_left 300 frames PASS; 1 projectiles
+14:6:1:fire_right 300 frames PASS; 1 projectiles
+14:6:1:difficulty 300 frames PASS; 1 projectiles
+14:7:0:left 300 frames PASS; 1 projectiles
+14:7:0:right 300 frames PASS; 1 projectiles
+14:7:0:fire_left 300 frames PASS; 1 projectiles
+14:7:0:fire_right 300 frames PASS; 1 projectiles
+14:7:0:difficulty 300 frames PASS; 1 projectiles
+14:7:1:left 300 frames PASS; 1 projectiles
+14:7:1:right 300 frames PASS; 1 projectiles
+14:7:1:fire_left 300 frames PASS; 1 projectiles
+14:7:1:fire_right 300 frames PASS; 1 projectiles
+14:7:1:difficulty 300 frames PASS; 1 projectiles
+15:1:0:left 300 frames PASS; 1 projectiles
+15:1:0:right 300 frames PASS; 1 projectiles
+15:1:0:fire_left 300 frames PASS; 1 projectiles
+15:1:0:fire_right 300 frames PASS; 1 projectiles
+15:1:0:difficulty 300 frames PASS; 1 projectiles
+15:1:1:left 300 frames PASS; 0 projectiles
+15:1:1:right 300 frames PASS; 1 projectiles
+15:1:1:fire_left 300 frames PASS; 1 projectiles
+15:1:1:fire_right 300 frames PASS; 1 projectiles
+15:1:1:difficulty 300 frames PASS; 1 projectiles
+15:2:0:left 300 frames PASS; 0 projectiles
+15:2:0:right 300 frames PASS; 1 projectiles
+15:2:0:fire_left 300 frames PASS; 1 projectiles
+15:2:0:fire_right 300 frames PASS; 1 projectiles
+15:2:0:difficulty 300 frames PASS; 1 projectiles
+15:2:1:left 300 frames PASS; 0 projectiles
+15:2:1:right 300 frames PASS; 1 projectiles
+15:2:1:fire_left 300 frames PASS; 1 projectiles
+15:2:1:fire_right 300 frames PASS; 1 projectiles
+15:2:1:difficulty 300 frames PASS; 1 projectiles
+15:3:0:left 300 frames PASS; 1 projectiles
+15:3:0:right 300 frames PASS; 0 projectiles
+15:3:0:fire_left 300 frames PASS; 1 projectiles
+15:3:0:fire_right 300 frames PASS; 1 projectiles
+15:3:0:difficulty 300 frames PASS; 1 projectiles
+15:4:0:left 300 frames PASS; 1 projectiles
+15:4:0:right 300 frames PASS; 0 projectiles
+15:4:0:fire_left 300 frames PASS; 3 projectiles
+15:4:0:fire_right 300 frames PASS; 1 projectiles
+15:4:0:difficulty 300 frames PASS; 3 projectiles
+15:4:1:left 300 frames PASS; 0 projectiles
+15:4:1:right 300 frames PASS; 1 projectiles
+15:4:1:fire_left 300 frames PASS; 1 projectiles
+15:4:1:fire_right 300 frames PASS; 1 projectiles
+15:4:1:difficulty 300 frames PASS; 1 projectiles
+15:6:0:left 300 frames PASS; 1 projectiles
+15:6:0:right 300 frames PASS; 0 projectiles
+15:6:0:fire_left 300 frames PASS; 1 projectiles
+15:6:0:fire_right 300 frames PASS; 1 projectiles
+15:6:0:difficulty 300 frames PASS; 1 projectiles
+15:7:0:left 300 frames PASS; 1 projectiles
+15:7:0:right 300 frames PASS; 0 projectiles
+15:7:0:fire_left 300 frames PASS; 1 projectiles
+15:7:0:fire_right 300 frames PASS; 1 projectiles
+15:7:0:difficulty 300 frames PASS; 1 projectiles
+15:8:0:left 300 frames PASS; 1 projectiles
+15:8:0:right 300 frames PASS; 0 projectiles
+15:8:0:fire_left 300 frames PASS; 1 projectiles
+15:8:0:fire_right 300 frames PASS; 1 projectiles
+15:8:0:difficulty 300 frames PASS; 1 projectiles
+17:3:0:left 300 frames PASS; 0 projectiles
+17:3:0:right 300 frames PASS; 1 projectiles
+17:3:0:fire_left 300 frames PASS; 1 projectiles
+17:3:0:fire_right 300 frames PASS; 1 projectiles
+17:3:0:difficulty 300 frames PASS; 1 projectiles
+17:4:0:left 300 frames PASS; 1 projectiles
+17:4:0:right 300 frames PASS; 0 projectiles
+17:4:0:fire_left 300 frames PASS; 1 projectiles
+17:4:0:fire_right 300 frames PASS; 1 projectiles
+17:4:0:difficulty 300 frames PASS; 1 projectiles
+17:4:1:left 300 frames PASS; 1 projectiles
+17:4:1:right 300 frames PASS; 0 projectiles
+17:4:1:fire_left 300 frames PASS; 1 projectiles
+17:4:1:fire_right 300 frames PASS; 1 projectiles
+17:4:1:difficulty 300 frames PASS; 1 projectiles
+17:5:0:left 300 frames PASS; 1 projectiles
+17:5:0:right 300 frames PASS; 1 projectiles
+17:5:0:fire_left 300 frames PASS; 1 projectiles
+17:5:0:fire_right 300 frames PASS; 3 projectiles
+17:5:0:difficulty 300 frames PASS; 1 projectiles
+18:1:0:left 300 frames PASS; 0 projectiles
+18:1:0:right 300 frames PASS; 1 projectiles
+18:1:0:fire_left 300 frames PASS; 1 projectiles
+18:1:0:fire_right 300 frames PASS; 1 projectiles
+18:1:0:difficulty 300 frames PASS; 1 projectiles
+18:2:0:left 300 frames PASS; 0 projectiles
+18:2:0:right 300 frames PASS; 1 projectiles
+18:2:0:fire_left 300 frames PASS; 1 projectiles
+18:2:0:fire_right 300 frames PASS; 1 projectiles
+18:2:0:difficulty 300 frames PASS; 1 projectiles
+18:8:0:left 300 frames PASS; 0 projectiles
+18:8:0:right 300 frames PASS; 1 projectiles
+18:8:0:fire_left 300 frames PASS; 1 projectiles
+18:8:0:fire_right 300 frames PASS; 1 projectiles
+18:8:0:difficulty 300 frames PASS; 1 projectiles
+Z80/C boxes PASS {'contact': 12045, 'whip': 25992}
+09h: 52 real-room scenarios, 20800 frames: PASS
+12h: 18 scenarios 7200 frames 27 shots PASS
+late channels: 156 scenarios 156000 images PASS; 80h does not dispatch a channel
+12 0 (1, 1, 77)
+12 1 (0, 0, 0)
+12 2 (0, 0, 0)
+12 3 (0, 0, 0)
+12 4 (1, 1, 833)
+12 5 (1, 1, 77)
+12 6 (0, 0, 0)
+12 7 (1, 1, 131)
+12 8 (1, 1, 77)
+12 9 (0, 0, 0)
+12 10 (1, 1, 77)
+12 11 (1, 2, 293)
+13 0 (2, 4, 591)
+13 1 (2, 4, 551)
+13 2 (4, 0, 0)
+13 3 (3, 4, 127)
+13 4 (2, 3, 63)
+13 5 (4, 3, 126)
+13 6 (1, 0, 0)
+13 7 (2, 4, 62)
+13 8 (3, 0, 0)
+13 9 (3, 0, 0)
+13 10 (2, 4, 39)
+13 11 (3, 0, 0)
+14 0 (1, 2, 62)
+14 1 (2, 4, 64)
+14 2 (1, 2, 64)
+14 3 (3, 0, 0)
+14 4 (2, 4, 125)
+14 5 (1, 2, 64)
+14 6 (2, 4, 192)
+14 7 (2, 3, 62)
+15 0 (0, 0, 0)
+15 1 (2, 4, 153)
+15 2 (2, 4, 142)
+15 3 (1, 2, 62)
+15 4 (2, 3, 64)
+15 5 (0, 0, 0)
+15 6 (1, 2, 64)
+15 7 (1, 2, 64)
+15 8 (1, 2, 64)
+15 9 (0, 0, 0)
+16 0 (0, 0, 0)
+16 1 (1, 1, 29)
+16 2 (1, 1, 42)
+16 3 (1, 1, 55)
+16 4 (1, 1, 29)
+16 5 (0, 0, 0)
+16 6 (0, 0, 0)
+16 7 (1, 1, 19)
+16 8 (1, 1, 42)
+16 9 (0, 0, 0)
+17 0 (0, 0, 0)
+17 1 (1, 4, 231)
+17 2 (1, 0, 0)
+17 3 (1, 2, 84)
+17 4 (2, 4, 64)
+17 5 (1, 2, 124)
+17 6 (2, 0, 0)
+17 7 (3, 0, 643)
+17 8 (1, 0, 0)
+17 9 (1, 0, 0)
+17 10 (4, 0, 331)
+17 11 (0, 0, 0)
+18 0 (0, 0, 0)
+18 1 (1, 2, 84)
+18 2 (1, 2, 144)
+18 3 (2, 0, 0)
+18 4 (2, 0, 0)
+18 5 (2, 0, 0)
+18 6 (2, 0, 0)
+18 7 (2, 0, 0)
+18 8 (1, 2, 84)
+18 9 (0, 0, 0)
+74 real rooms, 177600 video images, peak combined live objects 7: PASS; no capacity excess observed in this scenario
+boss12: 5780/6445 graphics, mirrored rider, 9 poses and 60 MD tiles CHECK PASS
+boss12 entry: door5 to room6, 77D1 X/Y and sound87 PASS
+boss12 boxes, armor and rider hits: {'contact': 31850, 'whip': 51984, 'armor': 16, 'rider_frames': 800, 'shot_contact': 2805, 'shot_whip': 10824, 'burst_frames': 80} PASS
+boss12 lifecycle: [(0, 32, 2264), (1, 22, 1896)] PASS
+boss12 motion: 5 scenarios 6000 images PASS
+boss15: body + CC projectile,11 cells,44 tiles CHECK PASS
+boss15 entry: door8 to room9, 77D1 X/Y and sound87 PASS
+boss15 motion: 6 scenarios 9600 images, peaks [3, 3, 3, 3, 3, 3] PASS
+boss15 projectile destruction: 240 images, slots 0/2 and freeze PASS
+boss15 collision and armor: 73442 PASS
+boss15 reentry: 1020 images, persistent CF20 PASS
+boss15 lifecycle: [(0, 32, 2168), (1, 22, 1800)] PASS
+Dracula credits: 41 lines and terminal, ROM data CHECK PASS
+Dracula sprites: 26 poses, loaders and composed cells CHECK PASS
+Dracula background:6 views, 283 tiles,4 busts CHECK PASS
+Dracula credits renderer:41 bands, 27 tiles CHECK PASS
+Dracula entry77D1: room9 X246, Y preserved, music86 PASS
+Dracula projectile/fly strikes: 35 hits, 1600 images including freeze PASS
+Dracula first/second form, fly and projectile boxes: 146868 PASS
+Dracula post-credits4326: first clear restarts courtyard, second clear returns title PASS
+Dracula credit pixels: 10558 images PASS
+Dracula background pixels: 3338 images PASS
+Dracula lifecycle weapon/difficulty 0 0 states [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10] hits [32, 8] images 13894 PASS
+Dracula credit pixels: 10558 images PASS
+Dracula background pixels: 2666 images PASS
+Dracula lifecycle weapon/difficulty 1 1 states [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10] hits [22, 6] images 13222 PASS
+Dracula credit pixels: 10556 images PASS
+Dracula background pixels: 6140 images PASS
+Dracula lifecycle weapon/difficulty 2 2 states [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10] hits [32, 32] images 16694 PASS
+Dracula credit pixels: 10558 images PASS
+Dracula background pixels: 2922 images PASS
+Dracula lifecycle weapon/difficulty 3 2 states [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10] hits [22, 22] images 13478 PASS
+Dracula first form: 8000 images PASS
+Trade data:19 stages,16 wall selectors,9 ROM products, 16 direct walls, 17 hidden blocks CHECK PASS
+Trade 12 4 1219 images PASS
+Trade 13 4 1219 images PASS
+Trade 14 6 1219 images PASS
+Trade 17 8 1219 images PASS
+Trade 17 9 1219 images PASS
+Trade 18 1 1219 images PASS
+Trade 18 8 1219 images PASS
+Trade 13 0 1219 images PASS
+Trade 13 6 1219 images PASS
+Trade 13 10 1219 images PASS
+Trade 15 0 1219 images PASS
+Trade 15 2 1219 images PASS
+Trade 17 1 1219 images PASS
+Trade 17 6 1219 images PASS
+Trade variants 12 4 7 cases PASS
+Trade variants 13 4 7 cases PASS
+Trade variants 14 6 7 cases PASS
+Trade variants 17 8 7 cases PASS
+Trade variants 17 9 7 cases PASS
+Trade variants 18 1 7 cases PASS
+Trade variants 18 8 7 cases PASS
+Trade variants 13 0 7 cases PASS
+Trade variants 13 6 7 cases PASS
+Trade variants 13 10 7 cases PASS
+Trade variants 15 0 7 cases PASS
+Trade variants 15 2 7 cases PASS
+Trade variants 17 1 7 cases PASS
+Trade variants 17 6 7 cases PASS
+Trade variants 42098 images,98 scenarios PASS
+Trade legacy9397: borderY136, black interiorY137;zo_merchant coordinate proof PASS
+Trade whip boxes 112480 executed83A1 comparisons PASS
+Trade graphics 1344000 pixels;5 wall frames,504 windows/restorations;max 29 tiles PASS
+Trade total 17066 images, 14 late walls PASS
+Dracula MD: room pixels, actual whip callbacks, both forms, credits and courtyard/title returns PASS {'passed': True, 'scope': 'RAM entry into stage18/room9; no traversal validation', 'frames': 24776, 'room_pixels': 17408, 'credits_pixels': 57344, 'score': 160000, 'completions': 2, 'core': '/workspace/emulators/genesis-plus-gx/genesis_plus_gx_libretro.so'}
+Trade MD 12 4 300 frozen images and purchase PASS
+Trade MD 13 4 300 frozen images and purchase PASS
+Trade MD 14 6 300 frozen images and purchase PASS
+Trade MD 17 8 300 frozen images and purchase PASS
+Trade MD 17 9 300 frozen images and purchase PASS
+Trade MD 18 1 300 frozen images and purchase PASS
+Trade MD 18 8 300 frozen images and purchase PASS
+Trade MD 3744 frames PASS
+Secret MD room 0 -> 3 both input phases PASS
+Secret MD room 1 -> 4 both input phases PASS
+Secret MD room 2 -> 11 both input phases PASS
+Secret MD room 3 -> 0 both input phases PASS
+Secret MD room 4 -> 1 both input phases PASS
+Secret MD room 5 -> 8 both input phases PASS
+Secret MD room 7 -> 10 both input phases PASS
+Secret MD room 8 -> 5 both input phases PASS
+Secret MD room 10 -> 7 both input phases PASS
+Secret MD room 11 -> 2 both input phases PASS
+Secret MD stage 13 320 negative images PASS
+Secret MD stage 14 320 negative images PASS
+Secret MD stage 15 320 negative images PASS
+Secret MD stage 16 320 negative images PASS
+Secret MD stage 17 320 negative images PASS
+Secret MD stage 18 320 negative images PASS
+Secret MD 5016 frames,20 routes and6 absent stages PASS
+Items MD0E:128 border pixels and underlying room restoration PASS
+Items MD F2: 78624 pixels,three uses,960 frozen images PASS
+Items MD shield:charge16->15,single0B,32-image flame PASS
+Items MD 1350 images PASS
+Late MD stage 12 all rooms x300 frames and collision bytes PASS
+Late MD stage 13 all rooms x300 frames and collision bytes PASS
+Late MD stage 14 all rooms x300 frames and collision bytes PASS
+Late MD stage 15 all rooms x300 frames and collision bytes PASS
+Late MD stage 16 all rooms x300 frames and collision bytes PASS
+Late MD stage 17 all rooms x300 frames and collision bytes PASS
+Late MD stage 18 all rooms x300 frames and collision bytes PASS
+Late MD compiled door11->12 PASS
+Loot MD 25 reserved airborne slot, direct air pickup/hearts/PSG PASS
+Loot MD 26 reserved airborne slot, direct air pickup/hearts/PSG PASS
+Candle MD 1 real B hit,C800 reservation,no C500 duplicate,air pickup,PSG,360-image continuation PASS
+Candle MD 2 real B hit,C800 reservation,no C500 duplicate,air pickup,PSG,360-image continuation PASS
+Candle MD pool-full fallback,C500 air pickup,PSG,360-image continuation PASS
+LOT12 seven stage scenarios and explicit action fixtures CHECK PASS
+[   749] OK   game.stage == 12 and game.room == 0
+[   749] OK   enemies.tick == (clk+150)%256
+[   749] OK   ram8('vk_candles') == 12 and ram8('vk_candles+1') == 0
+[  1183] OK   game.stage == 12 and game.room == 1
+[  1183] OK   enemies.tick == (clk+150)%256
+[  1183] OK   ram8('vk_candles') == 12 and ram8('vk_candles+1') == 1
+[  1617] OK   game.stage == 12 and game.room == 2
+[  1617] OK   enemies.tick == (clk+150)%256
+[  1617] OK   ram8('vk_candles') == 12 and ram8('vk_candles+1') == 2
+[  2051] OK   game.stage == 12 and game.room == 3
+[  2051] OK   enemies.tick == (clk+150)%256
+[  2051] OK   ram8('vk_candles') == 12 and ram8('vk_candles+1') == 3
+[  2485] OK   game.stage == 12 and game.room == 4
+[  2485] OK   enemies.tick == (clk+150)%256
+[  2485] OK   ram8('vk_candles') == 12 and ram8('vk_candles+1') == 4
+[  2919] OK   game.stage == 12 and game.room == 5
+[  2919] OK   enemies.tick == (clk+150)%256
+[  2919] OK   ram8('vk_candles') == 12 and ram8('vk_candles+1') == 5
+[  3353] OK   game.stage == 12 and game.room == 6
+[  3353] OK   enemies.tick == (clk+150)%256
+[  3353] OK   ram8('vk_candles') == 12 and ram8('vk_candles+1') == 6
+[  3787] OK   game.stage == 12 and game.room == 7
+[  3787] OK   enemies.tick == (clk+150)%256
+[  3787] OK   ram8('vk_candles') == 12 and ram8('vk_candles+1') == 7
+[  4221] OK   game.stage == 12 and game.room == 8
+[  4221] OK   enemies.tick == (clk+150)%256
+[  4221] OK   ram8('vk_candles') == 12 and ram8('vk_candles+1') == 8
+[  4655] OK   game.stage == 12 and game.room == 9
+[  4655] OK   enemies.tick == (clk+150)%256
+[  4655] OK   ram8('vk_candles') == 12 and ram8('vk_candles+1') == 9
+[  5089] OK   game.stage == 12 and game.room == 10
+[  5089] OK   enemies.tick == (clk+150)%256
+[  5089] OK   ram8('vk_candles') == 12 and ram8('vk_candles+1') == 10
+[  5523] OK   game.stage == 12 and game.room == 11
+[  5523] OK   enemies.tick == (clk+150)%256
+[  5523] OK   ram8('vk_candles') == 12 and ram8('vk_candles+1') == 11
+[  5560] OK   game.stage == 12
+[  5596] OK   ram8('vk_candles+4') & 1 != 0
+[  5679] OK   ram8('items') & 1 == 0
+[  5847] OK   game.stage == 12
+[  5907] OK   ram8('vk_boss') != 0
+41/41 assertions OK, 5907 images -> /workspace/scratch/lot12-scenarios/stage12
+[   757] OK   game.stage == 13 and game.room == 0
+[   757] OK   enemies.tick == (clk+150)%256
+[   757] OK   ram8('vk_candles') == 13 and ram8('vk_candles+1') == 0
+[  1191] OK   game.stage == 13 and game.room == 1
+[  1191] OK   enemies.tick == (clk+150)%256
+[  1191] OK   ram8('vk_candles') == 13 and ram8('vk_candles+1') == 1
+[  1625] OK   game.stage == 13 and game.room == 2
+[  1625] OK   enemies.tick == (clk+150)%256
+[  1625] OK   ram8('vk_candles') == 13 and ram8('vk_candles+1') == 2
+[  2059] OK   game.stage == 13 and game.room == 3
+[  2059] OK   enemies.tick == (clk+150)%256
+[  2059] OK   ram8('vk_candles') == 13 and ram8('vk_candles+1') == 3
+[  2493] OK   game.stage == 13 and game.room == 4
+[  2493] OK   enemies.tick == (clk+150)%256
+[  2493] OK   ram8('vk_candles') == 13 and ram8('vk_candles+1') == 4
+[  2927] OK   game.stage == 13 and game.room == 5
+[  2927] OK   enemies.tick == (clk+150)%256
+[  2927] OK   ram8('vk_candles') == 13 and ram8('vk_candles+1') == 5
+[  3361] OK   game.stage == 13 and game.room == 6
+[  3361] OK   enemies.tick == (clk+150)%256
+[  3361] OK   ram8('vk_candles') == 13 and ram8('vk_candles+1') == 6
+[  3795] OK   game.stage == 13 and game.room == 7
+[  3795] OK   enemies.tick == (clk+150)%256
+[  3795] OK   ram8('vk_candles') == 13 and ram8('vk_candles+1') == 7
+[  4229] OK   game.stage == 13 and game.room == 8
+[  4229] OK   enemies.tick == (clk+150)%256
+[  4229] OK   ram8('vk_candles') == 13 and ram8('vk_candles+1') == 8
+[  4663] OK   game.stage == 13 and game.room == 9
+[  4663] OK   enemies.tick == (clk+150)%256
+[  4663] OK   ram8('vk_candles') == 13 and ram8('vk_candles+1') == 9
+[  5097] OK   game.stage == 13 and game.room == 10
+[  5097] OK   enemies.tick == (clk+150)%256
+[  5097] OK   ram8('vk_candles') == 13 and ram8('vk_candles+1') == 10
+[  5531] OK   game.stage == 13 and game.room == 11
+[  5531] OK   enemies.tick == (clk+150)%256
+[  5531] OK   ram8('vk_candles') == 13 and ram8('vk_candles+1') == 11
+[  5569] OK   game.stage == 13
+[  5605] OK   ram8('vk_candles+4') & 1 != 0
+[  5688] OK   ram8('items') & 1 == 0
+[  5856] OK   game.room == 0
+40/40 assertions OK, 5856 images -> /workspace/scratch/lot12-scenarios/stage13
+[   765] OK   game.stage == 14 and game.room == 0
+[   765] OK   enemies.tick == (clk+150)%256
+[   765] OK   ram8('vk_candles') == 14 and ram8('vk_candles+1') == 0
+[  1199] OK   game.stage == 14 and game.room == 1
+[  1199] OK   enemies.tick == (clk+150)%256
+[  1199] OK   ram8('vk_candles') == 14 and ram8('vk_candles+1') == 1
+[  1633] OK   game.stage == 14 and game.room == 2
+[  1633] OK   enemies.tick == (clk+150)%256
+[  1633] OK   ram8('vk_candles') == 14 and ram8('vk_candles+1') == 2
+[  2067] OK   game.stage == 14 and game.room == 3
+[  2067] OK   enemies.tick == (clk+150)%256
+[  2067] OK   ram8('vk_candles') == 14 and ram8('vk_candles+1') == 3
+[  2501] OK   game.stage == 14 and game.room == 4
+[  2501] OK   enemies.tick == (clk+150)%256
+[  2501] OK   ram8('vk_candles') == 14 and ram8('vk_candles+1') == 4
+[  2935] OK   game.stage == 14 and game.room == 5
+[  2935] OK   enemies.tick == (clk+150)%256
+[  2935] OK   ram8('vk_candles') == 14 and ram8('vk_candles+1') == 5
+[  3369] OK   game.stage == 14 and game.room == 6
+[  3369] OK   enemies.tick == (clk+150)%256
+[  3369] OK   ram8('vk_candles') == 14 and ram8('vk_candles+1') == 6
+[  3803] OK   game.stage == 14 and game.room == 7
+[  3803] OK   enemies.tick == (clk+150)%256
+[  3803] OK   ram8('vk_candles') == 14 and ram8('vk_candles+1') == 7
+[  3841] OK   game.stage == 14
+[  3877] OK   ram8('vk_candles+4') & 1 != 0
+[  3960] OK   ram8('items') & 1 == 0
+[  4128] OK   game.room == 0
+28/28 assertions OK, 4128 images -> /workspace/scratch/lot12-scenarios/stage14
+[   773] OK   game.stage == 15 and game.room == 0
+[   773] OK   enemies.tick == (clk+150)%256
+[   773] OK   ram8('vk_candles') == 15 and ram8('vk_candles+1') == 0
+[  1207] OK   game.stage == 15 and game.room == 1
+[  1207] OK   enemies.tick == (clk+150)%256
+[  1207] OK   ram8('vk_candles') == 15 and ram8('vk_candles+1') == 1
+[  1641] OK   game.stage == 15 and game.room == 2
+[  1641] OK   enemies.tick == (clk+150)%256
+[  1641] OK   ram8('vk_candles') == 15 and ram8('vk_candles+1') == 2
+[  2075] OK   game.stage == 15 and game.room == 3
+[  2075] OK   enemies.tick == (clk+150)%256
+[  2075] OK   ram8('vk_candles') == 15 and ram8('vk_candles+1') == 3
+[  2509] OK   game.stage == 15 and game.room == 4
+[  2509] OK   enemies.tick == (clk+150)%256
+[  2509] OK   ram8('vk_candles') == 15 and ram8('vk_candles+1') == 4
+[  2943] OK   game.stage == 15 and game.room == 5
+[  2943] OK   enemies.tick == (clk+150)%256
+[  2943] OK   ram8('vk_candles') == 15 and ram8('vk_candles+1') == 5
+[  3377] OK   game.stage == 15 and game.room == 6
+[  3377] OK   enemies.tick == (clk+150)%256
+[  3377] OK   ram8('vk_candles') == 15 and ram8('vk_candles+1') == 6
+[  3811] OK   game.stage == 15 and game.room == 7
+[  3811] OK   enemies.tick == (clk+150)%256
+[  3811] OK   ram8('vk_candles') == 15 and ram8('vk_candles+1') == 7
+[  4245] OK   game.stage == 15 and game.room == 8
+[  4245] OK   enemies.tick == (clk+150)%256
+[  4245] OK   ram8('vk_candles') == 15 and ram8('vk_candles+1') == 8
+[  4679] OK   game.stage == 15 and game.room == 9
+[  4679] OK   enemies.tick == (clk+150)%256
+[  4679] OK   ram8('vk_candles') == 15 and ram8('vk_candles+1') == 9
+[  4717] OK   game.stage == 15
+[  4753] OK   ram8('vk_candles+4') & 1 != 0
+[  4836] OK   ram8('items') & 1 == 0
+[  5004] OK   game.stage == 15
+[  5064] OK   ram8('vk_boss') != 0
+35/35 assertions OK, 5064 images -> /workspace/scratch/lot12-scenarios/stage15
+[   781] OK   game.stage == 16 and game.room == 0
+[   781] OK   enemies.tick == (clk+150)%256
+[   781] OK   ram8('vk_candles') == 16 and ram8('vk_candles+1') == 0
+[  1215] OK   game.stage == 16 and game.room == 1
+[  1215] OK   enemies.tick == (clk+150)%256
+[  1215] OK   ram8('vk_candles') == 16 and ram8('vk_candles+1') == 1
+[  1649] OK   game.stage == 16 and game.room == 2
+[  1649] OK   enemies.tick == (clk+150)%256
+[  1649] OK   ram8('vk_candles') == 16 and ram8('vk_candles+1') == 2
+[  2083] OK   game.stage == 16 and game.room == 3
+[  2083] OK   enemies.tick == (clk+150)%256
+[  2083] OK   ram8('vk_candles') == 16 and ram8('vk_candles+1') == 3
+[  2517] OK   game.stage == 16 and game.room == 4
+[  2517] OK   enemies.tick == (clk+150)%256
+[  2517] OK   ram8('vk_candles') == 16 and ram8('vk_candles+1') == 4
+[  2951] OK   game.stage == 16 and game.room == 5
+[  2951] OK   enemies.tick == (clk+150)%256
+[  2951] OK   ram8('vk_candles') == 16 and ram8('vk_candles+1') == 5
+[  3385] OK   game.stage == 16 and game.room == 6
+[  3385] OK   enemies.tick == (clk+150)%256
+[  3385] OK   ram8('vk_candles') == 16 and ram8('vk_candles+1') == 6
+[  3819] OK   game.stage == 16 and game.room == 7
+[  3819] OK   enemies.tick == (clk+150)%256
+[  3819] OK   ram8('vk_candles') == 16 and ram8('vk_candles+1') == 7
+[  4253] OK   game.stage == 16 and game.room == 8
+[  4253] OK   enemies.tick == (clk+150)%256
+[  4253] OK   ram8('vk_candles') == 16 and ram8('vk_candles+1') == 8
+[  4687] OK   game.stage == 16 and game.room == 9
+[  4687] OK   enemies.tick == (clk+150)%256
+[  4687] OK   ram8('vk_candles') == 16 and ram8('vk_candles+1') == 9
+[  4725] OK   game.stage == 16
+[  4762] OK   ram8('vk_candles+4') & 1 != 0
+[  4845] OK   ram8('items') & 1 == 0
+[  5013] OK   game.room == 0
+34/34 assertions OK, 5013 images -> /workspace/scratch/lot12-scenarios/stage16
+[   789] OK   game.stage == 17 and game.room == 0
+[   789] OK   enemies.tick == (clk+150)%256
+[   789] OK   ram8('vk_candles') == 17 and ram8('vk_candles+1') == 0
+[  1223] OK   game.stage == 17 and game.room == 1
+[  1223] OK   enemies.tick == (clk+150)%256
+[  1223] OK   ram8('vk_candles') == 17 and ram8('vk_candles+1') == 1
+[  1657] OK   game.stage == 17 and game.room == 2
+[  1657] OK   enemies.tick == (clk+150)%256
+[  1657] OK   ram8('vk_candles') == 17 and ram8('vk_candles+1') == 2
+[  2091] OK   game.stage == 17 and game.room == 3
+[  2091] OK   enemies.tick == (clk+150)%256
+[  2091] OK   ram8('vk_candles') == 17 and ram8('vk_candles+1') == 3
+[  2525] OK   game.stage == 17 and game.room == 4
+[  2525] OK   enemies.tick == (clk+150)%256
+[  2525] OK   ram8('vk_candles') == 17 and ram8('vk_candles+1') == 4
+[  2959] OK   game.stage == 17 and game.room == 5
+[  2959] OK   enemies.tick == (clk+150)%256
+[  2959] OK   ram8('vk_candles') == 17 and ram8('vk_candles+1') == 5
+[  3393] OK   game.stage == 17 and game.room == 6
+[  3393] OK   enemies.tick == (clk+150)%256
+[  3393] OK   ram8('vk_candles') == 17 and ram8('vk_candles+1') == 6
+[  3827] OK   game.stage == 17 and game.room == 7
+[  3827] OK   enemies.tick == (clk+150)%256
+[  3827] OK   ram8('vk_candles') == 17 and ram8('vk_candles+1') == 7
+[  4261] OK   game.stage == 17 and game.room == 8
+[  4261] OK   enemies.tick == (clk+150)%256
+[  4261] OK   ram8('vk_candles') == 17 and ram8('vk_candles+1') == 8
+[  4695] OK   game.stage == 17 and game.room == 9
+[  4695] OK   enemies.tick == (clk+150)%256
+[  4695] OK   ram8('vk_candles') == 17 and ram8('vk_candles+1') == 9
+[  5129] OK   game.stage == 17 and game.room == 10
+[  5129] OK   enemies.tick == (clk+150)%256
+[  5129] OK   ram8('vk_candles') == 17 and ram8('vk_candles+1') == 10
+[  5563] OK   game.stage == 17 and game.room == 11
+[  5563] OK   enemies.tick == (clk+150)%256
+[  5563] OK   ram8('vk_candles') == 17 and ram8('vk_candles+1') == 11
+[  5601] OK   game.stage == 17
+[  5638] OK   ram8('vk_candles+4') & 1 != 0
+[  5721] OK   ram8('items') & 1 == 0
+[  5889] OK   game.room == 0
+40/40 assertions OK, 5889 images -> /workspace/scratch/lot12-scenarios/stage17
+[   797] OK   game.stage == 18 and game.room == 0
+[   797] OK   enemies.tick == (clk+150)%256
+[   797] OK   ram8('vk_candles') == 18 and ram8('vk_candles+1') == 0
+[  1231] OK   game.stage == 18 and game.room == 1
+[  1231] OK   enemies.tick == (clk+150)%256
+[  1231] OK   ram8('vk_candles') == 18 and ram8('vk_candles+1') == 1
+[  1665] OK   game.stage == 18 and game.room == 2
+[  1665] OK   enemies.tick == (clk+150)%256
+[  1665] OK   ram8('vk_candles') == 18 and ram8('vk_candles+1') == 2
+[  2099] OK   game.stage == 18 and game.room == 3
+[  2099] OK   enemies.tick == (clk+150)%256
+[  2099] OK   ram8('vk_candles') == 18 and ram8('vk_candles+1') == 3
+[  2533] OK   game.stage == 18 and game.room == 4
+[  2533] OK   enemies.tick == (clk+150)%256
+[  2533] OK   ram8('vk_candles') == 18 and ram8('vk_candles+1') == 4
+[  2967] OK   game.stage == 18 and game.room == 5
+[  2967] OK   enemies.tick == (clk+150)%256
+[  2967] OK   ram8('vk_candles') == 18 and ram8('vk_candles+1') == 5
+[  3401] OK   game.stage == 18 and game.room == 6
+[  3401] OK   enemies.tick == (clk+150)%256
+[  3401] OK   ram8('vk_candles') == 18 and ram8('vk_candles+1') == 6
+[  3835] OK   game.stage == 18 and game.room == 7
+[  3835] OK   enemies.tick == (clk+150)%256
+[  3835] OK   ram8('vk_candles') == 18 and ram8('vk_candles+1') == 7
+[  4269] OK   game.stage == 18 and game.room == 8
+[  4269] OK   enemies.tick == (clk+150)%256
+[  4269] OK   ram8('vk_candles') == 18 and ram8('vk_candles+1') == 8
+[  4703] OK   game.stage == 18 and game.room == 9
+[  4703] OK   enemies.tick == (clk+150)%256
+[  4703] OK   ram8('vk_candles') == 18 and ram8('vk_candles+1') == 9
+[  4740] OK   game.stage == 18
+[  4777] OK   ram8('vk_candles+4') & 1 != 0
+[  4859] OK   ram8('items') & 1 == 0
+[  5027] OK   game.stage == 18
+[  5087] OK   ram8('vk_boss') != 0
+[  6287] OK   ram8('dracula') == 23
+[ 17885] OK   ram32('vk_hud_score') >= before_final_score+80000
+37/37 assertions OK, 17885 images -> /workspace/scratch/lot12-scenarios/stage18

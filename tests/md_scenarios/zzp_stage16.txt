@@ -1,0 +1,318 @@
+# LOT12 stage16: all10 rooms via controller debug selector.
+# Not a continuous walk: room selection restarts the game. Action fixtures below are explicitly RAM-set.
+until front_mode == MODES['TITLE'] max 2000
+tap START
+tap START
+until front_mode == MODES['COURTYARD'] max 500
+wait 60
+tap START
+until ram8('paused') == 1 max 30
+tap UP
+tap UP
+tap DOWN
+tap DOWN
+tap LEFT
+tap RIGHT
+tap LEFT
+tap RIGHT
+tap B
+tap A
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap B
+until game.stage == 16 and game.room == 0 max 300
+poke Enemies_god 1
+poke vk_enemies+162 1
+until game.player.mode == 0 max 300
+wait 30
+set clk enemies.tick
+wait 300
+expect game.stage == 16 and game.room == 0
+expect enemies.tick == (clk+150)%256
+expect ram8('vk_candles') == 16 and ram8('vk_candles+1') == 0
+shot zzp16-room0
+dump s16r0
+include zzp_next.inc
+until game.stage == 16 and game.room == 1 max 300
+poke Enemies_god 1
+poke vk_enemies+162 1
+until game.player.mode == 0 max 300
+wait 30
+set clk enemies.tick
+wait 300
+expect game.stage == 16 and game.room == 1
+expect enemies.tick == (clk+150)%256
+expect ram8('vk_candles') == 16 and ram8('vk_candles+1') == 1
+shot zzp16-room1
+dump s16r1
+include zzp_next.inc
+until game.stage == 16 and game.room == 2 max 300
+poke Enemies_god 1
+poke vk_enemies+162 1
+until game.player.mode == 0 max 300
+wait 30
+set clk enemies.tick
+wait 300
+expect game.stage == 16 and game.room == 2
+expect enemies.tick == (clk+150)%256
+expect ram8('vk_candles') == 16 and ram8('vk_candles+1') == 2
+shot zzp16-room2
+dump s16r2
+include zzp_next.inc
+until game.stage == 16 and game.room == 3 max 300
+poke Enemies_god 1
+poke vk_enemies+162 1
+until game.player.mode == 0 max 300
+wait 30
+set clk enemies.tick
+wait 300
+expect game.stage == 16 and game.room == 3
+expect enemies.tick == (clk+150)%256
+expect ram8('vk_candles') == 16 and ram8('vk_candles+1') == 3
+shot zzp16-room3
+dump s16r3
+include zzp_next.inc
+until game.stage == 16 and game.room == 4 max 300
+poke Enemies_god 1
+poke vk_enemies+162 1
+until game.player.mode == 0 max 300
+wait 30
+set clk enemies.tick
+wait 300
+expect game.stage == 16 and game.room == 4
+expect enemies.tick == (clk+150)%256
+expect ram8('vk_candles') == 16 and ram8('vk_candles+1') == 4
+shot zzp16-room4
+dump s16r4
+include zzp_next.inc
+until game.stage == 16 and game.room == 5 max 300
+poke Enemies_god 1
+poke vk_enemies+162 1
+until game.player.mode == 0 max 300
+wait 30
+set clk enemies.tick
+wait 300
+expect game.stage == 16 and game.room == 5
+expect enemies.tick == (clk+150)%256
+expect ram8('vk_candles') == 16 and ram8('vk_candles+1') == 5
+shot zzp16-room5
+dump s16r5
+include zzp_next.inc
+until game.stage == 16 and game.room == 6 max 300
+poke Enemies_god 1
+poke vk_enemies+162 1
+until game.player.mode == 0 max 300
+wait 30
+set clk enemies.tick
+wait 300
+expect game.stage == 16 and game.room == 6
+expect enemies.tick == (clk+150)%256
+expect ram8('vk_candles') == 16 and ram8('vk_candles+1') == 6
+shot zzp16-room6
+dump s16r6
+include zzp_next.inc
+until game.stage == 16 and game.room == 7 max 300
+poke Enemies_god 1
+poke vk_enemies+162 1
+until game.player.mode == 0 max 300
+wait 30
+set clk enemies.tick
+wait 300
+expect game.stage == 16 and game.room == 7
+expect enemies.tick == (clk+150)%256
+expect ram8('vk_candles') == 16 and ram8('vk_candles+1') == 7
+shot zzp16-room7
+dump s16r7
+include zzp_next.inc
+until game.stage == 16 and game.room == 8 max 300
+poke Enemies_god 1
+poke vk_enemies+162 1
+until game.player.mode == 0 max 300
+wait 30
+set clk enemies.tick
+wait 300
+expect game.stage == 16 and game.room == 8
+expect enemies.tick == (clk+150)%256
+expect ram8('vk_candles') == 16 and ram8('vk_candles+1') == 8
+shot zzp16-room8
+dump s16r8
+include zzp_next.inc
+until game.stage == 16 and game.room == 9 max 300
+poke Enemies_god 1
+poke vk_enemies+162 1
+until game.player.mode == 0 max 300
+wait 30
+set clk enemies.tick
+wait 300
+expect game.stage == 16 and game.room == 9
+expect enemies.tick == (clk+150)%256
+expect ram8('vk_candles') == 16 and ram8('vk_candles+1') == 9
+shot zzp16-room9
+dump s16r9
+# RAM fixture for action only: stage16/room0, not a walked route.
+poke vk_game+16 1 32
+poke vk_game+22 16
+poke vk_game+20 0
+poke vk_front_mode 4 16
+poke vk_game+0 16
+poke vk_game+1 112
+poke vk_game+2 0
+poke vk_game+3 0
+poke vk_game+4 0
+poke vk_game+7 0
+poke vk_game+8 0
+poke vk_game+23 0
+poke vk_game+26 0
+poke vk_game+30 0
+poke vk_candles 255
+poke health+1 0
+poke health+2 0 16
+poke Enemies_god 1
+poke vk_enemies+162 1
+poke items+2 0
+poke items+3 0
+poke freeze_drawn 0
+poke room_freeze 4
+poke room_freeze+1 4
+poke room_freeze+2 0
+write freeze_vtimer 32 ram32('vtimer')
+until ram8('room_freeze') == 0 and ram8('freeze_drawn') != 0 max 100
+wait 30
+poke vk_game+0 8
+poke vk_game+1 128
+poke vk_game+3 0
+poke vk_game+8 0
+until game.room == 1 max 120 LEFT
+expect game.stage == 16
+shot zzp16-edge-0-1
+# RAM fixture for action only: stage16/room0, not a walked route.
+poke vk_game+16 1 32
+poke vk_game+22 16
+poke vk_game+20 0
+poke vk_front_mode 4 16
+poke vk_game+0 104
+poke vk_game+1 112
+poke vk_game+2 0
+poke vk_game+3 0
+poke vk_game+4 0
+poke vk_game+7 0
+poke vk_game+8 0
+poke vk_game+23 0
+poke vk_game+26 0
+poke vk_game+30 0
+poke vk_candles 255
+poke health+1 0
+poke health+2 0 16
+poke Enemies_god 1
+poke vk_enemies+162 1
+poke items+2 0
+poke items+3 0
+poke freeze_drawn 0
+poke room_freeze 4
+poke room_freeze+1 4
+poke room_freeze+2 0
+write freeze_vtimer 32 ram32('vtimer')
+until ram8('room_freeze') == 0 and ram8('freeze_drawn') != 0 max 100
+wait 30
+expect ram8('vk_candles+4') & 1 != 0
+poke vk_game+0 116
+poke vk_game+1 124
+poke vk_game+2 0
+poke vk_game+3 0
+poke vk_whip 0
+tap B 2
+until ram8('vk_candles+4') & 1 == 0 max 40
+shot zzp16-candle
+# RAM fixture for action only: stage16/room1, not a walked route.
+poke vk_game+16 1 32
+poke vk_game+22 16
+poke vk_game+20 1
+poke vk_front_mode 4 16
+poke vk_game+0 96
+poke vk_game+1 112
+poke vk_game+2 0
+poke vk_game+3 0
+poke vk_game+4 0
+poke vk_game+7 0
+poke vk_game+8 0
+poke vk_game+23 0
+poke vk_game+26 0
+poke vk_game+30 0
+poke vk_candles 255
+poke health+1 0
+poke health+2 0 16
+poke Enemies_god 1
+poke vk_enemies+162 1
+poke items+2 0
+poke items+3 0
+poke freeze_drawn 0
+poke room_freeze 4
+poke room_freeze+1 4
+poke room_freeze+2 0
+write freeze_vtimer 32 ram32('vtimer')
+until ram8('room_freeze') == 0 and ram8('freeze_drawn') != 0 max 100
+wait 30
+until enemies.enemy[0].active max 100
+poke vk_enemies+3 1
+poke Enemies_s7R 1 16
+poke vk_game+0 108
+poke vk_game+1 184
+poke vk_game+2 0
+poke vk_game+3 0
+poke vk_whip 0
+tap B 2
+until enemies.enemy[0].flame == 1 max 40
+shot zzp16-enemy-killed
+# RAM fixture for action only: stage16/room5, not a walked route.
+poke vk_game+16 1 32
+poke vk_game+22 16
+poke vk_game+20 5
+poke vk_front_mode 4 16
+poke vk_game+0 16
+poke vk_game+1 112
+poke vk_game+2 0
+poke vk_game+3 0
+poke vk_game+4 0
+poke vk_game+7 0
+poke vk_game+8 0
+poke vk_game+23 0
+poke vk_game+26 0
+poke vk_game+30 0
+poke vk_candles 255
+poke health+1 0
+poke health+2 0 16
+poke Enemies_god 1
+poke vk_enemies+162 1
+poke items+2 0
+poke items+3 0
+poke freeze_drawn 0
+poke room_freeze 4
+poke room_freeze+1 4
+poke room_freeze+2 0
+write freeze_vtimer 32 ram32('vtimer')
+until ram8('room_freeze') == 0 and ram8('freeze_drawn') != 0 max 100
+wait 30
+poke items 1
+poke vk_game+2 1
+poke vk_game+0 20
+poke vk_game+1 80
+poke vk_game+3 0
+until ram8('items+2') == 1 max 60 LEFT
+expect ram8('items') & 1 == 0
+shot zzp16-door
+until game.stage == 17 max 500
+expect game.room == 0
+shot zzp16-next-stage

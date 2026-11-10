@@ -1,0 +1,13 @@
+{
+  "requests": [
+    23,
+    13
+  ],
+  "C096_after_each": [
+    23,
+    23
+  ],
+  "last_accepted": 23,
+  "native_accepted_requests": 1,
+  "oracle": "actual509F;hook removed,no ROM patches"
+}

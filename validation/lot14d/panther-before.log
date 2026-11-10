@@ -1,0 +1,9 @@
+Legacy IX revisit 5 0 360 images/all7 raw32/SAT positions/Simon/sounds PASS
+Traceback (most recent call last):
+  File "/workspace/base-d/vampirekiller-MD/tools/verify_legacy_revisit.py", line 34, in <module>
+    if __name__=='__main__':main()
+                            ^^^^^^
+  File "/workspace/base-d/vampirekiller-MD/tools/verify_legacy_revisit.py", line 26, in main
+    assert bytes(raw)==bytes(m[a:a+32]),('legacy32',kind,moving,p,i,bytes(raw).hex(),bytes(m[a:a+32]).hex())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ('legacy32', 5, 1, 15, 1, '050100b0006001000000fc410301070000000000000000000000000000000000', '050100b0005c01000000fc420401070000000000000000000000000000000000')

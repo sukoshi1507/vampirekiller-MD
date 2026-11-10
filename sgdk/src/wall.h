@@ -2,9 +2,10 @@
 #define VK_WALL_H
 
 #include "candles.h"
+#include "generated/trade_data.h"
 
 /* Wall objects (the old man in the wall, records C5B5 and C5C5) and the merchant
- * of stages 0-2 (research/merchant.md; ROM code read in bank 2, 9179-954F, and
+ * of stages0..18 (research/merchant.md, research/trade-late.md; bank2,9179-954F, and
  * openMSX traces). No SGDK dependency: tested natively. Coordinates are the MSX
  * ones (X/Y of the record: top left of the 32 x 32 frame copied by 925E). */
 
@@ -51,8 +52,9 @@ typedef struct {
      * (+1) has the number of hits in bits 0..6 and bit 7 while the merchant waits
      * for an answer (9407); it lasts until the stream is decoded again (5A49:
      * new life or stage start). */
-    VKByte count[VK_CANDLE_STAGES][VK_CANDLE_ROOMS][VK_WALL_RECORDS];
-    VKByte gone[VK_CANDLE_STAGES][VK_CANDLE_ROOMS];   /* direct wall objects removed (9358) */
+    /* Keep early rows at12: late rows were appended by LOT08. */
+    VKByte count[12][VK_CANDLE_ROOMS][VK_WALL_RECORDS];
+    VKByte gone[12][VK_CANDLE_ROOMS];   /* direct wall objects removed (9358) */
     VKByte pad2;                     /* even offsets for the 68000 since the stage 11 rows (count and gone grew by 27 bytes) */
     VKByte c70c, c70b;               /* result and frame of the last hit (92BB) */
     VKByte d012;                     /* D012: spawn speed (9CD8), changed by 9333/933C */
@@ -68,6 +70,10 @@ typedef struct {
     VKByte keys;                     /* C709: keys of the last read (951F) */
     VKByte c003;                     /* C003 for the shop: + 1 at each pass */
     VKByte bought;                   /* 1 when the last answer was a purchase */
+    /* LOT08 appended: preserve all offsets used by the MD scenarios. */
+    VKByte late_count[7][VK_TRADE_ROOMS][VK_WALL_RECORDS];
+    VKByte late_gone[7][VK_TRADE_ROOMS];
+    VKByte late_block_gone[7][VK_TRADE_ROOMS];
 } VKWall;
 
 typedef enum {
@@ -90,9 +96,9 @@ typedef struct {
 
 /* Sale prices of 9428: object, then the price normal, with 11 (C702 bit 7), with
  * 10 (C702 bit 6), BCD hearts. */
-extern const VKByte vk_shop_prices[9][4];
+/* ROM9428 contains nine products, shared by all19 stages; generated declaration above. */
 /* 5B0B: object sold for B = (entry & 3C) >> 2. */
-extern const VKByte vk_wall_objects[9];
+/* All16 selector values, including the seven reserved zeros, are generated. */
 
 /* New game (44C6): records, counts, D012 and the shop at 0. */
 void vk_wall_begin(VKWall *w);
@@ -105,6 +111,9 @@ void vk_wall_enter(VKWall *w, VKByte stage, VKByte room);
 /* 8814 -> 9179: hidden block i of the room (0x1F, +9 & C0 = C0) was broken: its
  * wall object is made and shown in the same pass (91BE after 8671). Returns the
  * record, -1 when DE00 has no slot for its object (91A2: nothing). */
+/* PROVISIONAL integration: LOT11 must query this before loading a late hidden
+ * candle; VKCandles still has its LOT07 layout and no late-room loader. */
+int vk_wall_block_present(const VKWall *w,VKByte stage,VKByte room,int candle);
 int vk_wall_block(VKWall *w, int candle, const VKCandleDef *def);
 /* 80E5: record i is shown (+0 bit 7) and can be hit. */
 int vk_wall_hittable(const VKWall *w, int i);

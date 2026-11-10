@@ -13,7 +13,7 @@
 
 #define VK_CANDLE_MAX 8
 #define VK_DROP_MAX 8                /* C500-C570 */
-#define VK_CANDLE_STAGES 12   /* stages 0 (courtyard) to 11 */
+#define VK_CANDLE_STAGES 19   /* stages 0 (courtyard) to 18 */
 #define VK_CANDLE_ROOMS 9
 
 #define VK_OBJ_SMALL_HEART 0x01
@@ -115,11 +115,22 @@ typedef struct {
     VKByte triple_key;               /* C701 bit 2: the object 12 gave three keys (8E79), HUD icon 12 */
     VKByte out11[VK_CANDLE_ROOMS];   /* out and taken of the stage 11, after the other fields so that the offsets read by the MD scenarios stay */
     VKByte taken11[VK_CANDLE_ROOMS];
+    VKByte out_late[7][12], taken_late[7][12]; /* LOT11, appended: offsets0..353 unchanged. */
 } VKCandles;
 /* out[stage][room] and taken[stage][room], the stage 11 rows being out11 and taken11. */
-#define VK_CANDLE_OUT(c, s, r) (*((s) < 11 ? &(c)->out[s][r] : &(c)->out11[r]))
-#define VK_CANDLE_TAKEN(c, s, r) (*((s) < 11 ? &(c)->taken[s][r] : &(c)->taken11[r]))
+#define VK_CANDLE_OUT(c, s, r) (*((s) < 11 ? &(c)->out[s][r] : (s)==11 ? &(c)->out11[r] : &(c)->out_late[(s)-12][r]))
+#define VK_CANDLE_TAKEN(c, s, r) (*((s) < 11 ? &(c)->taken[s][r] : (s)==11 ? &(c)->taken11[r] : &(c)->taken_late[(s)-12][r]))
 
+#define VK_CANDLE_ROOM_LIMIT(s) ((s)<12 ? VK_CANDLE_ROOMS : 12)
+
+/* Optional engine pool adapter. A successful89BF suppresses C500 creation.
+ * Standalone decor facades without an adapter retain the historical API. */
+typedef int (*VKCandleAirborne)(VKByte kind,VKByte x,VKByte y);
+void vk_candles_airborne(VKCandleAirborne callback);
+/* Logical pass clock, supplied by the engine after Enemies_frame. */
+void vk_candles_sync(VKByte clock,VKByte pass);
+const VKByte *vk_candles_fallback_record(const VKCandles *c,int slot);
+int vk_candles_fallback_sprite(const VKCandles *c,int slot,VKByte out[4]);
 void vk_candles_begin(VKCandles *c);
 /* Entering a stage again (a new stage start): every candle and fixed object of
  * that stage is back. PROVISIONAL: the MSX keeps them in the decoded stage stream
@@ -152,6 +163,7 @@ void vk_candles_weapon_lost(VKCandles *c);
 void vk_candles_drop(VKCandles *c, VKByte x, VKByte y, VKByte kind);
 /* 9B90 / 9B13 (enemies.c, research/death-flame.md): an enemy killed at (x, y) (the C800 object coordinates of its flame) leaves the small heart
  * (kind 1: the object 24 at the end of the death flame) or, in place of the flame, the flame 26 of the object kind (02, 13h). */
+void vk_candles_loot_rest(VKCandles *c,VKByte kind,VKByte x,VKByte y,VKByte tick);
 void vk_candles_death_drop(VKCandles *c, VKByte kind, int x, int y);
 /* 94E8 -> 8D30: object given by the merchant, as if taken from the floor (C419,
  * 8F23, handler of 8D3E). Returns the events of the effect. */

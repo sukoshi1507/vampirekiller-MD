@@ -7,6 +7,7 @@
 #include "room_manager.h"
 #include "whip.h"
 #include "actors.h"
+#include "dracula_view.h"
 #include "room_view.h"
 #include "scene.h"
 #include "sound_test.h"
@@ -22,6 +23,8 @@
 #include "candle_view.h"
 #include "generated/intro_assets.h"
 #include "room_freeze.h"
+#include "secret.h"
+#include "item_reveal_view.h"
 #include "wilhelm_audio.h"
 
 /* Front-end state machine and game loop. Display lives in scene.c (logo, title,
@@ -36,6 +39,8 @@ static VKHealth health;
 static VKItems items;
 /* State 9 after a room change (room_freeze.c). */
 static VKRoomFreeze room_freeze;
+static bool secret_up_pending;
+static bool map_a_pending;
 
 static void show_courtyard(u16 room);
 
@@ -71,6 +76,8 @@ static void step_death_jingle(void)
     vk_psg_music(VK_MUSIC_DEATH);
 }
 
+static void enemy_loot_take(EnemyState *s,EnemyU8 kind);
+
 static void new_game(void)
 {
     vk_hud_score = 0;   /* 44C6 clears C405-C407 */
@@ -80,6 +87,7 @@ static void new_game(void)
     vk_health_begin(&health);
     vk_items_begin(&items);
     vk_candles_begin(&vk_candles);
+    Enemies_loot_handler(enemy_loot_take);
     vk_wall_begin(&vk_walls);
     vk_set_whip_level(0);
     vk_weapons_reset(&vk_weapons);
@@ -89,9 +97,28 @@ static void new_game(void)
     play_stage_music();
 }
 
+/* 4326: first clear starts the courtyard cycle; second clear returns to title. */
+static void dracula_finish(void)
+{
+ const VKDracula *d=vk_dracula_state();const u8 difficulty=d->difficulty;
+ const VKByte hearts=vk_candles.hearts,map=vk_candles.c701&0x80,uses=vk_candles.c70f,lives=health.lives;
+ const EnemyU8 tick=vk_enemies.tick,phase=vk_enemies.itemPhase;
+ vk_dracula_view_reset();
+ if(d->return_title){vk_show_title();return;}
+ vk_game_begin(&vk_game);vk_items_begin(&items);vk_reset_enemies();
+ vk_enemies.tick=tick;vk_enemies.itemPhase=phase;
+ vk_health_begin(&health);health.lives=lives;
+ vk_candles_begin(&vk_candles);vk_candles.hearts=hearts;vk_candles.c701=map;vk_candles.c70f=uses;
+ vk_wall_begin(&vk_walls);vk_walls.d012=difficulty;vk_set_whip_level(0);
+ vk_weapons_reset(&vk_weapons);vk_room_freeze_clear(&room_freeze);
+ show_courtyard(0);vk_hud_status(vk_hud_score,0,vk_candles.hearts,health.lives);death_jingle_timer=0;play_stage_music();
+}
+
 /* 5BB7 at a room load: the wall objects of the room, drawn again. */
 static void wall_room(void)
 {
+    vk_secret_enter(&vk_secret, vk_candles_stage_of(&vk_game), vk_game.room);
+    secret_up_pending = FALSE;
     vk_wall_enter(&vk_walls, vk_candles_stage_of(&vk_game), vk_game.room);
     vk_wall_view_room();
 }
@@ -113,6 +140,7 @@ static void show_hall_room(u16 room)
     vk_item_view_room(&items, &vk_game);
     vk_candle_view_room();
     wall_room();
+    if(vk_game.stage==18 && room==9)vk_step_enemies();
 }
 
 /* Frames left before next_stage() after a boss exit (B772: C409 = 1). State 8 (4324)
@@ -171,8 +199,9 @@ static void candle_hit_view(int events, int hit)
 }
 
 /* An object given to Simon: what it changes in the whip, enemies and sounds. */
-static void candle_taken(int events, VKByte gold_keys)
+static void candle_taken(int events, VKByte gold_keys, bool audio)
 {
+    const VKByte kind=vk_candles.picked;
     /* 7FFD: any object taken clears C433 (the block an axe touched). */
     if (events & (VK_CANDLE_EVENT_HEARTS | VK_CANDLE_EVENT_WEAPON | VK_CANDLE_EVENT_GOLD_KEY |
                   VK_CANDLE_EVENT_ITEM | VK_CANDLE_EVENT_PICK | VK_CANDLE_EVENT_BOX_ITEM))
@@ -181,22 +210,29 @@ static void candle_taken(int events, VKByte gold_keys)
     /* Energy, armor, timers C434/C43A/C440, enemy wipe (8D3E, enemies.c). */
     if (events & VK_CANDLE_EVENT_PICK)
     {
-        Enemies_item(&vk_enemies, vk_candles.picked, vk_candles.c431);
-        if (vk_candles.picked == 0x05) vk_wall_cross(&vk_walls);   /* 928D */
+        Enemies_item(&vk_enemies, kind, vk_candles.c431);
+        if (kind == 0x05) vk_wall_cross(&vk_walls);   /* 928D */
     }
     /* Pickup effects, returned by the 8D3E handlers to 509F: hearts 0F (8DAF,
      * 8DB7), most objects 12 (8D8A), 05: 1B, 08: 16, gold key 14 (8E5D); a chest
      * uses a key: 11 (8F7B). */
-    if (events & VK_CANDLE_EVENT_HEARTS) vk_psg_effect(VK_SFX_HEART);
+    if (audio && (events & VK_CANDLE_EVENT_HEARTS)) vk_psg_effect(VK_SFX_HEART);
     /* 8E42, 8E4B: DE = 5000h or 1000h, then 44EC adds it to the score (C405-C407). */
-    if ((events & VK_CANDLE_EVENT_ITEM) && (vk_candles.picked == 0x13 || vk_candles.picked == 0x14))
-        vk_hud_add_score(vk_candles.picked == 0x13 ? 5000 : 1000);
-    if ((events & (VK_CANDLE_EVENT_WEAPON | VK_CANDLE_EVENT_ITEM | VK_CANDLE_EVENT_PICK |
+    if ((events & VK_CANDLE_EVENT_ITEM) && (kind == 0x13 || kind == 0x14))
+        vk_hud_add_score(kind == 0x13 ? 5000 : 1000);
+    if (audio && (events & (VK_CANDLE_EVENT_WEAPON | VK_CANDLE_EVENT_ITEM | VK_CANDLE_EVENT_PICK |
                    VK_CANDLE_EVENT_BOX_ITEM)) &&
-        vk_candles_sound(vk_candles.picked))
-        vk_psg_effect(vk_candles_sound(vk_candles.picked));
-    if (events & VK_CANDLE_EVENT_GOLD_KEY)
+        vk_candles_sound(kind))
+        vk_psg_effect(vk_candles_sound(kind));
+    if (audio && (events & VK_CANDLE_EVENT_GOLD_KEY))
         vk_psg_effect(vk_candles.gold_keys < gold_keys ? VK_SFX_CHEST : VK_SFX_KEY);
+}
+
+static void enemy_loot_take(EnemyState *s,EnemyU8 kind)
+{
+    const VKByte keys=vk_candles.gold_keys;
+    (void)s;
+    candle_taken(vk_candles_give(&vk_candles,kind),keys,TRUE);
 }
 
 /* One frame of candles.c: whip hits, drops and pickups, and what they change on
@@ -207,14 +243,21 @@ static void step_candles(void)
     const VKByte gold_keys = vk_candles.gold_keys;
     int events, i;
     /* 9B90 / 9B13: what the enemies killed this frame leave (enemies_death.inc), made before the tick like a candle's drop. */
-    for (i = 0; i < Enemies_dropCount; i++)
-        vk_candles_death_drop(&vk_candles, Enemies_drops[i].kind, Enemies_drops[i].x, Enemies_drops[i].y);
+    if(Enemies_lootPick){
+        int picked=vk_candles_give(&vk_candles,Enemies_lootPick);Enemies_lootPick=0;
+        candle_taken(picked,gold_keys,TRUE);
+    }
+    for (i = 0; i < Enemies_dropCount; i++){
+        if(Enemies_drops[i].landed)vk_candles_loot_rest(&vk_candles,Enemies_drops[i].kind,(VKByte)Enemies_drops[i].x,Enemies_drops[i].y,vk_enemies.tick);
+        else vk_candles_death_drop(&vk_candles, Enemies_drops[i].kind, Enemies_drops[i].x, Enemies_drops[i].y);
+    }
     Enemies_dropCount = 0;
+    vk_candles_sync(vk_enemies.tick,(VKByte)!vk_enemies.itemPhase);
     events = vk_candles_tick(&vk_candles, &vk_game, &vk_whip, &hit);
     if (events & VK_CANDLE_EVENT_GHOST)   /* 8AD0: the flame of an object 15 went out, the enemy object of the stage is made */
         Enemies_candleObject(&vk_enemies, (EnemyU8)vk_game.stage, (EnemyU8)vk_game.room, vk_candles.ghost_x, vk_candles.ghost_y);
     candle_hit_view(events, hit);
-    candle_taken(events, gold_keys);
+    candle_taken(events, gold_keys, TRUE);
 }
 
 /* One frame of the wall objects: whip hits (80E5), then 91BE. */
@@ -228,9 +271,44 @@ static void step_walls(void)
             vk_wall_hit(&vk_walls, (int)i);
             vk_psg_effect(VK_SFX_HIT);           /* 8112 */
         }
+    vk_walls.c003 = vk_enemies.tick; /* global C003, also used by 94BA */
     vk_wall_step(&vk_walls, &vk_candles, &ev);
     for (i = 0; i < ev.sounds; i++) vk_psg_effect(ev.sound[i]);
     if (ev.points) vk_hud_add_score(VK_WALL_POINTS);   /* 9372 */
+}
+
+/* Late rooms are connected by LOT11; full traversal scenarios remain LOT12;
+ * the hook is validated through isolated RAM room entry.
+ * 6DA9/70FB before75C0. Keep the player still, but the world and common
+ * invulnerability timer continue. UP edges between30Hz passes are latched until
+ * the next pass, preserving the crouched state that the ROM input read saw. */
+static bool secret_controls(bool up_new, VKEvent *event)
+{
+    VKPlayer *p = &vk_game.player;
+    const bool pass = vk_enemies.itemPhase == 1;
+    *event = VK_EVENT_NONE;
+    if (vk_secret.active)
+    {
+        if (pass && vk_secret_poll(&vk_secret, vk_enemies.invuln))
+        {
+            vk_secret_route(&vk_secret, &vk_game.room);
+            *event = VK_EVENT_ROOM; /* B98C changes only D001, no X/Y teleport. */
+        }
+        return TRUE;
+    }
+    if (vk_game.area != VK_AREA_INTERIOR || vk_game.recoil || p->mode ||
+        p->on_stairs || !p->crouched || !vk_secret_near(&vk_secret,p->y,p->x))
+    { secret_up_pending = FALSE; return FALSE; }
+    if (!secret_up_pending && !up_new) return FALSE;
+    if (!pass) { secret_up_pending = TRUE; return TRUE; }
+    secret_up_pending = FALSE;
+    {
+        const VKByte effect = vk_secret_begin(&vk_secret,2,p->y,p->x,1,&vk_enemies.invuln);
+        if (!effect) return FALSE;
+        vk_enemies.invulnPhase = 0; /* timer75C0 starts in this30Hz pass */
+        vk_psg_effect(effect);
+    }
+    return TRUE;
 }
 
 static void hud_status(void);
@@ -244,10 +322,11 @@ static void step_shop(u16 keys)
     const int events = vk_shop_step(&vk_walls, &vk_candles,
                                     (VKByte)(((keys & BUTTON_B) ? 1 : 0) | ((keys & BUTTON_C) ? 2 : 0)), &ev);
     u16 i;
+    vk_enemies.tick = vk_walls.c003; /* C003 keeps advancing while the world is frozen. */
     if (state == VK_SHOP_OPEN) vk_shop_view_open();
     if (vk_walls.shop == VK_SHOP_NONE) vk_shop_view_close();
+    candle_taken(events, gold_keys, FALSE); /* 8D30 returns A;94EF replaces it by12. */
     for (i = 0; i < ev.sounds; i++) vk_psg_effect(ev.sound[i]);
-    candle_taken(events, gold_keys);
     hud_status();
 }
 /* Castle door of courtyard room 2 (research/castle-entrance.md). The MSX copies the
@@ -371,6 +450,7 @@ static void pause_end(void)
     paused = FALSE;
     vk_msx_text_clear(BG_B, PAUSE_X, PAUSE_Y, 5);
     vk_psg_resume();
+    vk_item_reveal_invalidate();
 }
 
 /* Top line of the HUD. Stage C411 = D000: 0 in the courtyard (44C6), +1 at each
@@ -444,7 +524,7 @@ static void stage_select_clear(void)
 }
 static void jump_to_stage(u16 stage, u16 room)
 {
-    if (stage < 1 || stage > 11 || room >= vk_stage_room_count((VKByte)stage)) return;
+    if (stage < 1 || stage > 18 || room >= vk_stage_room_count((VKByte)stage)) return;
     /* Full fresh game, then the selected playable room. */
     stage_select_clear();
     pause_end();
@@ -556,7 +636,11 @@ int main(bool hardReset)
             const u16 held = locked ? 0 : input.keys;
             const bool jump = locked ? FALSE : input.jump_pressed;
             /* State 8 after a boss: no key is read, the screen is black. */
-            if (stage_blank)
+            if(vk_dracula_cinematic()){
+                vk_step_enemies();
+                if(vk_boss_take_exit())dracula_finish();
+            }
+            else if (stage_blank)
             {
                 static const u16 black[64] = {0};
                 if (--stage_blank == 0) next_stage();
@@ -569,8 +653,8 @@ int main(bool hardReset)
             {
                 if (stage_select)
                 {
-                    if (pressed & BUTTON_UP) { selected_stage = selected_stage == 1 ? 11 : selected_stage - 1; selected_room = 0; stage_select_draw(); }
-                    else if (pressed & BUTTON_DOWN) { selected_stage = selected_stage == 11 ? 1 : selected_stage + 1; selected_room = 0; stage_select_draw(); }
+                    if (pressed & BUTTON_UP) { selected_stage = selected_stage == 1 ? 18 : selected_stage - 1; selected_room = 0; stage_select_draw(); }
+                    else if (pressed & BUTTON_DOWN) { selected_stage = selected_stage == 18 ? 1 : selected_stage + 1; selected_room = 0; stage_select_draw(); }
                     else if (pressed & BUTTON_LEFT) { selected_room = selected_room ? selected_room - 1 : vk_stage_room_count((VKByte)selected_stage) - 1; stage_select_draw(); }
                     else if (pressed & BUTTON_RIGHT) { selected_room = (selected_room + 1) % vk_stage_room_count((VKByte)selected_stage); stage_select_draw(); }
                     else if (pressed & BUTTON_B) { jump_to_stage(selected_stage, selected_room); }
@@ -579,7 +663,7 @@ int main(bool hardReset)
                 }
                 else if (vk_konami_step(pressed))
                 {
-                    selected_stage = vk_game.stage >= 1 && vk_game.stage <= 11 ? vk_game.stage : 1;
+                    selected_stage = vk_game.stage >= 1 && vk_game.stage <= 18 ? vk_game.stage : 1;
                     selected_room = vk_game.area == VK_AREA_INTERIOR && vk_game.room < vk_stage_room_count((VKByte)selected_stage) ? vk_game.room : 0;
                     stage_select = TRUE;
                     Enemies_god = 1;
@@ -590,8 +674,14 @@ int main(bool hardReset)
             /* 95B3: the map stays until the key is pressed again; the game is frozen. */
             else if (vk_stage_map_is_open())
             {
-                if (pressed & BUTTON_A) vk_stage_map_close();
-                else vk_candle_view_hud_only();
+                map_a_pending |= !!(pressed & BUTTON_A);
+                vk_enemies.itemPhase ^= 1; /* C003 advances; Simon/item timers stay frozen. */
+                if(!vk_enemies.itemPhase){
+                    vk_enemies.tick++;
+                    vk_stage_map_tick(map_a_pending);
+                    map_a_pending=FALSE;
+                }
+                if (vk_stage_map_is_open()) vk_candle_view_hud_only();
             }
             /* Debug: A+START goes back to the title. */
             else if ((pressed & BUTTON_START) && (input.keys & BUTTON_A))
@@ -604,9 +694,12 @@ int main(bool hardReset)
             /* 9552, in state 5: F2 is A pressed alone. */
             else if ((pressed & BUTTON_A) && !(input.keys & ~BUTTON_A) &&
                      (health.phase == VK_LIFE_ALIVE || health.phase == VK_LIFE_DYING) &&
-                     !vk_game_entrance_locked(&vk_game) && vk_candles_map_use(&vk_candles))
+                     !vk_game_entrance_locked(&vk_game) && !vk_boss.in_room &&
+                     (vk_candles.c701 & VK_ITEM_BIT_0F) && vk_candles.c70f)
             {
                 vk_psg_effect(0x19);
+                map_a_pending=FALSE;
+                vk_enemies.itemPhase^=1;if(!vk_enemies.itemPhase)vk_enemies.tick++;
                 vk_stage_map_open();
                 vk_candle_view_hud_only();
             }
@@ -644,9 +737,10 @@ int main(bool hardReset)
                 }
                 vk_game.items = vk_candles.c431;
                 vk_step_platforms();
-                const VKEvent event = vk_game_tick_controls(&vk_game, direction,
-                    jump, !!(held & BUTTON_UP),
-                    !!(held & BUTTON_DOWN));
+                VKEvent event;
+                if (!secret_controls(!!(pressed & BUTTON_UP), &event))
+                    event = vk_game_tick_controls(&vk_game, direction,
+                        jump, !!(held & BUTTON_UP), !!(held & BUTTON_DOWN));
                 vk_player = vk_game.player;
                 {
                     const bool idle = vk_whip.timer == 0;
@@ -700,14 +794,6 @@ int main(bool hardReset)
                     items.attacking = vk_whip.timer != 0;   /* C422, 7FE2 */
                     const VKItemEvent item = vk_items_tick(&items, &vk_game);
                     vk_player = vk_game.player;
-                    if (item == VK_ITEM_STAGE_EXIT && vk_game.stage >= 11)
-                    {
-                        /* Never enter undefined stage 12 (research/stage11-level.md). Until the final game
-                         * ending is ported, return safely to the title. */
-                        vk_show_title();
-                        SYS_doVBlankProcess();
-                        continue;
-                    }
                     if (item == VK_ITEM_STAGE_EXIT && vk_boss_door(vk_game.stage, vk_game.room))
                     {
                         /* 77D1, trace: the link of the side of the door (stage 3: right, X 10, Y 176;
@@ -717,7 +803,7 @@ int main(bool hardReset)
                         if (vk_boss_entry_y(vk_game.stage) >= 0) vk_game.player.y = (VKByte)vk_boss_entry_y(vk_game.stage);
                         vk_player = vk_game.player;
                         show_hall_room((VKByte)vk_boss_room_of(vk_game.stage));
-                        vk_psg_music(VK_MUSIC_BOSS);
+                        vk_psg_music(vk_game.stage==18?VK_DRACULA_ENTRY_MUSIC:VK_MUSIC_BOSS);
                         SYS_doVBlankProcess();
                         continue;
                     }
@@ -753,6 +839,7 @@ int main(bool hardReset)
                         if (!invuln && vk_enemies.invuln) vk_psg_effect(VK_SFX_DAMAGE);
                         if (vk_boss_take_exit())
                         {
+                            if(vk_game.stage==18){dracula_finish();SYS_doVBlankProcess();continue;}
                             /* B772: C409 = 1, Simon out of the screen, then state 8. */
                             hide_sprites();
                             stage_blank = BOSS_EXIT_FRAMES;
@@ -765,6 +852,7 @@ int main(bool hardReset)
                         const int shot_hit = vk_step_weapons(throw_launch, &shot_events);
                         candle_hit_view(shot_events, shot_hit);
                     }
+                    vk_step_projectile_shield();
                     step_candles();
                     step_walls();
                     vk_flames_tick();
@@ -796,7 +884,7 @@ int main(bool hardReset)
         {
             if (pressed & BUTTON_B)
             {
-                if (stage <= 11 && room < vk_stage_room_count((VKByte)stage))
+                if (stage <= 18 && room < vk_stage_room_count((VKByte)stage))
                     jump_to_stage(stage, room);
                 else VDP_drawText("SALLE NON JOUABLE - VISUEL", 2, 2);
             }
@@ -815,6 +903,7 @@ int main(bool hardReset)
                 if (dirty) vk_show_room(stage, room, atlas);
             }
         }
+        if(!paused)vk_item_reveal_refresh();
         SYS_doVBlankProcess();
         vk_show_backdrop();
 #ifdef VK_MEASURE_PSG

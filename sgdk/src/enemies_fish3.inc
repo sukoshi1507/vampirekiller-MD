@@ -55,8 +55,8 @@ static void fish3Fire(EnemyState *s, const Enemy *fish, const S8Ext *q)
     e->anim = FISH3_FIRE_SPEED;
     e->x = fish->x;
     e->y = (EnemyU8)(fish->y - 0x14);
-    fireballStep(e);
-    e->age = 1;
+    /*9E31 owns the first movement after the complete C800 traversal. */
+    e->age = 0;
 }
 
 /* A2E0 : an object 03 out of the water (5F1D then the init) : at (X, C8h), facing Simon, vy F480h, two drops. */

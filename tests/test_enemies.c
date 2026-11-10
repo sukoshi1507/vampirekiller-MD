@@ -662,9 +662,9 @@ static void test_items(void)
         }
         frames++;
     }
-    CHECK(hits == 0 && sounds17 == 1 && s.energy == ENEMY_ENERGY_MAX, "C43A : ni contact ni degat, un effet 17");
+    CHECK(hits == 1 && sounds17 == 1 && s.energy == ENEMY_ENERGY_MAX - ENEMY_CONTACT_DAMAGE, "C43A : contact dans la passe1->0 (75E2 avant7E67), un effet17");
     CHECK(frames >= 2 * ENEMY_ITEM_TIMER - 1 && frames <= 2 * ENEMY_ITEM_TIMER, "C43A : 300 images (%d)", frames);
-    CHECK(Enemies_frame(&s, &t, &v) == 1, "C43A a 0 : contact");
+    CHECK(Enemies_frame(&s, &t, &v) == 0, "C43A a0 : invulnerabilite du coup de la passe1->0");
     s.recoil = 0;
     s.invuln = 0;
 
@@ -716,7 +716,7 @@ static void test_items(void)
         Enemies_item(&w, 0x11, 0);
         CHECK(w.enemy[0].active && w.flash == 0, "livres 10, 11 : ennemis gardes, pas d'eclair");
         Enemies_item(&w, 0x05, 0);
-        CHECK(w.flash == ENEMY_FLASH_START && !w.enemy[0].active, "objet 05 : C43E = 18h, ennemis detruits");
+        CHECK(w.flash == ENEMY_FLASH_START && !Enemy_alive(w.enemy[0]), "objet 05 : C43E = 18h, ennemis detruits");
         {
             static const EnemyU8 expect[24] = { 0, 14, 14, 0, 0, 14, 14, 0, 0, 14, 14, 0,
                                                 0, 14, 14, 0, 0, 14, 14, 0, 0, 14, 14, 0 };
@@ -792,17 +792,18 @@ static void test_items(void)
     (void)Enemies_spawn(&s, ENEMY_SIDE_RIGHT, ENEMY_TYPE_A, 0xA0, 1);
     (void)Enemies_spawn(&s, ENEMY_SIDE_LEFT, ENEMY_TYPE_B, 0xA0, 1);
     Enemies_item(&s, 0x05, 0);
-    for (f = 0; f < ENEMY_MAX; f++) CHECK(!s.enemy[f].active, "objet 05 : ennemi %d detruit", f);
+    for (f = 0; f < ENEMY_MAX; f++) CHECK(!Enemy_alive(s.enemy[f]), "objet 05 : ennemi %d detruit (flamme1E conservee)", f);
 }
 
-/* 7c. 06 (C440) : la boucle d'apparition 5ED8 est sautee 150 passes (300 images). */
+/* 7c. 06 : 75C0 decremente C440 avant 5EB8. Le passage 1 -> 0 autorise
+ * deja le canal : 149 passes bloquees, preuve Z80 run_late_channels_trace.sh. */
 static void test_spawn_pause(void)
 {
     const int normal = first_spawn_frame(0);
     const int paused = first_spawn_frame(0x06);
-    CHECK(normal > 0 && paused == normal + 2 * ENEMY_ITEM_TIMER,
+    CHECK(normal > 0 && paused == normal + 2 * (ENEMY_ITEM_TIMER - 1),
           "C440 : premiere apparition %d images plus tard (obtenu %d -> %d)",
-          2 * ENEMY_ITEM_TIMER, normal, paused);
+          2 * (ENEMY_ITEM_TIMER - 1), normal, paused);
 }
 
 /* 7d. 0A (C701 bit 6) : 715F-718F, 5 coeurs, C43B = 5Ah (96h avec C431 bit 2), D010 bit 0 ;

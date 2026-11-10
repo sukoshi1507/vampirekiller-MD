@@ -1,0 +1,142 @@
+{
+ "frames": 2002,
+ "checks": [
+  {
+   "line": 19,
+   "frame": 327,
+   "expr": "ram8('Enemies_god') == 0",
+   "message": "",
+   "ok": true,
+   "error": null
+  },
+  {
+   "line": 7,
+   "frame": 409,
+   "expr": "ram8('vk_platforms') == 1 and ram8('vk_platforms+1') == 0x8F and ram8('vk_platforms+4') == 0x60",
+   "message": "salle 0",
+   "ok": true,
+   "error": null
+  },
+  {
+   "line": 10,
+   "frame": 429,
+   "expr": "ram8('vk_platforms+2') - x0 == 10",
+   "message": "une case par passe de 2 images",
+   "ok": true,
+   "error": null
+  },
+  {
+   "line": 14,
+   "frame": 467,
+   "expr": "[(enemies.enemy[k].x, enemies.enemy[k].y) for k in range(7) if enemies.enemy[k].active and enemies.enemy[k].type == 2] == [(229, 122)]",
+   "message": "",
+   "ok": true,
+   "error": null
+  },
+  {
+   "line": 20,
+   "frame": 473,
+   "expr": "ram8('items') & 1 == 1",
+   "message": "",
+   "ok": true,
+   "error": null
+  },
+  {
+   "line": 24,
+   "frame": 638,
+   "expr": "ram8('vk_platforms') == 0",
+   "message": "salle 1 : pas de plateforme",
+   "ok": true,
+   "error": null
+  },
+  {
+   "line": 27,
+   "frame": 664,
+   "expr": "[enemies.enemy[k].x for k in range(7) if enemies.enemy[k].active and enemies.enemy[k].type == 17] == [208]",
+   "message": "",
+   "ok": true,
+   "error": null
+  },
+  {
+   "line": 30,
+   "frame": 680,
+   "expr": "15 <= frame - tf <= 17",
+   "message": "",
+   "ok": true,
+   "error": null
+  },
+  {
+   "line": 35,
+   "frame": 838,
+   "expr": "ram8('vk_platforms') == 1 and ram8('vk_platforms+1') == 0xA7 and ram8('vk_platforms+4') == 0x80",
+   "message": "",
+   "ok": true,
+   "error": null
+  },
+  {
+   "line": 39,
+   "frame": 996,
+   "expr": "ram8('vk_platforms') == 1 and ram8('vk_platforms+1') == 0x8F and ram8('vk_platforms+4') == 0xA0",
+   "message": "",
+   "ok": true,
+   "error": null
+  },
+  {
+   "line": 43,
+   "frame": 1154,
+   "expr": "ram8('vk_platforms') == 1 and ram8('vk_platforms+1') == 0xA7 and ram8('vk_platforms+4') == 0x40",
+   "message": "",
+   "ok": true,
+   "error": null
+  },
+  {
+   "line": 47,
+   "frame": 1312,
+   "expr": "ram8('vk_platforms') == 0",
+   "message": "",
+   "ok": true,
+   "error": null
+  },
+  {
+   "line": 54,
+   "frame": 1490,
+   "expr": "sorted((enemies.enemy[k].x, enemies.enemy[k].y) for k in range(7) if enemies.enemy[k].active and enemies.enemy[k].type == 17) == [(48, 176), (192, 176)]",
+   "message": "",
+   "ok": true,
+   "error": null
+  },
+  {
+   "line": 55,
+   "frame": 1490,
+   "expr": "all(enemies.enemy[k].pose == 18 for k in range(7) if enemies.enemy[k].active and enemies.enemy[k].type == 17)",
+   "message": "",
+   "ok": true,
+   "error": null
+  },
+  {
+   "line": 74,
+   "frame": 1802,
+   "expr": "ram8('items+2') == 0",
+   "message": "porte fermee",
+   "ok": true,
+   "error": null
+  },
+  {
+   "line": 76,
+   "frame": 1830,
+   "expr": "ram8('items') == 0",
+   "message": "cle consommee a l'ouverture",
+   "ok": true,
+   "error": null
+  },
+  {
+   "line": 81,
+   "frame": 2002,
+   "expr": "game.room == 0 and game.player.x == 16 and game.player.y == 176",
+   "message": "",
+   "ok": true,
+   "error": null
+  }
+ ],
+ "passed": true
+}

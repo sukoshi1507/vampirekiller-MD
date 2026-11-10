@@ -1,4 +1,13 @@
+#include "secret.h"
+#include "item_shield.h"
 #include "actors.h"
+#include "generated/late_graphics.inc"
+#include "generated/loot_md.h"
+_Static_assert(LOOT_TILE_INDEX+VK_LOOT_TILE_COUNT<=1536,"loot before BG plane tables");
+/* Late deduplicated cells fit the existing128-tile enemy block. */
+#define LATE_ENEMY_TILE_INDEX ENEMY5_TILE_INDEX
+_Static_assert(LATE_ENEMY_TILE_INDEX+128<=SHIELD_TILE_INDEX,"late sprites before shield");
+#include "dracula_view.h"
 #include "wall_view.h"
 #include "frontend.h"
 #include "room_view.h"
@@ -6,6 +15,8 @@
 #include "generated/enemy_sprites_md.h"
 #include "hud.h"
 #include "generated/boss_md.h"
+#include "generated/boss12_md.h"
+#include "generated/boss15_md.h"
 #include "generated/boss6_md.h"
 #include "generated/boss9_md.h"
 #include "generated/stage4_enemies_md.h"
@@ -45,6 +56,8 @@ _Static_assert(ENEMY5_TILE_INDEX + VK_ENEMY2_TILE_COUNT <= HUD_TILE_INDEX,
 _Static_assert(ENEMY_TIME_STOP_ITEM == VK_ITEM_BIT_0A,
                "object 0A: Enemies_useTimeStop reads the C701 bit 6 of vk_candles.c701");
 
+_Static_assert(VK_BOSS15_TILE_COUNT+VK_DEATH_FLAME_TILE_COUNT<=128, "boss15 and flames fit type5 block");
+_Static_assert(VK_BOSS12_TILE_COUNT+4+VK_DEATH_FLAME_TILE_COUNT<=128, "boss12, shot and death flames fit the type5 block");
 _Static_assert(VK_BOSS_TILE_COUNT <= 128 && VK_ORB_TILE_COUNT <= 128, "boss and orb in the type 5 block");
 _Static_assert(VK_STAGE7_ENEMY_TILE_COUNT <= 128, "stage 7 enemies in the type 5 block");
 _Static_assert(VK_BOSS6_TILE_COUNT <= 128 && VK_ORB6_TILE_COUNT <= 128, "boss 6 and its orb in the type 5 block");
@@ -55,6 +68,44 @@ _Static_assert(VK_BOSS_MAX_SPRITES <= ENEMY_MAX * ENEMY_SPRITES, "boss sprites i
 VKBoss vk_boss;
 static int boss_exit;
 static void boss_struck(void);
+static VKDracula dracula;
+static u8 dracula_shot_clock,dracula_cycles;
+const VKDracula *vk_dracula_state(void){return &dracula;}
+static int dracula_active(void){return vk_game.area==VK_AREA_INTERIOR && vk_game.stage==18 && vk_game.room==9 && vk_boss.in_room && vk_boss.kind==5;}
+int vk_dracula_cinematic(void){return dracula_active() && (dracula.ce[64] || dracula.credits_finished);}
+static void dracula_events(void)
+{
+ u16 i;for(i=0;i<dracula.sound_count;i++){
+  const u8 id=dracula.sound[i];if(!id)vk_psg_stop();else if(id==255)vk_psg_fade();else if(id>=128)vk_psg_music(id);else vk_psg_effect(id);
+ }
+ dracula.sound_count=0;vk_boss.energy=dracula.energy;
+}
+static void dracula_strike(int slot,int power)
+{
+ const u32 before=dracula.score;
+ vk_dracula_strike(&dracula,slot,vk_candles.weapon,power);
+ vk_hud_add_score((u32)(dracula.score-before));dracula_events();
+}
+static void dracula_step(const EnemyRoomVars *v)
+{
+ int i,hit=0;vk_boss.phase^=1;if(vk_boss.phase)return;vk_boss.tick++;
+ if(vk_boss.tick&4)vk_dracula_rearm(&dracula);
+ vk_dracula_pass(&dracula,v->simonX,v->simonY,v->difficulty,vk_boss.tick,vk_enemies.frozen,vk_psg.fade_steps>=8);
+ dracula_shot_clock=dracula.shot_clock;dracula_events();vk_dracula_view_pass(&dracula);
+ if(dracula.paint&1)vk_whip_stop(&vk_whip);
+ if(dracula.exit_requested){vk_dracula_transition(&dracula,dracula_cycles);dracula_cycles=dracula.completed_cycles;boss_exit=1;return;}
+ if(dracula.ce[64] || dracula.blank)return;
+ vk_hud_enemy(dracula.energy);
+ for(i=0;i<15;i++){
+  const u8 *p=i<7?dracula.object[i]:dracula.shot[i-7];
+  if(!p[0] || (i<7?!(p[14]&2):p[0]==12) || !vk_dracula_contact(&dracula,i,v->simonX,v->simonY,v->simonState))continue;
+  hit=Enemies_contact(&vk_enemies,v,(EnemyU8)(i>=7?1:p[0]==17?6:2),p[5],i<7);
+  if(hit && i>=7){vk_enemies.recoilDir=(p[10]&128)?-1:1;vk_dracula_projectile_contact(&dracula,i-7);}
+  if(hit)break;
+ }
+ if(hit){vk_whip_stop(&vk_whip);vk_game_hit(&vk_game,vk_enemies.recoilDir,vk_enemies.energy==0);vk_enemies.recoil=(EnemyU8)vk_game_recoiling(&vk_game);}
+}
+
 #define VK_SFX_WALKER_FIRE 0x0A   /* A4E8 with A = 0Ah: the walker's fireball (B9A9), stage 9 trace */
 
 /* Thrown weapons (weapons.c): one 16x16 sprite per slot (sprites 1 and 2, in Simon's
@@ -143,6 +194,7 @@ static u16 room_key(void)
 static u8 simon_state(void)
 {
     const VKPlayer *p = &vk_game.player;
+    if (vk_secret.active) return 7; /* real C420, not the preserved crouch artwork */
     if (p->on_stairs) return ENEMY_SIMON_STAIRS;
     if (p->mode == 1) return ENEMY_SIMON_JUMP;
     if (p->mode == 4) return vk_game.ground_fall ? ENEMY_SIMON_FALL : ENEMY_SIMON_JUMP;
@@ -189,9 +241,10 @@ int vk_step_weapons(int launch, int *candle_events)
         vk_weapons_launch(&vk_weapons, vk_whip.level);
         Enemies_rearm(&vk_enemies);   /* 7286 */
         vk_boss_rearm(&vk_boss);
+        if(dracula_active())vk_dracula_rearm(&dracula);
     }
-    if (!vk_weapons_frame(&vk_weapons, &simon, vk_candles.weapon, vk_game_collision(&vk_game),
-                          (VKByte)d000, &ev))
+    if (!vk_weapons_frame_clocked(&vk_weapons, &simon, vk_candles.weapon, vk_game_collision(&vk_game),
+                          (VKByte)d000, &ev, vk_enemies.tick, vk_enemies.itemPhase))
         return -1;
     for (i = 0; i < ev.sounds; i++) vk_psg_effect(ev.sound[i]);
     if (ev.rearm) { Enemies_rearm(&vk_enemies); vk_boss_rearm(&vk_boss); }
@@ -202,12 +255,29 @@ int vk_step_weapons(int launch, int *candle_events)
         vk_set_whip_level(0);
     }
     if (!vk_weapons.shot[0].state && !vk_weapons.shot[1].state) return -1;   /* 801E */
+    if(dracula_active()){
+        int target;static const u8 power[4]={1,4,2,2};
+        for(target=7;target<15;target++){
+            int x,y,h,l,slot;const u8 *p=dracula.shot[target-7];
+            if(p[0]==12 || !vk_dracula_target(&dracula,target,&x,&y,&h,&l))continue;
+            slot=shot_touch(&vk_weapons,0,x,y,h,l)?0:shot_touch(&vk_weapons,1,x,y,h,l)?1:-1;
+            if(slot>=0){dracula_strike(target,1);vk_weapons_enemy_hit(&vk_weapons,slot);}
+        }
+        for(target=0;target<7;target++){
+            int x,y,h,l,slot,type;const u8 *p=dracula.object[target];
+            if(!(p[14]&1) || !vk_dracula_target(&dracula,target,&x,&y,&h,&l))continue;
+            slot=shot_touch(&vk_weapons,0,x,y,h,l)?0:shot_touch(&vk_weapons,1,x,y,h,l)?1:-1;
+            if(slot<0)continue;
+            type=vk_weapons.shot[slot].type-VK_SHOT_DAGGER;
+            dracula_strike(target,type>=0&&type<4?power[type]:1);vk_weapons_enemy_hit(&vk_weapons,slot);break;
+        }
+    }
     /* 7F79: the thrown weapons against the fireballs of the boss (D700 objects): 84F0, slot 0 then 1; the ball is
      * destroyed (822A: 100 points, effect 0C), a dagger disappears (7F9E, 74EC); the weapon goes on otherwise. */
-    if (vk_boss.in_room)
+    if (vk_boss.in_room && vk_boss.kind!=5)
     {
         int ball, bx, by, bh, bl;
-        for (ball = 0; ball < VK_BOSS_SHOTS; ball++)
+        for (ball = 0; ball < vk_boss_shot_count(&vk_boss); ball++)
         {
             int slot;
             if (!vk_boss_shot_target(&vk_boss, ball, &bx, &by, &bh, &bl)) continue;
@@ -227,13 +297,18 @@ int vk_step_weapons(int launch, int *candle_events)
             /* 801E, HL = 180Ch (28h and 5 for the walkers of stage 9); 8083 clears +E bit 0, 999F sets it again: an axe
              * or a cross touches once going out and once coming back. One object per pass, the first touched. */
             int target, bx, by, bh, bl;
-            for (target = 0; target < 2; target++)
+            for (target = 0; vk_boss.kind!=5 && target < 2; target++)
             {
                 int touched;
                 if (!vk_boss_target(&vk_boss, target, &bx, &by, &bh, &bl)) continue;
                 touched = shot_touch(&vk_weapons, 0, bx, by, bh, bl) ? 0 : shot_touch(&vk_weapons, 1, bx, by, bh, bl) ? 1 : -1;
                 if (touched < 0) continue;
-                boss_struck();
+                if(vk_boss.kind==3 && target==1) {
+                    static const u8 power[4]={1,4,2,2};
+                    const int type=vk_weapons.shot[touched].type;
+                    const int score=vk_boss_rider_hit(&vk_boss,type>=VK_SHOT_DAGGER && type<VK_SHOT_DAGGER+4?power[type-VK_SHOT_DAGGER]:1);
+                    vk_psg_effect(VK_SFX_HIT);vk_hud_add_score((u32)score*100);
+                } else boss_struck();
                 vk_weapons_enemy_hit(&vk_weapons, touched);
                 vk_boss_set_armed(&vk_boss, target);
                 break;
@@ -291,7 +366,7 @@ static void boss_struck(void)
     if (vk_boss_hit(&vk_boss, vk_candles.weapon))
     {
         vk_psg_effect(VK_SFX_BOSS_DEAD);                 /* 7E17 */
-        vk_hud_add_score((u32)VK_BOSS_SCORE * 100);      /* 81AB */
+        vk_hud_add_score((u32)vk_boss_score(&vk_boss) * 100);      /* 81AB */
     }
 }
 
@@ -335,13 +410,25 @@ static void boss9_flash_cells(void)
     }
 }
 
+/* Shared ownership for stage15. Ending/flame reallocation and other bosses
+ * remain provisional until their physical-slot traces are extended. */
+static int boss15_pool(int slot,int count){return Enemies_boss15_reserve(&vk_enemies,slot,count);}
+static void boss15_pool_sync(void){
+ int i;if(!vk_boss.in_room || vk_boss.kind!=4)return;
+ if(!vk_boss.walker[0].alive)boss15_pool(0,0);
+ for(i=0;i<VK_BOSS_MAX_SHOTS;i++)if(!vk_boss_shot_data(&vk_boss,i)->active)boss15_pool(i+1,0);
+}
+
 /* Boss of the room, after the enemies: BE70 or BD19, the D700 fireball, the end script B6AB. */
 static void step_boss(const EnemyRoomVars *v)
 {
     int events, hit = 0;
     if (!vk_boss.in_room) return;
+    if(vk_boss.kind==5){dracula_step(v);return;}
+    boss15_pool_sync();
     events = vk_boss_frame(&vk_boss, v->simonX, v->simonY, v->difficulty, vk_enemies.frozen,
                            vk_enemies.energy);
+    boss15_pool_sync();
     boss9_flash_cells();
     if (events & VK_BOSS_EV_FIRE) vk_psg_effect(vk_boss.kind == 2 ? VK_SFX_WALKER_FIRE : VK_SFX_DAMAGE);   /* A4E8: 0A (stage 9) */
     if (events & VK_BOSS_EV_FLASH) vk_enemies.flash = ENEMY_FLASH_START;
@@ -361,6 +448,7 @@ static void step_boss(const EnemyRoomVars *v)
         }
     }
     if (events & VK_BOSS_EV_ERASE) boss_erase_bust();
+    if (events & VK_BOSS_EV_STOP) vk_psg_stop();
     if (events & VK_BOSS_EV_MUSIC) vk_psg_music(VK_MUSIC_BOSS_END);
     if (events & VK_BOSS_EV_HEAL)
     {
@@ -371,12 +459,12 @@ static void step_boss(const EnemyRoomVars *v)
     vk_hud_enemy(vk_boss.energy);
     vk_boss_orb_touch(&vk_boss, v->simonX, v->simonY, v->simonState);
     if (vk_boss_touch_x(&vk_boss, v->simonX, v->simonY, v->simonState) >= 0)
-        hit = Enemies_contact(&vk_enemies, v, VK_BOSS_DAMAGE_CONTACT,
+        hit = Enemies_contact(&vk_enemies, v, (EnemyU8)vk_boss_touch_damage(&vk_boss,v->simonX,v->simonY,v->simonState),
                               vk_boss_touch_x(&vk_boss, v->simonX, v->simonY, v->simonState), 1);
     else
     {
         const int shot = vk_boss_shot_touches(&vk_boss, v->simonX, v->simonY, v->simonState);
-        if (shot >= 0) hit = Enemies_contact(&vk_enemies, v, 1, vk_boss.shot[shot].x >> 8, 0);
+        if (shot >= 0) hit = Enemies_contact(&vk_enemies, v, 1, vk_boss_shot_data(&vk_boss,shot)->x >> 8, 0);
     }
     if (hit)
     {
@@ -489,11 +577,26 @@ void vk_step_enemies(void)
                 VDP_loadTileData(vk_ghost_a_tiles, ENEMY5_TILE_INDEX + (Enemies_ghostCell((EnemyU8)vk_game.stage) - 0x40),
                                  VK_GHOST_A_TILE_COUNT, CPU);
         }
+            if(vk_game.stage>=12 && vk_game.stage<=18 && vk_game.room<12){
+                const VKLateGraphicsRoom *g=&late_graphics_rooms[vk_game.stage-12][vk_game.room];
+                if(g->tiles)VDP_loadTileData(&late_graphics_words[g->first*8],LATE_ENEMY_TILE_INDEX,g->tiles,CPU);
+            }
         /* 6319-6333. PROVISIONAL: the bar is full again outside the boss room. */
         if (vk_boss_room(vk_game.stage, vk_game.room))
         {
             vk_boss_begin_stage(&vk_boss, vk_game.stage);
-            if (vk_boss.kind == 2) VDP_loadTileData(vk_boss9_tiles, ENEMY5_TILE_INDEX, VK_BOSS9_TILE_COUNT, CPU);
+            vk_boss_set_collision(&vk_boss,vk_game_collision(&vk_game));
+            if(vk_boss.kind==5){vk_dracula_init(&dracula);dracula.shot_clock=dracula_shot_clock;vk_dracula_view_begin(&dracula);}
+            else if(vk_boss.kind==3) {
+                VDP_loadTileData(vk_boss12_tiles,ENEMY5_TILE_INDEX,VK_BOSS12_TILE_COUNT,CPU);
+                VDP_loadTileData(vk_boss_tiles+28*8,ENEMY5_TILE_INDEX+VK_BOSS12_SHOT_TILE,4,CPU);
+                VDP_loadTileData(vk_death_flame_tiles,ENEMY5_TILE_INDEX+64,8,CPU);
+            }
+            else if(vk_boss.kind==4) {
+                VDP_loadTileData(vk_boss15_tiles,ENEMY5_TILE_INDEX,VK_BOSS15_TILE_COUNT,CPU);
+                VDP_loadTileData(vk_death_flame_tiles,ENEMY5_TILE_INDEX+44,8,CPU);
+            }
+            else if (vk_boss.kind == 2) VDP_loadTileData(vk_boss9_tiles, ENEMY5_TILE_INDEX, VK_BOSS9_TILE_COUNT, CPU);
             else if (vk_boss.kind) VDP_loadTileData(vk_boss6_tiles, ENEMY5_TILE_INDEX, VK_BOSS6_TILE_COUNT, CPU);
             else VDP_loadTileData(vk_boss_tiles, ENEMY5_TILE_INDEX, VK_BOSS_TILE_COUNT, CPU);
             boss9_flash_pose[0] = boss9_flash_pose[1] = 0;
@@ -521,6 +624,7 @@ void vk_step_enemies(void)
     if (Enemies_frame(&vk_enemies, &enemy_timer, &vars))
     {
         /* 7EC1: the whip stops (C422 := 0) and Simon is knocked back. */
+        vk_secret_interrupt(&vk_secret);
         vk_whip_stop(&vk_whip);
         vk_game_hit(&vk_game, vk_enemies.recoilDir, vk_enemies.energy == 0);
         vk_enemies.recoil = (EnemyU8)vk_game_recoiling(&vk_game);
@@ -536,6 +640,7 @@ void vk_step_enemies(void)
             if (Enemies_contact(&vk_enemies, &vars, (EnemyU8)damage, vars.simonX, 0))
             {
                 vk_enemies.recoilDir = side;
+                vk_secret_interrupt(&vk_secret); /* 85C6 writes C420=5, not7. */
                 vk_whip_stop(&vk_whip);
                 vk_game_hit(&vk_game, side, vk_enemies.energy == 0);
                 vk_enemies.recoil = (EnemyU8)vk_game_recoiling(&vk_game);
@@ -548,7 +653,7 @@ void vk_step_enemies(void)
     /* Object 09 (C434): an enemy touched is destroyed, scored as by the whip (81AB),
      * effect 0D (7EBC). Object 08 (C43A): effect 17 when it drops to 10h (75ED). */
     if (vk_enemies.contactScore) vk_hud_add_score((u32)vk_enemies.contactScore * 100);
-    if (vk_enemies.itemSound) vk_psg_effect(vk_enemies.itemSound);
+    {EnemyU8 n;for(n=0;n<Enemies_itemSoundCount;n++)vk_psg_effect(Enemies_itemSounds[n]);}
     /* A2F9/A34D/A386 du stage 10 : événements des hommes-poissons dans l’ordre Z80. */
     {
         EnemyU8 n;
@@ -593,17 +698,29 @@ void vk_step_enemies(void)
         }
         /* 7F65 (D700 loop) and 7DD4 (C800 objects): effect 0C on a whip contact. */
         if (hits) vk_psg_effect(VK_SFX_HIT);
-        if (vk_boss.in_room)
+        if(dracula_active()){
+            int k,body_hit=0;const int state=vk_whip.crouched?2:0;
+            for(k=0;k<15;k++){
+                const u8 *p=k<7?dracula.object[k]:dracula.shot[k-7];
+                if(!p[0] || (k<7?body_hit||!(p[14]&1):p[0]==12))continue;
+                if(vk_dracula_whip(&dracula,k,vk_whip.x,vk_whip.y,vk_whip.facing,state,chain)){dracula_strike(k,chain?2:1);if(k<7)body_hit=1;}
+            }
+        }
+        if (vk_boss.in_room && vk_boss.kind!=5)
         {
             /* 7DAD, 83F2: the boss; 7F65, 8320: its fireball, 100 points (822A). */
             const int state = vk_whip.crouched ? 2 : 0;
             const int shot = vk_boss_shot_whip_touches(&vk_boss, vk_whip.x, vk_whip.y,
                                                        vk_whip.facing, state, chain);
+            if(vk_boss_rider_whip(&vk_boss,vk_whip.x,vk_whip.y,vk_whip.facing,state,chain)) {
+                const int score=vk_boss_rider_hit(&vk_boss,chain?2:1);
+                vk_psg_effect(VK_SFX_HIT);vk_hud_add_score((u32)score*100);
+            }
             if (vk_boss_whip_touches(&vk_boss, vk_whip.x, vk_whip.y, vk_whip.facing, state, chain))
                 boss_struck();
             if (shot >= 0)
             {
-                vk_boss.shot[shot].active = 0;
+                vk_boss_shot_kill(&vk_boss,shot);
                 vk_psg_effect(VK_SFX_HIT);
                 vk_hud_add_score(100);
             }
@@ -611,15 +728,21 @@ void vk_step_enemies(void)
     }
 }
 
+static int candle_airborne(VKByte kind,VKByte x,VKByte y){boss15_pool_sync();return Enemies_candleLoot(&vk_enemies,kind,x,y);}
+
 void vk_reset_enemies(void)
 {
     Enemies_init(&vk_enemies);
+    vk_boss15_pool=boss15_pool;
+    vk_candles_airborne(candle_airborne);
     enemy_room_key = 0xFFFF;
 }
 
 void vk_reset_enemy_clock(void)
 {
     Enemies_spawnTimerInit(&enemy_timer);
+    vk_boss_clock_init();
+    dracula_shot_clock=dracula_cycles=0;
 }
 
 /* Enemy layers as hardware sprites from ENEMY_SPRITE_BASE, one 16x16 sprite each,
@@ -631,12 +754,25 @@ static u16 show_enemy_sprites(u16 tail)
      * the fields of the first entry of an enemy 252 bytes too low, below the stack
      * (lea %sp@(0,%d0:l),%a3 then %a3@(-166), %a3@(-164)); the first layer of the panther
      * was then drawn from whatever the stack held. */
-    static EnemySprite list[ENEMY_MAX * ENEMY_SPRITES + VK_PLATFORM_MAX * VK_PLATFORM_CELLS + VK_CRUSHER_MAX * 5];
-    u16 count = 0;
+    static EnemySprite list[ENEMY_MAX * ENEMY_SPRITES + ENEMY_PROJECTILE_MAX + VK_PLATFORM_MAX * VK_PLATFORM_CELLS + VK_CRUSHER_MAX * 5];
+    u16 count = 0,boss_count=0,boss_body_count=0;
     u16 i;
     if (!enemy_room_key || enemy_room_key != room_key()) return 0;
-    for (i = 0; i < ENEMY_MAX; i++)
-        count = (u16)(count + Enemies_sprites(&vk_enemies, (EnemyU8)i, &list[count]));
+    Enemies_sat_render(&vk_enemies);
+    for (i = 0; i < ENEMY_ALL; i++){
+        u16 start=count,k;count=(u16)(count+Enemies_sprites(&vk_enemies,(EnemyU8)i,&list[count]));
+        if(vk_game.stage>=12 && vk_game.stage<=18 && vk_game.room<12){
+            const VKLateGraphicsRoom *g=&late_graphics_rooms[vk_game.stage-12][vk_game.room];
+            for(k=start;k<count;k++)if(list[k].bank==1){
+                u16 j;for(j=0;j<g->cells;j++){
+                    const VKLateGraphicsCell *c=&late_graphics_cells[g->cell_first+j];
+                    if(c->type==Enemies_object(&vk_enemies,(EnemyU8)i)->type && c->pattern==list[k].pattern){list[k].bank=3;list[k].pattern=c->cell;break;}
+                }
+                /* PROVISIONAL: unlisted candle-spawned species retain the old renderer;
+                 * their AI/graphics are not claimed as ported by LOT11. */
+            }
+        }
+    }
     /* 90D8, 9112: two cells per platform; the pattern takes a free slot of the block (patterns D0, D4 on the MSX). */
     for (i = 0; i < VK_PLATFORM_MAX; i++)
     {
@@ -686,32 +822,40 @@ static u16 show_enemy_sprites(u16 tail)
             list[count].bank = 1;
         }
     }
-    if (vk_boss.in_room && !count)
+    if (vk_boss.in_room)
     {
         static VKBossSprite boss[VK_BOSS_MAX_SPRITES];
-        const int n = vk_boss_sprites(&vk_boss, boss);
+        int n;
+        if(vk_boss.kind==5)boss_count=vk_dracula_view_sprites(&dracula,(u16)(ENEMY_SPRITE_BASE+count),tail);
+        else {
+        n=vk_boss_sprites(&vk_boss, boss);
+        /* Stage15 SAT order: body0..11, C800 loot, then D700 projectiles.
+         * Other boss/shared allocations remain under the explicit pool reserve. */
+        if(vk_boss.kind==4)boss_body_count=vk_boss.orb?1:vk_boss.walker[0].alive==1?6:vk_boss.walker[0].alive==2?1:0;
         for (i = 0; i < n; i++)
-            VDP_setSpriteFull((u16)(ENEMY_SPRITE_BASE + i), boss[i].x, boss[i].y,
+            VDP_setSpriteFull((u16)(ENEMY_SPRITE_BASE + (i<boss_body_count?i:count+i)), boss[i].x, boss[i].y,
                 SPRITE_SIZE(boss[i].size, boss[i].size),
-                TILE_ATTR_FULL(PAL2, TRUE, FALSE, FALSE, (u16)(ENEMY5_TILE_INDEX + boss[i].tile)),
-                (u16)(i + 1 < n ? ENEMY_SPRITE_BASE + i + 1 : tail));
-        return (u16)n;
+                TILE_ATTR_FULL(PAL2, TRUE, FALSE, FALSE, (u16)((boss[i].tile&VK_BOSS_SHARED_FLAME_TILE)?DEATH_FLAME_TILE_INDEX+(boss[i].tile&7):ENEMY5_TILE_INDEX+boss[i].tile)),
+                (u16)(i+1<boss_body_count?ENEMY_SPRITE_BASE+i+1:i+1==boss_body_count && count?ENEMY_SPRITE_BASE+boss_body_count:i+1<n?ENEMY_SPRITE_BASE+count+i+1:tail));
+        boss_count=(u16)n;
+        }
+        if(!count)return boss_count;
     }
     for (i = 0; i < count; i++)
     {
         const u8 pattern = list[i].pattern;
-        const u16 tile = list[i].bank == 2
+        const u16 tile = list[i].bank == 4 ? (u16)(LOOT_TILE_INDEX+4*pattern) : list[i].bank == 3 ? (u16)(LATE_ENEMY_TILE_INDEX+4*pattern) : list[i].bank == 2
             ? (u16)(DEATH_FLAME_TILE_INDEX + pattern)
             : list[i].bank
             ? (u16)(ENEMY5_TILE_INDEX + pattern - VK_ENEMY5_FIRST_PATTERN)
             : (pattern & ENEMY_PATTERN_TYPE4)
             ? (u16)(ENEMY4_TILE_INDEX + (pattern & ~ENEMY_PATTERN_TYPE4) - VK_ENEMY4_FIRST_PATTERN)
             : (u16)(ENEMY_TILE_INDEX + pattern - VK_ENEMY_FIRST_PATTERN);
-        VDP_setSpriteFull((u16)(ENEMY_SPRITE_BASE + i), list[i].x, list[i].y, SPRITE_SIZE(2, 2),
+        VDP_setSpriteFull((u16)(ENEMY_SPRITE_BASE + boss_body_count + i), list[i].x, list[i].y, SPRITE_SIZE(2, 2),
             TILE_ATTR_FULL(PAL2, TRUE, FALSE, FALSE, tile),
-            (u16)(i + 1 < count ? ENEMY_SPRITE_BASE + i + 1 : tail));
+            (u16)(i+1<count?ENEMY_SPRITE_BASE+boss_body_count+i+1:boss_count>boss_body_count?ENEMY_SPRITE_BASE+boss_body_count+count:tail));
     }
-    return count;
+    return (u16)(count+boss_count);
 }
 
 /* 790C: while C43A (object 08) or C434 (object 09) runs, every line of Simon's
@@ -746,7 +890,7 @@ static void load_simon_color(u8 color)
  * the MSX), with the shield tiles and silhouette colour they were built with. The
  * candles, drops, HUD objects and courtyard torches, MSX bitmap, stay at 1 frame. */
 #define SIMON_SPRITES 7
-#define ENEMY_SPRITE_MAX (ENEMY_MAX * ENEMY_SPRITES + VK_PLATFORM_MAX * VK_PLATFORM_CELLS + VK_CRUSHER_MAX * 5)
+#define ENEMY_SPRITE_MAX (ENEMY_MAX * ENEMY_SPRITES + ENEMY_PROJECTILE_MAX + VK_PLATFORM_MAX * VK_PLATFORM_CELLS + VK_CRUSHER_MAX * 5)
 static VDPSprite late_simon[SIMON_SPRITES];
 static VDPSprite late_enemies[ENEMY_SPRITE_MAX];
 static u16 late_enemy_count;
@@ -1001,7 +1145,34 @@ void vk_load_whip_graphics(void)
     load_whip_level(vk_whip_level(&vk_whip));
     shot_loaded[0] = shot_loaded[1] = -1;
     VDP_loadTileData(vk_death_flame_tiles, DEATH_FLAME_TILE_INDEX, VK_DEATH_FLAME_TILE_COUNT, CPU);
+    VDP_loadTileData(vk_loot_tiles,LOOT_TILE_INDEX,VK_LOOT_TILE_COUNT,CPU);
     vk_hide_targets();
     shield_loaded = -1;              /* the scene tiles may have covered the slot */
 }
 
+
+void vk_step_projectile_shield(void)
+{
+    EnemyRoomVars v;int n,i;VKByte before=vk_candles.c701;
+    if(vk_enemies.itemPhase || !(before&VK_ITEM_BIT_04))return;
+    v.simonX=vk_game.player.x;v.simonY=vk_game.player.y;v.facingLeft=vk_game.player.facing;
+    n=Enemies_shield(&vk_enemies,&v,&vk_candles.c701);
+    if(dracula_active()){
+        for(i=0;i<8;i++){
+            const VKDByte *p=dracula.shot[i];
+            if(!vk_item_shield_touch(p[0],v.simonX,v.simonY,v.facingLeft,p[5],p[3]))continue;
+            vk_dracula_projectile_shield(&dracula,i);n++;
+            if(--vk_enemies.armor==0)vk_candles.c701&=(VKByte)~VK_ITEM_BIT_04;
+        }
+    }else if(vk_boss.in_room){
+        for(i=0;i<vk_boss_shot_count(&vk_boss);i++){
+            const VKBossShot *p=vk_boss_shot_data(&vk_boss,i);
+            const VKByte raw=vk_boss.kind==4?8:(vk_boss.kind==0||vk_boss.kind==3)?3:6;
+            if(!p||p->active!=1 || !vk_item_shield_touch(raw,v.simonX,v.simonY,v.facingLeft,p->x>>8,p->y>>8))continue;
+            vk_boss_shot_shield(&vk_boss,i);n++;
+            if(--vk_enemies.armor==0)vk_candles.c701&=(VKByte)~VK_ITEM_BIT_04;
+        }
+    }
+    for(i=0;i<n;i++)vk_psg_effect(0x0B);
+    if((before^vk_candles.c701)&VK_ITEM_BIT_04)vk_candles_item_box(&vk_candles);
+}

@@ -15,13 +15,19 @@
  * uniform. The generator returns 0..7Fh, each value equally often (16-bit full-period LCG, bits 8-14). One stream for all
  * uses, like the single R register. Tests set Enemies_s7R to 0..255 to get a fixed value. */
 volatile EnemyS16 Enemies_s7R = -1;
+#ifndef VK_RANDOM_PROBE
 static EnemyU16 s7seed = 0x1D35;
+#endif
 
 static EnemyU8 s7Random(void)
 {
+#ifdef VK_RANDOM_PROBE
+    return VK_RANDOM_PROBE(); /* native harness: actual observed LD A,R inputs */
+#else
     if (Enemies_s7R >= 0) return (EnemyU8)Enemies_s7R;
     s7seed = (EnemyU16)(s7seed * 25173u + 13849u);
     return (EnemyU8)((s7seed >> 8) & 0x7F);
+#endif
 }
 
 EnemyU8 Enemies_randomR(void) { return s7Random(); }
