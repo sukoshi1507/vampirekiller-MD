@@ -195,7 +195,7 @@ static void candle_hit_view(int events, int hit)
     if (events & VK_CANDLE_EVENT_WHITE_KEY)
     {
         items.white_key_revealed = 1;
-        vk_item_view_room(&items, &vk_game);
+        vk_item_view_key(&items, &vk_game);
     }
 }
 

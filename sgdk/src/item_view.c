@@ -106,6 +106,16 @@ static void draw_hud_box(const VKItems *items)
                VK_HUD_BOX_CELL_X, VK_HUD_BOX_CELL_Y, VK_HUD_BOX_W, VK_HUD_BOX_H);
 }
 
+/* The hidden key revealed by the whip: its tiles were loaded with the room, only its block is drawn (no tile
+ * reload, which would overrun the frame of the break). */
+void vk_item_view_key(const VKItems *items, const VKGame *game)
+{
+    VKByte key_x = 0, key_y = 0;
+    vk_items_key_place(game, &key_x, &key_y);
+    if (vk_items_key_shown(items, game))
+        draw_block(KEY_TILE_INDEX, key_x / 8, key_y / 8, 2, 2);
+}
+
 void vk_item_view_room(const VKItems *items, const VKGame *game)
 {
     VKByte key_x = 0, key_y = 0;

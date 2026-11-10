@@ -10,6 +10,7 @@
 /* After a hall room is shown: loads the tiles, draws the HUD box, the floor key
  * (room 2) and the door bar at its current lift (room 7). */
 void vk_item_view_room(const VKItems *items, const VKGame *game);
+void vk_item_view_key(const VKItems *items, const VKGame *game);
 /* Redraws what an event of vk_items_tick changed. */
 void vk_item_view_event(VKItemEvent event, const VKItems *items, const VKGame *game);
 

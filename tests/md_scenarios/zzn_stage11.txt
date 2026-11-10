@@ -41,5 +41,8 @@ expect ram8('items+2') == 0 # porte fermee
 until ram8('items+2') == 1 max 400 RIGHT
 expect ram8('items') == 0 # cle consommee a l'ouverture
 shot zzn-porte
-# Sortie : le stage 12 n'est pas porte (trace KD : son 1A a 1153, D000 = 12 a 1322, Simon en (16, 176) au stage 12 salle 0) : retour au titre.
-until front_mode == MODES['TITLE'] max 1200 RIGHT
+# Sortie vers le stage 12 (trace KD : son 1A a 1153, D000 = 12 a 1322, Simon en (16, 176) au stage 12 salle 0).
+until game.stage == 12 max 1200 RIGHT
+expect game.room == 0 and front_mode == MODES['INTERIOR']
+wait 20
+expect game.stage == 12 and game.room == 0 and game.player.x <= 24 and game.player.y == 176 # entree (16, 176)

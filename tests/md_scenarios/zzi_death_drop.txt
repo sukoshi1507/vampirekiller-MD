@@ -1,6 +1,6 @@
 # (zzi) Objet laisse par la flamme de mort (9ABE, 9B90 ; research/death-flame.md). Meme mise en place que zzh_death_flame (zombie du stage 2 salle 2
 # tue au fouet), avec le registre R force a 4 (R & 3F != 0, R & 3 = 0, Enemies_s7R = 4) : la flamme porte +1F = 1 et, a sa 16e mise a jour
-# (32 images), l'objet 24 (petit coeur) nait en (X, Y) de la flamme, dans candles.c (VKDrop, etat FALL = 2, genre 1).
+# (32 images), le petit coeur nait en (X, Y) de la flamme, objet 25 du pool C800 (ENEMY_TYPE_LOOT_HEART).
 include boot_to_courtyard.inc
 until front_mode == MODES['INTERIOR'] max 3000 RIGHT
 poke vk_game+22 2
@@ -24,16 +24,14 @@ until enemies.enemy[0].flame == 1 max 30
 set f0 frame
 set zx enemies.enemy[0].x
 set zy enemies.enemy[0].y
-set heart lambda: [i for i in range(8) if ram8('vk_candles+%d' % (6 + 14 * i)) == 2 and ram8('vk_candles+%d' % (9 + 14 * i)) == 1]
-expect heart() == [] # pas de coeur pendant la flamme
+expect [o for o in enemies.objects if o.type == 25] == [] # pas de coeur pendant la flamme
 until enemies.enemy[0].flame == 0 max 40
 wait 3
-expect len(heart()) == 1 # l'objet 24 : etat FALL, genre 1
-set hi heart()[0]
+expect len([o for o in enemies.objects if o.type == 25]) == 1 # petit coeur : objet 25 du pool C800 (ENEMY_TYPE_LOOT_HEART)
 # Le coeur nait en (X, Y) de la flamme (drop = X - 8, Y - 16) puis tombe d'un demi-pixel par passe et oscille.
-expect abs(ram8('vk_candles+%d' % (7 + 14 * hi)) + 8 - zx) <= 8 and ram8('vk_candles+%d' % (8 + 14 * hi)) + 16 >= zy
-set y0 ram8('vk_candles+%d' % (8 + 14 * hi))
+expect abs([o for o in enemies.objects if o.type == 25][0].x - zx) <= 8 and [o for o in enemies.objects if o.type == 25][0].y + 16 >= zy
+set y0 [o for o in enemies.objects if o.type == 25][0].y
 wait 60
-expect ram8('vk_candles+%d' % (8 + 14 * hi)) > y0 # il descend
+expect [o for o in enemies.objects if o.type == 25][0].y > y0 # il descend
 expect enemies.energy == 32
 shot zzi-coeur

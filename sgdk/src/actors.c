@@ -3,7 +3,7 @@
 #include "actors.h"
 #include "generated/late_graphics.inc"
 #include "generated/loot_md.h"
-_Static_assert(LOOT_TILE_INDEX+VK_LOOT_TILE_COUNT<=1536,"loot before BG plane tables");
+_Static_assert(LOOT_TILE_INDEX+VK_LOOT_TILE_COUNT<=1536 && LOOT_TILE_INDEX>1440+('Z'-' '),"loot in the lower case font tiles");
 /* Late deduplicated cells fit the existing128-tile enemy block. */
 #define LATE_ENEMY_TILE_INDEX ENEMY5_TILE_INDEX
 _Static_assert(LATE_ENEMY_TILE_INDEX+128<=SHIELD_TILE_INDEX,"late sprites before shield");

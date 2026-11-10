@@ -57,7 +57,7 @@ wait 14
 hold B 2
 until (ram8('vk_candles+4') & 2) == 0 max 40
 set f1 frame
-expect ram8('vk_candles+9') == 0x1A # fouet a chaine
+expect any(o.type == 26 for o in enemies.objects) # flamme 26 en C800 (objet 1A, fouet a chaine)
 until ram8('vk_candles+6') == 3 max 300
 expect 50 <= frame - f1 <= 58 # trace : flamme 26 fixe 41 images puis chute de 8 px toutes les 2 images (n = 6 pas de 128 a 176), objet cree 41 + 2 n = 53 images apres la flamme
 expect ram8('vk_candles+7') == 144 and ram8('vk_candles+8') == 176 # pose au sol

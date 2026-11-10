@@ -31,7 +31,9 @@ until ram8('vk_walls+8') == 0x82 max 90
 poke vk_candles+118 50
 poke vk_walls+11 1
 until ram8('vk_walls+348') == 2 max 120
-wait 2
+# Fenetre ecrite par vk_shop_view_open (lecture VRAM + tuiles : quelques images, jeu fige).
+until ram8('win_open') == 1 max 10
+wait 1
 shot zo-fenetre
 # LOT08 : 9397 donne Y=160-24=136. Y137 est l'interieur noir, pas le cadre.
 expect pixel(161, 136)[0] > 200 and pixel(164, 150) != pixel(161, 136) # cadre blanc de la fenetre (9397)

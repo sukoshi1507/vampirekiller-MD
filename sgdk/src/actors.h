@@ -1,6 +1,8 @@
 #ifndef VK_ACTORS_H
 #define VK_ACTORS_H
-#define LOOT_TILE_INDEX 1440
+/* SGDK keeps its font at 1440..1535 (LEGACY_FONT_LOCATION): the space (1440) clears the HUD rows. The 20 loot
+ * cells take the last font tiles, lower case letters that no VDP_drawText of the port uses. */
+#define LOOT_TILE_INDEX 1516
 
 #include "boss.h"
 #include "dracula.h"

@@ -4,7 +4,11 @@ ifndef GDK
 $(error Definir GDK vers une installation SGDK, ex. make GDK=/opt/sgdk)
 endif
 
-EXTRA_FLAGS += -std=c99
+# GCC 15+ (16.1) late-combine folds a byte load into a word/long load at an odd address (and.l clk-3):
+# address error on the 68000 (boss 15 C500 fallback, red candle outline). Not needed with GCC 13/14.
+# Recursive: CC is only defined by the SGDK include below; older compilers ignore it.
+NO_LATE_COMBINE = $(shell echo | $(CC) -fno-late-combine-instructions -x c -E - >/dev/null 2>&1 && echo -fno-late-combine-instructions)
+EXTRA_FLAGS += -std=c99 $(NO_LATE_COMBINE)
 
 include $(GDK)/makefile.gen
 

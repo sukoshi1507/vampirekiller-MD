@@ -62,7 +62,7 @@ def main():
  correct=len(ordinary)==expected_ordinary and after==9
  if a.free_third:
   cache=addr('late_enemies');tiles=[m.rd16(cache+8*i+4)&2047 for i in range(after)]
-  assert all(t<1440 for t in tiles[:6]) and 1440<=tiles[6]<1460 and all(t<1440 for t in tiles[7:]),('body-loot-projectile priority',tiles)
+  assert all(t<1440 for t in tiles[:6]) and 1516<=tiles[6]<1536 and all(t<1440 for t in tiles[7:]),('body-loot-projectile priority',tiles)
  continuation_min=after
  for _ in range(360):m.run(1,set());continuation_min=min(continuation_min,m.rd16(addr('late_enemy_count')))
  assert continuation_min>=(8 if a.free_third else 9),('boss must remain drawn during loot continuation',continuation_min)
