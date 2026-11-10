@@ -140,6 +140,7 @@ static void show_hall_room(u16 room)
     vk_item_view_room(&items, &vk_game);
     vk_candle_view_room();
     wall_room();
+    vk_enemy_room_cells();
     if(vk_game.stage==18 && room==9)vk_step_enemies();
 }
 

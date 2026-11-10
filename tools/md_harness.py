@@ -37,7 +37,8 @@ Les EXPR sont du Python evalue sur l'etat : frame, front_mode, game.area, game.r
 game.player.x/.y/.facing/.mode/.crouched/.on_stairs..., game.recoil/.recoil_count/.recoil_dir,
 player (copie affichee),
 whip.timer/.facing/.x/.y, enemies.energy/.invuln/.recoil/.alive (nb actifs),
-enemies.enemy[i].active/.type/.x/.y/.dx/.age/.romBox/.timer (i < 7; death flame: .active=0/.flame=1; airborne loot: .active=0/.loot=1),
+enemies.enemy[i].active/.type/.x/.y/.dx/.age/.romBox/.timer (i < 7; death flame: .active=0/.flame=1; airborne loot: .active=0/.loot=1);
+enemies.projectiles[j] (D700, j < 8), enemies.objects = enemy + projectiles (15, the former single pool order),
 enemies.timeStop/.frozen (objet 0A : C43B, D010 ; l'objet est C701 bit 6, ram8('vk_candles+322') & 0x40), target (test_target), flames[0..1],
 health.lives/.phase/.timer/.fell (C410 ; phase 0 vivant, 1 mort, 2 reapparition, 3 fin de partie),
 ram8/ram16/ram32(addr|'symbole'), et les noms memorises par `set`.
@@ -322,7 +323,7 @@ class Game_View:
                 if e['flame']:
                     e['active'] = 0
             b = a + 18 * ENEMY_SLOTS
-            state['enemies'] = {'enemy': enemies[:ENEMY_SLOTS], 'projectiles':enemies[ENEMY_SLOTS:], 'alive': sum(1 for e in enemies if e['active']),
+            state['enemies'] = {'enemy': enemies[:ENEMY_SLOTS], 'projectiles':enemies[ENEMY_SLOTS:], 'objects': enemies, 'alive': sum(1 for e in enemies if e['active']),
                                 'energy': m.rd8(b), 'invuln': m.rd8(b + 1), 'invulnPhase': m.rd8(b + 2),
                                 'recoil': m.rd8(b + 3), 'recoilDir': s8(m.rd8(b + 4)),
                                 'parity': m.rd8(b + 5), 'type4Count': m.rd16(b + 6),

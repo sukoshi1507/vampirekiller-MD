@@ -370,10 +370,13 @@ int vk_candles_hit(VKCandles *c, int i)
         block_object(c, def, kind);
         return VK_CANDLE_EVENT_HIT;
     }
+    /* airborne_pool: >0 reserved in C800, 0 refused (C500 fallback), <0 no engine pool
+     * here (courtyard): keep the historical C500 drop below. */
     if(airborne_pool){
-        if(airborne_pool(kind,def->x,def->y))return VK_CANDLE_EVENT_HIT;
-        d=free_drop(c);if(d)fallback_init(c,d,kind,def->x,def->y);
-        return VK_CANDLE_EVENT_HIT;
+        int r=airborne_pool(kind,def->x,def->y);
+        if(r>0)return VK_CANDLE_EVENT_HIT;
+        if(r==0){d=free_drop(c);if(d)fallback_init(c,d,kind,def->x,def->y);
+        return VK_CANDLE_EVENT_HIT;}
     }
     d = free_drop(c);
     if (!d) return VK_CANDLE_EVENT_HIT;
@@ -395,8 +398,9 @@ void vk_candles_drop(VKCandles *c, VKByte x, VKByte y, VKByte kind)
     VKDrop *d;
     /* 8992 bypasses8A29, but still goes through89BF and its C500 fallback. */
     if(airborne_pool && kind && kind!=VK_OBJ_NOTHING){
-        if(airborne_pool(kind,x,y))return;
-        d=free_drop(c);if(d)fallback_init(c,d,kind,x,y);return;
+        int r=airborne_pool(kind,x,y);
+        if(r>0)return;
+        if(r==0){d=free_drop(c);if(d)fallback_init(c,d,kind,x,y);return;}
     }
     d = free_drop(c);        /* 8A37: no free C500 slot, no object */
     if (!d) return;

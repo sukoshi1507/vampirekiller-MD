@@ -42,6 +42,7 @@ poke vk_game+1 192
 hold A 3
 hold A+RIGHT 3
 until game.room == 5 max 200
+wait 4 # the room is shown (enemy cells copied) before the jump is read
 hold A 3
 hold A+LEFT 3
 until game.room == 4 max 200

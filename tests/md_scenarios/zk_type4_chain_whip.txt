@@ -20,7 +20,7 @@ wait 10
 hold A 3
 until game.room == 4 max 10 A+RIGHT
 expect game.room == 4 # salle 4 du hall
-until enemies.type5Timer == 0 max 40 # setRoom
+until enemies.alive == 0 max 40 # setRoom (the room's first pass runs in the same frame)
 poke vk_enemies+127 255
 until len([e for e in enemies.enemy if e.active and e.type == 2]) > 0 max 200
 expect enemies.enemy[0].active and enemies.enemy[0].type == 2 # premier tir dans le bloc 0

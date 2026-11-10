@@ -95,6 +95,7 @@ void vk_actors_flush(void);
 void vk_show_backdrop(void);
 /* One gameplay frame of the hall enemies (spawn, move, contact, whip hits, recoil). */
 void vk_step_enemies(void);
+void vk_enemy_room_cells(void);   /* enemy cells of the room, loaded while it is shown */
 /* The boss of the room (boss.c): its state and the end of its script (C409 = 1, B772). */
 extern VKBoss vk_boss;
 int vk_boss_take_exit(void);

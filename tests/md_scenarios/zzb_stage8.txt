@@ -8,42 +8,42 @@ wait 60
 # Salle 1 : objet 08 (canal 9DD5), trace R images 1377-1393 : X 237, 235, 232, 230, 227 et Y 132, 128, 125, 122, 119.
 include zzb_next.inc
 until game.stage == 8 and game.room == 1 max 200
-until any(enemies.enemy[k].active and enemies.enemy[k].type == 7 for k in range(7)) max 600
-expect [enemies.enemy[k].x for k in range(7) if enemies.enemy[k].active] == [240]
+until any(enemies.objects[k].active and enemies.objects[k].type == 7 for k in range(15)) max 600
+expect [enemies.objects[k].x for k in range(15) if enemies.objects[k].active] == [240]
 wait 1
-expect [enemies.enemy[k].x for k in range(7) if enemies.enemy[k].active] == [237]
-expect [enemies.enemy[k].y for k in range(7) if enemies.enemy[k].active] == [132]
+expect [enemies.objects[k].x for k in range(15) if enemies.objects[k].active] == [237]
+expect [enemies.objects[k].y for k in range(15) if enemies.objects[k].active] == [132]
 wait 2
-expect [enemies.enemy[k].x for k in range(7) if enemies.enemy[k].active] == [235]
-expect [enemies.enemy[k].y for k in range(7) if enemies.enemy[k].active] == [128]
+expect [enemies.objects[k].x for k in range(15) if enemies.objects[k].active] == [235]
+expect [enemies.objects[k].y for k in range(15) if enemies.objects[k].active] == [128]
 wait 2
-expect [enemies.enemy[k].x for k in range(7) if enemies.enemy[k].active] == [232]
-expect [enemies.enemy[k].y for k in range(7) if enemies.enemy[k].active] == [125]
+expect [enemies.objects[k].x for k in range(15) if enemies.objects[k].active] == [232]
+expect [enemies.objects[k].y for k in range(15) if enemies.objects[k].active] == [125]
 wait 2
-expect [enemies.enemy[k].x for k in range(7) if enemies.enemy[k].active] == [230]
-expect [enemies.enemy[k].y for k in range(7) if enemies.enemy[k].active] == [122]
+expect [enemies.objects[k].x for k in range(15) if enemies.objects[k].active] == [230]
+expect [enemies.objects[k].y for k in range(15) if enemies.objects[k].active] == [122]
 shot zzb-objet08
 # Salle 2 : hopper 0B de la liste en (208, 80), vx vers Simon : X 205, 203, 201, 199 (trace R : CD.C0, CB.80, C9.40, C7.00).
 include zzb_next.inc
 until game.stage == 8 and game.room == 2 max 200
-until any(enemies.enemy[k].active and enemies.enemy[k].type == 11 for k in range(7)) max 100
-expect [enemies.enemy[k].x for k in range(7) if enemies.enemy[k].active] == [208]
-expect [enemies.enemy[k].y for k in range(7) if enemies.enemy[k].active] == [80]
-expect [enemies.enemy[k].extraPhase for k in range(7) if enemies.enemy[k].active] == [4] # 4 points de vie (60E1)
+until any(enemies.objects[k].active and enemies.objects[k].type == 11 for k in range(15)) max 100
+expect [enemies.objects[k].x for k in range(15) if enemies.objects[k].active] == [208]
+expect [enemies.objects[k].y for k in range(15) if enemies.objects[k].active] == [80]
+expect [enemies.objects[k].extraPhase for k in range(15) if enemies.objects[k].active] == [4] # 4 points de vie (60E1)
 wait 1
-expect [enemies.enemy[k].x for k in range(7) if enemies.enemy[k].active] == [205]
+expect [enemies.objects[k].x for k in range(15) if enemies.objects[k].active] == [205]
 wait 2
-expect [enemies.enemy[k].x for k in range(7) if enemies.enemy[k].active] == [203]
+expect [enemies.objects[k].x for k in range(15) if enemies.objects[k].active] == [203]
 wait 2
-expect [enemies.enemy[k].x for k in range(7) if enemies.enemy[k].active] == [201]
+expect [enemies.objects[k].x for k in range(15) if enemies.objects[k].active] == [201]
 wait 2
-expect [enemies.enemy[k].x for k in range(7) if enemies.enemy[k].active] == [199]
+expect [enemies.objects[k].x for k in range(15) if enemies.objects[k].active] == [199]
 shot zzb-hopper
 # L'os (D700 type 4, 9F07) : vy -7B0h ou -4B0h a la creation (trace R : F850 et FB50), pose 4B, +50h par passe.
-until any(enemies.enemy[k].active and enemies.enemy[k].type == 13 for k in range(7)) max 900
-set b [k for k in range(7) if enemies.enemy[k].active and enemies.enemy[k].type == 13][0]
-expect enemies.enemy[b].pose == 75
-expect enemies.enemy[b].vy in (-1968, -1200) # -7B0h, -4B0h
+until any(enemies.objects[k].active and enemies.objects[k].type == 13 for k in range(15)) max 900
+set b [k for k in range(15) if enemies.objects[k].active and enemies.objects[k].type == 13][0]
+expect enemies.objects[b].pose == 75
+expect enemies.objects[b].vy in (-1968, -1200) # -7B0h, -4B0h
 shot zzb-os
 # Contact du corps (81CE : base 1, doublee) : energie 32 -> 30.
 expect enemies.energy == 32
@@ -69,7 +69,7 @@ poke vk_enemies+6 144
 set s0 ram32('vk_hud_score')
 hold B 2
 wait 16
-expect not any(enemies.enemy[k].active and enemies.enemy[k].type == 11 for k in range(7))
+expect not any(enemies.objects[k].active and enemies.objects[k].type == 11 for k in range(15))
 expect ram32('vk_hud_score') == s0 + 200
 # Salle 3 : hopper de la liste en (144, 144), coffre fixe (32, 128) contenu 0C et cle doree (160, 64) (decodes de la ROM, 5A49/5B1B).
 include zzb_next.inc
@@ -77,8 +77,8 @@ until game.stage == 8 and game.room == 3 max 200
 wait 10
 expect ram8('vk_candles+6') == 3 and ram8('vk_candles+9') == 25 and ram8('vk_candles+12') == 0x0C # coffre (32, 128)
 expect ram8('vk_candles+20') == 3 and ram8('vk_candles+23') == 0x17 # cle doree (160, 64)
-until any(enemies.enemy[k].active and enemies.enemy[k].type == 11 for k in range(7)) max 100
-expect [(enemies.enemy[k].x, enemies.enemy[k].y) for k in range(7) if enemies.enemy[k].active] == [(141, 144)]  # a peine cree, deja deplace de 3 pixels : B344 compte +12 (B364) comme le fait la ROM
+until any(enemies.objects[k].active and enemies.objects[k].type == 11 for k in range(15)) max 100
+expect [(enemies.objects[k].x, enemies.objects[k].y) for k in range(15) if enemies.objects[k].active] == [(141, 144)]  # a peine cree, deja deplace de 3 pixels : B344 compte +12 (B364) comme le fait la ROM
 shot zzb-salle3
 # La cle doree (160, 64) se prend au contact (8E50) : C700 = 1, la cle disparait du sol.
 # Le coffre prend cette cle (8F68), puis son contenu 0C attend 32 images et tombe (8C14, 8C2F).
@@ -109,36 +109,36 @@ shot zzb-salle4
 # X 82 Y 82, 84 84, 86 86, 88 87 (trace R images 4174-4180).
 include zzb_next.inc
 until game.stage == 8 and game.room == 5 max 200
-until any(enemies.enemy[k].active and enemies.enemy[k].type == 12 for k in range(7)) max 100
+until any(enemies.objects[k].active and enemies.objects[k].type == 12 for k in range(15)) max 100
 poke vk_game+0 212
 poke vk_game+1 144
-expect [(enemies.enemy[k].x, enemies.enemy[k].y, enemies.enemy[k].pose) for k in range(7) if enemies.enemy[k].active] == [(80, 80, 137)]
-until [enemies.enemy[k].state for k in range(7) if enemies.enemy[k].active] == [1] max 100
-expect [(enemies.enemy[k].x, enemies.enemy[k].y) for k in range(7) if enemies.enemy[k].active] == [(82, 82)]
+expect [(enemies.objects[k].x, enemies.objects[k].y, enemies.objects[k].pose) for k in range(15) if enemies.objects[k].active] == [(80, 80, 137)]
+until [enemies.objects[k].state for k in range(15) if enemies.objects[k].active] == [1] max 100
+expect [(enemies.objects[k].x, enemies.objects[k].y) for k in range(15) if enemies.objects[k].active] == [(82, 82)]
 wait 2
-expect [(enemies.enemy[k].x, enemies.enemy[k].y, enemies.enemy[k].pose) for k in range(7) if enemies.enemy[k].active] == [(84, 84, 138)]
+expect [(enemies.objects[k].x, enemies.objects[k].y, enemies.objects[k].pose) for k in range(15) if enemies.objects[k].active] == [(84, 84, 138)]
 wait 2
-expect [(enemies.enemy[k].x, enemies.enemy[k].y) for k in range(7) if enemies.enemy[k].active] == [(86, 86)]
+expect [(enemies.objects[k].x, enemies.objects[k].y) for k in range(15) if enemies.objects[k].active] == [(86, 86)]
 wait 2
-expect [(enemies.enemy[k].x, enemies.enemy[k].y) for k in range(7) if enemies.enemy[k].active] == [(88, 87)]
+expect [(enemies.objects[k].x, enemies.objects[k].y) for k in range(15) if enemies.objects[k].active] == [(88, 87)]
 shot zzb-leaper
 # Salle 6 : statue 0A (144, 144) tournee vers Simon (pose 4), boule en (140, 124) puis -4 par passe (trace R images 4034-4040), leaper en (80, 192).
 include zzb_next.inc
 until game.stage == 8 and game.room == 6 max 200
-until any(enemies.enemy[k].active and enemies.enemy[k].type == 9 for k in range(7)) max 100
-expect sorted((enemies.enemy[k].type, enemies.enemy[k].x, enemies.enemy[k].y) for k in range(7) if enemies.enemy[k].active) == [(9, 144, 144), (12, 80, 192)]
-until any(enemies.enemy[k].active and enemies.enemy[k].type == 10 for k in range(7)) max 200
-expect [(enemies.enemy[k].x, enemies.enemy[k].y) for k in range(7) if enemies.enemy[k].active and enemies.enemy[k].type == 10] == [(140, 124)]
+until any(enemies.objects[k].active and enemies.objects[k].type == 9 for k in range(15)) max 100
+expect sorted((enemies.objects[k].type, enemies.objects[k].x, enemies.objects[k].y) for k in range(15) if enemies.objects[k].active) == [(9, 144, 144), (12, 80, 192)]
+until any(enemies.objects[k].active and enemies.objects[k].type == 10 for k in range(15)) max 200
+expect [(enemies.objects[k].x, enemies.objects[k].y) for k in range(15) if enemies.objects[k].active and enemies.objects[k].type == 10] == [(140, 124)]
 wait 2
-expect [enemies.enemy[k].x for k in range(7) if enemies.enemy[k].active and enemies.enemy[k].type == 10] == [136]
+expect [enemies.objects[k].x for k in range(15) if enemies.objects[k].active and enemies.objects[k].type == 10] == [136]
 wait 2
-expect [enemies.enemy[k].x for k in range(7) if enemies.enemy[k].active and enemies.enemy[k].type == 10] == [132]
+expect [enemies.objects[k].x for k in range(15) if enemies.objects[k].active and enemies.objects[k].type == 10] == [132]
 shot zzb-salle6
 # Salle 7 : hopper en (128, 192), cle blanche visible en (32, 64) (prise au contact), porte en (236, 64), sortie vers le stage 9.
 include zzb_next.inc
 until game.stage == 8 and game.room == 7 max 200
-until any(enemies.enemy[k].active and enemies.enemy[k].type == 11 for k in range(7)) max 100
-expect [(enemies.enemy[k].x, enemies.enemy[k].y) for k in range(7) if enemies.enemy[k].active] == [(128, 192)]
+until any(enemies.objects[k].active and enemies.objects[k].type == 11 for k in range(15)) max 100
+expect [(enemies.objects[k].x, enemies.objects[k].y) for k in range(15) if enemies.objects[k].active] == [(128, 192)]
 expect ram8('items+4') == 0 and ram8('items') == 0 # cle posee sur le rebord, pas encore prise
 poke vk_game+0 40
 poke vk_game+1 66
@@ -158,4 +158,4 @@ expect game.stage == 9 and game.room == 0 and game.player.x == 16 and game.playe
 shot zzb-stage9
 # Apres la sortie : stage 9 charge avec ses cartes, bougies et blocs ; la salle 0 n'a que le canal 08 (zzc_stage9.txt), l'energie est gardee.
 wait 200
-expect enemies.energy == 32 and not any(enemies.enemy[k].active and enemies.enemy[k].type != 7 for k in range(7))
+expect enemies.energy == 32 and not any(enemies.objects[k].active and enemies.objects[k].type != 7 for k in range(15))

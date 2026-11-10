@@ -19,7 +19,7 @@ wait 10
 hold A 3
 until game.room == 4 max 10 A+RIGHT
 expect game.room == 4 # salle 4 du hall
-until enemies.type5Timer == 0 max 40 # setRoom
+until enemies.alive == 0 max 40 # setRoom (the room's first pass runs in the same frame)
 poke vk_game+0 100
 # Simon invulnerable (C42D) : pas de contact pendant les coups.
 poke vk_enemies+127 255

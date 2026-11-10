@@ -28,20 +28,20 @@ until game.stage == 7 and game.room == 1 max 200
 poke vk_game+0 232
 poke vk_game+1 176
 until enemies.alive >= 2 max 400
-expect [(enemies.enemy[k].type, enemies.enemy[k].x, enemies.enemy[k].y) for k in range(7) if enemies.enemy[k].active] == [(14, 80, 144), (14, 160, 144)]
+expect [(enemies.objects[k].type, enemies.objects[k].x, enemies.objects[k].y) for k in range(15) if enemies.objects[k].active] == [(14, 80, 144), (14, 160, 144)]
 # Attente de 3Ch passes (+C = 3Ch - (R >> 3)), puis le premier saut vers Simon : passe 60 (X 82, Y 143), 61, 62 (au sol), 64 (en l'air).
 wait 117
-expect [(enemies.enemy[k].x, enemies.enemy[k].y) for k in range(7) if enemies.enemy[k].active] == [(80, 144), (160, 144)]
+expect [(enemies.objects[k].x, enemies.objects[k].y) for k in range(15) if enemies.objects[k].active] == [(80, 144), (160, 144)]
 wait 2
-expect [(enemies.enemy[k].x, enemies.enemy[k].y) for k in range(7) if enemies.enemy[k].active] == [(82, 143), (162, 143)]
+expect [(enemies.objects[k].x, enemies.objects[k].y) for k in range(15) if enemies.objects[k].active] == [(82, 143), (162, 143)]
 wait 2
-expect [(enemies.enemy[k].x, enemies.enemy[k].y) for k in range(7) if enemies.enemy[k].active] == [(84, 144), (164, 144)]
+expect [(enemies.objects[k].x, enemies.objects[k].y) for k in range(15) if enemies.objects[k].active] == [(84, 144), (164, 144)]
 wait 2
-expect [(enemies.enemy[k].x, enemies.enemy[k].y) for k in range(7) if enemies.enemy[k].active] == [(84, 144), (164, 144)]
+expect [(enemies.objects[k].x, enemies.objects[k].y) for k in range(15) if enemies.objects[k].active] == [(84, 144), (164, 144)]
 wait 4
-expect [(enemies.enemy[k].x, enemies.enemy[k].y) for k in range(7) if enemies.enemy[k].active] == [(86, 137), (166, 137)]
+expect [(enemies.objects[k].x, enemies.objects[k].y) for k in range(15) if enemies.objects[k].active] == [(86, 137), (166, 137)]
 wait 2
-expect [(enemies.enemy[k].x, enemies.enemy[k].y) for k in range(7) if enemies.enemy[k].active] == [(88, 130), (168, 130)]
+expect [(enemies.objects[k].x, enemies.objects[k].y) for k in range(15) if enemies.objects[k].active] == [(88, 130), (168, 130)]
 shot zza-puce
 # Contact : degat 2 (trace : energie 32 a 30), recul, invulnerabilite.
 poke Enemies_god 0
@@ -71,25 +71,25 @@ poke Enemies_god 1
 poke vk_game+0 232
 poke vk_game+1 176
 until enemies.alive >= 1 max 400
-expect [(enemies.enemy[k].type, enemies.enemy[k].x, enemies.enemy[k].y) for k in range(7) if enemies.enemy[k].active] == [(11, 144, 176)]
+expect [(enemies.objects[k].type, enemies.objects[k].x, enemies.objects[k].y) for k in range(15) if enemies.objects[k].active] == [(11, 144, 176)]
 wait 1
-expect [(enemies.enemy[k].x, enemies.enemy[k].y) for k in range(7) if enemies.enemy[k].active] == [(146, 176)]
+expect [(enemies.objects[k].x, enemies.objects[k].y) for k in range(15) if enemies.objects[k].active] == [(146, 176)]
 wait 2
-expect [(enemies.enemy[k].x, enemies.enemy[k].y) for k in range(7) if enemies.enemy[k].active] == [(148, 176)]
+expect [(enemies.objects[k].x, enemies.objects[k].y) for k in range(15) if enemies.objects[k].active] == [(148, 176)]
 wait 2
-expect [(enemies.enemy[k].x, enemies.enemy[k].y) for k in range(7) if enemies.enemy[k].active] == [(150, 176)]
+expect [(enemies.objects[k].x, enemies.objects[k].y) for k in range(15) if enemies.objects[k].active] == [(150, 176)]
 wait 2
-expect [(enemies.enemy[k].x, enemies.enemy[k].y) for k in range(7) if enemies.enemy[k].active] == [(153, 176)]
+expect [(enemies.objects[k].x, enemies.objects[k].y) for k in range(15) if enemies.objects[k].active] == [(153, 176)]
 shot zza-squelette
 # Passe 38 : tombe du bord en X 216, Y 192 ; passes 39 a 54 : arret ; passe 55 : premier os en (217, 171), puis (219, 166), (220, 162).
 wait 68
-expect [(enemies.enemy[k].x, enemies.enemy[k].y) for k in range(7) if enemies.enemy[k].active] == [(216, 192)]
+expect [(enemies.objects[k].x, enemies.objects[k].y) for k in range(15) if enemies.objects[k].active] == [(216, 192)]
 wait 34
-expect [(enemies.enemy[k].type, enemies.enemy[k].x, enemies.enemy[k].y) for k in range(7) if enemies.enemy[k].active] == [(11, 213, 192), (13, 217, 171)]
+expect [(enemies.objects[k].type, enemies.objects[k].x, enemies.objects[k].y) for k in range(15) if enemies.objects[k].active] == [(11, 213, 192), (13, 217, 171)]
 wait 2
-expect [(enemies.enemy[k].x, enemies.enemy[k].y) for k in range(7) if enemies.enemy[k].active] == [(213, 192), (219, 166)]
+expect [(enemies.objects[k].x, enemies.objects[k].y) for k in range(15) if enemies.objects[k].active] == [(213, 192), (219, 166)]
 wait 2
-expect [(enemies.enemy[k].x, enemies.enemy[k].y) for k in range(7) if enemies.enemy[k].active] == [(213, 192), (220, 162)]
+expect [(enemies.objects[k].x, enemies.objects[k].y) for k in range(15) if enemies.objects[k].active] == [(213, 192), (220, 162)]
 shot zza-os
 # Contact du squelette (deduit : table 81CE, paire 02 01 doublee) : degat 2.
 poke Enemies_god 0
@@ -123,15 +123,15 @@ poke Enemies_god 1
 poke vk_game+0 232
 poke vk_game+1 176
 until enemies.alive >= 1 max 400
-expect [(enemies.enemy[k].type, enemies.enemy[k].x, enemies.enemy[k].y) for k in range(7) if enemies.enemy[k].active] == [(12, 112, 80)]
+expect [(enemies.objects[k].type, enemies.objects[k].x, enemies.objects[k].y) for k in range(15) if enemies.objects[k].active] == [(12, 112, 80)]
 wait 45
-expect [(enemies.enemy[k].x, enemies.enemy[k].y) for k in range(7) if enemies.enemy[k].active] == [(112, 80)]
+expect [(enemies.objects[k].x, enemies.objects[k].y) for k in range(15) if enemies.objects[k].active] == [(112, 80)]
 wait 2
-expect [(enemies.enemy[k].x, enemies.enemy[k].y) for k in range(7) if enemies.enemy[k].active] == [(114, 82)]
+expect [(enemies.objects[k].x, enemies.objects[k].y) for k in range(15) if enemies.objects[k].active] == [(114, 82)]
 wait 2
-expect [(enemies.enemy[k].x, enemies.enemy[k].y) for k in range(7) if enemies.enemy[k].active] == [(116, 84)]
+expect [(enemies.objects[k].x, enemies.objects[k].y) for k in range(15) if enemies.objects[k].active] == [(116, 84)]
 wait 2
-expect [(enemies.enemy[k].x, enemies.enemy[k].y) for k in range(7) if enemies.enemy[k].active] == [(118, 86)]
+expect [(enemies.objects[k].x, enemies.objects[k].y) for k in range(15) if enemies.objects[k].active] == [(118, 86)]
 shot zza-creature
 # Contact : degat 2 (trace : energie 27 a 25, 25 a 23, 23 a 21).
 poke Enemies_god 0

@@ -29,30 +29,30 @@ expect enemies.alive == 0
 # Salle 0, Simon immobile en (232, 128) : la chauve-souris nait en X 10h, Y 78h, et avance de 120h par passe.
 poke vk_game+0 232
 poke vk_game+1 128
-until any(enemies.enemy[k].active and enemies.enemy[k].type == 8 for k in range(7)) max 400
-expect [enemies.enemy[k].x for k in range(7) if enemies.enemy[k].active] == [16]
+until any(enemies.objects[k].active and enemies.objects[k].type == 8 for k in range(15)) max 400
+expect [enemies.objects[k].x for k in range(15) if enemies.objects[k].active] == [16]
 wait 1
-expect [enemies.enemy[k].x for k in range(7) if enemies.enemy[k].active] == [17]
+expect [enemies.objects[k].x for k in range(15) if enemies.objects[k].active] == [17]
 wait 2
-expect [enemies.enemy[k].x for k in range(7) if enemies.enemy[k].active] == [18]
+expect [enemies.objects[k].x for k in range(15) if enemies.objects[k].active] == [18]
 wait 2
-expect [enemies.enemy[k].x for k in range(7) if enemies.enemy[k].active] == [19]
+expect [enemies.objects[k].x for k in range(15) if enemies.objects[k].active] == [19]
 wait 2
-expect [enemies.enemy[k].x for k in range(7) if enemies.enemy[k].active] == [20]
+expect [enemies.objects[k].x for k in range(15) if enemies.objects[k].active] == [20]
 wait 2
-expect [enemies.enemy[k].x for k in range(7) if enemies.enemy[k].active] == [21]
+expect [enemies.objects[k].x for k in range(15) if enemies.objects[k].active] == [21]
 wait 2
-expect [enemies.enemy[k].x for k in range(7) if enemies.enemy[k].active] == [22]
+expect [enemies.objects[k].x for k in range(15) if enemies.objects[k].active] == [22]
 wait 2
-expect [enemies.enemy[k].x for k in range(7) if enemies.enemy[k].active] == [23]
+expect [enemies.objects[k].x for k in range(15) if enemies.objects[k].active] == [23]
 wait 2
-expect [enemies.enemy[k].x for k in range(7) if enemies.enemy[k].active] == [25]
-expect [enemies.enemy[k].y for k in range(7) if enemies.enemy[k].active] == [120]
+expect [enemies.objects[k].x for k in range(15) if enemies.objects[k].active] == [25]
+expect [enemies.objects[k].y for k in range(15) if enemies.objects[k].active] == [120]
 shot zx-chauve-souris
 # Le premier contact, comme la trace (MSX, images 1205-1206) : X 220, degat 2.
 until enemies.energy < 32 max 600
 expect enemies.energy == 30
-expect [enemies.enemy[k].x for k in range(7) if enemies.enemy[k].active and enemies.enemy[k].type == 8][0] == 220
+expect [enemies.objects[k].x for k in range(15) if enemies.objects[k].active and enemies.objects[k].type == 8][0] == 220
 # Salle 3 : objet 08 (9DD5), memes valeurs que la trace, Simon en (232, 128).
 until game.player.mode == 0 max 200
 tap START
@@ -75,22 +75,22 @@ tap B
 until game.stage == 6 and game.room == 3 max 200
 poke vk_game+0 232
 poke vk_game+1 128
-until any(enemies.enemy[k].active and enemies.enemy[k].type == 7 for k in range(7)) max 600
+until any(enemies.objects[k].active and enemies.objects[k].type == 7 for k in range(15)) max 600
 wait 1
-expect [enemies.enemy[k].x for k in range(7) if enemies.enemy[k].active] == [18]
-expect [enemies.enemy[k].y for k in range(7) if enemies.enemy[k].active] == [116]
+expect [enemies.objects[k].x for k in range(15) if enemies.objects[k].active] == [18]
+expect [enemies.objects[k].y for k in range(15) if enemies.objects[k].active] == [116]
 wait 2
-expect [enemies.enemy[k].x for k in range(7) if enemies.enemy[k].active] == [21]
-expect [enemies.enemy[k].y for k in range(7) if enemies.enemy[k].active] == [112]
+expect [enemies.objects[k].x for k in range(15) if enemies.objects[k].active] == [21]
+expect [enemies.objects[k].y for k in range(15) if enemies.objects[k].active] == [112]
 wait 2
-expect [enemies.enemy[k].x for k in range(7) if enemies.enemy[k].active] == [23]
-expect [enemies.enemy[k].y for k in range(7) if enemies.enemy[k].active] == [109]
+expect [enemies.objects[k].x for k in range(15) if enemies.objects[k].active] == [23]
+expect [enemies.objects[k].y for k in range(15) if enemies.objects[k].active] == [109]
 wait 2
-expect [enemies.enemy[k].x for k in range(7) if enemies.enemy[k].active] == [26]
-expect [enemies.enemy[k].y for k in range(7) if enemies.enemy[k].active] == [106]
+expect [enemies.objects[k].x for k in range(15) if enemies.objects[k].active] == [26]
+expect [enemies.objects[k].y for k in range(15) if enemies.objects[k].active] == [106]
 wait 2
-expect [enemies.enemy[k].x for k in range(7) if enemies.enemy[k].active] == [28]
-expect [enemies.enemy[k].y for k in range(7) if enemies.enemy[k].active] == [103]
+expect [enemies.objects[k].x for k in range(15) if enemies.objects[k].active] == [28]
+expect [enemies.objects[k].y for k in range(15) if enemies.objects[k].active] == [103]
 shot zx-objet08
 # Salle 2 : la statue 0A en (192, 80) tire une boule en (196, 60), +4 par passe (trace).
 tap START
@@ -111,27 +111,27 @@ tap B
 until game.stage == 6 and game.room == 2 max 200
 poke vk_game+0 232
 poke vk_game+1 160
-until any(enemies.enemy[k].active and enemies.enemy[k].type == 9 for k in range(7)) max 100
-expect [enemies.enemy[k].x for k in range(7) if enemies.enemy[k].active] == [192]
-expect [enemies.enemy[k].y for k in range(7) if enemies.enemy[k].active] == [80]
-until any(enemies.enemy[k].active and enemies.enemy[k].type == 10 for k in range(7)) max 200
-expect [enemies.enemy[k].x for k in range(7) if enemies.enemy[k].active and enemies.enemy[k].type == 10] == [196]
-expect [enemies.enemy[k].y for k in range(7) if enemies.enemy[k].active and enemies.enemy[k].type == 10] == [60]
+until any(enemies.objects[k].active and enemies.objects[k].type == 9 for k in range(15)) max 100
+expect [enemies.objects[k].x for k in range(15) if enemies.objects[k].active] == [192]
+expect [enemies.objects[k].y for k in range(15) if enemies.objects[k].active] == [80]
+until any(enemies.objects[k].active and enemies.objects[k].type == 10 for k in range(15)) max 200
+expect [enemies.objects[k].x for k in range(15) if enemies.objects[k].active and enemies.objects[k].type == 10] == [196]
+expect [enemies.objects[k].y for k in range(15) if enemies.objects[k].active and enemies.objects[k].type == 10] == [60]
 # La boule marche dans la meme passe que la statue (trace R2 : X de la boule et compteur +12 de la statue
 # changent aux memes images, 1910, 1912, ...) et non une image avant.
-set st0 [enemies.enemy[k].sub for k in range(7) if enemies.enemy[k].active and enemies.enemy[k].type == 9][0]
+set st0 [enemies.objects[k].sub for k in range(15) if enemies.objects[k].active and enemies.objects[k].type == 9][0]
 wait 1
-expect [enemies.enemy[k].x for k in range(7) if enemies.enemy[k].active and enemies.enemy[k].type == 10] == [196]
-expect [enemies.enemy[k].sub for k in range(7) if enemies.enemy[k].active and enemies.enemy[k].type == 9][0] == st0
+expect [enemies.objects[k].x for k in range(15) if enemies.objects[k].active and enemies.objects[k].type == 10] == [196]
+expect [enemies.objects[k].sub for k in range(15) if enemies.objects[k].active and enemies.objects[k].type == 9][0] == st0
 wait 1
-expect [enemies.enemy[k].x for k in range(7) if enemies.enemy[k].active and enemies.enemy[k].type == 10] == [200]
-expect [enemies.enemy[k].sub for k in range(7) if enemies.enemy[k].active and enemies.enemy[k].type == 9][0] == st0 - 1
+expect [enemies.objects[k].x for k in range(15) if enemies.objects[k].active and enemies.objects[k].type == 10] == [200]
+expect [enemies.objects[k].sub for k in range(15) if enemies.objects[k].active and enemies.objects[k].type == 9][0] == st0 - 1
 wait 2
-expect [enemies.enemy[k].x for k in range(7) if enemies.enemy[k].active and enemies.enemy[k].type == 10] == [204]
+expect [enemies.objects[k].x for k in range(15) if enemies.objects[k].active and enemies.objects[k].type == 10] == [204]
 shot zx-statue
-until [enemies.enemy[k].x for k in range(7) if enemies.enemy[k].active and enemies.enemy[k].type == 10] == [240] max 100
+until [enemies.objects[k].x for k in range(15) if enemies.objects[k].active and enemies.objects[k].type == 10] == [240] max 100
 wait 2
-expect not any(enemies.enemy[k].active and enemies.enemy[k].type == 10 for k in range(7))
+expect not any(enemies.objects[k].active and enemies.objects[k].type == 10 for k in range(15))
 # Salle 1 : trois pics du plafond (8F9A), premiere passe : Y 64, 64, 60 (la troisieme attend une passe paire).
 tap START
 wait 10

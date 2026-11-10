@@ -508,20 +508,14 @@ void vk_step_platforms(void)
     }
 }
 
-void vk_step_enemies(void)
+/* Enemy cells of the room (VRAM copies only, no game state). The CPU copies cost ~160
+ * lines: done on the first game frame of a room they overran it and lost a pass of the
+ * enemies (zza/zzb/zzc). show_hall_room loads them while the room is shown; the room
+ * change work of vk_step_enemies then skips them when the key is already loaded. */
+static u16 cells_key = 0xFFFF;
+static void room_cells(u16 key)
 {
-    const u16 key = room_key();
-    EnemyRoomVars vars;
-    if (key != enemy_room_key)
-    {
-        enemy_room_key = key;
-        Enemies_setRoom(&vk_enemies);
-        Enemies_spawnTimerRoom(&enemy_timer);   /* 9CA9: CF10 carries over */
-        /* 6395, 6398: the records, then a first step while the room loads. */
-        vk_platforms_room(&vk_platforms, key ? vk_game.stage : 0, vk_game.room);
-        vk_platforms_step(&vk_platforms);
-        platform_pass = 0;
-        vk_crushers_room(&vk_crushers, key ? vk_game.stage : 0, vk_game.room);
+    cells_key = key;
         if (key)
         {
             VDP_loadTileData((const u32 *)vk_enemy_tiles, ENEMY_TILE_INDEX, VK_ENEMY_TILE_COUNT, CPU);
@@ -581,6 +575,30 @@ void vk_step_enemies(void)
                 const VKLateGraphicsRoom *g=&late_graphics_rooms[vk_game.stage-12][vk_game.room];
                 if(g->tiles)VDP_loadTileData(&late_graphics_words[g->first*8],LATE_ENEMY_TILE_INDEX,g->tiles,CPU);
             }
+}
+
+void vk_enemy_room_cells(void)
+{
+    const u16 key = room_key();
+    if (key && key != cells_key) room_cells(key);
+}
+
+void vk_step_enemies(void)
+{
+    const u16 key = room_key();
+    EnemyRoomVars vars;
+    if (key != enemy_room_key)
+    {
+        enemy_room_key = key;
+        Enemies_setRoom(&vk_enemies);
+        Enemies_spawnTimerRoom(&enemy_timer);   /* 9CA9: CF10 carries over */
+        /* 6395, 6398: the records, then a first step while the room loads. */
+        vk_platforms_room(&vk_platforms, key ? vk_game.stage : 0, vk_game.room);
+        vk_platforms_step(&vk_platforms);
+        platform_pass = 0;
+        vk_crushers_room(&vk_crushers, key ? vk_game.stage : 0, vk_game.room);
+        if (key != cells_key) room_cells(key);
+        cells_key = 0xFFFF;   /* one use: VRAM may be overwritten before the next room change */
         /* 6319-6333. PROVISIONAL: the bar is full again outside the boss room. */
         if (vk_boss_room(vk_game.stage, vk_game.room))
         {
@@ -728,7 +746,9 @@ void vk_step_enemies(void)
     }
 }
 
-static int candle_airborne(VKByte kind,VKByte x,VKByte y){boss15_pool_sync();return Enemies_candleLoot(&vk_enemies,kind,x,y);}
+/* The courtyard runs no Enemies_frame: a C800 object would never move there. Answer -1 (no
+ * pool) so its torches keep the C500 drop traced in openMSX (8B22, scenario i_). */
+static int candle_airborne(VKByte kind,VKByte x,VKByte y){if(!room_key())return -1;boss15_pool_sync();return Enemies_candleLoot(&vk_enemies,kind,x,y);}
 
 void vk_reset_enemies(void)
 {
