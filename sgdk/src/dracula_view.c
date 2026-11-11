@@ -50,11 +50,15 @@ static void bust(const VKDracula *d)
  if(last_bust==(s16)key)return;
  for(i=0;i<128;i++)row_words[i]=0;
  for(n=0;n<d->bust_count;n++)for(i=0;i<128;i++){
-  const u32 src=vk_dracula_bust_tiles[(d->bust_layers[n]-1)*128+i];u32 mask=0;int shift;
-  for(shift=0;shift<32;shift+=4)if((src>>shift)&15)mask|=(u32)15<<shift;
+  /* Opaque pixels of the layer replace those below: F in each non-zero nibble (bit 0 of every nibble
+   * gathered, then times 15 without a 32-bit multiply). Was a loop of 8 tests a word: ~200 lines a
+   * recomposition, one frame lost every 5 in the Dracula room. */
+  const u32 src=vk_dracula_bust_tiles[(d->bust_layers[n]-1)*128+i];
+  u32 mask=(src|src>>1|src>>2|src>>3)&0x11111111UL;mask=(mask<<4)-mask;
   row_words[i]=(row_words[i]&~mask)|src;
  }
- VDP_loadTileData(row_words,ENEMY4_TILE_INDEX,16,CPU);last_bust=(s16)key;
+ /* row_words is only written here, once a frame: the queued DMA reads it at the next V-blank. */
+ VDP_loadTileData(row_words,ENEMY4_TILE_INDEX,16,DMA_QUEUE);last_bust=(s16)key;
 }
 static void credit_row(u16 row)
 {

@@ -55,7 +55,7 @@ def main():
     m.run(4, {BUTTONS['START']}); m.run(4, set()); m.run(4, {BUTTONS['START']}); m.run(6, set())
     if not until(lambda: m.rd16(mode) == 3, 600):
         raise SystemExit('no courtyard after title')
-    failures, done = [], 0
+    failures, done, slow = [], 0, []
     for r in rooms:
         s, room = r['stage'], r['room']
         if not lo <= s <= hi or (a.only >= 0 and room != a.only):
@@ -64,17 +64,28 @@ def main():
             failures.append((s, room, 'entry: room freeze never ended'))
             m.image().save(a.out / f'fail-{s:02d}-{room:02d}.png')
             continue
-        last, still = None, 0
+        last, still, lost, worst = None, 0, 0, None
+        where, settle = None, 0
         for keys in INPUTS:
             m.wr(addr('Enemies_god'), 1)
             m.run(1, {BUTTONS[k] for k in keys})
             if a.trace and m.frame % 6 == 0: print('  t', m.frame, keys, 'room', m.rd8(g + 20), 'x', m.rd8(g), 'y', m.rd8(g + 1), 'mode', m.rd8(g + 2), 'hp', m.rd8(addr('health')), m.rd8(addr('health') + 1))
             beat = (m.rd8(e + 158), m.rd8(e + 147))   # tick (C003) and itemPhase
+            # A lost frame: normal play (alive, no freeze, pause, shop or map) but the loop did not end a pass.
+            here = (m.rd8(g + 22), m.rd8(g + 20), m.rd8(addr('health') + 1), m.rd8(f))
+            settle = 0 if here != where else settle + 1
+            where = here
+            if (settle > 40 and last is not None and beat[1] == last[1] and m.rd8(addr('health') + 1) == 0 and m.rd8(f) == 0
+                    and not m.rd8(addr('paused')) and not m.rd8(addr('vk_walls') + 348) and m.rd16(mode) == 4):
+                lost += 1; worst = worst or (m.frame, m.rd8(g + 20), m.rd8(g), m.rd8(g + 1))
+                if a.trace: print('  lost', m.frame, beat, [m.rd16(addr('vk_dbg_p') + 2 * i) for i in range(8)])
             still = still + 1 if beat == last else 0
             last = beat
             if still > 60:
                 break
         front = m.rd16(mode)
+        if lost:
+            slow.append((s, room, lost, worst))
         if a.shots:
             m.image().save(a.out / f'room-{s:02d}-{room:02d}.png')
             print(s, room, 'game', m.rd8(g + 22), m.rd8(g + 20), 'x', m.rd8(g), 'y', m.rd8(g + 1), 'front', front, 'frame', m.frame)
@@ -87,7 +98,9 @@ def main():
             m.run(4, {BUTTONS['START']}); m.run(4, set()); m.run(4, {BUTTONS['START']}); m.run(6, set())
             until(lambda: m.rd16(mode) == 3, 600)
         done += 1
-    print(f'{done} rooms, {len(failures)} failures')
+    print(f'{done} rooms, {len(failures)} failures, {len(slow)} rooms with lost frames')
+    for x in slow:
+        print('SLOW stage %d room %d: %d lost frames, first at %s (frame, room, x, y)' % x)
     for x in failures:
         print('FAIL stage %d room %d: %s' % x)
     raise SystemExit(1 if failures else 0)

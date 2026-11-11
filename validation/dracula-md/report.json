@@ -1,7 +1,7 @@
 {
   "passed": true,
   "scope": "RAM entry into stage18/room9; no traversal validation",
-  "frames": 24889,
+  "frames": 24859,
   "room_pixels": 17408,
   "credits_pixels": 57344,
   "score": 160000,
