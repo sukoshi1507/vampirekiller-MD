@@ -465,7 +465,7 @@ static int stage2Type1Tick(EnemySpawnTimer *t, const EnemyRoomVars *v, EnemyStat
 
     side = (dCoord == 0xF0) ? ENEMY_SIDE_RIGHT : ENEMY_SIDE_LEFT;
     k = Enemies_spawn(s, side, side == ENEMY_SIDE_RIGHT ? ENEMY_TYPE_A : ENEMY_TYPE_B,
-                      v->stage == 11 ? 0xB0 : v->stage == 3 ? 0xA0 : ENEMY_S2_TYPE1_Y, side == ENEMY_SIDE_RIGHT ? 1 : 15);
+                      v->stage == 11 ? 0xB0 - 0x20 : v->stage == 3 ? 0xA0 : ENEMY_S2_TYPE1_Y, side == ENEMY_SIDE_RIGHT ? 1 : 15);
     if (k < 0) return 0;
     s->enemy[k].romBox = 1;
     return 1;
@@ -478,7 +478,9 @@ int Enemies_spawnTimerTick(EnemySpawnTimer *t, const EnemyRoomVars *v, EnemyStat
     EnemyU8 side;
     EnemyU8 type;
 
-    if (v->stage == 2 || v->stage == 3 || v->stage == 11) return stage2Type1Tick(t, v, s);   /* 9CFC : D000 = 11 -> 9D13, E = B0h (trace R, salle 0 : Y B0h) */
+    /* 9CFC : D000 = 11 -> 9D13, E = B0h (trace R, salle 0 : bloc en Y B0h). As for E = C0h of stage 1 (Y A0h), the port's
+     * Y is E - 20h: with B0h itself the zombies were born 32 px under the floor of room 0, fell and wrapped (tester 2026-11-11). */
+    if (v->stage == 2 || v->stage == 3 || v->stage == 11) return stage2Type1Tick(t, v, s);
 
     /* Tables des autres stages non extraites : pas de tir. */
     if (v->stage != 1 || v->room > 7) return 0;

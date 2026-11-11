@@ -4,6 +4,10 @@ include zzm_enter11.inc
 poke Enemies_god 1
 wait 10
 until any(enemies.objects[k].active and enemies.objects[k].type in (0, 1) for k in range(15)) max 500
+# Born on the floor of room 0 (E = B0h, port Y = E - 20h), not 32 px under it (they fell and wrapped, tester 2026-11-11).
+expect all(140 <= enemies.objects[k].y <= 148 for k in range(15) if enemies.objects[k].active and enemies.objects[k].type in (0, 1))
+wait 30
+expect all(140 <= enemies.objects[k].y <= 148 for k in range(15) if enemies.objects[k].active and enemies.objects[k].type in (0, 1))
 include zzb_next.inc
 until game.stage == 11 and game.room == 1 max 200
 # Puce 0D de la liste fixe en (144, 80) (trace R : bloc 0D en X 90h, Y 50h).
