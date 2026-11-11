@@ -1,0 +1,48 @@
+# (zzq) Stage 13 : depuis le sol de la salle 0, la seule montee passe par la salle 1 : escalier du sol (pied vers X 100) jusqu'au
+# sommet de la tour, second escalier vers l'etage, retour a gauche en salle 0 par l'etage, escalier vers la salle 3.
+# Trajet a la manette, sans poke de position (le test de parcours 12-18 n'avait pas trouve cette route).
+until front_mode == MODES['TITLE'] max 2000
+tap START
+tap START
+until front_mode == MODES['COURTYARD'] max 500
+wait 60
+tap START
+until ram8('paused') == 1 max 30
+tap UP
+tap UP
+tap DOWN
+tap DOWN
+tap LEFT
+tap RIGHT
+tap LEFT
+tap RIGHT
+tap B
+tap A
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap B
+until game.stage == 13 and game.room == 0 max 300
+poke Enemies_god 1
+poke vk_enemies+162 1
+until game.player.mode == 0 max 300
+wait 20
+until game.room == 1 max 600 RIGHT
+until game.player.x >= 98 max 300 RIGHT
+until game.player.y <= 114 max 300 UP
+expect game.room == 1 and game.player.x >= 150
+until game.player.y <= 80 max 300 UP
+until game.room == 0 max 600 LEFT
+expect game.player.y == 80
+until game.player.x <= 128 max 300 LEFT
+until game.room == 3 max 400 UP
+expect game.stage == 13 and game.room == 3
