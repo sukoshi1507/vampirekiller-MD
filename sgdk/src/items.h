@@ -64,4 +64,7 @@ int vk_items_controls_locked(const VKItems *items);
  * bar lift and the walk out. Moves Simon (door wall, walk out). */
 VKItemEvent vk_items_tick(VKItems *items, VKGame *game);
 
+/* 7763: the door of this stage fades the music when it opens (table 7777). */
+int vk_items_door_fades(int stage);
+
 #endif

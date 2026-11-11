@@ -133,8 +133,10 @@ const VKByte *vk_candles_fallback_record(const VKCandles *c,int slot);
 int vk_candles_fallback_sprite(const VKCandles *c,int slot,VKByte out[4]);
 void vk_candles_begin(VKCandles *c);
 /* Entering a stage again (a new stage start): every candle and fixed object of
- * that stage is back. PROVISIONAL: the MSX keeps them in the decoded stage stream
- * (flag pointers +6/+7, +14/+15), whose reload is not traced. */
+ * that stage is back. The MSX keeps them in the decoded stage stream (flag pointers
+ * +7/+8, +14/+15, cleared by 8874); state 4 (423A -> 62E6 -> 5A49) decodes the stream
+ * again at each stage entry as at each new life, and the flags are back (executed by
+ * tools/verify_rom_markers.py: flag cleared, candle gone, 5A49, candle back). */
 void vk_candles_reset_stage(VKCandles *c, VKByte stage);
 /* New life (state 4): 62E6 decodes the stage stream again (5A49), so every
  * candle and fixed object of the stage is back, and 70DC clears the weapon
@@ -196,8 +198,10 @@ int vk_candles_hit(VKCandles *c, int i);
  * others; 0 for 00, 15 and 19 (no effect). */
 VKByte vk_candles_sound(VKByte kind);
 /* Sheet object of a drop to draw, 0 for none. Bursting drops show nothing here
- * (the flame is drawn by the caller); falling ones show the small heart (E8) or
- * the orb (EC), PROVISIONAL stand-ins taken from the sheet. */
+ * (their flame, patterns F4 / F8 / EC of research/candle-flames.md, is drawn by
+ * burst_sprite in candle_view.c); a drop at rest shows its object, the small heart
+ * falls as itself, and the content of a chest shows the object 07 until 8B70 draws
+ * its own object. */
 VKByte vk_candles_drop_sprite(const VKDrop *d, VKByte clock);
 
 #endif

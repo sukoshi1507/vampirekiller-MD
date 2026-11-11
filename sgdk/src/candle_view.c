@@ -33,7 +33,13 @@
 #define WEAPON_ICON_TILE_INDEX (HUD_TEXT_TILE_INDEX + HUD_TEXT_TILE_COUNT)
 #define HUD_WEAPON_X 0x80
 #define HUD_WEAPON_Y 0x0C
-#define CANDLE_FRAME_TICKS 8          /* PROVISIONAL: the MSX candle cadence is not measured */
+/* 869D-86C7 (8671, once per state 5 pass): the counter +6 of each candle goes up by
+ * one; when its bits 0-1 are 0 the candle is drawn again, frame = bit 3 of the
+ * counter: each frame stays 8 passes = 16 frames (executed 70 passes in three rooms,
+ * tools/verify_rom_markers.py). PROVISIONAL: the phase. On the MSX each candle starts
+ * from the low byte of its stream address + 2 at the room load; here all the candles
+ * follow the clock of the room. */
+#define CANDLE_FRAME_TICKS 16
 
 _Static_assert(WEAPON_ICON_TILE_INDEX + 4 <= DEATH_TILE_INDEX,
                "HUD weapon icon tiles before the death pose");

@@ -213,8 +213,10 @@ void vk_candles_enter(VKCandles *c, const VKGame *game)
     c->count = (VKByte)(vk_candle_first[stage][game->room + 1] - vk_candle_first[stage][game->room]);
     c->lit = (VKByte)(((1u << c->count) - 1) & ~VK_CANDLE_OUT(c, stage, game->room));
     /* 873A then 86CA: each hidden block still there is written into the room map
-     * (display and collision). PROVISIONAL: the MSX does it 16 frames after the
-     * room is entered (fishman runs), here at once. */
+     * (display and collision). The MSX does it in the room load of state 9 (62F5 ->
+     * 8671 at 6310), so the blocks are there from the first frame of play, as here
+     * (research/castle-candles.md, "Moment de la pose"; the delay once seen in the
+     * fishman runs was the freeze of state 9, room_freeze.c). */
     if (vk_game_room_map(game))
         for (i = 0; i < c->count; i++)
             if (vk_candles_lit(c, i) && vk_candles_def(c, i)->mode == VK_CANDLE_HIDDEN_BLOCK)

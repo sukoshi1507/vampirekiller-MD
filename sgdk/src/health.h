@@ -16,10 +16,12 @@
  *     state 6 -> title 6.31 s (378 frames) when the game is over.
  * Respawn place (vk_game_respawn in gameplay.c): 70D6 clears D001, 6402 reads
  * 641F[D000] (code; traced at stage 2: room 0, x 16, y 96).
- * PROVISIONAL (not traced):
- *   - Simon's controls are locked from the fatal contact to the respawn; the MSX
- *     death animation is not documented.
- *   - Bar scale: 2 px per energy point (32 points on the 64 px HUD bar). */
+ * Controls: no key is read during the recoil (C420 = 5) nor in the death state
+ * (C420 = 6, 7053-7070: pose 09/05, the remains of Simon; 767B and the routines
+ * of Simon return while C420 = 6), so they stay locked from the fatal contact to
+ * the respawn (code, research/player-health.md; the pose is in gameplay.c).
+ * Bar scale: 2 px per energy point, 4 px high, empty part in colour 0 (45B9
+ * executed for the 33 values by tools/verify_rom_markers.py). */
 #define VK_HEALTH_LIVES_START 2      /* C410 once play starts (3, minus the first state 4) */
 #define VK_HEALTH_ENERGY_MAX 0x20    /* C415, same as ENEMY_ENERGY_MAX */
 #define VK_HEALTH_DEATH_FRAMES 252   /* fatal contact -> state 6 (40.617 s -> 44.824 s) */

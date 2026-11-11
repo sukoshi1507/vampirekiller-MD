@@ -599,7 +599,11 @@ void vk_step_enemies(void)
         vk_crushers_room(&vk_crushers, key ? vk_game.stage : 0, vk_game.room);
         if (key != cells_key) room_cells(key);
         cells_key = 0xFFFF;   /* one use: VRAM may be overwritten before the next room change */
-        /* 6319-6333. PROVISIONAL: the bar is full again outside the boss room. */
+        /* 6319-6333. PROVISIONAL: the bar is full again outside the boss room. The
+         * room load does not write C418 (only 44E5, 4E14, 62D7 and 6620 do: game
+         * start, death, stage exit, boss; tools/verify_rom_markers.py), so the two
+         * agree when the room after the boss is the next stage. A boss room left
+         * during the fight would keep the hurt boss on the MSX: not traced. */
         if (vk_boss_room(vk_game.stage, vk_game.room))
         {
             vk_boss_begin_stage(&vk_boss, vk_game.stage);

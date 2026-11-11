@@ -162,7 +162,9 @@ static int vk_entrance_zone(const VKGame *game)
 {
     const VKPlayer *p = &game->player;
     /* PROVISIONAL: the facing-left zone of 8580 (X in [232, 240)) is read in the
-     * code only; it is not ported (no traced way to stand there facing left). */
+     * code only; it is not ported. No way to stand there facing left is known: the
+     * facing-right zone [216, 224) takes Simon first on his way, in the air too
+     * (772A does not test C420), and the courtyard has no enemy to push him. */
     return game->area == VK_AREA_COURTYARD && game->room == ENTRANCE_ROOM &&
            !p->facing && !p->on_stairs &&
            p->x >= ENTRANCE_X_MIN && p->x < ENTRANCE_X_END &&

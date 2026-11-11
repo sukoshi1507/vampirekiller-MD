@@ -66,7 +66,11 @@ static const u8 stage_after_boss[19] = {
 /* Death jingle 89 (70A0-70AC): the music stops and 89 starts when C428 runs out.
  * Fall: C428 = 30 frames in the water stages, 1 elsewhere (76BC). Fatal contact:
  * PROVISIONAL 79 frames (C0A7 = 7 at 41.94 s after the contact at 40.617 s,
- * research/player-health.md). */
+ * research/player-health.md). On the MSX the delay is not a constant: 7053 sets
+ * C420 = 6 and C428 = 1 when the recoil ends on the floor, 70A0 asks for 89 one
+ * pass later and 70B4 ends the death 90 passes after that. The port keeps the two
+ * durations measured on a flat floor (here and VK_HEALTH_DEATH_FRAMES); a recoil
+ * that falls further is not traced. */
 #define DEATH_JINGLE_CONTACT_FRAMES 79
 static u16 death_jingle_timer;
 static void step_death_jingle(void)
@@ -564,7 +568,8 @@ static void step_health(void)
     }
     if (life == VK_HEALTH_REFILL) vk_enemies.energy = ENEMY_ENERGY_MAX;
     else if (life == VK_HEALTH_RESPAWN) respawn();
-    /* PROVISIONAL: the MSX game over screen (state 7) is not captured. */
+    /* 42E3 (state 7), executed by tools/verify_rom_markers.py: the screen is cleared,
+     * only "GAME  OVER" in colour 14 at (88, 88) and the HUD of 4513, C004 = 78h. */
     else if (life == VK_HEALTH_GAME_OVER)
     {
         show_game_over();
@@ -815,8 +820,9 @@ int main(bool hardReset)
                         continue;
                     }
                     vk_item_view_event(item, &items, &vk_game);
-                    /* 8E68: white key 14. PROVISIONAL: the room 7 door gives 1A
-                     * (7772: 15 only when C5AC reaches 5, at the castle door). */
+                    /* 8E68: white key 14. 772A: an inner door (C5AC 1 -> 2) gives 1A, after
+                     * the fade FF when 7777[D000] is set; 15 only when C5AC reaches 5, at
+                     * the castle door (executed for the 18 doors, tools/verify_rom_markers.py). */
                     if (item == VK_ITEM_KEY_TAKEN)
                     {
                         vk_psg_effect(VK_SFX_KEY);
@@ -824,8 +830,9 @@ int main(bool hardReset)
                     }
                     else if (item == VK_ITEM_DOOR_OPENED)
                     {
-                        /* 7763: the music fades at the door of a boss room. */
-                        if (vk_boss_door(vk_game.stage, vk_game.room)) vk_psg_fade();
+                        /* 7763: the music fades at the door when 7777[D000] is set
+                         * (stages 3, 6, 9, 10, 12, 15, 17, 18). */
+                        if (vk_items_door_fades(vk_game.stage)) vk_psg_fade();
                         vk_psg_effect(VK_SFX_DOOR_1A);
                     }
                     {

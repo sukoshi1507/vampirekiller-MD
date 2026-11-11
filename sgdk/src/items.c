@@ -107,6 +107,18 @@ int vk_items_door_place(const VKGame *game, VKByte *x, VKByte *y)
     return 1;
 }
 
+/* 7756-7765: table 7777 indexed by D000 (19 bytes, read in the ROM and executed
+ * by tools/verify_rom_markers.py). Non zero: the door of the stage fades the music
+ * (request FF) before its effect 1A. The same table restarts the music on arrival
+ * (794F reads 7777[D000 - 1]). */
+int vk_items_door_fades(int stage)
+{
+    static const VKByte table_7777[19] = {
+        0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1
+    };
+    return stage >= 0 && stage < 19 && table_7777[stage];
+}
+
 /* Original 8580: unsigned byte comparisons, facing moves the probe by 8. */
 int vk_items_door_touch(const VKGame *game)
 {

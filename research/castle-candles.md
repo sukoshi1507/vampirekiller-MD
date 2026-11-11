@@ -319,10 +319,10 @@ Les noms des objets (croix, sablier, etc.) et leurs dessins ne sont pas releves 
 
 **PROVISOIRE** :
 - la flamme `C800` est remplacee par les etincelles de l'effet de flamme, et l'orbe EC par l'objet 07 de la planche ;
-- la cadence de la bougie murale (8 images) n'est pas mesuree ;
+- (fait, 2026-11-11) cadence de la bougie murale : `869D`-`86C7` (`8671`, une fois par passe), compteur `+6` + 1, redessin quand ses bits 0-1 sont nuls, image = bit 3 : 8 passes = 16 images par image (execute par `tools/verify_rom_markers.py`) ; `CANDLE_FRAME_TICKS` passe de 8 a 16. Reste provisoire : la phase (chaque bougie part de l'octet bas de son adresse de flux + 2 au chargement de la salle) ;
 - objets 03-16 : voir 9.8 (03, 05-0A, 0C, 0D, 0F, 10, 11 portes) ;
 - 1B a 1D (dague, hache, croix) ne changent pas l'arme ;
-- les bougies restent eteintes jusqu'au changement de stage (le rechargement du flux de stage n'est pas trace) ;
+- (fait, 2026-11-11) les bougies restent eteintes jusqu'au changement de stage : `8874` met a 0 le drapeau du flux, l'etat 4 (`423A` -> `62E6` -> `5A49`) redecode le flux a chaque entree de stage comme a chaque vie (execute par `tools/verify_rom_markers.py`) ;
 - (fait) icone de la cle doree : voir 9.7.
 
 ### 9.7 Cle doree et coffre : inventaire et port (lecture du code, 2026-10-29)

@@ -85,7 +85,7 @@ Pointeurs relus dans la ROM : `research/audio/msx_sounds.json` (`effect_pointers
 | 17 | `9275` | `75ED` | `C43A` atteint 10 : fin de minuterie proche | déduit | non |
 | 18 | `92D8` | `7414` | projectile, changement d'état | PROVISOIRE | non |
 | 19 | `9470` | `938F`, `959E` | objets, texte (`490A`) | PROVISOIRE | non |
-| 1A | `931A` | `776F` | porte de `772A` quand `C5AC ≠ 5` | déduit | oui, PROVISOIRE (porte de la salle 7) |
+| 1A | `931A` | `776F` | porte de `772A` quand `C5AC ≠ 5` : les 18 portes intérieures (`C5AC` 1 → 2), précédé de `FF` si `7777[D000] ≠ 0` (stages 3, 6, 9, 10, 12, 15, 17, 18) | **prouvé** (exécution Z80, `tools/verify_rom_markers.py`) | oui (`vk_items_door_fades`) |
 | 1B | `93CA` | `8DCA` | objet 05 | prouvé (code) | non |
 | 1C | `939F` | `7E1C` | défaite d'un boss : jauge ENEMY `C418` à 0 (`7E17`), avec `C445 = 14h`, `7806` et `CE15 = 1` (voir `castle-candles.md` 9.8) | déduit (code) | non (pas de boss aux stages 0-2) |
 | 1D | `8E69` | `934E` | objet mural `C5B5`/`C5C5`, résultat `C70C = 4` : cœurs - 5 (`45A0`) ; le pointeur tombe au milieu des données de 02 (`8E58`-`8E89`) | PROVISOIRE ; **non extrait** (hors de la plage 01-1C de l'outil) | non |
@@ -169,7 +169,7 @@ Cadence et interruption : comme le pilote MSX, appelé par le VBLANK `4028` (H.T
 | Fouet sur ennemi | 0C | `7F65`, `7DD4` | `actors.c` |
 | Cœur, fouet amélioré, clé dorée, coffre | 0F, 12, 14, 11 | `8DAF`, `8D8A`, `8E5D`, `8F7B` | `main.c` |
 | Clé blanche | 14 | `8E68` | `main.c` |
-| Porte de la salle 7 | 1A | `776F` | `main.c` (**PROVISOIRE** : dépend de `C5AC`, non tracé) |
+| Porte intérieure d'un stage | 1A, après `FF` selon `7777[D000]` | `776F`, `7763` | `main.c`, `items.c` (`vk_items_door_fades`) ; exécuté pour les 18 portes |
 | Porte du château | 15 | `7774` | `main.c` |
 | Contact ennemi (recul) | 13 | `6F9A` | `main.c` |
 | Chute dans l'eau (stage 2) | 09 | `76E5` | `main.c` |

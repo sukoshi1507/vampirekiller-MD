@@ -65,7 +65,8 @@ VKByte vk_player_platform;
 /* Gameplay controller: the original tile probes and delta tables above remain
  * unchanged for differential C/Z80 verification. Vertical movement is swept
  * one pixel at a time to prevent tunnelling through thin platforms.
- * mode: 0 grounded, 1 jump, 4 falling. Other original states are not ported.
+ * mode: 0 grounded, 1 jump, 4 falling (C420). The other states of C420 the port
+ * has are not here: stairs (3), recoil (5) and death (6) are in gameplay.c.
  * The MSX has no ceiling in the air: the jump step 6CE7 only adds the table
  * value to C425 (traced under the stage 2 room 5 ledge: Simon rises from 176 to
  * 144 with his head in the solid row y 112, run K4 of research/door-room7.md

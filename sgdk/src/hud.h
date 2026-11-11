@@ -11,7 +11,10 @@
  * ROM tiles (scene 6 tiles 27-29, 41-43, 51-53) are copied here with the fill
  * pixels past the current energy cleared, and drawn in PAL1.
  * The scale is read in 45D1: the PLAYER bar is 2 x C415 px wide at (60, 14),
- * 4 px high, colour 11h (490A). PROVISIONAL: the empty colour (0). */
+ * 4 px high, colour 11h (490A). Before it, 45C8 -> 5D0E clears the box to colour
+ * 0 and draws its frame in colour 14: the empty part of a bar is colour 0, also for
+ * the ENEMY bar (45BF); pixels read after the ROM routines for every value by
+ * tools/verify_rom_markers.py. */
 #define HUD_TILE_INDEX 900          /* 27 tiles, free VRAM between the scene and sprite tiles */
 
 /* Text of the HUD (4513, texts at 4C00 drawn by 4ACB in the MSX font):
