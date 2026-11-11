@@ -1,24 +1,20 @@
 #include "room_freeze.h"
 
-/* openMSX traces T1 and T2 (scratchpad/transition, research/room-links.md section 9):
- * frames with C000 = 9 and frames from the C000 = 9 start to the display off, for
- * each arrival room. Both depend on the arrival room only (not on the room left or
- * the direction); a run is sometimes one frame longer (hall rooms 0, 5 and 6). */
-static const VKRoomFreezeTiming courtyard_timing[3] = { {18, 1}, {18, 1}, {18, 1} };
-static const VKRoomFreezeTiming hall_timing[8] = {
-    {19, 2}, {20, 2}, {22, 4}, {22, 4}, {21, 3}, {19, 2}, {19, 2}, {23, 4}
-};
-static const VKRoomFreezeTiming stage2_timing[6] = {
-    {23, 3}, {24, 3}, {20, 2}, {21, 3}, {21, 3}, {21, 3}
-};
-/* PROVISIONAL: rooms without a trace (stages 3 and beyond are not playable). */
+/* openMSX measure of every arrival room (research/room-freeze-rooms.json, made by
+ * tools/run_room_freeze_trace.py; research/room-links.md section 9 for the courtyard,
+ * the hall and stage 2, traces T1 and T2): frames with C000 = 9 and frames from the
+ * C000 = 9 start to the display off. Both depend on the arrival room only (not on the
+ * room left or the direction); a run is sometimes one frame longer or shorter, the
+ * table keeps the most frequent value. */
+#include "generated/room_freeze_table.h"
+
+/* Rooms that do not exist (no link leads there): the hall room 1 figures. */
 static const VKRoomFreezeTiming default_timing = {20, 2};
 
 VKRoomFreezeTiming vk_room_freeze_timing(VKFreezeByte stage, VKFreezeByte room)
 {
-    if (stage == 0 && room < 3) return courtyard_timing[room];
-    if (stage == 1 && room < 8) return hall_timing[room];
-    if (stage == 2 && room < 6) return stage2_timing[room];
+    if (stage < VK_FREEZE_STAGES && room < VK_FREEZE_ROOMS && vk_room_freeze_table[stage][room].frames)
+        return vk_room_freeze_table[stage][room];
     return default_timing;
 }
 

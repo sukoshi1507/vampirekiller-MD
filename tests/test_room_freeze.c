@@ -30,8 +30,12 @@ static void test_table(void)
     for (r = 0; r < 6; r++)
         CHECK(vk_room_freeze_timing(2, (VKFreezeByte)r).frames == stage2[r] &&
               vk_room_freeze_timing(2, (VKFreezeByte)r).dark == stage2_dark[r], "stage 2 salle %d", r);
-    CHECK(vk_room_freeze_timing(3, 0).frames == 20 && vk_room_freeze_timing(1, 8).frames == 20,
-          "salle inconnue : 20 images (provisoire)");
+    /* research/room-freeze-rooms.json: every room is measured (tools/verify_rom_markers.py
+     * compares the whole table); here the extremes and a room that does not exist. */
+    CHECK(vk_room_freeze_timing(3, 0).frames == 22 && vk_room_freeze_timing(3, 0).dark == 4, "stage 3 salle 0");
+    CHECK(vk_room_freeze_timing(18, 9).frames == 53 && vk_room_freeze_timing(18, 9).dark == 3, "salle de Dracula");
+    CHECK(vk_room_freeze_timing(1, 8).frames == 20 && vk_room_freeze_timing(19, 0).frames == 20,
+          "salle inexistante : 20 images");
 }
 
 /* Sequence of a courtyard change: old room 1 frame, display off, black, room shown last. */

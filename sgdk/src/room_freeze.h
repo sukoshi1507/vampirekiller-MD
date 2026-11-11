@@ -32,7 +32,8 @@ typedef struct {
     VKFreezeByte dark;       /* frame index of the display off */
 } VKRoomFreeze;
 
-/* Timing of the arrival in a room; unknown rooms get the PROVISIONAL default. */
+/* Timing of the arrival in a room (stage 0 = courtyard, else D000); a room that
+ * does not exist gets a default. */
 VKRoomFreezeTiming vk_room_freeze_timing(VKFreezeByte stage, VKFreezeByte room);
 /* A room change into (stage, room) has been made in this frame. */
 void vk_room_freeze_begin(VKRoomFreeze *f, VKFreezeByte stage, VKFreezeByte room);
