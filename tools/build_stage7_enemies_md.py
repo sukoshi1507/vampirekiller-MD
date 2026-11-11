@@ -3,10 +3,12 @@
 four tiles). Patterns come from VRAM snapshots of openMSX runs (the game copies the patterns of the pose on
 show into the sprite generator, so a snapshot is chosen by the patterns of its SAT); the runs are not
 versioned, see research/stage7-enemies.md. Cells (destination pattern, source patterns, colours) :
-  40..5C   skeleton 0B, poses 47..4A : top (40 + 8k) and bottom (44 + 8k), layers N and N+4, colours 2 and 12
-  60..70   flying creature 0C, poses 87, 88, 89, 8A, 8B : layers N and N+4, colours 2 and 1
-  74 78 7C bone (D700 type 4), poses 4B, 4C, 4D : layers N and N+4 (90, 98, A0), colours 2 and 12
-  80..8C   flea 0D, poses 67, 68, 6A, 6B : patterns A8, B0, C0, C8, colours 2 and 5
+  64..80   skeleton 0B, poses 47..4A : top (64 + 8k) and bottom (68 + 8k), layers N and N+4, colours 2 and 12
+  84..94   flying creature 0C, poses 87, 88, 89, 8A, 8B : layers N and N+4, colours 2 and 1
+  98 9C A0 bone (D700 type 4), poses 4B, 4C, 4D : layers N and N+4 (90, 98, A0), colours 2 and 12
+  A4..B0   flea 0D, poses 67, 68, 6A, 6B : patterns A8, B0, C0, C8, colours 2 and 5
+0B, 0C and the bone are the ROM objects of stage 8 and share its sprite code (enemies.c), so their cells sit where the
+stage 8 block puts them; the flea takes A4..B0 as in the stage 9 block (fleaBase).
 The two layers of a MSX sprite pair are ORed (CC bit), so a pixel set in both takes colour a | b.
 Usage: build_stage7_enemies_md.py RUN... (directories holding snaps/*.vram and *.txt)"""
 import glob, sys
@@ -48,14 +50,14 @@ def layers(dest, n, rooms, c1, c2):
 
 SK = ('3', '6')
 for k in range(4):
-    layers(0x40 + 8 * k, 0x40 + 16 * k, SK, 2, 12)
-    layers(0x44 + 8 * k, 0x48 + 16 * k, SK, 2, 12)
+    layers(0x64 + 8 * k, 0x40 + 16 * k, SK, 2, 12)
+    layers(0x68 + 8 * k, 0x48 + 16 * k, SK, 2, 12)
 for i, n in enumerate((0x48, 0x40, 0x50, 0x60, 0x58)):
-    layers(0x60 + 4 * i, n, ('7', '8'), 2, 1)
+    layers(0x84 + 4 * i, n, ('7', '8'), 2, 1)
 for i, n in enumerate((0x90, 0x98, 0xA0)):
-    layers(0x74 + 4 * i, n, ('3', '6', '4'), 2, 12)
+    layers(0x98 + 4 * i, n, ('3', '6', '4'), 2, 12)
 for i, n in enumerate((0xA8, 0xB0, 0xC0, 0xC8)):
-    layers(0x80 + 4 * i, n, ('4', '1'), 2, 5)
+    layers(0xA4 + 4 * i, n, ('4', '1'), 2, 5)
 
 words = []
 for pattern in range(0x40, 0xC0, 4):

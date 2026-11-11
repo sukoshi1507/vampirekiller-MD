@@ -1810,7 +1810,7 @@ int Enemies_frame(EnemyState *s, EnemySpawnTimer *t, const EnemyRoomVars *v)
      * decrement, including the very last pass. Use the channel's30Hz phase. */
     if(s->parity==0 && s->spawnPause)s->spawnPause--;
     s->fishSoundCount = 0; /* une nouvelle image, les requêtes précédentes ont été consommées */
-    fleaBase = v->stage == 9 ? 0xA4 : 0x80;
+    fleaBase = v->stage == 7 || v->stage == 9 ? 0xA4 : 0x80;   /* stage 7 and 9 blocks: stage 8 cells + flea at A4 */
     fireballCell = v->stage == 11 ? 0x9C : 0x60;
     ghostCell = Enemies_ghostCell(v->stage);
 
@@ -2221,7 +2221,7 @@ int Enemies_sprites(const EnemyState *s, EnemyU8 index, EnemySprite out[ENEMY_SP
     }
 
     if (e->type == ENEMY_TYPE_FLEA) {
-        /* Poses 67, 68, 6A, 6B : une cellule en (X-8, Y-15), cellules 80 a 8C du bloc (stage 7). */
+        /* Poses 67, 68, 6A, 6B : une cellule en (X-8, Y-15), cellules A4 a B0 des blocs des stages 7 et 9, 80 a 8C ailleurs. */
         out[0].y = (EnemyU8)(e->y - 14);
         out[0].x = (EnemyS16)(e->x - 8);
         out[0].pattern = (EnemyU8)(fleaBase + 4 * (e->pose < 0x69 ? e->pose - 0x67 : e->pose - 0x68));

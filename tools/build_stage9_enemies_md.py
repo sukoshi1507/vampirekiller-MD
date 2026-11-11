@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Sprite block of the stage 9 objects, in the layout of the type 5 block (pattern N is tile N - 0x40, a cell is four
 tiles). Stage 9 shows the objects 08 (rooms 0 to 3), 0A and its ball (rooms 1, 2, 4), 0B and its bone (rooms 4, 6, 8) and the
-flea 0D (rooms 5, 8): the cells of stage 8 (08, 0A, ball, 0B, 0C, bone) plus the four flea cells of stage 7, moved to
+flea 0D (rooms 5, 8): the cells of stage 8 (08, 0A, ball, 0B, 0C, bone) plus the four flea cells of stage 7, at
 A4, A8, AC and B0 (the leaper cells 84 to 94 stay where stage 8 put them, so the block is the stage 8 one plus the fleas).
 The cells come from the generated stage 8 and stage 7 blocks (themselves built from openMSX VRAM snapshots); the stage 9 run
 (scratchpad/stage9/out/R, rooms 0 to 8) is used only to check them: tools/check_stage9_cells.py.
@@ -21,8 +21,8 @@ def words(name):
 s8, s7 = words('stage8'), words('stage7')
 assert len(s8) == len(s7) == 1024
 out = list(s8)
-for i in range(4):                                  # flea cells 80 + 4 i (stage 7) -> A4 + 4 i
-    src = (0x80 - 0x40 + 4 * i) * 8
+for i in range(4):                                  # flea cells A4 + 4 i of the stage 7 block, same place
+    src = (0xA4 - 0x40 + 4 * i) * 8
     dst = (0xA4 - 0x40 + 4 * i) * 8
     assert not any(s8[dst:dst + 32]), 'destination cell is not free in the stage 8 block'
     out[dst:dst + 32] = s7[src:src + 32]

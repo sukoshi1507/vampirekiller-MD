@@ -123,7 +123,7 @@ int main(void)
         v = roomVars(&g, 5, 16, 144); v.stage = 7;
         Enemies_frame(&s, &t, &v);
         s.enemy[0].active = 1; s.enemy[0].type = ENEMY_TYPE_FLEA; s.enemy[0].pose = 0x6B;
-        assert(Enemies_sprites(&s, 0, sp) == 1 && sp[0].pattern == 0x8C);
+        assert(Enemies_sprites(&s, 0, sp) == 1 && sp[0].pattern == 0xB0);   /* stage 7 block: flea at A4..B0 as in stage 9 */
     }
     printf("stage 9 objects (hopper 0B, bone, statue 0A, flea 0D, fixed list): %d + %d trace transitions, spawns, sprites PASS\n",
            (int)(sizeof kHop9 / sizeof kHop9[0]), (int)(sizeof kBone9 / sizeof kBone9[0]));
