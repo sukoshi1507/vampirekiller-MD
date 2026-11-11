@@ -1,0 +1,22 @@
+# (zzm) Stage 10 salle 2 : meme mecanique que la salle 4 (zzm_stage10_stalactite.txt), plateforme 906C Y 0xA7, X 0x40, longueur 0x80.
+# 7BA9 execute sur la carte de la ROM, Simon a Y 168 : debout bloque en X 104-111 et 120-127 (pointes de stalactite, colonnes 13-18),
+# accroupi libre de X 24 a 215. Le transport 6BAF suit donc C420 : le Simon accroupi traverse, le Simon debout est retenu.
+include zzm_enter10.inc
+poke Enemies_god 1
+include zzb_next.inc
+until game.stage == 10 and game.room == 1 max 200
+include zzb_next.inc
+until game.stage == 10 and game.room == 2 max 200
+wait 10
+poke Enemies_god 1
+poke vk_game+0 70
+poke vk_game+1 160
+poke vk_game+2 0
+until game.player.x >= 185 max 600 DOWN
+expect game.player.y == 168 and game.player.mode == 0
+poke Enemies_god 1
+poke vk_game+0 70
+poke vk_game+1 160
+poke vk_game+2 0
+wait 150
+expect game.player.x <= 130

@@ -503,7 +503,9 @@ void vk_step_platforms(void)
         (vk_game.recoil == VK_RECOIL_NONE || vk_game.recoil == VK_RECOIL_FLOOR))
     {
         const int dx = vk_platforms_carry(&vk_platforms);
-        if (dx && !vk_wall(vk_game_collision(&vk_game), p->x, p->y, dx, 0, vk_game.stage, 0))
+        /* 6BAF calls 7BA9/7C05 with C420 as it is: crouched (C420 = 2) the probe has 3 rows, not 4 (stage 10 room 4:
+         * the stalactite tile (176, 143) stops the standing Simon, the crouched one goes under it). */
+        if (dx && !vk_wall(vk_game_collision(&vk_game), p->x, p->y, dx, p->crouched, vk_game.stage, 0))
             p->x = (VKByte)(p->x + dx);
     }
 }

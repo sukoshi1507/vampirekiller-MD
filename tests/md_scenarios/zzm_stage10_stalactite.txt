@@ -1,0 +1,29 @@
+# (zzm) Stage 10 salle 4 : plateforme mobile sous la stalactite (cols 22-23, lignes 12-15 de la carte : tuiles 5-9 solides).
+# ROM : le transport de la plateforme (6BAF) appelle 7BA9 / 7C05 avec C420 tel quel ; accroupi (C420 = 2) la sonde a 3 lignes
+# (7BDB) et passe sous la pointe (ligne 15), debout elle a 4 lignes et Simon est retenu en X 168. Verifie en executant 7BA9 sur
+# la carte de la ROM. Avant la correction, le port sondait toujours debout et le Simon accroupi etait lache en X 168.
+include zzm_enter10.inc
+poke Enemies_god 1
+include zzb_next.inc
+until game.stage == 10 and game.room == 1 max 200
+include zzb_next.inc
+until game.stage == 10 and game.room == 2 max 200
+include zzb_next.inc
+until game.stage == 10 and game.room == 3 max 200
+include zzb_next.inc
+until game.stage == 10 and game.room == 4 max 200
+wait 10
+# Accroupi sur la plateforme (Y 168) : emporte sous la pointe jusqu'au bout de la course.
+poke Enemies_god 1
+poke vk_game+0 128
+poke vk_game+1 160
+poke vk_game+2 0
+until game.player.x >= 190 max 400 DOWN
+expect game.player.y == 168 and game.player.mode == 0
+# Debout : arrete en X 168 par la pointe de stalactite, puis tombe a l'eau.
+poke Enemies_god 1
+poke vk_game+0 128
+poke vk_game+1 160
+poke vk_game+2 0
+wait 150
+expect game.player.x <= 175
