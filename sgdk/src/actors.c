@@ -794,8 +794,11 @@ static u16 show_enemy_sprites(u16 tail)
                     const VKLateGraphicsCell *c=&late_graphics_cells[g->cell_first+j];
                     if(c->type==Enemies_object(&vk_enemies,(EnemyU8)i)->type && c->pattern==list[k].pattern){list[k].bank=3;list[k].pattern=c->cell;break;}
                 }
-                /* PROVISIONAL: unlisted candle-spawned species retain the old renderer;
-                 * their AI/graphics are not claimed as ported by LOT11. */
+                /* Every species created in a room of stages 12-18 has cells in its table: openMSX creates, in the 74 rooms, only
+                 * the fixed list (6154), the 9DE7 channel (flag 64: eagle 0F + flea 23h), the bones 04 and shot D700 of 0B/10h, and
+                 * bosses (own banks); the only candle channel (object 15h, 8AD0) makes 1B, generated for each such candle. Proof:
+                 * research/late-species-msx.json, tools/verify_late_species.py. An entry left in bank 1 here is a boss layer or a
+                 * stale object of the previous room (not drawn: enemy_room_key differs). */
             }
         }
     }

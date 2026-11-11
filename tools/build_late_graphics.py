@@ -7,7 +7,7 @@ from build_boss12_md import BossGraphics
 from decode_room_links import decode
 from castle_room_objects import decode_room
 
-SPECS=[(9,22,(0,*range(0x21,0x27))),(16,20,range(0x5F,0x63)),(18,23,(0x4E,0x4F)),(11,11,range(0x47,0x4B)),(13,14,(0x67,0x68,0x6A,0x6B)),(15,18,(0x6D,0x6E,0x8D))]
+SPECS=[(9,22,(0,*range(0x21,0x27))),(16,20,range(0x5F,0x63)),(18,23,(0x4E,0x4F)),(11,11,range(0x47,0x4B)),(13,14,(0x67,0x68,0x6A,0x6B)),(35,14,(0x67,0x68,0x6A,0x6B)),(15,18,(0x6D,0x6E,0x8D))]
 def words(pix):
  return [sum(pix[8*r+y][8*c+x]<<(28-4*x) for x in range(8)) for c in range(2) for r in range(2) for y in range(8)]
 def generate():
@@ -37,7 +37,9 @@ def generate():
      checks+=256
     allowed={q['raw_type']&127 for q in fixed[stage-12]['rooms'][room]}
     flagoff=14*8192+0x5A6+2*stage;ptr=int.from_bytes(rom[flagoff:flagoff+2],'little')
-    if rom[14*8192+ptr-0x8000+room]&64:allowed.update((13,15))
+    #Flag 64 = channel 9DE7: eagle 0F and its flea 23h (openMSX, research/late-species-msx.json: raw 15 and 35 in 17:7 and 17:10, never raw 13).
+    #Raw 35 draws with the cells of 0D: same pose cells, any conflict is caught below.
+    if rom[14*8192+ptr-0x8000+room]&64:allowed.update((35,15))
     specs=list(SPECS)
     if any(q['kind']==21 for q in decode_room(rom,stage,room)['candles']):
      m.set_memory_block(0xC800,bytes(896))

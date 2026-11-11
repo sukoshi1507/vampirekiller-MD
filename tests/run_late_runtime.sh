@@ -9,4 +9,5 @@ ${PYTHON:-python3} tools/build_late_ghost.py --check
 ${PYTHON:-python3} tools/build_candles_md.py --check
 ${PYTHON:-python3} tools/extract_stage_exits.py --check > /dev/null
 ${PYTHON:-python3} tools/build_late_graphics.py --check
+${PYTHON:-python3} tools/verify_late_species.py
 ${PYTHON:-python3} tools/verify_late_runtime.py "$BIN"
