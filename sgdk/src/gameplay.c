@@ -162,13 +162,15 @@ int vk_game_entrance_locked(const VKGame *game)
 static int vk_entrance_zone(const VKGame *game)
 {
     const VKPlayer *p = &game->player;
-    /* PROVISIONAL: the facing-left zone of 8580 (X in [232, 240)) is read in the
-     * code only; it is not ported. No way to stand there facing left is known: the
-     * facing-right zone [216, 224) takes Simon first on his way, in the air too
-     * (772A does not test C420), and the courtyard has no enemy to push him. */
+    /* 8580: facing right X in [216, 224), facing left X in [232, 240) (X +-8 against
+     * C5AE = 224); Y in [138, 194) either way. openMSX, Simon poked in room 2 facing
+     * left (C42C = 1) at Y 176: X 236 and 239 start the entrance and leave at the first
+     * step (C5AC 5, X - 1, C408 = 1, hall 4 frames later); X 232 starts it too, but the
+     * first step gives 231, outside the exit zone, and Simon walks left on his own. */
+    const VKByte x_min = p->facing ? ENTRANCE_X_END + 8 : ENTRANCE_X_MIN;
     return game->area == VK_AREA_COURTYARD && game->room == ENTRANCE_ROOM &&
-           !p->facing && !p->on_stairs &&
-           p->x >= ENTRANCE_X_MIN && p->x < ENTRANCE_X_END &&
+           !p->on_stairs &&
+           p->x >= x_min && p->x < x_min + 8 &&
            p->y >= ENTRANCE_Y_MIN && p->y < ENTRANCE_Y_END;
 }
 
@@ -187,15 +189,31 @@ static VKEvent vk_entrance_tick(VKGame *game)
             /* MSX2 walk cycle (player.c): poses 0,1,2,1 held 8 frames each. */
             static const VKByte walk_frames[4] = {0, 1, 2, 1};
             p->clock++;
-            p->pose = walk_frames[(p->clock >> 3) & 3];
+            p->pose = (VKByte)(walk_frames[(p->clock >> 3) & 3] + (p->facing ? 3 : 0));
         }
         game->entrance_step++;
-        if ((game->entrance_step & 3) == 0) p->x++;
-        if (p->x >= ENTRANCE_EXIT_X)
+        if (!p->facing)
+        {
+            if ((game->entrance_step & 3) == 0) p->x++;
+            if (p->x >= ENTRANCE_EXIT_X)
+            {
+                game->entrance = VK_ENTRANCE_EXIT;
+                game->entrance_timer = 0;
+            }
+            return VK_EVENT_NONE;
+        }
+        /* Facing left (778A: BC = FF80): half a pixel a pass, the first step already
+         * takes a pixel (X 236 -> 235 two frames after the start), then one every four
+         * frames; the exit zone [232, 240) (77C4) is tested after each step. */
+        if ((game->entrance_step & 3) == 2) p->x--;
+        if ((game->entrance_step & 1) == 0 && p->x >= ENTRANCE_EXIT_X && p->x < ENTRANCE_EXIT_X + 8)
         {
             game->entrance = VK_ENTRANCE_EXIT;
             game->entrance_timer = 0;
         }
+        /* PROVISIONAL: X 232 walks on to the left edge of room 2 (openMSX: room 1 at
+         * X 246, the walk over); the port gives the controls back at the edge. */
+        else if (p->x <= 8) vk_entrance_clear(game);
         return VK_EVENT_NONE;
     }
     game->entrance_timer++;

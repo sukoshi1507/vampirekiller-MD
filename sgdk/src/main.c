@@ -64,14 +64,10 @@ static const u8 stage_after_boss[19] = {
 };
 
 /* Death jingle 89 (70A0-70AC): the music stops and 89 starts when C428 runs out.
- * Fall: C428 = 30 frames in the water stages, 1 elsewhere (76BC). Fatal contact:
- * PROVISIONAL 79 frames (C0A7 = 7 at 41.94 s after the contact at 40.617 s,
- * research/player-health.md). On the MSX the delay is not a constant: 7053 sets
- * C420 = 6 and C428 = 1 when the recoil ends on the floor, 70A0 asks for 89 one
- * pass later and 70B4 ends the death 90 passes after that. The port keeps the two
- * durations measured on a flat floor (here and VK_HEALTH_DEATH_FRAMES); a recoil
- * that falls further is not traced. */
-#define DEATH_JINGLE_CONTACT_FRAMES 79
+ * Fall: C428 = 30 frames in the water stages, 1 elsewhere (76BC). Fatal contact: the
+ * recoil ends on the floor (7053 sets C420 = 6 and C428 = 1), 7093 / 709C asks for 89
+ * on the next pass, 2 frames later (VK_HEALTH_JINGLE_FRAMES, health.h; openMSX 5136 at
+ * 41.9437 s, 7070 at 41.9116 s), and 70B4 ends the death VK_HEALTH_DEAD_FRAMES after 7070. */
 static u16 death_jingle_timer;
 static void step_death_jingle(void)
 {
@@ -552,8 +548,15 @@ static void step_health(void)
     const bool fell = health.fell;
     const VKHealthEvent life = vk_health_tick(&health, vk_enemies.energy);
     if (life == VK_HEALTH_TITLE) { vk_show_title(); return; }
-    if (life == VK_HEALTH_DIED && !fell) death_jingle_timer = DEATH_JINGLE_CONTACT_FRAMES;
     step_death_jingle();
+    /* 7070: the fatal recoil ended (C420 = 6); the clock of 7093 starts there. A recoil
+     * that falls further ends later. */
+    if (health.phase == VK_LIFE_DYING && !health.fell && !health.timer &&
+        (vk_game.recoil == VK_RECOIL_DEAD || vk_game.recoil == VK_RECOIL_NONE))
+    {
+        vk_health_dead(&health);
+        death_jingle_timer = VK_HEALTH_JINGLE_FRAMES;
+    }
     /* End of a fall (70B4): no more than 5 hearts. */
     if (fell && (life == VK_HEALTH_REFILL || life == VK_HEALTH_GAME_OVER) &&
         vk_candles.hearts > VK_HEALTH_HEARTS_AFTER_FALL)

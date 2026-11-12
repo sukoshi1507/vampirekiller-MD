@@ -88,6 +88,8 @@ Chronologie du run 4 (énergie forcée à 2 à 40 s, un contact amène `C415` à
 6. 45,262 s : `41B6` : état 4. `C420=0` et `C40D=1` par `42A3`.
 7. 45,274 s : `422C` décrémente `C410` (`2 -> 1`). Puis état 5 avec `C413=1`.
 
+Séquence de mort du run 4, relue au pas de passe (openMSX 2026-11-12, `C428`, `C421`, `C420`, `C0A7` écrits avec PC ; deux exécutions identiques) : `702A` `C420 := 0` à 41,9115 s (fin du recul au sol), `7053` : `C415 = 0` donc `7067` `C421 := 0`, `706B` `C428 := 1`, `7070` `C420 := 6` (même passe). Passe suivante (`7093`, 2 images) : `709C` `C428` 1 -> 0, `709E` `C428 := 90`, `70A2` `C421 := 1`, `5136` `C0A7 := 7` (demande 89, `70AC`) à 41,9437 s. Ensuite `70B2` décrémente `C428` à chaque passe (89 à 41,977 s, 0 à 44,8138 s) puis `70C0`-`70D9` (`C413 := 0`) : 90 passes après la demande. Les passes durent 2 images, sauf les 8 dernières valeurs paires de `C428` (14 à 0) qui en durent 1 : 172 images pour les 90 passes, 174 de `7070` à `70C0`. L'état 6 vient à 44,8239 s. Le délai contact -> état 6 n'est donc pas constant : fin du recul (jusqu'à `7070`) + 174 images ; le recul sur sol plat dure 77,7 images (`C420 := 5` à 40,6166 s), d'où les 252 images du run 4. Port : `vk_health_dead` (health.c) lance `VK_HEALTH_DEAD_FRAMES` = 174 quand le recul mortel atteint `VK_RECOIL_DEAD`, le jingle suit `VK_HEALTH_JINGLE_FRAMES` = 2 images après (main.c). Chute dans le vide (`7093` avec `C428` = 30 ou 1) : même code, non retraçée, le port garde 1 ou 30 images + 90.
+
 Fin de partie (run 5, `C410=0` forcé à 40 s, `C415=2`) :
 
 1. 40,617 s : contact, `C415=0`.

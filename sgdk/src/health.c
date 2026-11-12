@@ -19,6 +19,11 @@ void vk_health_fall(VKHealth *h, int stage)
                         VK_HEALTH_FALL_FRAMES);
 }
 
+void vk_health_dead(VKHealth *h)
+{
+    if (h->phase == VK_LIFE_DYING && !h->fell && !h->timer) h->timer = VK_HEALTH_DEAD_FRAMES;
+}
+
 VKHealthEvent vk_health_tick(VKHealth *h, int energy)
 {
     switch (h->phase)
@@ -26,10 +31,10 @@ VKHealthEvent vk_health_tick(VKHealth *h, int energy)
     case VK_LIFE_ALIVE:
         if (energy > 0) return VK_HEALTH_NONE;
         h->phase = VK_LIFE_DYING;
-        h->timer = VK_HEALTH_DEATH_FRAMES;
+        h->timer = 0;   /* the recoil runs first: vk_health_dead starts the clock */
         return VK_HEALTH_DIED;
     case VK_LIFE_DYING:
-        if (--h->timer) return VK_HEALTH_NONE;
+        if (!h->timer || --h->timer) return VK_HEALTH_NONE;
         h->fell = 0;
         /* State 6 (4294): lives left -> refill and state 4, else jingle and state 7. */
         if (h->lives)

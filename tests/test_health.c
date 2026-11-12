@@ -58,8 +58,10 @@ static void test_death_with_lives(void)
     vk_health_begin(&h);
     CHECK(vk_health_tick(&h, 0) == VK_HEALTH_DIED, "energie 0 : mort");
     CHECK(vk_health_controls_locked(&h), "commandes bloquees pendant la mort");
-    CHECK(run(&h, 0, 400, &at) == VK_HEALTH_REFILL && at == VK_HEALTH_DEATH_FRAMES,
-          "etat 6 (refill) 252 images apres le contact (obtenu image %d)", at);
+    CHECK(run(&h, 0, 400, &at) == VK_HEALTH_NONE, "la mort attend la fin du recul (7070)");
+    vk_health_dead(&h);
+    CHECK(run(&h, 0, 400, &at) == VK_HEALTH_REFILL && at == VK_HEALTH_DEAD_FRAMES,
+          "etat 6 (refill) 174 images apres 7070 (obtenu image %d)", at);
     CHECK(h.lives == 2, "C410 inchange avant l'etat 4");
     CHECK(run(&h, VK_HEALTH_ENERGY_MAX, 100, &at) == VK_HEALTH_RESPAWN && at == VK_HEALTH_RESPAWN_FRAMES,
           "etat 4 27 images apres l'etat 6 (obtenu image %d)", at);
@@ -75,18 +77,22 @@ static void test_game_over(void)
     vk_health_begin(&h);
     for (death = 0; death < 2; death++) {
         CHECK(vk_health_tick(&h, 0) == VK_HEALTH_DIED, "mort %d", death + 1);
+        vk_health_dead(&h);
         CHECK(run(&h, 0, 400, &at) == VK_HEALTH_REFILL, "mort %d : refill", death + 1);
         CHECK(run(&h, VK_HEALTH_ENERGY_MAX, 100, &at) == VK_HEALTH_RESPAWN, "mort %d : reapparition", death + 1);
     }
     CHECK(h.lives == 0, "C410 = 0 apres deux morts");
     CHECK(vk_health_tick(&h, 0) == VK_HEALTH_DIED, "troisieme mort");
-    CHECK(run(&h, 0, 400, &at) == VK_HEALTH_GAME_OVER && at == VK_HEALTH_DEATH_FRAMES,
-          "etat 6 sans vie : fin de partie a l'image 252 (obtenu %d)", at);
+    vk_health_dead(&h);
+    CHECK(run(&h, 0, 400, &at) == VK_HEALTH_GAME_OVER && at == VK_HEALTH_DEAD_FRAMES,
+          "etat 6 sans vie : fin de partie 174 images apres 7070 (obtenu %d)", at);
     CHECK(vk_health_controls_locked(&h), "commandes bloquees pendant la fin de partie");
     CHECK(run(&h, 0, 1000, &at) == VK_HEALTH_TITLE && at == VK_HEALTH_GAMEOVER_FRAMES,
           "titre 378 images apres l'etat 6 (obtenu %d)", at);
-    CHECK(VK_HEALTH_DEATH_FRAMES + VK_HEALTH_GAMEOVER_FRAMES == 630,
-          "contact -> titre : 40,617 s -> 51,13 s, environ 630 images");
+    /* 7070 at 41.9116 s -> title at 51.13 s: 553 frames, 77.7 frames after the contact. */
+    CHECK(VK_HEALTH_DEAD_FRAMES + VK_HEALTH_GAMEOVER_FRAMES == 552,
+          "7070 -> titre : 41,9116 s -> 51,13 s, environ 553 images");
+    CHECK(VK_HEALTH_JINGLE_FRAMES == 2 && VK_HEALTH_JINGLE_FRAMES < VK_HEALTH_DEAD_FRAMES, "jingle une passe apres 7070");
 }
 
 /* 4. Largeur de la barre : 64 px pour 32 points, plancher et plafond. */
