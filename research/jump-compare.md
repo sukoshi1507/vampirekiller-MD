@@ -219,3 +219,37 @@ python3 tools/jump_compare.py scratchpad/jump/v2-still_tap scratchpad/jump/sim/s
 ```
 
 Scénarios de `tools/jump_trace.tcl` : `still_tap`, `still_hold`, `right_jump`, `right_held`, `turn_jump` (variable `VK_SCENARIO`). Sorties dans `VK_OUT`.
+
+## 9. Sauts des stages 14 et 15, image par image (trace du 2026-11-12)
+
+Méthode : `tools/run_jump_cases.py` (openMSX, salle forcée comme `tools/run_species_trace.py`, Simon posé par `C427`/`C425`, direction + HAUT, une ligne par VBLANK de `4028` : `C003`, `C420`, `C421`, `C425`, `C427`, `C428`) et `tools/jump_cases_md.py` (même cas sur le port, une ligne par image) ; `tools/jump_cases_compare.py` les compare (`-x` : image par image, sans alignement). Cas : `tools/jump_cases.json`. Cadence : `4028` passe à chaque image vidéo (60 Hz), `C003` avance toutes les 2 images ; une passe de jeu = 2 images, donc la trajectoire est comparée image par image (n = 1 est la première image touche enfoncée) et la phase de la passe par rapport à la touche (0 ou 1 image, latence du premier pas 5 ou 6 images côté MSX, toujours 5 côté port) est notée « shift » dans l'outil.
+
+Ce que la trace MSX donne (ROM `6CC0`-`6D3B`, `6C2F`/`6C53`/`6C73`, `7C05`/`7BA9`/`7B88`) :
+
+| Fait MSX | Preuve |
+|---|---|
+| Saut : touche vue à la passe n = 1 (marche de 2 px dans cette passe, `C420` := 1), `C421` lu à la passe suivante, premier pas à n = 5 (table `6D95`, un pas toutes les 2 images) | traces `flat_*`, `s15r*` |
+| En l'air, X bouge de 2 px (`6D61`/`6D67` appellent `6C2F`/`6C53` puis `6CE7`) une fois par passe, **avant** le pas vertical, avec une seule sonde de mur (X -+ 8, `7C05`/`7BA9`) faite au X et au Y d'avant la passe ; X ne bouge pas avant le premier pas | `s15r3_floor_to_block`: X 134 jusqu'au pas 8, puis 132 au pas 9 |
+| Marche au sol : 2 px par passe, une sonde de mur au X courant : contre le bloc de la salle 3 du stage 15 le MSX s'arrête à X 134, l'ancien port à 136 | `walk_wall_left` |
+| Atterrissage sur un rebord au sommet (pas 9, `6D13`) à n = 21 ; la marche reprend 2 images plus tard sur la grille de la passe | 4 cas demandés |
+| Escalier : `C420` = 3 et X calé à l'entrée, premier pas à n = 3, puis 1 px sur chaque axe toutes les 2 images (montée et descente) | 11 cas, 45 images identiques |
+
+Écarts trouvés et corrigés dans `sgdk/src/player.c` (avant : le port bougeait X de 1 px à chaque image, y compris pendant les 4 images avant le premier pas, et sondait le mur au X suivant) :
+1. En l'air (mode 1 et suite du saut en mode 4) : X de 2 px à la passe du pas vertical, sonde unique avant le pas (`6D61`/`6D67`). Avant : l'atterrissage des 4 rebords demandés avait lieu à n = 23 au lieu de 21, X d'1 à 2 px à côté.
+2. Marche au sol : 2 px par passe (une image sur deux, et à l'image de la touche de saut), sonde de mur unique au X courant (`6C2F`/`6C53`/`7C05`/`7BA9`) ; la grille de passe se recale à l'atterrissage. Avant : arrêt 2 px trop tôt contre un mur, parité de X différente de celle du MSX (un X impair change le résultat des sondes de sol X +- 5 au bord d'un rebord : `wall_air_left` atterrissait à n = 23).
+3. Escalier : la passe de 30 Hz repart à l'entrée (`clock` := 0), premier pas à n = 3 comme le MSX (avant : n = 2 ou 3 selon la marche précédente).
+
+Tableau (port après correction = MSX, image par image sur n = 1 à 25 au moins) :
+
+| Cas (départ, touches) | hauteur max | atterrissage | X à l'atterrissage | 32 px |
+|---|---|---|---|---|
+| stage 15 salle 1 (215,112) droite → rebord | Y 80 | n = 21, Y 80 | 219 | oui (112 → 80) |
+| stage 15 salle 3 (136,176) gauche → bloc | Y 144 (145 à n = 19-20) | n = 21, Y 144 | 132 | oui (176 → 144) |
+| stage 15 salle 4 (104,112) gauche → étage | Y 80 | n = 21, Y 80 | 100 | oui |
+| stage 14 salle 7 (232,112) gauche → étage | Y 80 | n = 21, Y 80 | 228 | oui |
+| stage 15 salle 1 (150,80) droite → petit bloc | Y 48 | n = 53, Y 112 | 204 (en 53 ou 54, une image de jeu perdue par le port vers X 189) | |
+| plat (200,176) sur place / gauche | Y 144 | n = 41, Y 176 | identique | oui |
+| plat saut haut (objet 0D) | Y 138 | n = 45, Y 176 | identique | table `6D94` : 38 px |
+| stage 14 salle 5 (159,112) gauche → sol | Y 80 | n = 63, Y 176 | 95 | |
+
+Pas corrigé : la chute d'un rebord (mode 4 depuis le sol). Le MSX attend une passe de plus pour passer `C420` := 4 (la sonde de sol précède la marche de la passe), puis sonde le sol avant le pas et peut entrer de 4 px dans le sol (Y 180) avant `Y &= F8` ; le port tombe une passe plus tôt et se pose au pixel (`walk_wall`/`s15r3`, X 90 : chute de n = 63 au lieu de 65, sol à n = 77 au lieu de 81). Le port perd aussi parfois une image de jeu (stage 15 salle 1, X ~189, Y 80 dans l'air) : la passe suivante est alors décalée de 1 image.

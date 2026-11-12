@@ -8,14 +8,15 @@ expect ram8('vk_candles+6') == 3 and ram8('vk_candles+9') == 25 and ram8('vk_can
 expect ram8('vk_candles+20') == 3 and ram8('vk_candles+23') == 25 and ram8('vk_candles+26') == 0x1E # coffre (176, 144)
 set s0 ram32('vk_hud_score')
 poke vk_candles+119 1
-poke vk_game+0 200
+# X 190: the platform is closed by a wall at X 200 (openMSX, tools/run_jump_cases.py: LEFT does not move Simon from X 200 or 230), Simon starts left of it.
+poke vk_game+0 190
 poke vk_game+1 96
 wait 4
 until ram8('vk_candles+119') == 0 max 120 LEFT
 expect ram8('vk_candles+6') == 4 and ram8('vk_candles+9') == 0x13 # le contenu attend 32 passes (64 images)
 until ram8('vk_candles+6') == 3 max 200 LEFT
 wait 4
-poke vk_game+0 200
+poke vk_game+0 190
 wait 4
 until ram8('vk_candles+6') == 0 max 60 LEFT
 expect ram32('vk_hud_score') == s0 + 5000 # 8E42 : 5000 points
