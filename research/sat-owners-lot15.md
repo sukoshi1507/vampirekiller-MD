@@ -28,7 +28,10 @@ Instantanés openMSX : 3:5 corps 12h, 8 entrées 0..7 ; 6:5 corps 13h, 8 entrée
 12:6 cavalier 15h (6, 0..5) + 18h (2, 6..7) ; 15:9 corps 16h (12, déjà LOT14G) ; 18:9 corps 11h (8, couleurs réécrites 00 -> 02/48, ys 80).
 Portés : 12h, 13h, 14h x2 (`actors.c`, `Enemies_boss15_reserve`, emplacement 9 = C800[1]) ; comparés au vrai 5F1D/99F6 par
 `tests/run_boss_bodies_sat.sh` (masque 18 entrées, références de deux flammes 1E, libération puis réutilisation).
-Restent hors allocateur (marqueur limité) : tirs D700 des boss 6 et 9, cavalier du stage 12, corps du stage 18.
+Ajoutés ensuite (`actors.c`, `tools/verify_boss_bodies_sat.py`, 5F1D/9F6D/99F6 réels) : cavalier 15h (C800[0], 6) + 18h (C800[1], 2) du stage 12, corps 11h
+du stage 18 (8), tirs D700 de 2 entrées des boss 6 (type 6), 9 (type 7), 12 (0Ah) et 18 (05h), références 17 16 / 15 14 / 13 12 pour D700[0..2].
+Le maintien du cavalier du stage 12 et de ses tirs 0Ah est écrit mais désactivé (`BOSS12_SAT_HOLD 0` dans `actors.c`) : activé, le rejeu image exacte `tests/run_playthrough_12_18_md.sh` manque le point de contrôle du combat (image 4870) ; à réactiver après un nouvel enregistrement.
+Restent hors allocateur (marqueur limité) : la flamme qui remplace un corps du stage 12 à sa mort, les autres objets C800 du combat 18.
 
 ## Espèces des stages 2-11
 
@@ -37,7 +40,7 @@ Restent hors allocateur (marqueur limité) : tirs D700 des boss 6 et 9, cavalier
 (les enfants construits par 5F1D, ex. gouttes du type 02/03, sont retirés pour ce montage parent seul), comparés (masque SAT, références
 du constructeur suivant, octets IX+00..1F) par `tests/run_c800_sat.sh` à plusieurs Y, IA gelée (le rendu et l'IA de ces espèces sont prouvés
 ailleurs). Exclus : types ROM 01 et 04 (le port garde leur Y en coordonnée SAT, `ENEMY_TYPE4_OBJ_Y`, alors que les lignes sont relatives au Y
-de l'objet). Poses non rencontrées dans les traces : entrées laissées réservées (marqueur limité).
+de l'objet). Poses atteintes par la ROM sans figurer dans les traces (panthère 43h..46h, chauve-souris 16h/17h, poisson 13h/14h) : `LEGACY_EXTRA` de `build_c800_sat.py`, prouvées par `tools/verify_legacy_poses.py` (5F1D + 98E5/9E31 réels).
 
 Coût : avec 73 lignes parcourues à chaque image pour chaque objet C800, `tests/run_candle_loot_md.sh` (repli C500) et
 `tests/run_mixed_pools_md.sh` échouaient (assertions sur 40 images ; même avec des lignes factices jamais appariées), car ces scénarios sont au
