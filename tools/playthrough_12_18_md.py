@@ -458,10 +458,11 @@ def fight(G, s, shots, limit=6000):
         d = bx - G.px
         toward = 7 if d > 0 else 6
         keys = set()
-        if abs(d) > 30: keys.add(toward)
+        perched = G.py < 192                        # on a block of the room: the whip passes over the boss
+        if abs(d) > 30 or perched: keys.add(toward) # walk off the block toward the boss
         elif i % 12 == 0: keys.add(toward)          # turn to the boss
         elif i % 12 in (1, 2): keys.add(0)          # whip (B pressed)
-        if i % 150 == 100: keys.add(8)             # a jump now and then
+        if i % 150 == 100 and not perched: keys.add(8)  # a jump now and then
         G.step(frozenset(keys), 1)
         if i % 300 == 0:
             print(f'    fight {i}: simon {G.px},{G.py} boss x {bx} y {G.m.rd16(G.boss + 8) >> 8} in_room {G.rd(G.boss)} '
