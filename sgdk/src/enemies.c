@@ -180,8 +180,8 @@ void Enemies_loot_handler(EnemyLootHandler callback){loot_handler=callback;}
  * - species of stages 2-11 that keep the object Y: rows of the poses met by tools/run_species_trace.py (research/legacy-species-msx.json) plus
  *   the poses the ROM handlers reach without the traces showing them (build_c800_sat.py LEGACY_EXTRA, checked by tools/verify_legacy_poses.py);
  * - the stage 6/9/18 D700 shots and the stage 18 body (11h): held by actors.c through Enemies_boss15_reserve, compared with 5F1D/9F6D/99F6 by
- *   tests/run_boss_bodies_sat.sh (the stage 12 rider 15h + 18h and its 0Ah shots are proven the same way but not held, see BOSS12_SAT_HOLD);
- * PROVISIONAL, limited to: the stage 12 rider + shots (BOSS12_SAT_HOLD), the stage 12 death flame that replaces a body, the other stage 18 C800 objects
+ *   tests/run_boss_bodies_sat.sh (including the stage 12 rider 15h + 18h and its 0Ah shots);
+ * PROVISIONAL, limited to: the stage 12 death flame that replaces a body, the other stage 18 C800 objects
  * (44h/45h/46h/30/23 of dracula.c) and types 01/04, whose port Y is a SAT Y (their entries stay reserved). */
 static unsigned long sat_used,c800_sat[ENEMY_MAX],d700_sat[ENEMY_PROJECTILE_MAX];
 static EnemyU8 sat_boss,renderStage;

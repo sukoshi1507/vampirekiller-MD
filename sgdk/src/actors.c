@@ -416,12 +416,10 @@ static void boss9_flash_cells(void)
  * C800[1] references 6..11), the stage 12 rider (15h: C800[0] references 0..5, 18h: C800[1] references 6..7), the stage 18 body (11h:
  * C800[0], 8 references; ys 80/B0/E1, never E0, so held until it dies) and the 2-entry D700 shots (types 6, 7, 0Ah, 05h: references 17 16,
  * 15 14, 13 12 for D700[0..2]; port slot k + 1).
- * Not held: the stage 12 rider and 0Ah shots (BOSS12_SAT_HOLD below), the flame that replaces a stage 12 body at its death (alive 2) and the
+ * Not held: the flame that replaces a stage 12 body at its death (alive 2) and the
  * other C800 objects of the stage 18 fight. */
-/* Stage 12 rider + 0Ah shots held (1) or not (0).  The 5F1D/9F6D/99F6 comparison of tools/verify_boss_bodies_sat.py passes, but with 1 the
- * recorded playthrough (tests/md_playthrough/playthrough_12_18.txt, replayed frame by frame) no longer finishes the stage 12 fight at its
- * checkpoint (frame 4870, either half of the hold alone is enough): kept at 0 until the playthrough is recorded again. */
-#define BOSS12_SAT_HOLD 0
+/* Stage 12 rider + 0Ah shots held (1) or not (0); checked against 5F1D/9F6D/99F6 by tools/verify_boss_bodies_sat.py. */
+#define BOSS12_SAT_HOLD 1
 static int boss15_pool(int slot,int count){return Enemies_boss15_reserve(&vk_enemies,slot,count);}
 static VKBossU8 boss_held[2];   /* last count requested for C800[0] (which 0, slot 0) and C800[1] (which 1, slot 9) */
 static VKBossU8 boss_shot_held[VK_BOSS_MAX_SHOTS];   /* D700 shots held for kinds 1, 2, 3 (2 slots) and 5 (8 slots) */
