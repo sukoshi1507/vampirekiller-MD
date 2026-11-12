@@ -146,6 +146,7 @@ static int vk_stair_enter(VKPlayer *p, const VKByte *map)
     p->stair_anim = 0;
     p->stair_glide = 0;
     p->stair_move = 1; /* 6BEE: C435 := the key, the first cell is climbed */
+    p->clock = 0;      /* the entry frame starts the 30 Hz pass: the first step comes 2 frames later (openMSX) */
     p->on_stairs = 1;
     p->mode = 0;
     p->phase = 0;
@@ -191,6 +192,7 @@ static int vk_stair_enter_top(VKPlayer *p, const VKByte *map)
     p->stair_anim = p->stair_len; /* the progress starts at the top */
     p->stair_glide = 0;
     p->stair_move = 2; /* 6BEE: C435 := the key (BAS), the first cell is descended */
+    p->clock = 0;      /* as the climb: first step 2 frames after the entry */
     p->facing = (VKByte)dir; /* entering from the top, Simon goes down */
     p->on_stairs = 1;
     p->mode = 0;
@@ -313,6 +315,7 @@ static void vk_stair_tick(VKPlayer *p, int direction, int down, int up)
 /* Direction of the jump in progress (C421 of the MSX) and whether a jump, not a fall from a ledge, holds it. */
 static signed char air_dx;
 static VKByte air_lock;
+static VKByte walk_last;   /* the last pass walked: the frame between two passes keeps the walk pose */
 
 void vk_player_tick_controls(VKPlayer *p, const VKByte *map, VKByte stage,
                              int direction, int jump_pressed, int down, int up)
@@ -355,21 +358,47 @@ void vk_player_tick_jump(VKPlayer *p, const VKByte *map, VKByte stage,
     int vertical = 0;
     int hit;
     int n;
+    const VKByte mode_in = p->mode;
     p->clock++;
     if (direction)
     {
         const int dx = direction < 0 ? -1 : 1;
         p->facing = dx < 0;
-        /* MSX2 measured in openMSX: C427 advances 1 px per VBLANK (60 px/s). */
-        for (n = 0; n < 1; n++)
+        if (p->mode == 1 || p->mode == 4)
         {
-            int next = (int)p->x + dx;
-            if (next < 8 || next > 248 ||
-                vk_wall(map, (VKByte)next, p->y, dx, p->crouched, stage, 0)) break;
-            p->x = (VKByte)next;
-            walking = 1;
+            /* 6D61 / 6D67 (C421 = 2, 3): in the air the pass calls 6C2F / 6C53 and then the vertical
+             * step 6CE7, so X moves 2 px (BC = FE00 / 0200 added to C426:C427, 6C73) once per 30 Hz pass,
+             * on the frame of the vertical step and before it: the wall probe 7C05 / 7BA9 (X -+ 8 at the
+             * rows Y - 2, -10, ...) looks at the X and Y before the pass and one probe decides the 2 px.
+             * Before the first step (C421 is read on the second pass, 6CC0-6CE5) X does not move
+             * (openMSX, tools/run_jump_cases.py: stage 15 room 3 jump left, X 134 until the step 9). */
+            const VKByte pass = (VKByte)(p->jump_frames + 1);
+            if ((pass & 1) == 0 && (p->mode == 4 || pass >= 4))
+            {
+                const int next = (int)p->x + 2 * dx;
+                if (next >= 8 && next <= 248 && !vk_wall(map, p->x, p->y, dx, 0, stage, 0))
+                { p->x = (VKByte)next; walking = 1; }
+            }
         }
+        else if ((p->clock & 1) == 0 || jump_pressed)
+        {
+            /* Ground walk 6C2F / 6C53: one wall probe 7C05 / 7BA9 at the current X (X -+ 8, rows Y - 2, -10..),
+             * then X moves by 2 px (6C73), once per 30 Hz pass: every second frame, and on the frame of a jump
+             * key, the pass that starts the jump walks first (openMSX, tools/run_jump_cases.py: stage 15 room 3,
+             * LEFT against the block: X 136 -> 134 and stops there; the pass moves 2 px at a time, X keeps its parity). */
+            if (!vk_wall(map, p->x, p->y, dx, p->crouched, stage, 0))
+                for (n = 0; n < 2; n++)
+                {
+                    const int next = (int)p->x + dx;
+                    if (next < 8 || next > 248) break;
+                    p->x = (VKByte)next;
+                    walking = 1;
+                }
+            walk_last = walking;
+        }
+        else walking = walk_last;   /* the frame between two passes goes on with the walk cycle */
     }
+    else walk_last = 0;
     if (p->mode == 0)
     {
         /* 6B52-6B5B: the floor or a moving platform (C439). */
@@ -431,6 +460,8 @@ void vk_player_tick_jump(VKPlayer *p, const VKByte *map, VKByte stage,
             else if (p->phase < 3) p->phase++;
         }
     }
+    /* The landing pass is a walk pass: the ground walk goes on 2 frames later, on the grid of the jump. */
+    if (mode_in != 0 && p->mode == 0) p->clock = (VKByte)(p->clock & ~1);
     if (p->mode != 0) p->crouched = 0;
     if (p->mode == 1 || p->mode == 4) p->pose = p->facing ? 7 : 6;
     else

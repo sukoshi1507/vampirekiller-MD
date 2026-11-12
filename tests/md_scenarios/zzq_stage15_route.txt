@@ -284,29 +284,8 @@ hold LEFT 1
 hold LEFT+C 4
 hold LEFT 60
 wait 20
-hold LEFT 3
-hold UP 8
-hold LEFT 3
-hold UP 8
-hold LEFT 3
-hold UP 8
-hold LEFT 3
-hold UP 8
-hold LEFT 3
-hold UP 8
-hold LEFT 3
-hold UP 8
-hold LEFT 3
-hold UP 8
-hold LEFT 3
-hold UP 8
-hold LEFT 3
-hold UP 8
-hold LEFT 3
-hold UP 8
-hold LEFT 3
-hold UP 8
-hold LEFT 3
+# The landing walk stops at X 58 (2 px per 30 Hz pass); the flight of room 4 is mounted from X 56 (openMSX: tools/run_jump_cases.py,
+# UP at X 56 to 69 mounts, X 44 to 55 does not), so one UP is enough; a 3-frame LEFT step would now skip the window.
 hold UP 8
 hold UP 300
 wait 20

@@ -1,0 +1,225 @@
+# (zzr) Saut de Simon image par image contre openMSX (tools/run_jump_cases.py + tools/jump_cases_md.py, research/jump-compare.md section 9).
+# Chaque cas pose Simon (X, Y) dans la salle, appuie sur la direction + C en meme temps (n = 1 est la premiere image touche enfoncee) et compare
+# (X, Y, mode) aux releves MSX (C427, C425, C420) aux images n = 4, 5, 19, 20, 21, 23 : montee de la table 6D95 tous les 2 images a partir de n = 5,
+# X +-2 a chaque passe 30 Hz sans bouger avant le premier pas, atterrissage sur le rebord 32 px plus haut au pas 9 (n = 21), marche de 2 px par passe ensuite.
+# Stage 15 : salles 1 (petit bloc vers le rebord Y 80), 3 (bloc a gauche de l escalier), 4 (palier Y 112 vers l etage Y 80).
+until front_mode == MODES['TITLE'] max 2000
+tap START
+tap START
+until front_mode == MODES['COURTYARD'] max 500
+wait 60
+tap START
+until ram8('paused') == 1 max 30
+tap UP
+tap UP
+tap DOWN
+tap DOWN
+tap LEFT
+tap RIGHT
+tap LEFT
+tap RIGHT
+tap B
+tap A
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap B
+until game.stage == 15 and game.room == 0 max 300
+poke Enemies_god 1
+poke vk_enemies+162 1
+until game.player.mode == 0 max 300
+# RAM fixture for action only: stage15/room3, not a walked route.
+poke vk_game+16 1 32
+poke vk_game+22 15
+poke vk_game+20 3
+poke vk_front_mode 4 16
+poke vk_game+0 136
+poke vk_game+1 176
+poke vk_game+2 0
+poke vk_game+3 0
+poke vk_game+4 0
+poke vk_game+7 0
+poke vk_game+8 0
+poke vk_game+23 0
+poke vk_game+26 0
+poke vk_game+30 0
+poke vk_candles 255
+poke health+1 0
+poke health+2 0 16
+poke Enemies_god 1
+poke vk_enemies+162 1
+poke items+2 0
+poke items+3 0
+poke freeze_drawn 0
+poke room_freeze 4
+poke room_freeze+1 4
+poke room_freeze+2 0
+write freeze_vtimer 32 ram32('vtimer')
+until ram8('room_freeze') == 0 and ram8('freeze_drawn') != 0 max 100
+wait 40
+poke vk_game+0 136
+poke vk_game+1 176
+hold LEFT+C 4
+expect game.player.x == 134 and game.player.y == 176 and game.player.mode == 1  # n = 4
+hold LEFT 1
+expect game.player.x == 134 and game.player.y == 170 and game.player.mode == 1  # n = 5
+hold LEFT 14
+expect game.player.x == 134 and game.player.y == 145 and game.player.mode == 1  # n = 19
+hold LEFT 1
+expect game.player.x == 134 and game.player.y == 145 and game.player.mode == 1  # n = 20
+hold LEFT 1
+expect game.player.x == 132 and game.player.y == 144 and game.player.mode == 0  # n = 21
+hold LEFT 2
+expect game.player.x == 130 and game.player.y == 144 and game.player.mode == 0  # n = 23
+hold LEFT 2
+expect game.player.x == 128 and game.player.y == 144 and game.player.mode == 0  # n = 25
+hold LEFT 2
+# RAM fixture for action only: stage15/room1, not a walked route.
+poke vk_game+16 1 32
+poke vk_game+22 15
+poke vk_game+20 1
+poke vk_front_mode 4 16
+poke vk_game+0 215
+poke vk_game+1 112
+poke vk_game+2 0
+poke vk_game+3 0
+poke vk_game+4 0
+poke vk_game+7 0
+poke vk_game+8 0
+poke vk_game+23 0
+poke vk_game+26 0
+poke vk_game+30 0
+poke vk_candles 255
+poke health+1 0
+poke health+2 0 16
+poke Enemies_god 1
+poke vk_enemies+162 1
+poke items+2 0
+poke items+3 0
+poke freeze_drawn 0
+poke room_freeze 4
+poke room_freeze+1 4
+poke room_freeze+2 0
+write freeze_vtimer 32 ram32('vtimer')
+until ram8('room_freeze') == 0 and ram8('freeze_drawn') != 0 max 100
+wait 40
+poke vk_game+0 215
+poke vk_game+1 112
+hold RIGHT+C 4
+expect game.player.x == 217 and game.player.y == 112 and game.player.mode == 1  # n = 4
+hold RIGHT 1
+expect game.player.x == 217 and game.player.y == 106 and game.player.mode == 1  # n = 5
+hold RIGHT 14
+expect game.player.x == 217 and game.player.y == 81 and game.player.mode == 1  # n = 19
+hold RIGHT 1
+expect game.player.x == 217 and game.player.y == 81 and game.player.mode == 1  # n = 20
+hold RIGHT 1
+expect game.player.x == 219 and game.player.y == 80 and game.player.mode == 0  # n = 21
+hold RIGHT 2
+expect game.player.x == 221 and game.player.y == 80 and game.player.mode == 0  # n = 23
+hold RIGHT 2
+expect game.player.x == 223 and game.player.y == 80 and game.player.mode == 0  # n = 25
+hold RIGHT 2
+# RAM fixture for action only: stage15/room4, not a walked route.
+poke vk_game+16 1 32
+poke vk_game+22 15
+poke vk_game+20 4
+poke vk_front_mode 4 16
+poke vk_game+0 104
+poke vk_game+1 112
+poke vk_game+2 0
+poke vk_game+3 0
+poke vk_game+4 0
+poke vk_game+7 0
+poke vk_game+8 0
+poke vk_game+23 0
+poke vk_game+26 0
+poke vk_game+30 0
+poke vk_candles 255
+poke health+1 0
+poke health+2 0 16
+poke Enemies_god 1
+poke vk_enemies+162 1
+poke items+2 0
+poke items+3 0
+poke freeze_drawn 0
+poke room_freeze 4
+poke room_freeze+1 4
+poke room_freeze+2 0
+write freeze_vtimer 32 ram32('vtimer')
+until ram8('room_freeze') == 0 and ram8('freeze_drawn') != 0 max 100
+wait 40
+poke vk_game+0 104
+poke vk_game+1 112
+hold LEFT+C 4
+expect game.player.x == 102 and game.player.y == 112 and game.player.mode == 1  # n = 4
+hold LEFT 1
+expect game.player.x == 102 and game.player.y == 106 and game.player.mode == 1  # n = 5
+hold LEFT 14
+expect game.player.x == 102 and game.player.y == 81 and game.player.mode == 1  # n = 19
+hold LEFT 1
+expect game.player.x == 102 and game.player.y == 81 and game.player.mode == 1  # n = 20
+hold LEFT 1
+expect game.player.x == 100 and game.player.y == 80 and game.player.mode == 0  # n = 21
+hold LEFT 2
+expect game.player.x == 98 and game.player.y == 80 and game.player.mode == 0  # n = 23
+hold LEFT 2
+expect game.player.x == 96 and game.player.y == 80 and game.player.mode == 0  # n = 25
+hold LEFT 2
+# RAM fixture for action only: stage15/room1, not a walked route.
+poke vk_game+16 1 32
+poke vk_game+22 15
+poke vk_game+20 1
+poke vk_front_mode 4 16
+poke vk_game+0 150
+poke vk_game+1 80
+poke vk_game+2 0
+poke vk_game+3 0
+poke vk_game+4 0
+poke vk_game+7 0
+poke vk_game+8 0
+poke vk_game+23 0
+poke vk_game+26 0
+poke vk_game+30 0
+poke vk_candles 255
+poke health+1 0
+poke health+2 0 16
+poke Enemies_god 1
+poke vk_enemies+162 1
+poke items+2 0
+poke items+3 0
+poke freeze_drawn 0
+poke room_freeze 4
+poke room_freeze+1 4
+poke room_freeze+2 0
+write freeze_vtimer 32 ram32('vtimer')
+until ram8('room_freeze') == 0 and ram8('freeze_drawn') != 0 max 100
+wait 40
+poke vk_game+0 150
+poke vk_game+1 80
+hold RIGHT+C 4
+expect game.player.x == 152 and game.player.y == 80 and game.player.mode == 1  # n = 4
+hold RIGHT 1
+expect game.player.x == 154 and game.player.y == 74 and game.player.mode == 1  # n = 5
+hold RIGHT 14
+expect game.player.x == 168 and game.player.y == 49 and game.player.mode == 1  # n = 19
+hold RIGHT 1
+expect game.player.x == 168 and game.player.y == 49 and game.player.mode == 1  # n = 20
+hold RIGHT 1
+expect game.player.x == 170 and game.player.y == 48 and game.player.mode == 1  # n = 21
+hold RIGHT 2
+expect game.player.x == 172 and game.player.y == 48 and game.player.mode == 1  # n = 23
+hold RIGHT 2
+expect game.player.x == 174 and game.player.y == 48 and game.player.mode == 1  # n = 25
+hold RIGHT 2
