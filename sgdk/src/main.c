@@ -141,6 +141,7 @@ static void show_hall_room(u16 room)
     vk_candle_view_room();
     wall_room();
     vk_enemy_room_cells();
+    vk_room_display_on();
     if(vk_game.stage==18 && room==9)vk_step_enemies();
 }
 
@@ -405,13 +406,17 @@ static void begin_room_freeze(void)
 
 /* One frozen frame: no input, Simon, whip, enemies, candles, drops or flames;
  * only the music goes on (4028 with the C005 guard). The display goes off as the
- * castle entrance does (black palettes). The port draws the new room in about
- * ROOM_DRAW_FRAMES frames of 68000 time (display off during vk_show_room, then
- * tile loads with the room on screen), so it starts that many frames before the
- * end, and the room comes up, without sprites, near the end as on the MSX (47C7
- * in the last C000 = 9 frame). The freeze counts VBlanks (vtimer), not loop
+ * castle entrance does (black palettes). The port draws the new room in under
+ * ROOM_DRAW_FRAMES frames of 68000 time (about 2: display off, tiles by DMA until
+ * vk_room_display_on, see room_view.h), so it starts that many frames before the end,
+ * and the room comes up, without sprites, near the end as on the MSX (47C7 in the last
+ * C000 = 9 frame). The freeze counts VBlanks (vtimer), not loop
  * turns, so that it keeps the MSX frame count across the draw. */
 #define ROOM_DRAW_FRAMES 7
+/* VBlanks the last room draw took (measure: research/room-draw-budget.md); the freeze
+ * keeps its frame count while this stays below ROOM_DRAW_FRAMES, and the scenario
+ * n_room_draw_margin.txt keeps a margin. */
+volatile u8 room_draw_vblanks;
 static void room_freeze_step(void)
 {
     static const u16 black[64] = {0};
@@ -426,10 +431,14 @@ static void room_freeze_step(void)
     }
     if (!freeze_drawn && room_freeze.left <= ROOM_DRAW_FRAMES)
     {
+        const u32 start = vtimer;
         freeze_drawn = TRUE;
+        vk_fast_room_draw = TRUE;
         if (vk_game.area == VK_AREA_INTERIOR) show_hall_room(vk_game.room);
         else show_courtyard(vk_game.room);
+        vk_fast_room_draw = FALSE;
         hide_sprites();
+        room_draw_vblanks = (u8)(vtimer - start);
     }
 }
 
@@ -600,7 +609,12 @@ int main(bool hardReset)
         u16 pressed;
         bool dirty = FALSE;
         int throw_launch = 0;
-        handleInput(&input);
+        /* Once the new room is drawn, the freeze no longer reads the pads: the draw used to
+         * take its last frames in one loop turn, so a key pressed there was an edge for the
+         * first turn after the freeze (jump buffered). The draw is shorter now, the keys of
+         * those frames still count at that turn. */
+        if (freeze_drawn && vk_room_freeze_active(&room_freeze)) input.pressed = 0;
+        else handleInput(&input);
         pressed = input.pressed;
         if (vk_front_mode == FRONT_LOGO)
             vk_logo_tick(pressed);

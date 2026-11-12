@@ -1,0 +1,14 @@
+# (n) Marge du dessin de salle (research/room-draw-budget.md) : le gel de changement de salle
+# commence le dessin ROOM_DRAW_FRAMES = 7 images avant la fin ; si le dessin depasse ce budget,
+# le gel s'allonge (hall : 21 images au lieu de 20). room_draw_vblanks (main.c) = VBlanks pris
+# par le dernier dessin : 3 mesure (avant : 7), on exige <= 4 (marge >= 3 images de 68000).
+# Cour (scene) et hall (salle de chateau) sont mesures.
+include boot_to_courtyard.inc
+until game.room == 1 max 400 RIGHT
+until ram8('room_freeze') == 0 max 40 RIGHT
+expect ram8('room_draw_vblanks') <= 4 # cour, salle 1
+until front_mode == MODES['INTERIOR'] max 3000 RIGHT
+until game.room == 1 max 600 RIGHT
+until ram8('room_freeze') == 0 max 40 RIGHT
+expect ram8('room_draw_vblanks') >= 1 # le dessin du hall a ete mesure
+expect ram8('room_draw_vblanks') <= 4 # hall, salle 1 (dessin par DMA, affichage coupe)

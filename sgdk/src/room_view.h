@@ -9,6 +9,18 @@
  * the debug room label. Plane A only; sprites are drawn by actors.c. */
 #define COURTYARD_MAX_FLAMES 2
 
+/* Room draw of a room-change freeze (main.c room_freeze_step sets vk_fast_room_draw):
+ * the display stays off from the start of vk_show_courtyard / vk_show_castle_room until
+ * vk_room_display_on, and the tile loads go by blocking DMA (about 170 bytes per line, 3x
+ * the CPU loop, and 10x it with the display on: research/room-draw-budget.md). Every other
+ * draw (respawn, stage start, debug jump) keeps the CPU copies with the display on, whose
+ * timing the scenarios calibrate on. */
+extern bool vk_fast_room_draw;
+extern bool vk_tiles_by_dma;
+#define VK_TM (vk_tiles_by_dma ? DMA : CPU)
+/* Ends a room draw: back to CPU copies, display on. */
+void vk_room_display_on(void);
+
 /* Full-screen ROM scene (intro_assets): tiles, palette PAL0 and 32x28 map. */
 void vk_show_scene(u16 index);
 /* Room viewer: one stage room (or its tile set with atlas) and the help text. */
