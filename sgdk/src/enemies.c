@@ -170,13 +170,20 @@ static EnemyLootHandler loot_handler;
 void Enemies_loot_handler(EnemyLootHandler callback){loot_handler=callback;}
 #include "generated/c800_sat.h"
 /* SAT18 bitmap: C800 scans0..13, D700 scans17..10 (four overlapping entries).
- * PROVISIONAL: boss-owned SAT, damage-driven palette changes and legacy
- * species without extracted rows remain outside the late normal/frozen proofs.
- * These are logical reservations, not raw VRAM. */
+ * These are logical reservations, not raw VRAM.  Traced on the ROM (research/sat-owners-lot15.md):
+ * - CE03 is only read (9FC2) and never written (tools/verify_sat_colour_writers.py, openMSX: 0 in every room of stages 1-18), so D700 always
+ *   scans 17..10 and sat_boss stays 0 in play (the 17..16 restriction is kept for the pools tests only);
+ * - colour bytes (+25+5k, 651B turns a zero low nibble into E1): the only writers that can zero a layer are 09h (AF4A/B048 zero, AF7E
+ *   restores; rows per state in c800_sat.h) and the stage 18 body 11h (ACB2); the other writers (26h flame 9C2A, statue A28A, 14h flash
+ *   B96F) never store a zero nibble;
+ * - bodies held by bosses 12h/13h/14h x2: actors.c boss15_pool_sync, tools/verify_boss_bodies_sat.py;
+ * - species of stages 2-11 that keep the object Y: rows of the poses met by tools/run_species_trace.py (research/legacy-species-msx.json).
+ * PROVISIONAL, limited to: the D700 shots of the bosses of stages 6 and 9, the stage 12 rider (15h + 18h) and the stage 18 body (11h) which
+ * are not in this allocator, and poses of the legacy species not met in those traces, and types 01/04 whose port Y is a SAT Y (their entries stay reserved). */
 static unsigned long sat_used,c800_sat[ENEMY_MAX],d700_sat[ENEMY_PROJECTILE_MAX];
 static EnemyU8 sat_boss,renderStage;
 /* LOT14G: boss15 owns physical C800[0] and D700 slots in this same allocator. */
-static unsigned long boss15_sat[9];
+static unsigned long boss15_sat[10]; /* 0: C800[0], 1..8: D700[0..7], 9: C800[1] (second 14h walker of stage 9) */
 static int isProjectile(EnemyU8 type);
 static EnemyU8 satCount(EnemyU8 type);
 static unsigned long *sat_owner(int i){return i<ENEMY_MAX?&c800_sat[i]:&d700_sat[i-ENEMY_MAX];}
@@ -193,24 +200,24 @@ static void sat_sync(EnemyState *s){
   EnemyU8 type=Enemies_slot(s,(EnemyU8)i)->type;*sat_owner(i)=sat_reserve(isProjectile(type),isProjectile(type)?2:satCount(type));
  }
 }
-/* count=0 releases; slot0 is the body, slots1..8 are physical D700 indices.
+/* count=0 releases; slot0 is the body, slots1..8 are physical D700 indices, slot9 is C800[1].
  * Persistent masks retain holes: do not recompute them from active counts. */
 int Enemies_boss15_reserve(EnemyState *s,int slot,int count){
  unsigned long mask;int i,n=0;
- if(slot<0 || slot>8)return 0;
+ if(slot<0 || slot>9)return 0;
  sat_sync(s);mask=boss15_sat[slot];
  for(i=0;i<18;i++)n+=(int)((mask>>i)&1);
  if(n==count)return 1;
  if(mask){sat_used&=~mask;boss15_sat[slot]=0;}
  if(!count)return 1;
- if(slot ? vk_projectiles[slot-1].active : s->enemy[0].active)return -1;
- mask=sat_reserve(slot!=0,count);if(!mask)return 0;
+ if(slot==9 ? s->enemy[1].active : slot ? vk_projectiles[slot-1].active : s->enemy[0].active)return -1;
+ mask=sat_reserve(slot!=0 && slot!=9,count);if(!mask)return 0;
  boss15_sat[slot]=mask;return 1;
 }
 /* Executed6445 ->64EC/64E5: 1E/0C pose85/86 has one coloured
  * SAT entry and one colour-zero entry forced toE1 by651B.
  * C800 puts colour8 first; D700 puts it second (descending SAT refs).
- * PROVISIONAL: boss ownership, damage colours and unlisted legacy species. */
+ * Rows: c800_sat.h (5F1D + 6445 on the ROM, tools/build_c800_sat.py); boss holds: boss15_sat (see the comment of the allocator above). */
 void Enemies_sat_render(EnemyState *s){
  int i; sat_sync(s);
  for(i=0;i<ENEMY_ALL;i++){
@@ -234,9 +241,9 @@ void Enemies_sat_render(EnemyState *s){
     }
     continue;
    }
-   for(row=0;row<sizeof(c800_sat_layouts)/sizeof(c800_sat_layouts[0]);row++){
+   if(e->type<sizeof(c800_sat_ranges)/sizeof(c800_sat_ranges[0]))for(row=c800_sat_ranges[e->type].first;row<(unsigned int)c800_sat_ranges[e->type].first+c800_sat_ranges[e->type].count;row++){
     const VKC800SATLayout *layout=&c800_sat_layouts[row];int entry=0;
-    if(layout->type!=e->type || layout->pose!=e->pose)continue;
+    if(layout->pose!=e->pose)continue;
     for(j=0;j<18 && entry<layout->count;j++)if(mask&(1UL<<j)){
      if((layout->visible&(1U<<entry)) && (EnemyU8)(e->y+layout->dy[entry])==0xE0)sat_used&=~(1UL<<j);
      entry++;
@@ -280,7 +287,7 @@ void Enemies_setRoom(EnemyState *s)
 {
     EnemyU8 i;
     for (i = 0; i < ENEMY_ALL; i++) clearEnemy(Enemies_slot(s,i));
-    {int j;sat_used=0;sat_boss=0;for(j=0;j<9;j++)boss15_sat[j]=0;for(j=0;j<ENEMY_MAX;j++)c800_sat[j]=0;for(j=0;j<ENEMY_PROJECTILE_MAX;j++)d700_sat[j]=0;}
+    {int j;sat_used=0;sat_boss=0;for(j=0;j<10;j++)boss15_sat[j]=0;for(j=0;j<ENEMY_MAX;j++)c800_sat[j]=0;for(j=0;j<ENEMY_PROJECTILE_MAX;j++)d700_sat[j]=0;}
     s->parity = 0;
     s->type4Count = ENEMY_TYPE4_COUNT;   /* 9CA9 : CF06 = 08, CF07 = 00 */
     s->type4Side = ENEMY_SIDE_RIGHT;
@@ -1593,7 +1600,7 @@ static Enemy *newObject(EnemyState *s,EnemyU8 type)
    int k,busy=0;for(k=0;k<ENEMY_MAX;k++)if(s->enemy[k].active && isProjectile(s->enemy[k].type) && ext(s,&s->enemy[k])->c10==i)busy=1;
    if(!busy){slot=&vk_projectiles[i];break;}
   }
- }else for(i=0;i<ENEMY_MAX;i++)if(!s->enemy[i].active && !(i==0 && boss15_sat[0])){slot=&s->enemy[i];break;}
+ }else for(i=0;i<ENEMY_MAX;i++)if(!s->enemy[i].active && !(i==0 && boss15_sat[0]) && !(i==1 && boss15_sat[9])){slot=&s->enemy[i];break;}
  if(!slot)return 0;
  mask=sat_reserve(isProjectile(type),isProjectile(type)?2:satCount(type));if(!mask)return 0;
  *sat_owner(objectIndex(s,slot))=mask;clearEnemy(slot);slot->active=1;slot->type=type;
