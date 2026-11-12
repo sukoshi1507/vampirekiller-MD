@@ -108,6 +108,7 @@ const VKByte *vk_game_collision(const VKGame *game)
 /* Index of vk_collision_limits: 0 in the courtyard, the stage number inside. */
 static VKByte vk_game_limit_stage(const VKGame *game)
 {
+    if (game->area == VK_AREA_INTERIOR && game->stage == 18 && game->room == 9) return VK_STAGE_CE00_6;
     return game->area == VK_AREA_COURTYARD ? 0 : game->stage;
 }
 

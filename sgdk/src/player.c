@@ -8,10 +8,12 @@ VKByte vk_sample_tile(const VKByte *map, VKByte x, VKByte y)
     return index < 768 ? map[index] : 0;
 }
 
-/* Original 7C5E: carry is set for (tile - 1) < the stage-specific limit. */
+/* Original 7C5E: carry is set for (tile - 1) < the stage-specific limit; with CE00 = 6
+ * (7C5F-7C64, 7C73-7C77, checked on the ROM in openMSX: the Dracula room) the limit is 6
+ * whatever the stage. The callers give that room as the pseudo stage VK_STAGE_CE00_6. */
 int vk_tile_solid(VKByte tile, VKByte stage, VKByte special)
 {
-    VKByte limit = special ? 6 : vk_collision_limits[stage < 19 ? stage : 0];
+    VKByte limit = (special || stage == VK_STAGE_CE00_6) ? 6 : vk_collision_limits[stage < 19 ? stage : 0];
     return (VKByte)(tile - 1) < limit;
 }
 

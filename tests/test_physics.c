@@ -102,5 +102,9 @@ int main(void)
         vk_player_tick_controls(&p,map,1,0,1,0,0);
         assert(!p.on_stairs && p.mode==1);
     }
+    /* 7C5E, CE00 = 6 (Dracula room, ROM read in openMSX: 7C5F CP 6 / 7C73 DEC A, CP 6): only tiles 1..6 are solid, the
+     * tiles 7 and 8 of the towers are decor; with CE00 != 6 the stage 18 limit is 8. */
+    assert(vk_tile_solid(6,18,0) && vk_tile_solid(7,18,0) && vk_tile_solid(8,18,0) && !vk_tile_solid(9,18,0));
+    assert(vk_tile_solid(6,VK_STAGE_CE00_6,0) && !vk_tile_solid(7,VK_STAGE_CE00_6,0) && !vk_tile_solid(8,VK_STAGE_CE00_6,0));
     return 0;
 }

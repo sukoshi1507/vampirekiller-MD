@@ -14,6 +14,7 @@ typedef struct {
     VKByte jump_frames;          /* frames since the jump began, paces the arc at 30 Hz */
 } VKPlayer;
 
+#define VK_STAGE_CE00_6 19   /* pseudo stage of the collision tests: the room with CE00 = 6 (stage 18 room 9) */
 VKByte vk_sample_tile(const VKByte *map, VKByte x, VKByte y);
 int vk_tile_solid(VKByte tile, VKByte stage, VKByte special);
 int vk_grounded(const VKByte *map, VKByte x, VKByte y, VKByte stage, VKByte special);
