@@ -267,8 +267,7 @@ int main(void)
     assert(vk_game_debug_room(&g, 0) && g.collision_verified);
     assert(g.player.x == 16 && g.player.y == 192);
 
-    /* x 232 is not a door, the old UP door is gone, and facing left in the zone
-     * does nothing (the left-facing zone of 8580 is not ported). */
+    /* x 232 facing right is not a door and the old UP door is gone. */
     vk_game_begin(&g);
     g.room = 2;
     g.player.x = 232;
@@ -281,6 +280,52 @@ int main(void)
     g.player.x = 218;
     g.player.facing = 1;
     assert(vk_game_tick(&g, 0, 0, 0) == VK_EVENT_NONE && !g.entrance);
+    /* Facing left the zone of 8580 is X in [232, 240) (openMSX, Simon poked in room 2 at
+     * Y 176, C42C = 1): X 236 and 239 start the entrance, the first step (t 2) gives
+     * X - 1 inside the exit zone, the hall follows 3 frames later; X 240 and 231 do
+     * nothing; X 232 steps to 231, outside the exit zone, and walks on to the left. */
+    {
+        static const VKByte starts[2] = {236, 239};
+        int i, t;
+        for (i = 0; i < 2; i++)
+        {
+            vk_game_begin(&g);
+            g.room = 2;
+            g.player.x = starts[i];
+            g.player.y = 176;
+            g.player.facing = 1;
+            assert(vk_game_tick(&g, 0, 0, 0) == VK_EVENT_ENTRANCE && g.entrance == VK_ENTRANCE_WALK);
+            assert(vk_game_tick(&g, 1, 1, 0) == VK_EVENT_NONE && g.player.x == starts[i] && g.entrance == VK_ENTRANCE_WALK);
+            assert(vk_game_tick(&g, 1, 1, 0) == VK_EVENT_NONE && g.player.x == starts[i] - 1 && g.entrance == VK_ENTRANCE_EXIT);
+            assert(vk_game_tick(&g, 0, 0, 0) == VK_EVENT_NONE);
+            assert(vk_game_tick(&g, 0, 0, 0) == VK_EVENT_NONE);
+            assert(vk_game_tick(&g, 0, 0, 0) == VK_EVENT_ENTRANCE_DARK && g.area == VK_AREA_INTERIOR);
+            for (t = 0; t < 35; t++) assert(vk_game_tick(&g, 0, 0, 0) == VK_EVENT_NONE);
+            assert(vk_game_tick(&g, 0, 0, 0) == VK_EVENT_ENTER && g.player.x == 16 && g.player.y == 192);
+        }
+        for (i = 0; i < 2; i++)
+        {
+            vk_game_begin(&g);
+            g.room = 2;
+            g.player.x = i ? 231 : 240;
+            g.player.y = 176;
+            g.player.facing = 1;
+            assert(vk_game_tick(&g, 0, 0, 0) != VK_EVENT_ENTRANCE && !g.entrance);
+        }
+        vk_game_begin(&g);
+        g.room = 2;
+        g.player.x = 232;
+        g.player.y = 176;
+        g.player.facing = 1;
+        assert(vk_game_tick(&g, 0, 0, 0) == VK_EVENT_ENTRANCE);
+        vk_game_tick(&g, 0, 0, 0);
+        vk_game_tick(&g, 0, 0, 0);
+        assert(g.player.x == 231 && g.entrance == VK_ENTRANCE_WALK);
+        for (t = 0; t < 4; t++) vk_game_tick(&g, 0, 0, 0);
+        assert(g.player.x == 230);
+        for (t = 0; t < 4 * 230 && g.entrance; t++) vk_game_tick(&g, 0, 0, 0);
+        assert(!g.entrance && g.area == VK_AREA_COURTYARD && g.room == 2 && g.player.x <= 8);
+    }
     /* Out of the Y band [138, 194) nothing starts either. */
     g.player.facing = 0;
     g.player.y = 120;

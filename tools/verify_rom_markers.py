@@ -17,6 +17,7 @@ from pathlib import Path
 from probe import ROOT,load_rom,reference_rom
 from verify_item_trace import setup
 from extract_stage_exits import extract
+from decode_room_links import decode
 
 def hud(lib,rom):
     h=setup(rom,2,0);m=h.cpu.memory;h.call(0x4513)
@@ -109,7 +110,12 @@ def room_load(rom):
         assert (m[0xC415],m[0xC418])==(7,0x44)
     writers=[i for i in range(len(rom)-2) if rom[i]==0x32 and rom[i+1]==0x18 and rom[i+2]==0xC4]
     assert writers==[0x04E5,0x0E14,0x22D7,0x2620],[hex(x) for x in writers]
-    print('Room load: C418 kept; only writers 44E5, 4E14, 62D7, 6620 (LD (C418),A) PASS',flush=True)
+    # A boss room cannot be left by an edge: its four links are empty in the room link table
+    # (the fight ends by the stage exit, 6620 / state 8, or by the death, 62D7: both write 80).
+    links=decode(rom)
+    for stage,room in ((3,5),(6,5),(9,7),(12,6),(15,9),(18,9)):
+        assert links[stage]['rooms'][room]=={'UP':None,'DOWN':None,'LEFT':None,'RIGHT':None},(stage,room)
+    print('Room load: C418 kept; only writers 44E5, 4E14, 62D7, 6620 (LD (C418),A); the 6 boss rooms have no link PASS',flush=True)
 
 def freeze(lib):
     rooms=json.loads((ROOT/'research/room-freeze-rooms.json').read_text())['rooms']
