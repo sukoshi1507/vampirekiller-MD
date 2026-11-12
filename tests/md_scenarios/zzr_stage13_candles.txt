@@ -1,0 +1,129 @@
+# (zzr) Stage 13 room 7 : les trois bougies (X 48, 144, 192, Y 128) sont fouettables. Elles sont a 48 pixels au-dessus du sol (Y 176) :
+# le fouet debout ne les touche pas (boite du fouet 8450 : Y bougie <= Y Simon - 18 < Y bougie + 20), ce que la ROM d'origine fait aussi
+# (openMSX, salle forcee 13:7 : fouet au sol sans effet, saut + fouet detruit chaque bougie)
+# Chaque bougie est donc fouettee en plein saut, Simon pose au pied de la bougie.
+# Arrivee dans la salle 7 par le selecteur de salles (comme zzp_stage13), pas de marche continue.
+until front_mode == MODES['TITLE'] max 2000
+tap START
+tap START
+until front_mode == MODES['COURTYARD'] max 500
+wait 60
+tap START
+until ram8('paused') == 1 max 30
+tap UP
+tap UP
+tap DOWN
+tap DOWN
+tap LEFT
+tap RIGHT
+tap LEFT
+tap RIGHT
+tap B
+tap A
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap B
+until game.stage == 13 and game.room == 0 max 300
+poke Enemies_god 1
+poke vk_enemies+162 1
+until game.player.mode == 0 max 300
+wait 30
+set clk enemies.tick
+wait 300
+include zzp_next.inc
+until game.stage == 13 and game.room == 1 max 300
+poke Enemies_god 1
+poke vk_enemies+162 1
+until game.player.mode == 0 max 300
+wait 30
+set clk enemies.tick
+wait 300
+include zzp_next.inc
+until game.stage == 13 and game.room == 2 max 300
+poke Enemies_god 1
+poke vk_enemies+162 1
+until game.player.mode == 0 max 300
+wait 30
+set clk enemies.tick
+wait 300
+include zzp_next.inc
+until game.stage == 13 and game.room == 3 max 300
+poke Enemies_god 1
+poke vk_enemies+162 1
+until game.player.mode == 0 max 300
+wait 30
+set clk enemies.tick
+wait 300
+include zzp_next.inc
+until game.stage == 13 and game.room == 4 max 300
+poke Enemies_god 1
+poke vk_enemies+162 1
+until game.player.mode == 0 max 300
+wait 30
+set clk enemies.tick
+wait 300
+include zzp_next.inc
+until game.stage == 13 and game.room == 5 max 300
+poke Enemies_god 1
+poke vk_enemies+162 1
+until game.player.mode == 0 max 300
+wait 30
+set clk enemies.tick
+wait 300
+include zzp_next.inc
+until game.stage == 13 and game.room == 6 max 300
+poke Enemies_god 1
+poke vk_enemies+162 1
+until game.player.mode == 0 max 300
+wait 30
+set clk enemies.tick
+wait 300
+include zzp_next.inc
+until game.stage == 13 and game.room == 7 max 300
+poke Enemies_god 1
+poke vk_enemies+162 1
+until game.player.mode == 0 max 300
+wait 30
+set clk enemies.tick
+wait 300
+expect ram8('vk_candles+4') == 7
+poke vk_game+0 48
+poke vk_game+1 176
+wait 40
+tap B 2
+wait 40
+expect ram8('vk_candles+4') == 7 # fouet au sol : aucune bougie (comme sur MSX)
+poke vk_game+0 48
+poke vk_game+1 176
+wait 40
+tap C 2
+wait 4
+tap B 2
+wait 40
+expect ram8('vk_candles+4') == 6 # bougie 0 fouettee en saut
+poke vk_game+0 144
+poke vk_game+1 176
+wait 40
+tap C 2
+wait 4
+tap B 2
+wait 40
+expect ram8('vk_candles+4') == 4 # bougie 1 fouettee en saut
+poke vk_game+0 192
+poke vk_game+1 176
+wait 40
+tap C 2
+wait 4
+tap B 2
+wait 40
+expect ram8('vk_candles+4') == 0 # bougie 2 fouettee en saut
