@@ -10,8 +10,11 @@ SPECS=((9,22,(0,*range(0x21,0x27))),(11,11,range(0x47,0x4B)),(13,14,(0x67,0x68,0
 # (enemies.h, ENEMY_TYPE4_OBJ_Y), not the object Y that the rows are relative to.  Not listed on purpose: 0E (dynamic chain, verify_c800_sat.py), 11/12/13/14/15/18/19/21/22/24 bosses and
 # bodies (their SAT is held for the whole fight, never at Y=E0), 1F (shares B0F8 with 04, poses 0 and 1A only seen once).
 LEGACY_INTERNAL={2:(4,),3:(17,),5:(3,),6:(6,),7:(8,),8:(7,),10:(9,),12:(12,),32:(5,),33:(17,),35:(14,)}
+# Poses the ROM handlers reach but the openMSX room traces never showed (tools/verify_legacy_poses.py runs the real 5F1D + 98E5/9E31 and
+# asserts that each of them is reached): 05 panther facing right 43h..46h, 07 bat 16h/17h, 03 fish 13h/14h.
+LEGACY_EXTRA={5:range(0x43,0x47),7:(0x16,0x17),3:(0x13,0x14)}
 def trace_poses():
- seen={}
+ seen={raw:set(p) for raw,p in LEGACY_EXTRA.items()}
  for name in ('late-species-msx.json','legacy-species-msx.json'):
   for room in json.loads((ROOT/'research'/name).read_text())['rooms'].values():
    for raw,poses in room.get('poses',{}).items():seen.setdefault(int(raw),set()).update(poses)

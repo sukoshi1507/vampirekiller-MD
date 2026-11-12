@@ -410,27 +410,55 @@ static void boss9_flash_cells(void)
     }
 }
 
-/* Shared ownership: stage 15 (body 16h, 12 entries, and its three 08h shots) and the bodies of stages 3 and 6 (12h / 13h: C800[0] holds
- * 8 references 0..7 from the creation until the 7806 destruction) and the two 14h walkers of stage 9 (C800[0] references 0..5, C800[1]
- * references 6..11), openMSX tools/sat_snapshot_extra.tcl rooms 3:5, 6:5, 9:7, checked against 5F1D/99F6 by tools/verify_boss_bodies_sat.py.
- * Not held here: the D700 shots of the stage 6 and 9 bosses (types 03/07, 2 entries each), the stage 12 rider 15h + 18h (6 + 2 entries,
- * trace 12:6) and the stage 18 body 11h (8 entries, colours rewritten by ACB2): boss.c kind 3 and dracula.c keep those slots outside the
- * allocator (PROVISIONAL, limited to these three). */
+/* Shared ownership (openMSX tools/sat_snapshot_extra.tcl rooms 3:5, 6:5, 9:7, 12:6, 18:9, checked against 5F1D/9F6D/99F6 by
+ * tools/verify_boss_bodies_sat.py): stage 15 (body 16h, 12 entries, and its three 08h shots), the bodies of stages 3 and 6 (12h / 13h:
+ * C800[0] holds 8 references 0..7 from the creation until the 7806 destruction), the two 14h walkers of stage 9 (C800[0] references 0..5,
+ * C800[1] references 6..11), the stage 12 rider (15h: C800[0] references 0..5, 18h: C800[1] references 6..7), the stage 18 body (11h:
+ * C800[0], 8 references; ys 80/B0/E1, never E0, so held until it dies) and the 2-entry D700 shots (types 6, 7, 0Ah, 05h: references 17 16,
+ * 15 14, 13 12 for D700[0..2]; port slot k + 1).
+ * Not held: the stage 12 rider and 0Ah shots (BOSS12_SAT_HOLD below), the flame that replaces a stage 12 body at its death (alive 2) and the
+ * other C800 objects of the stage 18 fight. */
+/* Stage 12 rider + 0Ah shots held (1) or not (0).  The 5F1D/9F6D/99F6 comparison of tools/verify_boss_bodies_sat.py passes, but with 1 the
+ * recorded playthrough (tests/md_playthrough/playthrough_12_18.txt, replayed frame by frame) no longer finishes the stage 12 fight at its
+ * checkpoint (frame 4870, either half of the hold alone is enough): kept at 0 until the playthrough is recorded again. */
+#define BOSS12_SAT_HOLD 0
 static int boss15_pool(int slot,int count){return Enemies_boss15_reserve(&vk_enemies,slot,count);}
 static VKBossU8 boss_held[2];   /* last count requested for C800[0] (which 0, slot 0) and C800[1] (which 1, slot 9) */
+static VKBossU8 boss_shot_held[VK_BOSS_MAX_SHOTS];   /* D700 shots held for kinds 1, 2, 3 (2 slots) and 5 (8 slots) */
 static void boss_body_hold(int which,int count)
 {
  if(boss_held[which]==count)return;
  if(boss15_pool(which?9:0,count)>0)boss_held[which]=(VKBossU8)count;
 }
-/* Bodies of stages 3, 6 and 9, only when one is present or was held (the allocator is not touched in other rooms: a sync there would
+static void boss_shot_hold(int i,int active)
+{
+ if(boss_shot_held[i]==active)return;
+ if(boss15_pool(i+1,active?2:0)>0)boss_shot_held[i]=(VKBossU8)active;
+}
+/* Bodies of stages 3, 6, 9 and 12, only when one is present or was held (the allocator is not touched in other rooms: a sync there would
  * reorder the lazy SAT assignment of the objects). */
 static void boss_bodies_sync(void)
 {
  if(vk_boss.kind<=1){if(vk_boss.alive||boss_held[0])boss_body_hold(0,vk_boss.alive?8:0);return;}
  if(vk_boss.walker[0].alive||vk_boss.walker[1].alive||boss_held[0]||boss_held[1]){
+  if(vk_boss.kind==3){boss_body_hold(0,vk_boss.walker[0].alive==1?6:0);boss_body_hold(1,vk_boss.walker[1].alive==1?2:0);return;}
   boss_body_hold(0,vk_boss.walker[0].alive?6:0);boss_body_hold(1,vk_boss.walker[1].alive?6:0);
  }
+}
+/* 2-entry D700 shots of the bosses of stages 6, 9 and 12 (two slots). */
+static void boss_shots_sync(void)
+{
+ int i;
+ if(vk_boss.kind<1 || vk_boss.kind>2+BOSS12_SAT_HOLD)return;
+ for(i=0;i<VK_BOSS_SHOTS;i++)boss_shot_hold(i,vk_boss.shot[i].active!=0);
+}
+/* Stage 18 (dracula.c owns the objects, every other pass): the body 11h is object type 17, the shots are D700 05h / 0Ch. */
+static void dracula_sat_sync(void)
+{
+ const VKDracula *d=vk_dracula_state();int i,body=0;
+ for(i=0;i<7;i++)if(d->object[i][0]==17){body=1;break;}
+ if(body||boss_held[0])boss_body_hold(0,body?8:0);
+ for(i=0;i<8;i++)boss_shot_hold(i,d->shot[i][0]!=0);
 }
 static void boss15_pool_sync(void){
  int i;
@@ -441,19 +469,19 @@ static void boss15_pool_sync(void){
 
 __attribute__((noinline)) static void boss_bodies_step(void)
 {
- if(vk_boss.kind<=2)boss_bodies_sync();
+ if(vk_boss.kind<=2+BOSS12_SAT_HOLD)boss_bodies_sync();
 }
 
 /* Boss of the room, after the enemies: BE70 or BD19, the D700 fireball, the end script B6AB. */
 static void step_boss(const EnemyRoomVars *v)
 {
     int events, hit = 0;
-    if (!vk_boss.in_room) {boss_held[0] = boss_held[1] = 0; return;}   /* leaving the room resets the allocator (Enemies_init) */
-    if(vk_boss.kind==5){dracula_step(v);return;}
+    if (!vk_boss.in_room) {int k;boss_held[0] = boss_held[1] = 0;for(k=0;k<VK_BOSS_MAX_SHOTS;k++)boss_shot_held[k]=0;return;}   /* leaving the room resets the allocator (Enemies_init) */
+    if(vk_boss.kind==5){dracula_step(v);dracula_sat_sync();return;}
     boss15_pool_sync();boss_bodies_step();
     events = vk_boss_frame(&vk_boss, v->simonX, v->simonY, v->difficulty, vk_enemies.frozen,
                            vk_enemies.energy);
-    boss15_pool_sync();
+    boss15_pool_sync();boss_shots_sync();
     boss9_flash_cells();
     if (events & VK_BOSS_EV_FIRE) vk_psg_effect(vk_boss.kind == 2 ? VK_SFX_WALKER_FIRE : VK_SFX_DAMAGE);   /* A4E8: 0A (stage 9) */
     if (events & VK_BOSS_EV_FLASH) vk_enemies.flash = ENEMY_FLASH_START;
