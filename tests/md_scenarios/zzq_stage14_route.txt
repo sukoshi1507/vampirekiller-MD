@@ -1,0 +1,172 @@
+# (zzq) Stage 14 a la manette, de la salle 0 a la porte de la salle 7 puis au stage 15 : 0 (escaliers gauche) -> 3 (escalier
+# depuis X 70, etage) -> 4 (etage) -> 5 (etage, puis sol par le saut gauche du palier) -> 6 (escalier) -> 7 (saut sur l'etage,
+# escalier, porte en bas a gauche). Poses : invulnerabilite et cle blanche seulement (le test de parcours 12-18 n'avait pas
+# trouve la route des salles 4/5).
+# LOT12 stage14: all8 rooms via controller debug selector.
+# Not a continuous walk: room selection restarts the game. Action fixtures below are explicitly RAM-set.
+until front_mode == MODES['TITLE'] max 2000
+tap START
+tap START
+until front_mode == MODES['COURTYARD'] max 500
+wait 60
+tap START
+until ram8('paused') == 1 max 30
+tap UP
+tap UP
+tap DOWN
+tap DOWN
+tap LEFT
+tap RIGHT
+tap LEFT
+tap RIGHT
+tap B
+tap A
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap B
+until game.stage == 14 and game.room == 0 max 300
+poke Enemies_god 1
+poke vk_enemies+162 1
+until game.player.mode == 0 max 300
+wait 10
+write items 8 ram8('items') | 1
+hold LEFT 132
+hold UP 400
+hold LEFT 28
+hold UP 300
+wait 60
+hold LEFT 68
+hold UP 300
+wait 20
+hold LEFT 400
+wait 20
+hold RIGHT 4
+hold RIGHT 4
+hold DOWN 12
+hold RIGHT 4
+hold DOWN 12
+hold RIGHT 4
+hold DOWN 12
+hold RIGHT 4
+hold DOWN 12
+hold RIGHT 4
+hold DOWN 12
+hold RIGHT 4
+hold DOWN 12
+hold RIGHT 4
+hold DOWN 12
+hold RIGHT 4
+hold DOWN 12
+hold DOWN 300
+wait 20
+hold LEFT 300
+wait 30
+hold RIGHT 148
+hold UP 300
+wait 20
+hold LEFT 1
+hold LEFT+C 4
+hold LEFT 60
+wait 30
+hold LEFT 60
+hold LEFT 200
+wait 20
+hold RIGHT 4
+hold UP 8
+hold RIGHT 4
+hold UP 8
+hold RIGHT 4
+hold UP 8
+hold RIGHT 4
+hold UP 8
+hold RIGHT 4
+hold UP 8
+hold RIGHT 4
+hold UP 8
+hold RIGHT 4
+hold UP 8
+hold RIGHT 4
+hold UP 8
+hold RIGHT 4
+hold UP 8
+hold RIGHT 4
+hold UP 8
+hold RIGHT 4
+hold UP 8
+hold RIGHT 4
+hold UP 8
+hold RIGHT 4
+hold UP 8
+hold RIGHT 4
+hold UP 8
+hold RIGHT 4
+hold UP 8
+hold RIGHT 4
+hold UP 8
+hold RIGHT 4
+hold UP 8
+hold RIGHT 4
+hold UP 8
+hold RIGHT 4
+hold UP 8
+hold RIGHT 4
+hold UP 8
+hold UP 200
+wait 10
+hold LEFT 200
+wait 30
+wait 1
+hold LEFT 2
+hold LEFT+C 4
+hold LEFT 60
+wait 20
+hold LEFT 200
+wait 30
+hold RIGHT 4
+hold DOWN 8
+hold RIGHT 4
+hold DOWN 8
+hold RIGHT 4
+hold DOWN 8
+hold RIGHT 4
+hold DOWN 8
+hold RIGHT 4
+hold DOWN 8
+hold RIGHT 4
+hold DOWN 8
+hold RIGHT 4
+hold DOWN 8
+hold RIGHT 4
+hold DOWN 8
+hold RIGHT 4
+hold DOWN 8
+hold RIGHT 4
+hold DOWN 8
+hold RIGHT 4
+hold DOWN 8
+hold RIGHT 4
+hold DOWN 8
+hold RIGHT 4
+hold DOWN 8
+hold RIGHT 4
+hold DOWN 8
+hold RIGHT 4
+hold DOWN 8
+hold RIGHT 4
+hold DOWN 8
+hold DOWN 300
+wait 10
+hold LEFT 300
+wait 100
+expect game.stage == 15 and game.room == 0
