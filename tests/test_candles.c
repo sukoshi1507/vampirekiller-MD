@@ -57,6 +57,16 @@ static const int kFlames26[][8] = {
 #include "death_flame26_trace.inc"
 };
 
+/* One frame as main.c gives it: the engine counter C003 (enemies.c tick) goes up at the first
+ * frame of each pass of 2 frames, and vk_candles_sync tells candles.c. */
+static unsigned sim_f;
+static int tk(VKCandles *c, VKGame *g, const VKWhip *w, int *hit)
+{
+    sim_f++;
+    vk_candles_sync((VKByte)(sim_f >> 1), (VKByte)!(sim_f & 1));
+    return vk_candles_tick(c, g, w, hit);
+}
+
 int main(void)
 {
     VKCandles c;
@@ -105,7 +115,7 @@ int main(void)
 
     /* The hit puts it out, a small heart bursts 33 frames (flame 1E, trace) then sways down. */
     lash(&w, &g, 0);
-    assert(vk_candles_tick(&c, &g, &w, &hit) & VK_CANDLE_EVENT_HIT);
+    assert(tk(&c, &g, &w, &hit) & VK_CANDLE_EVENT_HIT);
     assert(hit == 0 && !vk_candles_lit(&c, 0) && c.drop[0].state == VK_DROP_BURST);
     assert(c.drop[0].kind == VK_OBJ_SMALL_HEART);
     vk_whip_reset(&w);
@@ -113,13 +123,13 @@ int main(void)
     assert(c.drop[0].state == VK_DROP_BURST);
     run(&c, &g, &w, 1);
     assert(c.drop[0].state == VK_DROP_FALL);
-    for (i = 0; i < 400 && c.drop[0].state == VK_DROP_FALL; i++) vk_candles_tick(&c, &g, &w, &hit);
+    for (i = 0; i < 400 && c.drop[0].state == VK_DROP_FALL; i++) tk(&c, &g, &w, &hit);
     assert(c.drop[0].state == VK_DROP_REST);
     assert((c.drop[0].x & 7) == 0 && (c.drop[0].y & 7) == 0);
     /* Picked up by walking onto it: hearts + 1. */
     g.player.x = (VKByte)(c.drop[0].x + 8);
     g.player.y = (VKByte)(c.drop[0].y + 2 + 20);
-    assert(vk_candles_tick(&c, &g, &w, &hit) & VK_CANDLE_EVENT_HEARTS);
+    assert(tk(&c, &g, &w, &hit) & VK_CANDLE_EVENT_HEARTS);
     assert(c.hearts == 1 && c.drop[0].state == VK_DROP_NONE);
 
     /* 7FE2: the heart sways down as an object caught in the air. */
@@ -132,7 +142,7 @@ int main(void)
     assert(c.drop[0].state == VK_DROP_FALL && c.drop[0].catchable);
     g.player.x = (VKByte)(c.drop[0].x + 8);
     g.player.y = (VKByte)(c.drop[0].y + 2 + 20);
-    assert(vk_candles_tick(&c, &g, &w, &hit) & VK_CANDLE_EVENT_HEARTS);
+    assert(tk(&c, &g, &w, &hit) & VK_CANDLE_EVENT_HEARTS);
     assert(c.hearts == 2 && c.drop[0].state == VK_DROP_NONE);
     c.hearts = 1;
 
@@ -148,14 +158,14 @@ int main(void)
     vk_candles_begin(&c);
     place(&g, VK_AREA_COURTYARD, 1, 2, 44, 176);
     lash(&w, &g, 0);
-    vk_candles_tick(&c, &g, &w, &hit);
+    tk(&c, &g, &w, &hit);
     assert(c.drop[0].kind == VK_OBJ_CHAIN_WHIP);
     vk_whip_reset(&w);
-    for (i = 0; i < 100 && c.drop[0].state != VK_DROP_REST; i++) vk_candles_tick(&c, &g, &w, &hit);
+    for (i = 0; i < 100 && c.drop[0].state != VK_DROP_REST; i++) tk(&c, &g, &w, &hit);
     assert(c.drop[0].state == VK_DROP_REST);
     g.player.x = (VKByte)(c.drop[0].x + 8);
     g.player.y = (VKByte)(c.drop[0].y + 22);
-    assert(vk_candles_tick(&c, &g, &w, &hit) & VK_CANDLE_EVENT_WEAPON);
+    assert(tk(&c, &g, &w, &hit) & VK_CANDLE_EVENT_WEAPON);
     assert(c.weapon == 1);
     c.lit = 1;
     assert(vk_candles_hit(&c, 0) && c.drop[0].kind == VK_OBJ_SMALL_HEART);
@@ -166,7 +176,7 @@ int main(void)
     vk_candles_enter(&c, &g);
     vk_candles_hit(&c, 0);
     vk_whip_reset(&w);
-    for (i = 0; i < 100 && c.drop[0].state != VK_DROP_REST; i++) vk_candles_tick(&c, &g, &w, &hit);
+    for (i = 0; i < 100 && c.drop[0].state != VK_DROP_REST; i++) tk(&c, &g, &w, &hit);
     assert(c.drop[0].kind == VK_OBJ_BIG_HEART && c.drop[0].state == VK_DROP_REST);
     run(&c, &g, &w, 8 * 32 + 32);
     assert(c.drop[0].state == VK_DROP_NONE);
@@ -182,7 +192,7 @@ int main(void)
     assert(vk_sample_tile(vk_game_collision(&g), 152, 184) == 0x09);
     assert(vk_tile_solid(vk_sample_tile(vk_game_collision(&g), 136, 176), 1, 0));
     lash(&w, &g, 1);
-    assert(vk_candles_tick(&c, &g, &w, &hit) & VK_CANDLE_EVENT_WHITE_KEY);
+    assert(tk(&c, &g, &w, &hit) & VK_CANDLE_EVENT_WHITE_KEY);
     /* 8899: broken, the ROM tiles are back. */
     assert(vk_sample_tile(vk_game_collision(&g), 128, 160) == vk_stage1_collision[2][(160 - 16) / 8 * 32 + 16]);
     assert(c.drop[2].state == VK_DROP_NONE);
@@ -198,7 +208,7 @@ int main(void)
     /* 8C0B: once the key is taken, the block does not come back. */
     vk_whip_reset(&w);
     lash(&w, &g, 1);
-    assert(vk_candles_tick(&c, &g, &w, &hit) & VK_CANDLE_EVENT_WHITE_KEY);
+    assert(tk(&c, &g, &w, &hit) & VK_CANDLE_EVENT_WHITE_KEY);
     vk_candles_white_key_taken(&c);
     assert(c.out[1][2] == 2);
     place(&g, VK_AREA_INTERIOR, 1, 3, 16, 192);
@@ -233,20 +243,20 @@ int main(void)
     assert(c.drop[0].state == VK_DROP_REST && c.drop[0].kind == VK_OBJ_GOLD_KEY);
     assert(c.drop[1].state == VK_DROP_REST && c.drop[1].kind == VK_OBJ_CHEST);
     g.player.x = 184;                              /* chest without the key: stays */
-    assert(vk_candles_tick(&c, &g, &w, &hit) == VK_CANDLE_EVENT_NONE);
+    assert(tk(&c, &g, &w, &hit) == VK_CANDLE_EVENT_NONE);
     assert(c.drop[1].state == VK_DROP_REST);
     /* 8F83: no second gold key while one is held (C701 bit 1). */
     c.gold_keys = 1;
     g.player.x = 72;
-    assert(vk_candles_tick(&c, &g, &w, &hit) == VK_CANDLE_EVENT_NONE);
+    assert(tk(&c, &g, &w, &hit) == VK_CANDLE_EVENT_NONE);
     assert(c.drop[0].state == VK_DROP_REST && c.hud_key == 0);
     c.gold_keys = 0;
-    assert(vk_candles_tick(&c, &g, &w, &hit) & VK_CANDLE_EVENT_GOLD_KEY);
+    assert(tk(&c, &g, &w, &hit) & VK_CANDLE_EVENT_GOLD_KEY);
     assert(c.gold_keys == 1 && c.drop[0].state == VK_DROP_NONE);
     assert(c.hud_key == VK_OBJ_GOLD_KEY);          /* 8E50 -> 8EC9: HUD key at (148, 12) */
     run(&c, &g, &w, 200);                          /* the key does not time out */
     g.player.x = 184;
-    assert(vk_candles_tick(&c, &g, &w, &hit) & VK_CANDLE_EVENT_GOLD_KEY);
+    assert(tk(&c, &g, &w, &hit) & VK_CANDLE_EVENT_GOLD_KEY);
     assert(c.gold_keys == 0 && c.drop[1].kind == VK_OBJ_BIG_HEART);
     assert(c.hud_key == 0);                        /* 8C23: last key used, HUD key cleared */
     /* 8C2F/8BCC: the content waits 32 passes (64 frames, traced) 8 px above the chest, then falls. */
@@ -260,7 +270,7 @@ int main(void)
     g.player.x = 184;
     for (i = 0; i < 20 && c.drop[1].y < 176; i++)
     {
-        vk_candles_tick(&c, &g, &w, &hit);
+        tk(&c, &g, &w, &hit);
         assert(c.hearts == 0);
     }
     g.player.x = 100;
@@ -269,7 +279,7 @@ int main(void)
     run(&c, &g, &w, 1);
     assert(c.drop[1].state == VK_DROP_REST && c.drop[1].y == 176);
     g.player.x = 184;
-    assert(vk_candles_tick(&c, &g, &w, &hit) & VK_CANDLE_EVENT_HEARTS);
+    assert(tk(&c, &g, &w, &hit) & VK_CANDLE_EVENT_HEARTS);
     assert(c.hearts == 5);
     /* Taken for good: back in the room, neither key nor chest. */
     g.room = 1;
@@ -297,7 +307,7 @@ int main(void)
     c.drop[0].y = 176;
     g.player.x = 72;
     g.player.y = 176 + 2 + 20;
-    assert(vk_candles_tick(&c, &g, &w, &hit) & VK_CANDLE_EVENT_ITEM);
+    assert(tk(&c, &g, &w, &hit) & VK_CANDLE_EVENT_ITEM);
     assert(c.c431 == 0x08 && c.drop[0].state == VK_DROP_NONE);
     assert(c.picked == 0x0C && vk_candles_sound(c.picked) == 0x12);
     vk_candles_death(&c);
@@ -326,7 +336,7 @@ int main(void)
             c.drop[0].timer = 0xFF;
             c.drop[0].x = 64;
             c.drop[0].y = 176;
-            events = vk_candles_tick(&c, &g, &w, &hit);
+            events = tk(&c, &g, &w, &hit);
             assert(c.drop[0].state == VK_DROP_NONE && c.picked == kPick[n].kind);
             assert((events & (VK_CANDLE_EVENT_PICK | VK_CANDLE_EVENT_WEAPON |
                               VK_CANDLE_EVENT_BOX_ITEM)) == kPick[n].event);
@@ -353,7 +363,7 @@ int main(void)
             c.drop[0].state = VK_DROP_REST; c.drop[0].kind = kQuiet[n];
             c.drop[0].fixed = 0; c.drop[0].timer = 0xFF; c.drop[0].x = 64; c.drop[0].y = 176;
             c.gold_keys = 0;
-            vk_candles_tick(&c, &g, &w, &hit);
+            tk(&c, &g, &w, &hit);
             assert(c.picked == kQuiet[n] && c.box_pick == 0x11);
         }
         c.weapon = 0;
@@ -361,7 +371,7 @@ int main(void)
         {
             c.drop[0].state = VK_DROP_REST; c.drop[0].kind = kShown[n];
             c.drop[0].fixed = 0; c.drop[0].timer = 0xFF; c.drop[0].x = 64; c.drop[0].y = 176;
-            vk_candles_tick(&c, &g, &w, &hit);
+            tk(&c, &g, &w, &hit);
             assert(c.box_pick == kShown[n] && c.box_items == 0 && c.box_timer == VK_ITEM_PICK_TICKS);
         }
         /* 1E: C701 bit 3; 04 (8DA1) takes bit 5 from bit 4, 03 the other way. */
@@ -369,16 +379,16 @@ int main(void)
         kind = 0x04;
         c.drop[0].state = VK_DROP_REST; c.drop[0].kind = kind;
         c.drop[0].fixed = 0; c.drop[0].timer = 0xFF; c.drop[0].x = 64; c.drop[0].y = 176;
-        assert(vk_candles_tick(&c, &g, &w, &hit) & VK_CANDLE_EVENT_PICK);
+        assert(tk(&c, &g, &w, &hit) & VK_CANDLE_EVENT_PICK);
         assert(c.c701 == (VK_ITEM_BIT_04 | VK_ITEM_BIT_0A | VK_ITEM_BIT_0F | VK_ITEM_BIT_1E));
         c.drop[0].state = VK_DROP_REST; c.drop[0].kind = 0x03;
         c.drop[0].fixed = 0; c.drop[0].timer = 0xFF; c.drop[0].x = 64; c.drop[0].y = 176;
-        vk_candles_tick(&c, &g, &w, &hit);
+        tk(&c, &g, &w, &hit);
         assert(c.c701 == (VK_ITEM_BIT_03 | VK_ITEM_BIT_0A | VK_ITEM_BIT_0F | VK_ITEM_BIT_1E));
         /* 8F55: 32 counted passes of 2 frames (C003 & 3F != 0), then 8EE6 draws
          * C701 bits 7..3. openMSX trace: 33 passes (66 frames) when C003 crosses a
          * multiple of 40h, else 32 (64 frames). */
-        while (c.box_pick) { vk_candles_tick(&c, &g, &w, &hit); ticks++; }
+        while (c.box_pick) { tk(&c, &g, &w, &hit); ticks++; }
         assert(ticks == 2 * VK_ITEM_PICK_TICKS || ticks == 2 * VK_ITEM_PICK_TICKS + 2);
         assert(c.box_items == c.c701 && c.box_timer == 0 && c.box_timer_on);
         {
@@ -387,14 +397,14 @@ int main(void)
             int skip;
             for (skip = 0; skip < 2; skip++)
             {
-                c.clock = (VKByte)(skip ? 0x80 - 8 : 0x80 + 2);
+                sim_f = (unsigned)(skip ? 0x80 - 8 : 0x80 + 2);
                 c.drop[0].state = VK_DROP_REST; c.drop[0].kind = 0x02;
                 c.drop[0].fixed = 0; c.drop[0].timer = 0xFF; c.drop[0].x = 64; c.drop[0].y = 176;
-                vk_candles_tick(&c, &g, &w, &hit);
+                tk(&c, &g, &w, &hit);
                 assert(c.box_pick == 0x02 && c.box_items == 0);
                 for (ticks = 1; c.box_pick; ticks++)
                 {
-                    vk_candles_tick(&c, &g, &w, &hit);
+                    tk(&c, &g, &w, &hit);
                     /* 8F55 only in the passes, 2 frames apart from the pickup. */
                     if (ticks == 1) assert(c.box_timer == VK_ITEM_PICK_TICKS);
                     if (ticks == 2 && !skip) assert(c.box_timer == VK_ITEM_PICK_TICKS - 1);
@@ -403,9 +413,9 @@ int main(void)
             }
             /* C5E5 stays FF: 8EE6 again after 256 counted passes (no change on screen). */
             c.box_items = 0;
-            for (ticks = 0; ticks < 2 * 255; ticks++) vk_candles_tick(&c, &g, &w, &hit);
+            for (ticks = 0; ticks < 2 * 255; ticks++) tk(&c, &g, &w, &hit);
             assert(c.box_items == 0 && c.box_timer_on);
-            for (ticks = 0; ticks < 2 * 0x100 && !c.box_items; ticks++) vk_candles_tick(&c, &g, &w, &hit);
+            for (ticks = 0; ticks < 2 * 0x100 && !c.box_items; ticks++) tk(&c, &g, &w, &hit);
             assert(c.box_items == items && c.box_timer == 0);
         }
         /* 819E: the armor used up clears bit 4 and redraws the box. */
@@ -457,7 +467,7 @@ int main(void)
     c.gold_keys = 1;
     g.player.x = 40;
     g.player.y = 192;
-    assert(vk_candles_tick(&c, &g, &w, &hit) & VK_CANDLE_EVENT_GOLD_KEY);
+    assert(tk(&c, &g, &w, &hit) & VK_CANDLE_EVENT_GOLD_KEY);
     assert(c.gold_keys == 0);
     g.room = 0;
     vk_candles_enter(&c, &g);
@@ -647,6 +657,40 @@ int main(void)
             vk_candles_reset_stage(&c2, 11);
             assert(c2.out11[1] == 0 && c2.taken11[1] == 0);
         }
+    }
+
+    /* 8671: each wall candle starts from the low byte of its stream address + 2 (room load,
+     * tools/verify_rom_markers.py checks the 457 candles against the ROM), +1 per pass. */
+    {
+        int r, j, f;
+        vk_candles_begin(&c);
+        place(&g, VK_AREA_INTERIOR, 1, 1, 16, 192);
+        vk_candles_enter(&c, &g);
+        for (r = 0; r < c.count; r++)
+            assert(c.phase[r] == (VKByte)(vk_candle_stream[vk_candle_first[1][1] + r] + 2));
+        assert(c.count == 4 && vk_candle_stream[vk_candle_first[1][1]] == 0x18 && c.phase[0] == 0x1A);
+        sim_f = 0;
+        for (f = 1; f <= 32; f++)
+        {
+            VKByte before[VK_CANDLE_MAX];
+            for (j = 0; j < c.count; j++) before[j] = c.phase[j];
+            tk(&c, &g, &w, &hit);
+            for (j = 0; j < c.count; j++) assert(c.phase[j] == (VKByte)(before[j] + !(sim_f & 1)));
+        }
+        assert(c.phase[0] == 0x1A + 16);
+        /* Stage 4 room 3 (executed on the ROM): counters 4A, 4C; the load draws frame 0 (a room byte,
+         * not bit 3 of 4A), the counter takes over at 4C (frame 1), 50 (frame 0). */
+        vk_candles_begin(&c);
+        place(&g, VK_AREA_INTERIOR, 4, 3, 16, 192);
+        vk_candles_enter(&c, &g);
+        assert(c.count == 2 && c.phase[0] == 0x4A && c.phase[1] == 0x4C && (c.frame & 3) == 0);
+        sim_f = 0;
+        tk(&c, &g, &w, &hit); assert((c.frame & 3) == 0 && c.phase[0] == 0x4A);   /* frame 1 of 2: not a pass */
+        tk(&c, &g, &w, &hit); assert((c.frame & 3) == 0 && c.phase[0] == 0x4B);
+        tk(&c, &g, &w, &hit); tk(&c, &g, &w, &hit);
+        assert(c.phase[0] == 0x4C && (c.frame & 3) == 1);                          /* 4C & 3 = 0: drawn, bit 3 = 1 */
+        for (f = 0; f < 2 * 4; f++) tk(&c, &g, &w, &hit);
+        assert(c.phase[0] == 0x50 && (c.frame & 1) == 0 && c.phase[1] == 0x52 && (c.frame & 2) == 0);
     }
 
     return 0;

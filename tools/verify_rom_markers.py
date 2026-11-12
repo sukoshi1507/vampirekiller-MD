@@ -7,7 +7,7 @@ compares what the port does (tests/rom_markers_bridge.c):
   game over  42E3: the screen of state 7
   doors      7718 -> 772A: the 18 inner doors and the castle door (requests to 509F, C5AC, C701)
   candles    8874, 5B1B + 8671, then 5A49 (state 4, 62E6): the stage stream flags come back
-  candle frames  8671: cadence of the wall candle (candle_view.c CANDLE_FRAME_TICKS)
+  candle frames  8671: cadence of the wall candle (candle_view.c, candles.c phase)
   room load  62F5 leaves C415 and C418
   freeze     the port table against research/room-freeze-rooms.json (openMSX, run_room_freeze_trace.py)
 Usage: verify_rom_markers.py BRIDGE.so
@@ -85,13 +85,40 @@ def candles(lib,rom):
     assert bytes(rom[0x23A:0x23D])==bytes((0xCD,0xE6,0x62)) and bytes(rom[0x22F2:0x22F5])==bytes((0xCD,0x49,0x5A))
     print('Candles:',cases,'rooms, flag cleared by 8874, candle gone, back after 5A49 (state 4: 423A -> 62E6 -> 62F2) PASS',flush=True)
 
-def candle_frames(rom):
+def candle_phase(lib,rom):
+    """5B1B + the 8671 of the room load: counter +6 = low byte of the stream address (+8) + 2, every candle of the port tables."""
+    from build_candles_md import ROOMS
+    from decode_room_links import decode
+    rooms=dict(ROOMS);rooms.update({s['stage']:len(s['rooms']) for s in decode(rom) if s['stage']>=12});n=0
+    for stage in range(19):
+        for room in range(rooms[stage]):
+            h=setup(rom,stage,room);m=h.cpu.memory
+            slots=[a for a in range(0xC470,0xC4F0,16) if m[a]==2]
+            assert len(slots)==lib.markers_candle_count(stage,room),(stage,room)
+            for i,a in enumerate(slots):
+                assert m[a+6]==(m[a+8]+2)&255==lib.markers_candle_phase(stage,room,i),(stage,room,i);n+=1
+    print('Candle phase 5B1B + 8671 (room load):',n,'candles, counter +6 = stream address low byte + 2 = port table PASS',flush=True)
+
+def box(rom):
+    """8F55 (once per pass): with C5E5 = FF, C5E6 goes down unless C003 & 3F is 0, and 8EE6 runs at 0."""
+    h=setup(rom,1,3);m=h.cpu.memory
+    for c003 in range(256):
+        m[0xC003]=c003;m[0xC5E5]=0xFF;m[0xC5E6]=5;h.call(0x8F55)
+        assert m[0xC5E6]==(5 if c003&0x3F==0 else 4),c003
+    m[0xC003]=1;m[0xC5E6]=1;h.call(0x8F55);assert m[0xC5E6]==0
+    m[0xC5E5]=0;m[0xC5E6]=5;h.call(0x8F55);assert m[0xC5E6]==5
+    print('Item box 8F55: C5E6 counts down except when C003 & 3F = 0 (skipped pass), 256 values of C003 PASS',flush=True)
+
+def candle_frames(lib,rom):
     """8671 once per pass: counter +6 up by one, frame = its bit 3, drawn when its bits 0-1 are 0."""
+    low=[]
     for stage,room in ((1,5),(2,2),(4,3)):
         h=setup(rom,stage,room);m=h.cpu.memory
-        a=[a for a in range(0xC470,0xC4F0,16) if m[a]==2 and m[a+4]==0][0];y,x=m[a+1],m[a+2]
+        slots=[a for a in range(0xC470,0xC4F0,16) if m[a]==2]
+        a=[a for a in slots if m[a+4]==0][0];y,x=m[a+1],m[a+2];index=slots.index(a)
         assert m[a+6]==(m[a+8]+2)&255          # first value: low byte of the stream address + 2
         seen={};shown=None;runs=[]
+        loaded=(lib.markers_candle_load_frame(stage,room,index),bytes(h.pixel(x+i,y+j) for j in range(16) for i in range(16)));loaded_low=m[a+6]&3   # drawn by the room load 8671 whatever the counter
         for p in range(70):
             before=m[a+6];h.call(0x8671);assert m[a+6]==(before+1)&255
             image=bytes(h.pixel(x+i,y+j) for j in range(16) for i in range(16))
@@ -101,6 +128,8 @@ def candle_frames(rom):
             if runs and runs[-1][0]==shown:runs[-1][1]+=1
             else:runs.append([shown,1])
         assert len(seen)==2 and seen[0]!=seen[1] and all(n==8 for _,n in runs[1:-1]),runs
+        assert seen[loaded[0]]==loaded[1],('candle drawn at the room load',stage,room);low.append(loaded_low)
+    assert any(low),low      # at least one candle shown by the load with bits 0-1 of its counter not 0
     print('Candles 8671: frame = bit 3 of the counter +6, 8 passes (16 frames) each, 3 rooms x 70 passes PASS',flush=True)
 
 def room_load(rom):
@@ -126,5 +155,5 @@ def freeze(lib):
 
 def main():
     lib=C.CDLL(str(Path(sys.argv[1]).resolve()));rom=load_rom(reference_rom())
-    hud(lib,rom);game_over(rom);doors(lib,rom);candles(lib,rom);candle_frames(rom);room_load(rom);freeze(lib)
+    hud(lib,rom);game_over(rom);doors(lib,rom);candles(lib,rom);candle_phase(lib,rom);box(rom);candle_frames(lib,rom);room_load(rom);freeze(lib)
 if __name__=='__main__':main()

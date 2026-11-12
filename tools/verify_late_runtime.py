@@ -27,7 +27,7 @@ def main():
     elif b[0]==131:fixed.append((b[2],b[1],b[4],b[13]))
    fo=(C.c_int*32)();fn=lib.late_fixed(fo);assert sorted(tuple(fo[4*i:4*i+4]) for i in range(fn))==sorted(fixed),(stage,room,'5B1B fixed/chests')
    assert o[0]==len(objects['candles']) and list(o)[12:12+len(defs)]==defs,(stage,room,'5B1B candles')
-   assert o[11]==522 and bool(o[5])==bool(white),(stage,room,'layout/keys')
+   assert o[11]==530 and bool(o[5])==bool(white),(stage,room,'layout/keys')
    if white:assert tuple(o[6:8])==white[0];keys+=1
    for index,ob in enumerate(objects['candles']):
     b=bytes.fromhex(ob['raw']);h=setup(rom,stage,room);mem=h.cpu.memory;a=int(ob['slot'],16);flag=mem[a+7]*256+mem[a+8]

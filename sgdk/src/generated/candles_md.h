@@ -13,6 +13,8 @@ extern const VKByte vk_wall_items[19][12][2];
 #define VK_FIXED_OBJECT_COUNT 138
 extern const VKByte vk_key_block_tiles[19][16];
 extern const VKCandleDef vk_candle_defs[457];
+extern const VKByte vk_candle_stream[457];
+extern const VKByte vk_candle_load_frame[457];
 extern const VKWord vk_candle_first[19][13];
 extern const VKCandleDef vk_fixed_object_defs[138];
 extern const VKByte vk_fixed_object_first[19][13];

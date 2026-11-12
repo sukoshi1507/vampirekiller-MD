@@ -49,6 +49,10 @@ const VKByte vk_item_box[5][2] = {
     { 0xE8, 0x0F }, { 0xD8, 0x0A }, { 0xC8, 0x04 }, { 0xC8, 0x03 }, { 0xB8, 0x1E }
 };
 
+/* C003 and the pass flag of the frame (vk_candles_sync): the engine counts C003 in
+ * enemies.c (tick), +1 at the first frame of each pass of 2 frames. */
+static VKByte fallback_clock, fallback_pass;
+
 static const VKByte *room_map(const VKGame *game)
 {
     return vk_game_collision(game);
@@ -152,12 +156,14 @@ static void box_show_pick(VKCandles *c, VKByte kind)
  * openMSX trace (research/castle-candles.md 9.8): object alone from the frame after
  * the pickup, 8EE6 33 passes (66 frames) later when C003 crossed a multiple of 40h,
  * again 260 passes (519 frames) later. The passes are counted from the pickup
- * (box_phase); c->clock / 2 stands for C003 (PROVISIONAL phase of the skipped pass). */
+ * (box_phase). The skipped pass is the one where C003 & 3F is 0: C003 is the engine
+ * counter given by vk_candles_sync (8F5A-8F5F read, executed on the ROM by
+ * tools/verify_rom_markers.py, "box 8F55"). */
 static void box_step(VKCandles *c)
 {
     if (!c->box_timer_on) return;
     c->box_phase ^= 1;
-    if (c->box_phase || ((c->clock >> 1) & 0x3F) == 0) return;
+    if (c->box_phase || (fallback_clock & 0x3F) == 0) return;
     if (--c->box_timer == 0) vk_candles_item_box(c);
 }
 
@@ -212,6 +218,17 @@ void vk_candles_enter(VKCandles *c, const VKGame *game)
     }
     c->count = (VKByte)(vk_candle_first[stage][game->room + 1] - vk_candle_first[stage][game->room]);
     c->lit = (VKByte)(((1u << c->count) - 1) & ~VK_CANDLE_OUT(c, stage, game->room));
+    /* 5B1B sets the counter +6 of each candle to the low byte of its stream address + 1
+     * and the room load (62F5, 6310) runs 8671 once: + 2, and the frame drawn there is
+     * not bit 3 of the counter but bit 3 of a room byte (86C2, vk_candle_load_frame);
+     * the counter takes over at its next multiple of 4 (tools/verify_rom_markers.py). */
+    c->frame = 0;
+    for (i = 0; i < c->count; i++)
+    {
+        const int d = vk_candle_first[stage][game->room] + i;
+        c->phase[i] = (VKByte)(vk_candle_stream[d] + 2);
+        c->frame |= (VKByte)(vk_candle_load_frame[d] << i);
+    }
     /* 873A then 86CA: each hidden block still there is written into the room map
      * (display and collision). The MSX does it in the room load of state 9 (62F5 ->
      * 8671 at 6310), so the blocks are there from the first frame of play, as here
@@ -800,6 +817,11 @@ int vk_candles_tick(VKCandles *c, VKGame *game, const VKWhip *whip, int *hit_ind
     int i;
     vk_candles_enter(c, game);
     c->clock++;
+    /* 8671, once per pass of state 5: the counter +6 of each candle goes up by one. */
+    if (fallback_pass)
+        for (i = 0; i < c->count; i++)
+            if (!(++c->phase[i] & 3))        /* 86B3: drawn again, frame = bit 3 (86C2) */
+                c->frame = (VKByte)((c->frame & ~(1u << i)) | (((c->phase[i] >> 3) & 1u) << i));
     *hit_index = -1;
     for (i = 0; i < c->count; i++)
         if (vk_candles_lit(c, i) && vk_candle_whip_touch(vk_candles_def(c, i), whip, c->weapon))

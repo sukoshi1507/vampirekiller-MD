@@ -36,10 +36,10 @@
 /* 869D-86C7 (8671, once per state 5 pass): the counter +6 of each candle goes up by
  * one; when its bits 0-1 are 0 the candle is drawn again, frame = bit 3 of the
  * counter: each frame stays 8 passes = 16 frames (executed 70 passes in three rooms,
- * tools/verify_rom_markers.py). PROVISIONAL: the phase. On the MSX each candle starts
- * from the low byte of its stream address + 2 at the room load; here all the candles
- * follow the clock of the room. */
-#define CANDLE_FRAME_TICKS 16
+ * tools/verify_rom_markers.py). The room load (62F5, 6310) runs 8671 once, which draws
+ * the candle whatever the counter (86A1-86BB), with the frame of a room byte
+ * (vk_candle_load_frame); each counter starts from the low byte of its stream address + 2
+ * (vk_candle_stream, VKCandles.phase) and takes the frame over at its next multiple of 4. */
 
 _Static_assert(WEAPON_ICON_TILE_INDEX + 4 <= DEATH_TILE_INDEX,
                "HUD weapon icon tiles before the death pose");
@@ -271,9 +271,9 @@ u16 vk_candle_view_sprites(void)
      * and hidden blocks (mode 3) are part of the wall. */
     if (vk_front_mode == FRONT_INTERIOR)
     {
-        const u16 frame = (c->clock / CANDLE_FRAME_TICKS) & 1;
         for (i = 0; i < c->count; i++)
         {
+            const u16 frame = (c->frame >> i) & 1;
             const VKCandleDef *def = vk_candles_def(c, i);
             if (def->mode != 0 || !vk_candles_lit(c, i)) continue;
             set_sprite(n++, def->x, def->y,

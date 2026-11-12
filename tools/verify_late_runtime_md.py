@@ -12,7 +12,7 @@ def main():
  syms=load_symbols(elf=ROOT/'sgdk/out/rom.out');m=Machine(a.core,ROOT/'sgdk/out/rom.bin');Game_View(m,syms)
  def addr(n):return lookup(syms,n)[0]
  g,c,e,f,p=map(addr,('vk_game','vk_candles','vk_enemies','room_freeze','vk_player'));rom=load_rom(reference_rom())
- assert lookup(syms,'vk_candles')[1]==522
+ assert lookup(syms,'vk_candles')[1]==530
  def until(fn,n=400,keys=set()):
   for _ in range(n):
    if fn():return
