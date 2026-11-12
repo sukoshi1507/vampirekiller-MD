@@ -11,7 +11,7 @@ def main():
  symbols=load_symbols(elf=ROOT/'sgdk/out/rom.out');m=Machine(a.core,ROOT/'sgdk/out/rom.bin');Game_View(m,symbols)
  def addr(n):return lookup(symbols,n)[0]
  g,s,e,f=map(addr,('vk_game','vk_secret','vk_enemies','room_freeze'))
- assert [lookup(symbols,n)[1] for n in ('vk_game','vk_enemies','vk_candles')]==[36,166,522]
+ assert [lookup(symbols,n)[1] for n in ('vk_game','vk_enemies','vk_candles')]==[36,166,530]
  def until(fn,n=400,keys=set()):
   for _ in range(n):
    if fn():return

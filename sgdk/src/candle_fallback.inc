@@ -2,7 +2,6 @@
  * All16 bytes retained; no C800 reservation is fabricated on this path. */
 static VKByte fallback_raw[VK_DROP_MAX][16];
 static VKCandles *fallback_owner;
-static VKByte fallback_clock,fallback_pass;
 static void fallback_reset(VKCandles *c){int i,j;fallback_owner=c;for(i=0;i<VK_DROP_MAX;i++)for(j=0;j<16;j++)fallback_raw[i][j]=0;}
 void vk_candles_sync(VKByte clock,VKByte pass){fallback_clock=clock;fallback_pass=pass;}
 const VKByte *vk_candles_fallback_record(const VKCandles *c,int slot){return c==fallback_owner && slot>=0 && slot<VK_DROP_MAX?fallback_raw[slot]:0;}

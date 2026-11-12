@@ -116,6 +116,8 @@ typedef struct {
     VKByte out11[VK_CANDLE_ROOMS];   /* out and taken of the stage 11, after the other fields so that the offsets read by the MD scenarios stay */
     VKByte taken11[VK_CANDLE_ROOMS];
     VKByte out_late[7][12], taken_late[7][12]; /* LOT11, appended: offsets0..353 unchanged. */
+    VKByte phase[VK_CANDLE_MAX];     /* counter +6 of each candle record (8671), appended */
+    VKByte frame;                    /* bit i: frame drawn for candle i (898A), appended */
 } VKCandles;
 /* out[stage][room] and taken[stage][room], the stage 11 rows being out11 and taken11. */
 #define VK_CANDLE_OUT(c, s, r) (*((s) < 11 ? &(c)->out[s][r] : (s)==11 ? &(c)->out11[r] : &(c)->out_late[(s)-12][r]))

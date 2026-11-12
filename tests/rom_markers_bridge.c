@@ -21,3 +21,13 @@ int markers_freeze(int stage, int room)
     const VKRoomFreezeTiming t = vk_room_freeze_timing((VKFreezeByte)stage, (VKFreezeByte)room);
     return t.frames << 8 | t.dark;
 }
+/* Counter +6 of candle i of a room once the room is entered (8671 at the room load). */
+int markers_candle_count(int stage, int room) { return vk_candle_first[stage][room + 1] - vk_candle_first[stage][room]; }
+int markers_candle_phase(int stage, int room, int i)
+{
+    return (VKByte)(vk_candle_stream[vk_candle_first[stage][room] + i] + 2);
+}
+int markers_candle_load_frame(int stage, int room, int i)
+{
+    return vk_candle_load_frame[vk_candle_first[stage][room] + i];
+}
