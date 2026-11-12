@@ -423,24 +423,34 @@ static void boss_body_hold(int which,int count)
  if(boss_held[which]==count)return;
  if(boss15_pool(which?9:0,count)>0)boss_held[which]=(VKBossU8)count;
 }
+/* Bodies of stages 3, 6 and 9, only when one is present or was held (the allocator is not touched in other rooms: a sync there would
+ * reorder the lazy SAT assignment of the objects). */
+static void boss_bodies_sync(void)
+{
+ if(vk_boss.kind<=1){if(vk_boss.alive||boss_held[0])boss_body_hold(0,vk_boss.alive?8:0);return;}
+ if(vk_boss.walker[0].alive||vk_boss.walker[1].alive||boss_held[0]||boss_held[1]){
+  boss_body_hold(0,vk_boss.walker[0].alive?6:0);boss_body_hold(1,vk_boss.walker[1].alive?6:0);
+ }
+}
 static void boss15_pool_sync(void){
  int i;
- if(!vk_boss.in_room){boss_held[0]=boss_held[1]=0;return;}   /* leaving the room resets the allocator (Enemies_init) */
- /* The allocator is only touched when a body appears or disappears (a sync in every room would reorder the lazy SAT assignment of the objects). */
- if(vk_boss.kind<=1){boss_body_hold(0,vk_boss.alive?8:0);return;}
- if(vk_boss.kind==2){boss_body_hold(0,vk_boss.walker[0].alive?6:0);boss_body_hold(1,vk_boss.walker[1].alive?6:0);return;}
- if(vk_boss.kind!=4)return;
+ if(!vk_boss.in_room || vk_boss.kind!=4)return;
  if(!vk_boss.walker[0].alive)boss15_pool(0,0);
  for(i=0;i<VK_BOSS_MAX_SHOTS;i++)if(!vk_boss_shot_data(&vk_boss,i)->active)boss15_pool(i+1,0);
+}
+
+__attribute__((noinline)) static void boss_bodies_step(void)
+{
+ if(vk_boss.kind<=2)boss_bodies_sync();
 }
 
 /* Boss of the room, after the enemies: BE70 or BD19, the D700 fireball, the end script B6AB. */
 static void step_boss(const EnemyRoomVars *v)
 {
     int events, hit = 0;
-    if (!vk_boss.in_room) return;
+    if (!vk_boss.in_room) {boss_held[0] = boss_held[1] = 0; return;}   /* leaving the room resets the allocator (Enemies_init) */
     if(vk_boss.kind==5){dracula_step(v);return;}
-    boss15_pool_sync();
+    boss15_pool_sync();boss_bodies_step();
     events = vk_boss_frame(&vk_boss, v->simonX, v->simonY, v->difficulty, vk_enemies.frozen,
                            vk_enemies.energy);
     boss15_pool_sync();

@@ -195,10 +195,13 @@ static unsigned long sat_reserve(int projectile,int count){
  return 0; /* already marked free entries remain reserved, exactly5F61/9FCA */
 }
 static void sat_sync(EnemyState *s){
- int i;for(i=0;i<ENEMY_ALL;i++)if(!Enemies_slot(s,(EnemyU8)i)->active){sat_used&=~*sat_owner(i);*sat_owner(i)=0;}
- for(i=0;i<ENEMY_ALL;i++)if(Enemies_slot(s,(EnemyU8)i)->active && !*sat_owner(i)){
-  EnemyU8 type=Enemies_slot(s,(EnemyU8)i)->type;*sat_owner(i)=sat_reserve(isProjectile(type),isProjectile(type)?2:satCount(type));
- }
+ /* Same two passes as before (release the inactive owners, then assign in index order), without the per-slot calls: this runs several
+  * times per frame and in every allocation. */
+ int i;Enemy *e;unsigned long *o;
+ for(i=0,e=s->enemy,o=c800_sat;i<ENEMY_MAX;i++,e++,o++)if(!e->active && *o){sat_used&=~*o;*o=0;}
+ for(i=0,e=vk_projectiles,o=d700_sat;i<ENEMY_PROJECTILE_MAX;i++,e++,o++)if(!e->active && *o){sat_used&=~*o;*o=0;}
+ for(i=0,e=s->enemy,o=c800_sat;i<ENEMY_MAX;i++,e++,o++)if(e->active && !*o)*o=sat_reserve(isProjectile(e->type),isProjectile(e->type)?2:satCount(e->type));
+ for(i=0,e=vk_projectiles,o=d700_sat;i<ENEMY_PROJECTILE_MAX;i++,e++,o++)if(e->active && !*o)*o=sat_reserve(isProjectile(e->type),isProjectile(e->type)?2:satCount(e->type));
 }
 /* count=0 releases; slot0 is the body, slots1..8 are physical D700 indices, slot9 is C800[1].
  * Persistent masks retain holes: do not recompute them from active counts. */
@@ -219,7 +222,12 @@ int Enemies_boss15_reserve(EnemyState *s,int slot,int count){
  * C800 puts colour8 first; D700 puts it second (descending SAT refs).
  * Rows: c800_sat.h (5F1D + 6445 on the ROM, tools/build_c800_sat.py); boss holds: boss15_sat (see the comment of the allocator above). */
 void Enemies_sat_render(EnemyState *s){
- int i; sat_sync(s);
+ int i;
+ if(!sat_used){   /* nothing reserved: only a new object could change anything */
+  for(i=0;i<ENEMY_MAX;i++)if(s->enemy[i].active)break;
+  if(i==ENEMY_MAX){for(i=0;i<ENEMY_PROJECTILE_MAX;i++)if(vk_projectiles[i].active)break;if(i==ENEMY_PROJECTILE_MAX)return;}
+ }
+ sat_sync(s);
  for(i=0;i<ENEMY_ALL;i++){
   Enemy *e=Enemies_slot(s,(EnemyU8)i);unsigned long mask=*sat_owner(i);int j;
   if(!e->active || !mask)continue;
