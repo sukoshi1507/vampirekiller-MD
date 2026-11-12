@@ -30,5 +30,5 @@ expect health.phase == 1 and health.fell == 1 # chute : mort en cours
 set t0 frame
 wait 10
 shot j-chute-eau
-until health.phase != 1 max 200
-expect frame - t0 == 120 # 30 images (eau) + 90 (jingle 89)
+until health.phase != 1 max 300
+expect frame - t0 == 240 # 7093 : 30 passes de 2 images (eau) + 90 passes de 2 images (trace openMSX, research/player-health.md)

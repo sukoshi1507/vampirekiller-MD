@@ -16,14 +16,14 @@ wait 10
 # Accroupi sur la plateforme (Y 168) : emporte sous la pointe jusqu'au bout de la course.
 poke Enemies_god 1
 poke vk_game+0 128
-poke vk_game+1 160
+poke vk_game+1 168
 poke vk_game+2 0
 until game.player.x >= 190 max 400 DOWN
 expect game.player.y == 168 and game.player.mode == 0
 # Debout : arrete en X 168 par la pointe de stalactite, puis tombe a l'eau.
 poke Enemies_god 1
 poke vk_game+0 128
-poke vk_game+1 160
+poke vk_game+1 168
 poke vk_game+2 0
 wait 150
 expect game.player.x <= 175

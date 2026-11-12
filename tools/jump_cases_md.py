@@ -32,7 +32,7 @@ def run_cases(cases, core):
     out = []
     for name, stage, room, x, y, d, high, frames, walk in cases:
         m.wr(g + 16, 1, 32); m.wr(g + 20, room); m.wr(g + 22, stage); m.wr(mode, 4, 16)
-        m.wr(g + 0, x); m.wr(g + 1, y)
+        m.wr(g + 0, x); m.wr(g + 1, y if y < 200 else 176)   # y >= 200: a fall out of the room, placed after the settling
         for o in list(range(2, 15)) + list(range(23, 36)):   # no stairs, recoil, jump state left by the previous case
             m.wr(g + o, 0)
         for i in range(15):
@@ -47,7 +47,7 @@ def run_cases(cases, core):
         c431 = addr('vk_candles') + C431
         for i in range(40):   # settle on the floor, as the MSX run does
             m.wr(c431, 16 if high == 1 else 0)
-            if i == 30:
+            if i == 30 and y < 200:
                 m.wr(g + 0, x); m.wr(g + 1, y)
             m.run(1, set())
         for i in range(0 if d in 'UD' else walk):   # UP held early would mount the stairs before X, Y are set
@@ -58,7 +58,8 @@ def run_cases(cases, core):
             m.wr(c431, 16 if high == 1 else 0)
             m.wr(addr('Enemies_god'), 1)
             m.run(1, dirs | ({BUTTONS['C']} if n <= 4 and d not in 'UD' and high != 2 else set()))
-            out.append('%s %d x=%d y=%d mode=%d phase=%d' % (name, n, m.rd8(g), m.rd8(g + 1), m.rd8(g + 3), m.rd8(g + 4)))
+            out.append('%s %d x=%d y=%d mode=%d phase=%d life=%d timer=%d fell=%d' % (name, n, m.rd8(g), m.rd8(g + 1), m.rd8(g + 3), m.rd8(g + 4),
+                                                                       m.rd8(addr('health') + 1), m.rd16(addr('health') + 2), m.rd8(addr('health') + 4)))
     m.close()
     return out
 

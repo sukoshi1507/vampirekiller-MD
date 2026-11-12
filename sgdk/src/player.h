@@ -12,6 +12,7 @@ typedef struct {
     VKByte stair_glide;          /* arrival slide from a hall link, not a tile flight */
     VKByte stair_move;           /* C435: step under way, 1 up / 2 down, 0 on a cell edge */
     VKByte jump_frames;          /* frames since the jump began, paces the arc at 30 Hz */
+    VKByte ledge;                /* the fall began on the ground (C420 := 4, 6BA5), not at the end of a jump; fills the padding of VKGame */
 } VKPlayer;
 
 #define VK_STAGE_CE00_6 19   /* pseudo stage of the collision tests: the room with CE00 = 6 (stage 18 room 9) */

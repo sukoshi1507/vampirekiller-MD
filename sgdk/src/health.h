@@ -63,13 +63,18 @@ typedef struct {
 
 /* Start of play: VK_HEALTH_LIVES_START lives, alive. */
 void vk_health_begin(VKHealth *h);
-/* Fall out of the room (7093, C420 = 6): C428 = 30 frames in the water stages
- * (D000 2 or 10, splash sound 9) or 1 elsewhere, then 90 frames (jingle 89),
- * then the life is lost as after a fatal contact; the hearts are capped to 5
- * (70B4). */
-#define VK_HEALTH_FALL_WATER_FRAMES 30
-#define VK_HEALTH_FALL_FRAMES 90
+/* Fall out of the room (7093, C420 = 6, openMSX 2026-11-12, tools/run_jump_cases.py cases water_s2r4b and
+ * air_s15r3): C428 = 30 passes in the water stages (D000 2 or 10, splash sound 9) or 1 elsewhere, one pass
+ * = 2 frames (C003), then C428 = 90 (jingle 89, 709E) and 90 more passes: C413 = 0 (70D9) 182 frames after
+ * the first frame with C420 = 6 (240 in the water), state 6 one frame later; 709E comes 2 frames (60 in the
+ * water) after the fall. All the passes last 2 frames (the 1-frame passes of the contact death are not
+ * seen). The hearts are capped to 5 (70B4). Same timer convention as VK_HEALTH_DEAD_FRAMES (the first
+ * decrement is the next frame). */
+#define VK_HEALTH_FALL_WATER_PASSES 30
+#define VK_HEALTH_FALL_PASSES 1
+#define VK_HEALTH_FALL_FRAMES 180   /* 90 passes of 2 frames after C428 := 90 */
 #define VK_HEALTH_HEARTS_AFTER_FALL 5
+#define VK_HEALTH_FALL_JINGLE(passes) (2 * (passes))    /* 709E */
 void vk_health_fall(VKHealth *h, int stage);
 /* The fatal recoil ended (C420 = 6, 7070): starts the death clock of VK_HEALTH_DEAD_FRAMES. */
 void vk_health_dead(VKHealth *h);

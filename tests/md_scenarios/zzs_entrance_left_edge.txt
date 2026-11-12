@@ -1,0 +1,20 @@
+# (zzs) Cour 2 : X 232 face a gauche lance l'entree, le premier pas donne 231 (hors de la zone de sortie) et Simon marche seul vers la gauche,
+# 1 px par 4 images, puis le pas qui irait a X 7 change de salle (cour 1, X 246) ; trace openMSX (research/castle-entrance.md section 4) :
+# declenchement n = 1, X 231 a n = 3, X 8 de n = 895 a 898, salle 1 en X 246 a n = 899, les touches comptent de nouveau ensuite.
+include boot_to_courtyard.inc
+until game.room == 2 max 1500 RIGHT
+wait 60   # fin du defilement
+poke vk_game+0 232
+poke vk_game+1 176
+poke vk_game+2 1
+poke vk_player+0 232
+poke vk_player+1 176
+poke vk_player+2 1
+until game.entrance == 1 max 10
+set t0 frame
+expect game.player.x == 232 and game.player.facing == 1
+until game.room == 1 max 1000
+expect game.player.x == 246 and game.entrance == 0 and game.area == 0
+expect frame - t0 == 898 # trace : n = 899 (t0 = n 1)
+wait 60
+expect game.room == 1 and game.player.x == 246 # marche finie, aucune touche tenue : Simon reste la

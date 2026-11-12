@@ -172,7 +172,7 @@ static void test_respawn_place(void)
           "stage 2 : salle 0, x 16, y 96, regard a droite (641F)");
 }
 
-/* Fall into the water of stage 2 (7093): 30 + 90 frames, then state 6. */
+/* Fall into the water of stage 2 (7093): (30 + 90) passes of 2 frames, then state 6. */
 static void test_fall(void)
 {
     VKHealth h;
@@ -182,12 +182,12 @@ static void test_fall(void)
     vk_health_fall(&h, 2);
     CHECK(h.fell && vk_health_controls_locked(&h), "chute : commandes bloquees");
     while (ev == VK_HEALTH_NONE && frames < 1000) { ev = vk_health_tick(&h, VK_HEALTH_ENERGY_MAX); frames++; }
-    CHECK(ev == VK_HEALTH_REFILL && frames == 120 && !h.fell, "chute dans l'eau : etat 6 apres 120 images");
+    CHECK(ev == VK_HEALTH_REFILL && frames == 240 && !h.fell, "chute dans l'eau : 30 + 90 passes de 2 images");
     vk_health_begin(&h);
     vk_health_fall(&h, 1);
     frames = 0; ev = VK_HEALTH_NONE;
     while (ev == VK_HEALTH_NONE && frames < 1000) { ev = vk_health_tick(&h, VK_HEALTH_ENERGY_MAX); frames++; }
-    CHECK(ev == VK_HEALTH_REFILL && frames == 91, "chute hors de l'eau : 1 + 90 images");
+    CHECK(ev == VK_HEALTH_REFILL && frames == 182, "chute hors de l'eau : 1 + 90 passes de 2 images");
 }
 
 int main(void)

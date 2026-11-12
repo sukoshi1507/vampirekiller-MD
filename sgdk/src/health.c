@@ -15,7 +15,7 @@ void vk_health_fall(VKHealth *h, int stage)
     if (h->phase != VK_LIFE_ALIVE) return;
     h->phase = VK_LIFE_DYING;
     h->fell = 1;
-    h->timer = (VKWord)((stage == 2 || stage == 10 ? VK_HEALTH_FALL_WATER_FRAMES : 1) +
+    h->timer = (VKWord)(2 * (stage == 2 || stage == 10 ? VK_HEALTH_FALL_WATER_PASSES : VK_HEALTH_FALL_PASSES) +
                         VK_HEALTH_FALL_FRAMES);
 }
 

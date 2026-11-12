@@ -252,4 +252,19 @@ Tableau (port après correction = MSX, image par image sur n = 1 à 25 au moins)
 | plat saut haut (objet 0D) | Y 138 | n = 45, Y 176 | identique | table `6D94` : 38 px |
 | stage 14 salle 5 (159,112) gauche → sol | Y 80 | n = 63, Y 176 | 95 | |
 
-Pas corrigé : la chute d'un rebord (mode 4 depuis le sol). Le MSX attend une passe de plus pour passer `C420` := 4 (la sonde de sol précède la marche de la passe), puis sonde le sol avant le pas et peut entrer de 4 px dans le sol (Y 180) avant `Y &= F8` ; le port tombe une passe plus tôt et se pose au pixel (`walk_wall`/`s15r3`, X 90 : chute de n = 63 au lieu de 65, sol à n = 77 au lieu de 81). Le port perd aussi parfois une image de jeu (stage 15 salle 1, X ~189, Y 80 dans l'air) : la passe suivante est alors décalée de 1 image.
+Chute d'un rebord : voir la section 10 (corrigée). Le port perd aussi parfois une image de jeu (stage 15 salle 1, X ~189, Y 80 dans l'air) : la passe suivante est alors décalée de 1 image.
+
+## 10. Chute d'un rebord (mode 4 depuis le sol), trace du 2026-11-12
+
+Cas : `tools/jump_cases.json` (`fall_*`, `high: 2` = direction seule, sans touche de saut), même méthode que la section 9 (`tools/run_jump_cases.py`, `tools/jump_cases_md.py`, `tools/jump_cases_compare.py -x`), scénario `tests/md_scenarios/zzr_jump_msx.txt` (dernier bloc). Faits MSX (stage 14 salle 5 X 159 Y 112 vers la gauche ; stage 15 salle 1 X 150 Y 80 vers la droite) :
+
+| Fait MSX | Image n (échantillon 4028) |
+|---|---|
+| dernière passe de marche, X 121 | 37 |
+| passe suivante : la sonde de sol (7B88) ne trouve rien, `C420 := 4`, Y et X inchangés, pas de marche | 39 |
+| premier pas vertical (2, puis 4, 6, 6 une passe sur deux) | 41 (Y 114) |
+| sol à 176 : le pas de 6 donne Y 178 (2 px dans le sol), `C420` reste 4 | 63 |
+| passe suivante : la sonde trouve le sol, `C425 &= F8` (176), `C420 := 0`, pas de marche | 65 |
+| la marche reprend (2 px par passe) | 67 |
+
+Le port tombait une passe plus tôt (mode 4 posé dans la passe de marche, premier pas 2 images plus tard), clippait la chute au pixel du sol et reprenait la marche à l'image du sol. Correction (`player.c`, `p->ledge`) : le passage au mode 4 se fait au début de la passe (avant la marche) et ne bouge rien ; à la passe suivante (une passe = 2 images), sonde du sol (ou plate-forme) au Y de début de passe : sol -> `Y &= F8`, mode 0, sans marche ; sinon le pas 2, 4, 6, 6 est ajouté en entier (pas de clip). La fin d'un saut (mode 4 du port, `C420` = 1 sur MSX avec test du sol après chaque pas, 6D13) garde l'ancien chemin : `ledge` n'est levé que pour une chute depuis le sol (octet de remplissage de `VKPlayer`, la disposition de `VKGame` ne change pas). 80 images identiques sur les cas `fall_s14r5_L` et `fall_s15r1_R` ; `fall_s14r5_L1` et `fall_s15r1_R1` (X de départ impair) sont identiques à une image près de phase de passe (« shift » 1, comme les cas `_w1`) ; les 35 cas de la section 9 restent identiques. Côté route (`zzq_stage17_route`), la chute à l'entrée de la salle 7 (la salle change sans mode 4 : même passe de sonde sur MSX) dure 4 images de plus.

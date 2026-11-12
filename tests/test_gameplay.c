@@ -323,8 +323,14 @@ int main(void)
         assert(g.player.x == 231 && g.entrance == VK_ENTRANCE_WALK);
         for (t = 0; t < 4; t++) vk_game_tick(&g, 0, 0, 0);
         assert(g.player.x == 230);
-        for (t = 0; t < 4 * 230 && g.entrance; t++) vk_game_tick(&g, 0, 0, 0);
-        assert(!g.entrance && g.area == VK_AREA_COURTYARD && g.room == 2 && g.player.x <= 8);
+        {
+            /* openMSX, stage 0 room 2, X 232 facing left, one line per frame (n = 1 the trigger): X 8 from n = 895,
+             * room 1 at X 246 at n = 899 (the walk is over, the keys count again). 7 frames already done here. */
+            VKEvent ev = VK_EVENT_NONE;
+            int n = 7;
+            for (t = 0; t < 4 * 230 && ev != VK_EVENT_ROOM; t++) { ev = vk_game_tick(&g, 0, 0, 0); n++; }
+            assert(ev == VK_EVENT_ROOM && n == 899 && !g.entrance && g.area == VK_AREA_COURTYARD && g.room == 1 && g.player.x == 246);
+        }
     }
     /* Out of the Y band [138, 194) nothing starts either. */
     g.player.facing = 0;

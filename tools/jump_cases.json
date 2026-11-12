@@ -306,5 +306,49 @@
 "x": 90,
 "y": 176,
 "dir": "R"
+},
+{
+"name": "fall_s14r5_L",
+"stage": 14,
+"room": 5,
+"x": 159,
+"y": 112,
+"dir": "L",
+"walk": 0,
+"high": 2,
+"frames": 80
+},
+{
+"name": "fall_s14r5_L1",
+"stage": 14,
+"room": 5,
+"x": 160,
+"y": 112,
+"dir": "L",
+"walk": 0,
+"high": 2,
+"frames": 80
+},
+{
+"name": "fall_s15r1_R",
+"stage": 15,
+"room": 1,
+"x": 150,
+"y": 80,
+"dir": "R",
+"walk": 0,
+"high": 2,
+"frames": 80
+},
+{
+"name": "fall_s15r1_R1",
+"stage": 15,
+"room": 1,
+"x": 151,
+"y": 80,
+"dir": "R",
+"walk": 0,
+"high": 2,
+"frames": 80
 }
 ]

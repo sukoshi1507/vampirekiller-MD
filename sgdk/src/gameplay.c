@@ -205,15 +205,31 @@ static VKEvent vk_entrance_tick(VKGame *game)
         /* Facing left (778A: BC = FF80): half a pixel a pass, the first step already
          * takes a pixel (X 236 -> 235 two frames after the start), then one every four
          * frames; the exit zone [232, 240) (77C4) is tested after each step. */
-        if ((game->entrance_step & 3) == 2) p->x--;
+        if ((game->entrance_step & 3) == 2)
+        {
+            /* X 232 gives 231, outside the exit zone: Simon walks on alone and, at the next step with X 8 (openMSX,
+             * stage 0 room 2, X 232 facing left, 895 frames: X 8 held 4 frames, then room 1 at X 246, the scroll,
+             * and the keys count again), the edge of the courtyard changes the room like a walk (same event, X 246);
+             * the walk is over. */
+            if (p->x <= 8)
+            {
+                const VKByte neighbor = vk_courtyard_neighbors[game->room][2];
+                if (neighbor != 255 && neighbor < 3)
+                {
+                    vk_entrance_clear(game);
+                    game->room = neighbor;
+                    p->x = 246;
+                    if (!vk_grounded(vk_game_collision(game), p->x, p->y, 0, 0)) { p->mode = 4; p->phase = 0; }
+                    return VK_EVENT_ROOM;
+                }
+            }
+            else p->x--;
+        }
         if ((game->entrance_step & 1) == 0 && p->x >= ENTRANCE_EXIT_X && p->x < ENTRANCE_EXIT_X + 8)
         {
             game->entrance = VK_ENTRANCE_EXIT;
             game->entrance_timer = 0;
         }
-        /* PROVISIONAL: X 232 walks on to the left edge of room 2 (openMSX: room 1 at
-         * X 246, the walk over); the port gives the controls back at the edge. */
-        else if (p->x <= 8) vk_entrance_clear(game);
         return VK_EVENT_NONE;
     }
     game->entrance_timer++;

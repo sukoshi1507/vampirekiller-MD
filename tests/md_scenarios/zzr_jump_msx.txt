@@ -223,3 +223,25 @@ expect game.player.x == 172 and game.player.y == 48 and game.player.mode == 1  #
 hold RIGHT 2
 expect game.player.x == 174 and game.player.y == 48 and game.player.mode == 1  # n = 25
 hold RIGHT 2
+# Chute d un rebord (stage 15 salle 1, X 150 Y 80 vers la droite sans saut) : trace MSX tools/jump_cases.json fall_s15r1_R, 80 images identiques.
+# RAM fixture for action only: stage15/room1 (walk off the ledge, no jump key), not a walked route.
+poke vk_game+16 1 32
+poke vk_game+22 15
+poke vk_game+20 1
+poke vk_front_mode 4 16
+poke vk_game+0 150
+poke vk_game+1 80
+hold RIGHT 16
+expect game.player.x == 166 and game.player.y == 80 and game.player.mode == 0  # n = 16 (last walk pass over the ledge)
+hold RIGHT 2
+expect game.player.x == 166 and game.player.y == 80 and game.player.mode == 4  # n = 18 (MSX n = 17, grid phase +1 here): the pass that sets C420 = 4 moves nothing
+hold RIGHT 2
+expect game.player.x == 166 and game.player.y == 82 and game.player.mode == 4  # n = 20: first fall step one pass later
+hold RIGHT 2
+expect game.player.x == 166 and game.player.y == 86 and game.player.mode == 4  # n = 22
+hold RIGHT 30
+expect game.player.x == 166 and game.player.y == 176 and game.player.mode == 4  # n = 52
+hold RIGHT 2
+expect game.player.x == 166 and game.player.y == 176 and game.player.mode == 0  # n = 54: the floor is probed one pass after the landing step
+hold RIGHT 2
+expect game.player.x == 168 and game.player.y == 176 and game.player.mode == 0  # n = 56: the walk resumes one pass later

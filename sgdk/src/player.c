@@ -59,7 +59,7 @@ void vk_player_reset(VKPlayer *p)
     p->facing = p->mode = p->phase = p->clock = p->pose = 0;
     p->crouched = p->on_stairs = p->stair_anim = 0;
     p->stair_dir = p->stair_len = p->stair_glide = p->stair_move = 0;
-    p->jump_frames = 0;
+    p->jump_frames = p->ledge = 0;
 }
 
 VKByte vk_player_platform;
@@ -332,10 +332,10 @@ void vk_player_tick_jump(VKPlayer *p, const VKByte *map, VKByte stage,
     const signed char *const deltas = high_jump ? vk_jump_deltas_high : vk_jump_deltas;
     const VKByte steps = high_jump ? VK_JUMP_STEPS_HIGH : VK_JUMP_STEPS;
     const int original_direction = direction;
-    if (p->mode == 0 || p->on_stairs) air_lock = 0;   /* on the ground or the stairs: no jump holds a direction */
+    if (p->mode == 0 || p->on_stairs) { air_lock = 0; p->ledge = 0; }   /* on the ground or the stairs: no jump holds a direction */
     /* Staircases exist only inside the interior areas (stage 1). */
     if (p->on_stairs && jump_pressed)
-    { p->on_stairs = 0; p->mode = 1; p->phase = 0; p->jump_frames = 0; air_dx = (signed char)direction; air_lock = 1; }
+    { p->on_stairs = 0; p->mode = 1; p->phase = 0; p->jump_frames = 0; p->ledge = 0; air_dx = (signed char)direction; air_lock = 1; }
     else if (p->on_stairs) { vk_stair_tick(p, direction, down, up); return; }
     else if (stage && up && !jump_pressed && vk_stair_enter(p, map))
     {
@@ -362,6 +362,12 @@ void vk_player_tick_jump(VKPlayer *p, const VKByte *map, VKByte stage,
     int n;
     const VKByte mode_in = p->mode;
     p->clock++;
+    /* 6B52-6B5B: the pass probes the floor before it walks; with none (a ledge, a moving platform gone) C420 := 4
+     * and that pass moves nothing; the first fall step comes one pass later (openMSX, tools/jump_cases_trace.tcl,
+     * research/jump-compare.md section 10: Y 112 held from n = 39, first step n = 41 on the MSX). */
+    if (p->mode == 0 && ((p->clock & 1) == 0 || jump_pressed) &&
+        !vk_grounded(map, p->x, p->y, stage, 0) && !vk_player_platform)
+    { p->mode = 4; p->phase = 0; p->jump_frames = 0; p->ledge = 1; air_lock = 0; direction = 0; }
     if (direction)
     {
         const int dx = direction < 0 ? -1 : 1;
@@ -404,10 +410,8 @@ void vk_player_tick_jump(VKPlayer *p, const VKByte *map, VKByte stage,
     if (p->mode == 0)
     {
         /* 6B52-6B5B: the floor or a moving platform (C439). */
-        if (!vk_grounded(map, p->x, p->y, stage, 0) && !vk_player_platform)
-        { p->mode = 4; p->phase = 0; p->jump_frames = 0; air_lock = 0; }
-        else if (jump_pressed && !p->crouched && !vk_jump_blocked(map, p->x, p->y, stage))
-        { p->mode = 1; p->phase = 0; p->jump_frames = 0; air_dx = (signed char)original_direction; air_lock = 1; }
+        if (jump_pressed && !p->crouched && !vk_jump_blocked(map, p->x, p->y, stage))
+        { p->mode = 1; p->phase = 0; p->jump_frames = 0; p->ledge = 0; air_dx = (signed char)original_direction; air_lock = 1; }
     }
     else if (p->mode == 1)
     {
@@ -445,9 +449,27 @@ void vk_player_tick_jump(VKPlayer *p, const VKByte *map, VKByte stage,
             }
         }
     }
-    else if (p->mode == 4)
+    else if (p->mode == 4 && mode_in != 0 && p->ledge)   /* the pass that sets C420 := 4 moves nothing */
     {
-        /* Check before falling, so standing on an existing floor is stable. */
+        /* Fall from a ledge (C420 = 4), one pass per 2 frames: the floor is probed at the Y of the pass start (7B88),
+         * on it C425 &= F8 and C420 := 0 (the walk starts one pass later); otherwise the whole step 2, 4, 6, 6 is
+         * added, a floor 6 px thick may be entered by up to 5 px (Y 178 then 176, openMSX, stage 14 room 5 walk-off). */
+        if ((++p->jump_frames & 1) == 0)
+        {
+            if (vk_player_platform || vk_grounded(map, p->x, p->y, stage, 0))
+            { p->y &= 0xF8; p->mode = 0; p->phase = 0; p->ledge = 0; }
+            else
+            {
+                const int vy = (int)p->y + vk_fall_deltas[p->phase < 4 ? p->phase : 3];
+                p->y = (VKByte)(vy >= 225 ? 225 : vy);
+                if (p->phase < 3) p->phase++;
+            }
+        }
+    }
+    else if (p->mode == 4 && mode_in != 0)
+    {
+        /* Past the end of a jump (C420 = 1 goes on at +6 a tick, 6D13 tests the floor after each step) or a fall
+         * entered by the port elsewhere. Check before falling, so standing on an existing floor is stable. */
         if (vk_player_platform)
         { p->y &= 0xF8; p->mode = 0; p->phase = 0; }   /* 6F3D -> 6F6A */
         else if (vk_grounded(map, p->x, p->y, stage, 0))

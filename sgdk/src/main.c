@@ -64,7 +64,7 @@ static const u8 stage_after_boss[19] = {
 };
 
 /* Death jingle 89 (70A0-70AC): the music stops and 89 starts when C428 runs out.
- * Fall: C428 = 30 frames in the water stages, 1 elsewhere (76BC). Fatal contact: the
+ * Fall: C428 = 30 passes (2 frames each) in the water stages, 1 elsewhere (76BC). Fatal contact: the
  * recoil ends on the floor (7053 sets C420 = 6 and C428 = 1), 7093 / 709C asks for 89
  * on the next pass, 2 frames later (VK_HEALTH_JINGLE_FRAMES, health.h; openMSX 5136 at
  * 41.9437 s, 7070 at 41.9116 s), and 70B4 ends the death VK_HEALTH_DEAD_FRAMES after 7070. */
@@ -357,6 +357,7 @@ static void castle_door_front(bool front)
  * MSX turns the display off (R1 bit 6); here the four palettes go black instead,
  * because with the display off the VDP reports VBlank all the time and the game
  * loop would no longer wait for the frame. The hall reloads all four palettes. */
+static void begin_room_freeze(void);
 static void castle_entrance_step(void)
 {
     static const u16 black[64] = {0};
@@ -368,6 +369,11 @@ static void castle_entrance_step(void)
         show_hall_room(0);
     }
     else if (event == VK_EVENT_ENTRANCE_DARK) PAL_setColors(0, black, 64, DMA_QUEUE);
+    else if (event == VK_EVENT_ROOM)   /* walked out of room 2 by its left edge (X 232 facing left) */
+    {
+        castle_door_front(FALSE);
+        begin_room_freeze();
+    }
     else if (vk_game.entrance != VK_ENTRANCE_DARK)
     {
         vk_flames_tick();
@@ -785,9 +791,9 @@ int main(bool hardReset)
                     if (vk_game.area == VK_AREA_INTERIOR && (vk_game.stage == 2 || vk_game.stage == 10))
                     {
                         vk_psg_effect(VK_SFX_WATER);
-                        death_jingle_timer = 30;
+                        death_jingle_timer = VK_HEALTH_FALL_JINGLE(VK_HEALTH_FALL_WATER_PASSES);
                     }
-                    else death_jingle_timer = 1;
+                    else death_jingle_timer = VK_HEALTH_FALL_JINGLE(VK_HEALTH_FALL_PASSES);
                 }
                 else if (vk_front_mode == FRONT_INTERIOR && direction &&
                          !(held & BUTTON_A) && !vk_game_recoiling(&vk_game) &&

@@ -218,7 +218,7 @@ hold UP 8
 hold LEFT 4
 hold UP 100
 wait 10
-hold LEFT 100
+hold LEFT 104
 wait 20
 hold LEFT 50
 hold LEFT+C 4

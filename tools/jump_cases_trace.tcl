@@ -69,7 +69,7 @@ proc jc_hook {} {
     # run: n = 0 is the pass that holds the first jump key
     debug write memory 0xC431 [expr {$high == 1 ? 16 : 0}]
     for {set a 0} {$a < 896} {incr a} { debug write memory [expr {0xC800 + $a}] 0 }
-    puts $jc_log [format "%s %d t=%.4f c003=%d c420=%d c421=%d y=%d x=%d c428=%d c42b=%d c42e=%d c006=%d" $name $jc_cnt [machine_info time] [jc_rd 0xC003] [jc_rd 0xC420] [jc_rd 0xC421] [jc_rd 0xC425] [jc_rd 0xC427] [jc_rd 0xC428] [jc_rd 0xC42B] [jc_rd 0xC42E] [jc_rd 0xC006]]
+    puts $jc_log [format "%s %d t=%.4f c003=%d c420=%d c421=%d y=%d x=%d c428=%d c42b=%d c42e=%d c006=%d c000=%d c413=%d c0a7=%d c004=%d c417=%d" $name $jc_cnt [machine_info time] [jc_rd 0xC003] [jc_rd 0xC420] [jc_rd 0xC421] [jc_rd 0xC425] [jc_rd 0xC427] [jc_rd 0xC428] [jc_rd 0xC42B] [jc_rd 0xC42E] [jc_rd 0xC006] [jc_rd 0xC000] [jc_rd 0xC413] [jc_rd 0xC0A7] [jc_rd 0xC004] [jc_rd 0xC417]]
     if {$jc_cnt == 4} { jc_press $dir }
     if {$jc_cnt >= $frames} {
         incr jc_idx
