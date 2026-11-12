@@ -410,11 +410,26 @@ static void boss9_flash_cells(void)
     }
 }
 
-/* Shared ownership for stage15. Ending/flame reallocation and other bosses
- * remain provisional until their physical-slot traces are extended. */
+/* Shared ownership: stage 15 (body 16h, 12 entries, and its three 08h shots) and the bodies of stages 3 and 6 (12h / 13h: C800[0] holds
+ * 8 references 0..7 from the creation until the 7806 destruction) and the two 14h walkers of stage 9 (C800[0] references 0..5, C800[1]
+ * references 6..11), openMSX tools/sat_snapshot_extra.tcl rooms 3:5, 6:5, 9:7, checked against 5F1D/99F6 by tools/verify_boss_bodies_sat.py.
+ * Not held here: the D700 shots of the stage 6 and 9 bosses (types 03/07, 2 entries each), the stage 12 rider 15h + 18h (6 + 2 entries,
+ * trace 12:6) and the stage 18 body 11h (8 entries, colours rewritten by ACB2): boss.c kind 3 and dracula.c keep those slots outside the
+ * allocator (PROVISIONAL, limited to these three). */
 static int boss15_pool(int slot,int count){return Enemies_boss15_reserve(&vk_enemies,slot,count);}
+static VKBossU8 boss_held[2];   /* last count requested for C800[0] (which 0, slot 0) and C800[1] (which 1, slot 9) */
+static void boss_body_hold(int which,int count)
+{
+ if(boss_held[which]==count)return;
+ if(boss15_pool(which?9:0,count)>0)boss_held[which]=(VKBossU8)count;
+}
 static void boss15_pool_sync(void){
- int i;if(!vk_boss.in_room || vk_boss.kind!=4)return;
+ int i;
+ if(!vk_boss.in_room){boss_held[0]=boss_held[1]=0;return;}   /* leaving the room resets the allocator (Enemies_init) */
+ /* The allocator is only touched when a body appears or disappears (a sync in every room would reorder the lazy SAT assignment of the objects). */
+ if(vk_boss.kind<=1){boss_body_hold(0,vk_boss.alive?8:0);return;}
+ if(vk_boss.kind==2){boss_body_hold(0,vk_boss.walker[0].alive?6:0);boss_body_hold(1,vk_boss.walker[1].alive?6:0);return;}
+ if(vk_boss.kind!=4)return;
  if(!vk_boss.walker[0].alive)boss15_pool(0,0);
  for(i=0;i<VK_BOSS_MAX_SHOTS;i++)if(!vk_boss_shot_data(&vk_boss,i)->active)boss15_pool(i+1,0);
 }

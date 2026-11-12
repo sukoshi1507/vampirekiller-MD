@@ -7,7 +7,8 @@ VBLANK and writes OUTDIR/species.txt plus OUTDIR/species.json: {"stage:room": {"
 keyed by the room actually observed (Simon may walk out of the forced room). C800 types are raw (bit 7 cleared);
 D700 kinds are the byte 0 of the D700 slots (4 = bones of raw 11, 9 = shot of raw 16, 1 = F0 projectile);
 'poses' gives the C800 +11 values seen per raw type. SP_X=64 places Simon left of C0 so that the 9DE7 channel runs,
-SP_ONLY=r1,r2 restricts the rooms, SP_DBG=1 logs the channel state."""
+SP_ONLY=r1,r2 restricts the rooms, SP_DBG=1 logs the channel state,
+SP_EXTRA=file.tcl appends an extra openMSX script (tools/sat_watch_extra.tcl logs the CE03 and SAT colour writers)."""
 import json, os, re, shutil, subprocess, sys, tempfile
 from pathlib import Path
 from probe import load_rom, reference_rom
@@ -35,7 +36,8 @@ def main():
             head += 'set sp_x %d\n' % int(os.environ['SP_X'])
         if os.environ.get('SP_DBG'):
             head += 'set sp_dbg 1\n'
-        (tmp / 'trace.tcl').write_text(head +(TOOLS / 'species_trace.tcl').read_text())
+        extra = ('\n' + Path(os.environ['SP_EXTRA']).read_text()) if os.environ.get('SP_EXTRA') else ''
+        (tmp / 'trace.tcl').write_text(head + (TOOLS / 'species_trace.tcl').read_text() + extra)
         env = dict(os.environ, OPENMSX_USER_DATA=str(tmp / 'user'), SDL_VIDEODRIVER='dummy', SDL_AUDIODRIVER='dummy')
         with (out / 'openmsx.log').open('w') as log:
             subprocess.run(['/usr/bin/openmsx', '-control', 'stdio', '-machine', 'C-BIOS_MSX2', '-cart', str(tmp / 'game.rom'),

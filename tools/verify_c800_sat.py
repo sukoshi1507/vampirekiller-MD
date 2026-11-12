@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """C800 generated layouts vs real full renderer and frozen99E5."""
-import ctypes as C,json,sys
+import ctypes as C,json,os,sys
 from pathlib import Path
 from probe import ROOT,load_rom,reference_rom
 from verify_item_trace import setup,val
-from build_c800_sat import collect
+from build_c800_sat import collect,SPECS
 
 def unused(lib,m,label):
  for i in range(2,7):
@@ -16,10 +16,15 @@ def unused(lib,m,label):
 
 def main():
  lib=C.CDLL(str(Path(sys.argv[1]).resolve()));lib.pools_begin.argtypes=[C.POINTER(C.c_ubyte)];rom=load_rom(reference_rom());cases=[]
+ only={int(x) for x in os.environ['SAT_RAWS'].split(',')} if os.environ.get('SAT_RAWS') else None   # debugging aid: restrict to some ROM types
  for raw,internal,pose,n,visible,dy in collect():
+  if only and raw not in only:continue
   ys=sorted({96}|{(224-dy[i])&255 for i in range(n) if visible&(1<<i)})
   for y in ys:
-   for ai in (0,1):
+   # Species outside SPECS (legacy rows): the port renders them from its own pose set and runs its own AI, proven elsewhere; here only the
+   # allocation (18-entry mask, references of the next constructor, IX+00..1F round trip) is compared, with the AI frozen.
+   legacy=raw not in {x[0] for x in SPECS}
+   for ai in ((0,) if legacy else (0,1)):
     h=setup(rom,13,3);m=h.cpu.memory;h.call(0x63C5);cmap=(C.c_ubyte*768).from_buffer_copy(m[0xD100:0xD400]);lib.pools_begin(cmap)
     h.cpu.c=raw;h.cpu.de=(128<<8)|y;h.call(0x5F1D)
     if raw==9 and 0x21<=pose<0x25:
@@ -27,6 +32,13 @@ def main():
     m[0xC803]=y;m[0xC80B]=pose
     #Eagle constructor has a real nested flea; remove it explicitly for this parent-only fixture.
     if raw==15:h.cpu.ix=0xC880;h.call(0x99F6)
+    #Legacy constructors may also build children (type 02/03 splashes): remove them for this parent-only fixture.
+    if legacy:
+     for k in range(1,7):
+      if m[0xC800+128*k]:
+       h.cpu.hl=0xC800+128*k;h.call(0x9A00)   # real 9A00: the child's SAT Y back to E0, then the block is wiped
+       m[0xC800+128*k:0xC880+128*k]=bytes(128)
+      h.sounds.clear()
     assert lib.c800_layout_import(internal,(C.c_ubyte*32).from_buffer_copy(m[0xC800:0xC820]))==0
     for p in range(180):
      if m[0xC800]:h.cpu.ix=0xC800;h.call(0x6445)
@@ -41,7 +53,7 @@ def main():
      b=(C.c_ubyte*32)();lib.c800_layout_record(b)
      assert bytes(b)==bytes(m[0xC800:0xC820]),('C80032',raw,pose,y,ai,p,bytes(b).hex(),bytes(m[0xC800:0xC820]).hex())
      lib.item_enemy_prefix(1,b);assert bytes(b)==bytes(m[0xC880:0xC8A0]),('secondary IX32',raw,pose,y,ai,p)
-     if m[0xC800]:
+     if m[0xC800] and not legacy:
       sp=(C.c_int*25)();lib.c800_layout_sprites(sp)
       entries=[tuple(m[0xC822+5*k:0xC824+5*k]) for k in range(m[0xC820]) if m[0xC825+5*k]&15]
       stride=2 if len(entries)==2*sp[0] else 1
