@@ -111,8 +111,9 @@ void vk_wall_enter(VKWall *w, VKByte stage, VKByte room);
 /* 8814 -> 9179: hidden block i of the room (0x1F, +9 & C0 = C0) was broken: its
  * wall object is made and shown in the same pass (91BE after 8671). Returns the
  * record, -1 when DE00 has no slot for its object (91A2: nothing). */
-/* PROVISIONAL integration: LOT11 must query this before loading a late hidden
- * candle; VKCandles still has its LOT07 layout and no late-room loader. */
+/* Stages 12-18: 0 when hidden block `candle` of the room was already broken
+ * (late_block_gone), so vk_wall_block makes nothing; always 1 before stage 12.
+ * vk_wall_block queries it; checked on the ROM by tools/verify_trade_trace.py. */
 int vk_wall_block_present(const VKWall *w,VKByte stage,VKByte room,int candle);
 int vk_wall_block(VKWall *w, int candle, const VKCandleDef *def);
 /* 80E5: record i is shown (+0 bit 7) and can be hit. */
