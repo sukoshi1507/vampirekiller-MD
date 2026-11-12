@@ -573,45 +573,45 @@ static void room_cells(u16 key)
     cells_key = key;
         if (key)
         {
-            VDP_loadTileData((const u32 *)vk_enemy_tiles, ENEMY_TILE_INDEX, VK_ENEMY_TILE_COUNT, CPU);
+            VDP_loadTileData((const u32 *)vk_enemy_tiles, ENEMY_TILE_INDEX, VK_ENEMY_TILE_COUNT, VK_TM);
             /* The bat of the stage 10 room 0 is another image than the bat of the hall and of the stage 2 (tools/build_stage10_enemies_md.py). */
-            VDP_loadTileData(vk_game.stage == 10 ? vk_stage10_bat_tiles : (const u32 *)vk_enemy4_tiles, ENEMY4_TILE_INDEX, VK_ENEMY4_TILE_COUNT, CPU);
+            VDP_loadTileData(vk_game.stage == 10 ? vk_stage10_bat_tiles : (const u32 *)vk_enemy4_tiles, ENEMY4_TILE_INDEX, VK_ENEMY4_TILE_COUNT, VK_TM);
             /* Stage 2 rooms 4 and 5: the fishman and its splash take the type 5 block. */
             if (vk_game.stage == 4 || vk_game.stage == 5)
             {
-                VDP_loadTileData(vk_stage4_enemy_tiles, ENEMY5_TILE_INDEX, VK_STAGE4_ENEMY_TILE_COUNT, CPU);
+                VDP_loadTileData(vk_stage4_enemy_tiles, ENEMY5_TILE_INDEX, VK_STAGE4_ENEMY_TILE_COUNT, VK_TM);
                 if (vk_game.stage == 5)
                     VDP_loadTileData(vk_stage5_platform_tiles, ENEMY5_TILE_INDEX + VK_PLATFORM_PATTERN - VK_ENEMY5_FIRST_PATTERN,
-                                     VK_STAGE5_PLATFORM_TILE_COUNT, CPU);
+                                     VK_STAGE5_PLATFORM_TILE_COUNT, VK_TM);
             }
             else if (vk_game.stage == 10)
             {
                 /* The fishman 03 / 21h (cells 40 to 68), its shot (60), the drop (90) and the platform (6C) share the block. */
-                VDP_loadTileData(vk_stage10_enemy_tiles, ENEMY5_TILE_INDEX, VK_STAGE10_ENEMY_TILE_COUNT, CPU);
+                VDP_loadTileData(vk_stage10_enemy_tiles, ENEMY5_TILE_INDEX, VK_STAGE10_ENEMY_TILE_COUNT, VK_TM);
                 VDP_loadTileData(vk_stage10_platform_tiles, ENEMY5_TILE_INDEX + VK_PLATFORM_PATTERN_10 - VK_ENEMY5_FIRST_PATTERN,
-                                 VK_STAGE10_PLATFORM_TILE_COUNT, CPU);
+                                 VK_STAGE10_PLATFORM_TILE_COUNT, VK_TM);
             }
             else if (vk_game.stage == 11)   /* eagle, flea, dragon and its shot (tools/build_stage11_enemies_md.py) */
-                VDP_loadTileData(vk_stage11_enemy_tiles, ENEMY5_TILE_INDEX, VK_STAGE11_ENEMY_TILE_COUNT, CPU);
+                VDP_loadTileData(vk_stage11_enemy_tiles, ENEMY5_TILE_INDEX, VK_STAGE11_ENEMY_TILE_COUNT, VK_TM);
             else if (vk_game.stage == 6)
-                VDP_loadTileData(vk_stage6_enemy_tiles, ENEMY5_TILE_INDEX, VK_STAGE6_ENEMY_TILE_COUNT, CPU);
+                VDP_loadTileData(vk_stage6_enemy_tiles, ENEMY5_TILE_INDEX, VK_STAGE6_ENEMY_TILE_COUNT, VK_TM);
             else if (vk_game.stage == 9)
-                VDP_loadTileData(vk_stage9_enemy_tiles, ENEMY5_TILE_INDEX, VK_STAGE9_ENEMY_TILE_COUNT, CPU);
+                VDP_loadTileData(vk_stage9_enemy_tiles, ENEMY5_TILE_INDEX, VK_STAGE9_ENEMY_TILE_COUNT, VK_TM);
             else if (vk_game.stage == 8)
-                VDP_loadTileData(vk_stage8_enemy_tiles, ENEMY5_TILE_INDEX, VK_STAGE8_ENEMY_TILE_COUNT, CPU);
+                VDP_loadTileData(vk_stage8_enemy_tiles, ENEMY5_TILE_INDEX, VK_STAGE8_ENEMY_TILE_COUNT, VK_TM);
             else if (vk_game.stage == 7)
-                VDP_loadTileData(vk_stage7_enemy_tiles, ENEMY5_TILE_INDEX, VK_STAGE7_ENEMY_TILE_COUNT, CPU);
+                VDP_loadTileData(vk_stage7_enemy_tiles, ENEMY5_TILE_INDEX, VK_STAGE7_ENEMY_TILE_COUNT, VK_TM);
             else if ((Enemies_roomFlags(vk_game.stage, vk_game.room) & 0x02))
-                VDP_loadTileData((const u32 *)vk_enemy2_tiles, ENEMY5_TILE_INDEX, VK_ENEMY2_TILE_COUNT, CPU);
+                VDP_loadTileData((const u32 *)vk_enemy2_tiles, ENEMY5_TILE_INDEX, VK_ENEMY2_TILE_COUNT, VK_TM);
             else
-                VDP_loadTileData((const u32 *)vk_enemy5_tiles, ENEMY5_TILE_INDEX, VK_ENEMY5_TILE_COUNT, CPU);
+                VDP_loadTileData((const u32 *)vk_enemy5_tiles, ENEMY5_TILE_INDEX, VK_ENEMY5_TILE_COUNT, VK_TM);
             /* Object 1C of the candles of object 15 (stages 7 to 9): the two poses of the room, cells B4 and B8 of the block. */
             if (vk_game.stage >= 7 && vk_game.stage <= 9)
             {
                 const EnemyU8 base = Enemies_ghostBase((EnemyU8)vk_game.stage, (EnemyU8)vk_game.room);
                 if (base)
                     VDP_loadTileData(vk_ghost_tiles[base == 0x9B ? 0 : base == 0x9F ? 1 : 2],
-                                     ENEMY5_TILE_INDEX + (0xB4 - 0x40), VK_GHOST_TILE_COUNT, CPU);
+                                     ENEMY5_TILE_INDEX + (0xB4 - 0x40), VK_GHOST_TILE_COUNT, VK_TM);
             }
             /* Object 1A (stages 4 to 6): the same image in colour 15, whatever the pose base 9B, 9D or 9F of the room; cells 70 and 74
              * (stages 4, 5) or 80 and 84 (stage 6) of the block. */
@@ -619,16 +619,16 @@ static void room_cells(u16 key)
             {   /* Object 1B (candles of object 15, rooms 0 and 5): the two poses of the room, cells A0 and A4 of the block (base 9B or A1). */
                 const EnemyU8 base = Enemies_ghostBase(11, (EnemyU8)vk_game.room);
                 if (base)
-                    VDP_loadTileData(vk_stage11_ghost_tiles[base == 0x9B ? 0 : 1], ENEMY5_TILE_INDEX + (0xA0 - 0x40), VK_STAGE11_GHOST_TILE_COUNT, CPU);
+                    VDP_loadTileData(vk_stage11_ghost_tiles[base == 0x9B ? 0 : 1], ENEMY5_TILE_INDEX + (0xA0 - 0x40), VK_STAGE11_GHOST_TILE_COUNT, VK_TM);
             }
             else if (vk_game.stage >= 4 && vk_game.stage <= 6 &&
                      Enemies_ghostBase((EnemyU8)vk_game.stage, (EnemyU8)vk_game.room))
                 VDP_loadTileData(vk_ghost_a_tiles, ENEMY5_TILE_INDEX + (Enemies_ghostCell((EnemyU8)vk_game.stage) - 0x40),
-                                 VK_GHOST_A_TILE_COUNT, CPU);
+                                 VK_GHOST_A_TILE_COUNT, VK_TM);
         }
             if(vk_game.stage>=12 && vk_game.stage<=18 && vk_game.room<12){
                 const VKLateGraphicsRoom *g=&late_graphics_rooms[vk_game.stage-12][vk_game.room];
-                if(g->tiles)VDP_loadTileData(&late_graphics_words[g->first*8],LATE_ENEMY_TILE_INDEX,g->tiles,CPU);
+                if(g->tiles)VDP_loadTileData(&late_graphics_words[g->first*8],LATE_ENEMY_TILE_INDEX,g->tiles, VK_TM);
             }
 }
 
@@ -1196,9 +1196,9 @@ void vk_show_player(const VKPlayer *shown)
 static void load_whip_level(int level)
 {
     if (level == 1)
-        VDP_loadTileData((const u32 *)vk_whip_level1_tiles, WHIP_LEVEL_TILE_INDEX, WHIP_LEVEL_TILE_COUNT, CPU);
+        VDP_loadTileData((const u32 *)vk_whip_level1_tiles, WHIP_LEVEL_TILE_INDEX, WHIP_LEVEL_TILE_COUNT, VK_TM);
     else if (level >= VK_WHIP_LEVEL_THROW)
-        VDP_loadTileData((const u32 *)vk_whip_level2_tiles, WHIP_LEVEL_TILE_INDEX, WHIP_LEVEL_TILE_COUNT, CPU);
+        VDP_loadTileData((const u32 *)vk_whip_level2_tiles, WHIP_LEVEL_TILE_INDEX, WHIP_LEVEL_TILE_COUNT, VK_TM);
 }
 
 void vk_set_whip_level(int level)
@@ -1210,24 +1210,24 @@ void vk_set_whip_level(int level)
 
 void vk_load_whip_graphics(void)
 {
-    VDP_loadTileData(whip_tiles, WHIP_TILE_INDEX, 3, CPU);
-    VDP_loadTileData(arm_tiles, ARM_TILE_INDEX, 4, CPU);
+    VDP_loadTileData(whip_tiles, WHIP_TILE_INDEX, 3, VK_TM);
+    VDP_loadTileData(arm_tiles, ARM_TILE_INDEX, 4, VK_TM);
     VDP_loadTileData((const u32 *) vk_simon_attack_tiles, ATTACK_TILE_INDEX,
-                     VK_ATTACK_FRAME_COUNT * VK_ATTACK_TILES_PER_FRAME, CPU);
+                     VK_ATTACK_FRAME_COUNT * VK_ATTACK_TILES_PER_FRAME, VK_TM);
     PAL_setPalette(PAL3, attack_palette, CPU);
-    VDP_loadTileData(target_tiles, TARGET_TILE_INDEX, 4, CPU);
+    VDP_loadTileData(target_tiles, TARGET_TILE_INDEX, 4, VK_TM);
     /* MSX colour numbers: shown in PAL2, the room palette, as the VRAM copies of the MSX. */
     VDP_loadTileData(vk_flame_fx_tiles, FLAME_TILE_INDEX,
-                     (VK_FLAME_FRAMES + VK_SPARK_FRAMES) * VK_FLAME_TILES_PER_FRAME, CPU);
+                     (VK_FLAME_FRAMES + VK_SPARK_FRAMES) * VK_FLAME_TILES_PER_FRAME, VK_TM);
     simon_flash_color = 0;
     vk_actors_flush();
-    VDP_loadTileData((const u32 *)vk_simon_crouch_tiles, CROUCH_TILE_INDEX, VK_CROUCH_TILE_COUNT, CPU);
+    VDP_loadTileData((const u32 *)vk_simon_crouch_tiles, CROUCH_TILE_INDEX, VK_CROUCH_TILE_COUNT, VK_TM);
     vk_whip_reset(&vk_whip);
     vk_whip_set_level(&vk_whip, whip_level_choice);
     load_whip_level(vk_whip_level(&vk_whip));
     shot_loaded[0] = shot_loaded[1] = -1;
-    VDP_loadTileData(vk_death_flame_tiles, DEATH_FLAME_TILE_INDEX, VK_DEATH_FLAME_TILE_COUNT, CPU);
-    VDP_loadTileData(vk_loot_tiles,LOOT_TILE_INDEX,VK_LOOT_TILE_COUNT,CPU);
+    VDP_loadTileData(vk_death_flame_tiles, DEATH_FLAME_TILE_INDEX, VK_DEATH_FLAME_TILE_COUNT, VK_TM);
+    VDP_loadTileData(vk_loot_tiles,LOOT_TILE_INDEX,VK_LOOT_TILE_COUNT, VK_TM);
     vk_hide_targets();
     shield_loaded = -1;              /* the scene tiles may have covered the slot */
 }

@@ -1,4 +1,5 @@
 #include "item_view.h"
+#include "room_view.h"
 #include "actors.h"
 #include "hud.h"
 #include "generated/door_key_md.h"
@@ -48,7 +49,7 @@ static void draw_door(int lift)
             door_tiles[((row / 8) * DOOR_COLS + col) * 8 + row % 8] =
                 source < VK_DOOR_ROWS ? vk_door_bar_rows[source * 2 + col] : 0;
     }
-    VDP_loadTileData(door_tiles, DOOR_TILE_INDEX, DOOR_COLS * DOOR_CELLS, CPU);
+    VDP_loadTileData(door_tiles, DOOR_TILE_INDEX, DOOR_COLS * DOOR_CELLS, VK_TM);
 }
 
 /* Stage 2 key (room 5): 8C7E copies sheet object 0x18 over the bitmap with
@@ -123,12 +124,12 @@ void vk_item_view_room(const VKItems *items, const VKGame *game)
     if (key_room && game->stage != 1)
     {
         compose_key(game, key_x, key_y);
-        VDP_loadTileData(key_tiles, KEY_TILE_INDEX, 4, CPU);
+        VDP_loadTileData(key_tiles, KEY_TILE_INDEX, 4, VK_TM);
     }
-    else VDP_loadTileData((const u32 *)vk_key_tiles, KEY_TILE_INDEX, 4, CPU);
-    VDP_loadTileData((const u32 *)vk_key_clear_tiles, KEY_CLEAR_TILE_INDEX, 4, CPU);
-    VDP_loadTileData((const u32 *)vk_hud_box_tiles, HUD_BOX_TILE_INDEX, VK_HUD_BOX_W * VK_HUD_BOX_H, CPU);
-    VDP_loadTileData((const u32 *)vk_hud_key_tiles, HUD_KEY_TILE_INDEX, VK_HUD_BOX_W * VK_HUD_BOX_H, CPU);
+    else VDP_loadTileData((const u32 *)vk_key_tiles, KEY_TILE_INDEX, 4, VK_TM);
+    VDP_loadTileData((const u32 *)vk_key_clear_tiles, KEY_CLEAR_TILE_INDEX, 4, VK_TM);
+    VDP_loadTileData((const u32 *)vk_hud_box_tiles, HUD_BOX_TILE_INDEX, VK_HUD_BOX_W * VK_HUD_BOX_H, VK_TM);
+    VDP_loadTileData((const u32 *)vk_hud_key_tiles, HUD_KEY_TILE_INDEX, VK_HUD_BOX_W * VK_HUD_BOX_H, VK_TM);
     draw_hud_box(items);
     if (vk_items_key_shown(items, game))
         draw_block(KEY_TILE_INDEX, key_x / 8, key_y / 8, 2, 2);

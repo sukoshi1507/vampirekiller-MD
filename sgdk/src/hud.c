@@ -1,4 +1,5 @@
 #include "hud.h"
+#include "room_view.h"
 #include "health.h"
 #include "generated/intro_assets.h"
 #include "msx_text.h"
@@ -118,7 +119,7 @@ static void show_labels(void)
         /* Rows 1..3 start at y 8. */
         vk_msx_text_compose(cells, LABEL_COLS, HUD_ROWS, 8, 12 - 8, "PLAYER");
         vk_msx_text_compose(cells, LABEL_COLS, HUD_ROWS, 8, 20 - 8, "ENEMY");
-        VDP_loadTileData(cells, LABEL_TILE, LABEL_COLS * HUD_ROWS, CPU);
+        VDP_loadTileData(cells, LABEL_TILE, LABEL_COLS * HUD_ROWS, VK_TM);
     }
     VDP_fillTileMapRectInc(BG_A, TILE_ATTR_FULL(PAL1, TRUE, FALSE, FALSE, LABEL_TILE),
                            0, HUD_ROW, LABEL_COLS, HUD_ROWS);
@@ -178,7 +179,7 @@ static void frame_cell(u16 tile, bool flip, u16 col, u16 row)
 void vk_hud_show_frame(void)
 {
     u16 col;
-    VDP_loadTileData(&frame_tiles[0][0], HUD_FRAME_TILE_INDEX, HUD_FRAME_TILE_COUNT, CPU);
+    VDP_loadTileData(&frame_tiles[0][0], HUD_FRAME_TILE_INDEX, HUD_FRAME_TILE_COUNT, VK_TM);
     for (col = 16; col <= 17; col++) { frame_cell(0, FALSE, col, 1); frame_cell(0, TRUE, col, 3); }
     for (col = 23; col <= 30; col++) { frame_cell(1, FALSE, col, 1); frame_cell(1, TRUE, col, 3); }
     frame_cell(2, FALSE, 31, 1);
@@ -230,5 +231,5 @@ void vk_hud_update(int energy)
     if (filled == drawn_pixels) return;
     drawn_pixels = filled;
     build_bar(filled);
-    VDP_loadTileData(bar_tiles, HUD_TILE_INDEX, HUD_ROWS * HUD_COLS, CPU);
+    VDP_loadTileData(bar_tiles, HUD_TILE_INDEX, HUD_ROWS * HUD_COLS, VK_TM);
 }

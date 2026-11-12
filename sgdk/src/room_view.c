@@ -13,7 +13,16 @@ static const u16 hud_palette[16] = {
     0, 0x08AE, 0, 0, 0, 0, 0, 0, 0x020E, 0, 0, 0, 0, 0, 0x0EEE, 0x0EEE
 };
 
-void vk_show_room(u16 stage, u16 room, bool atlas)
+bool vk_tiles_by_dma;
+bool vk_fast_room_draw;
+void vk_room_display_on(void)
+{
+    vk_tiles_by_dma = FALSE;
+    VDP_setEnable(TRUE);
+}
+
+/* Draws the room with the display off and leaves it off (see vk_show_castle_room). */
+static void draw_room(u16 stage, u16 room, bool atlas)
 {
     const VKStage *group = &vk_stages[stage - 1];
     const u16 index = group->first + room;
@@ -28,7 +37,7 @@ void vk_show_room(u16 stage, u16 room, bool atlas)
     VDP_resetSprites();
     VDP_updateSprites(1, CPU);
     VDP_clearPlane(BG_A, TRUE);
-    VDP_loadTileData(vk_tiles[group->tileset], TILE_USER_INDEX, VK_TILE_COUNT, CPU);
+    VDP_loadTileData(vk_tiles[group->tileset], TILE_USER_INDEX, VK_TILE_COUNT, VK_TM);
     PAL_setPalette(PAL0, vk_palettes[index], CPU);
     PAL_setPalette(PAL1, hud_palette, CPU);
     VDP_setTextPalette(PAL1);
@@ -48,22 +57,33 @@ void vk_show_room(u16 stage, u16 room, bool atlas)
             TILE_ATTR_FULL(PAL0, FALSE, FALSE, FALSE, TILE_USER_INDEX),
             0, 4, 32, 22, 32, CPU);
     VDP_drawText("L/R ROOM  U/D STAGE  A TILES", 2, 27);
+}
+
+void vk_show_room(u16 stage, u16 room, bool atlas)
+{
+    draw_room(stage, room, atlas);
     VDP_setEnable(TRUE);
 }
 
-void vk_show_scene(u16 index)
+/* Draws the scene with the display off and leaves it off. */
+static void draw_scene(u16 index)
 {
     const VKScene *scene = &vk_scenes[index];
     VDP_setEnable(FALSE);
     VDP_resetSprites();
     VDP_updateSprites(1, CPU);
     VDP_clearPlane(BG_A, TRUE);
-    VDP_loadTileData(scene->tiles, TILE_USER_INDEX, scene->count, CPU);
+    VDP_loadTileData(scene->tiles, TILE_USER_INDEX, scene->count, VK_TM);
     PAL_setPalette(PAL0, scene->palette, CPU);
     PAL_setPalette(PAL1, hud_palette, CPU);
     VDP_setTextPalette(PAL1);
     VDP_setTileMapDataRectEx(BG_A, scene->map,
         TILE_ATTR_FULL(PAL0, FALSE, FALSE, FALSE, TILE_USER_INDEX), 0, 0, 32, 28, 32, CPU);
+}
+
+void vk_show_scene(u16 index)
+{
+    draw_scene(index);
     VDP_setEnable(TRUE);
 }
 
@@ -209,7 +229,7 @@ void vk_enter_play(VKPlayer *player)
     vk_show_room(1, 0, FALSE);
     vk_player_reset(player);
     VDP_loadTileData((const u32 *) vk_player_tiles, PLAYER_TILE_INDEX,
-                    VK_PLAYER_POSES * VK_PLAYER_TILES_PER_POSE, CPU);
+                    VK_PLAYER_POSES * VK_PLAYER_TILES_PER_POSE, VK_TM);
     PAL_setPalette(PAL2, vk_palettes[0], CPU);
     vk_load_whip_graphics();
     vk_reset_training_target();
@@ -222,11 +242,11 @@ void vk_enter_play(VKPlayer *player)
 static void load_actor(u16 scene)
 {
     VDP_loadTileData((const u32 *) vk_player_tiles, PLAYER_TILE_INDEX,
-                    VK_PLAYER_POSES * VK_PLAYER_TILES_PER_POSE, CPU);
+                    VK_PLAYER_POSES * VK_PLAYER_TILES_PER_POSE, VK_TM);
     VDP_loadTileData((const u32 *) vk_player_death_tiles, DEATH_TILE_INDEX,
-                    2 * VK_PLAYER_DEATH_TILES, CPU);
+                    2 * VK_PLAYER_DEATH_TILES, VK_TM);
     VDP_loadTileData((const u32 *) vk_player_stair_tiles, STAIR_TILE_INDEX,
-                    VK_PLAYER_STAIR_POSES * VK_PLAYER_TILES_PER_POSE, CPU);
+                    VK_PLAYER_STAIR_POSES * VK_PLAYER_TILES_PER_POSE, VK_TM);
     PAL_setPalette(PAL2, vk_scenes[scene].palette, CPU);
     vk_load_whip_graphics();
     if (scene == 6 || (scene >= 3 && scene <= 5)) vk_reset_training_target();
@@ -276,11 +296,14 @@ void vk_show_courtyard(u16 room)
     courtyard_room = room;
     debug_room_key = 0xFFFF;
     vk_front_mode = FRONT_COURTYARD;
-    vk_show_scene(3 + room);
+    vk_tiles_by_dma = vk_fast_room_draw;   /* fast draw: display off until vk_room_display_on */
+    draw_scene(3 + room);
+    if (!vk_fast_room_draw) VDP_setEnable(TRUE);
     vk_player = vk_game.player;
     load_actor(3 + room);
-    VDP_loadTileData(flame_a_cleared_tiles, FLAME_A_CLEAR_TILE_INDEX, 4, CPU);
+    VDP_loadTileData(flame_a_cleared_tiles, FLAME_A_CLEAR_TILE_INDEX, 4, VK_TM);
     show_play_overlay();
+    vk_room_display_on();
 }
 
 /* Playable castle room loader (stage 1 hall or stage 2): common VRAM/player
@@ -293,10 +316,12 @@ void vk_show_castle_room(u16 stage, u16 room)
         vk_show_interior();
         return;
     }
-    vk_show_room(stage, room, FALSE);
+    vk_tiles_by_dma = vk_fast_room_draw;   /* fast draw: display off until vk_room_display_on */
+    draw_room(stage, room, FALSE);
+    if (!vk_fast_room_draw) VDP_setEnable(TRUE);
     vk_player = vk_game.player;
     VDP_loadTileData((const u32 *)vk_player_tiles, PLAYER_TILE_INDEX,
-        VK_PLAYER_POSES * VK_PLAYER_TILES_PER_POSE, CPU);
+        VK_PLAYER_POSES * VK_PLAYER_TILES_PER_POSE, VK_TM);
     PAL_setPalette(PAL2, vk_palettes[vk_stages[stage - 1].first + room], CPU);
     vk_load_whip_graphics();
     /* Mode first: reset_training_target must not redraw the courtyard torch cells
@@ -317,11 +342,14 @@ void vk_show_castle_room(u16 stage, u16 room)
 void vk_show_interior(void)
 {
     debug_room_key = 0xFFFF;
-    vk_show_scene(6);
+    vk_tiles_by_dma = vk_fast_room_draw;   /* fast draw: display off until vk_room_display_on */
+    draw_scene(6);
+    if (!vk_fast_room_draw) VDP_setEnable(TRUE);
     vk_player = vk_game.player;
     /* Set the mode first: the hall target must not be placed as a courtyard flame. */
     vk_front_mode = FRONT_INTERIOR;
     load_actor(6);
     show_play_overlay();
     vk_front_mode = FRONT_INTERIOR;
+    vk_room_display_on();
 }
