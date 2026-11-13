@@ -30,7 +30,8 @@
   "19": "9470",
   "1A": "931A",
   "1B": "93CA",
-  "1C": "939F"
+  "1C": "939F",
+  "1D": "8E69"
  },
  "music_pointers": {
   "80": [
@@ -109,12 +110,12 @@
    "A800"
   ]
  },
- "total_bytes": 71428,
+ "total_bytes": 71522,
  "sounds": [
   {
    "id": "01",
    "kind": "effect",
-   "name": "ENERGIE",
+   "name": "SOIN ENERGIE",
    "frames": 22,
    "loop_frame": null,
    "loop_offset": null,
@@ -128,7 +129,7 @@
   {
    "id": "02",
    "kind": "effect",
-   "name": "OBJET 94FC",
+   "name": "REFUS MARCHAND",
    "frames": 25,
    "loop_frame": null,
    "loop_offset": null,
@@ -144,7 +145,7 @@
   {
    "id": "03",
    "kind": "effect",
-   "name": "ESCALIER A",
+   "name": "CROIX TOURNE",
    "frames": 9,
    "loop_frame": null,
    "loop_offset": null,
@@ -158,7 +159,7 @@
   {
    "id": "04",
    "kind": "effect",
-   "name": "ARME LANCEE",
+   "name": "DAGUE LANCEE",
    "frames": 7,
    "loop_frame": null,
    "loop_offset": null,
@@ -172,7 +173,7 @@
   {
    "id": "05",
    "kind": "effect",
-   "name": "FOUET",
+   "name": "COUP DE FOUET",
    "frames": 13,
    "loop_frame": null,
    "loop_offset": null,
@@ -186,7 +187,7 @@
   {
    "id": "06",
    "kind": "effect",
-   "name": "ESCALIER B",
+   "name": "HACHE TOURNE",
    "frames": 12,
    "loop_frame": null,
    "loop_offset": null,
@@ -216,7 +217,7 @@
   {
    "id": "08",
    "kind": "effect",
-   "name": "ENNEMI A2F9",
+   "name": "POISSON SAUTE",
    "frames": 48,
    "loop_frame": null,
    "loop_offset": null,
@@ -230,7 +231,7 @@
   {
    "id": "09",
    "kind": "effect",
-   "name": "EAU",
+   "name": "PLONGEON EAU",
    "frames": 45,
    "loop_frame": null,
    "loop_offset": null,
@@ -244,7 +245,7 @@
   {
    "id": "0A",
    "kind": "effect",
-   "name": "ENNEMI B9A9",
+   "name": "TIR BOSS 9",
    "frames": 49,
    "loop_frame": null,
    "loop_offset": null,
@@ -258,7 +259,7 @@
   {
    "id": "0B",
    "kind": "effect",
-   "name": "ARME TOUCHE",
+   "name": "PROJECTILE PARE",
    "frames": 28,
    "loop_frame": null,
    "loop_offset": null,
@@ -277,7 +278,7 @@
   {
    "id": "0C",
    "kind": "effect",
-   "name": "COUP",
+   "name": "COUP TOUCHE",
    "frames": 12,
    "loop_frame": null,
    "loop_offset": null,
@@ -291,7 +292,7 @@
   {
    "id": "0D",
    "kind": "effect",
-   "name": "CONTACT 7EBC",
+   "name": "TUE AU CONTACT",
    "frames": 45,
    "loop_frame": null,
    "loop_offset": null,
@@ -307,7 +308,7 @@
   {
    "id": "0E",
    "kind": "effect",
-   "name": "BLOC CACHE",
+   "name": "BLOC CASSE",
    "frames": 25,
    "loop_frame": null,
    "loop_offset": null,
@@ -321,7 +322,7 @@
   {
    "id": "0F",
    "kind": "effect",
-   "name": "COEUR",
+   "name": "COEUR CLE ROUGE",
    "frames": 26,
    "loop_frame": null,
    "loop_offset": null,
@@ -335,7 +336,7 @@
   {
    "id": "10",
    "kind": "effect",
-   "name": "POINTS",
+   "name": "BONUS POINTS",
    "frames": 22,
    "loop_frame": null,
    "loop_offset": null,
@@ -349,7 +350,7 @@
   {
    "id": "11",
    "kind": "effect",
-   "name": "COFFRE",
+   "name": "COFFRE OUVERT",
    "frames": 43,
    "loop_frame": null,
    "loop_offset": null,
@@ -363,7 +364,7 @@
   {
    "id": "12",
    "kind": "effect",
-   "name": "OBJET",
+   "name": "OBJET PRIS",
    "frames": 39,
    "loop_frame": null,
    "loop_offset": null,
@@ -377,7 +378,7 @@
   {
    "id": "13",
    "kind": "effect",
-   "name": "DEGATS",
+   "name": "SIMON BLESSE",
    "frames": 49,
    "loop_frame": null,
    "loop_offset": null,
@@ -391,7 +392,7 @@
   {
    "id": "14",
    "kind": "effect",
-   "name": "CLE",
+   "name": "CLE PRISE",
    "frames": 53,
    "loop_frame": null,
    "loop_offset": null,
@@ -405,7 +406,7 @@
   {
    "id": "15",
    "kind": "effect",
-   "name": "PORTE",
+   "name": "PORTE PASSAGE",
    "frames": 76,
    "loop_frame": null,
    "loop_offset": null,
@@ -419,7 +420,7 @@
   {
    "id": "16",
    "kind": "effect",
-   "name": "OBJET 08",
+   "name": "INVULNERABLE",
    "frames": 49,
    "loop_frame": null,
    "loop_offset": null,
@@ -433,7 +434,7 @@
   {
    "id": "17",
    "kind": "effect",
-   "name": "FIN MINUTERIE",
+   "name": "FIN INVULNERABLE",
    "frames": 49,
    "loop_frame": null,
    "loop_offset": null,
@@ -447,7 +448,7 @@
   {
    "id": "18",
    "kind": "effect",
-   "name": "ARME 7414",
+   "name": "EAU BENITE SOL",
    "frames": 57,
    "loop_frame": null,
    "loop_offset": null,
@@ -463,7 +464,7 @@
   {
    "id": "19",
    "kind": "effect",
-   "name": "OBJET 938F",
+   "name": "MARCHAND CARTE",
    "frames": 49,
    "loop_frame": null,
    "loop_offset": null,
@@ -477,7 +478,7 @@
   {
    "id": "1A",
    "kind": "effect",
-   "name": "PORTE 1A",
+   "name": "PORTE STAGE",
    "frames": 78,
    "loop_frame": null,
    "loop_offset": null,
@@ -494,7 +495,7 @@
   {
    "id": "1B",
    "kind": "effect",
-   "name": "OBJET 05",
+   "name": "ENNEMIS DETRUITS",
    "frames": 76,
    "loop_frame": null,
    "loop_offset": null,
@@ -508,7 +509,7 @@
   {
    "id": "1C",
    "kind": "effect",
-   "name": "SON 7E1C",
+   "name": "MORT DU BOSS",
    "frames": 91,
    "loop_frame": null,
    "loop_offset": null,
@@ -518,6 +519,20 @@
    "ay_writes": 376,
    "conversion": {},
    "sha256": "e4db9e1a70344defdbd90455211431d988b26b25736ce7de6e1578d1a43181d2"
+  },
+  {
+   "id": "1D",
+   "kind": "effect",
+   "name": "COEURS PERDUS",
+   "frames": 46,
+   "loop_frame": null,
+   "loop_offset": null,
+   "bytes": 94,
+   "note_c_frames": 0,
+   "lock_frames": 0,
+   "ay_writes": 94,
+   "conversion": {},
+   "sha256": "52fe342cc9d5676e9f0431af4e746f33741bb601beeac6bc9c22308d46ab259f"
   },
   {
    "id": "80",
@@ -539,7 +554,7 @@
   {
    "id": "81",
    "kind": "music",
-   "name": "STAGES 4-6",
+   "name": "STAGES 4-6 11 12",
    "frames": 3073,
    "loop_frame": 1281,
    "loop_offset": 2545,
@@ -618,7 +633,7 @@
   {
    "id": "86",
    "kind": "music",
-   "name": "BOSS FINAL",
+   "name": "ENTREE DRACULA",
    "frames": 3457,
    "loop_frame": 1345,
    "loop_offset": 3433,
@@ -634,7 +649,7 @@
   {
    "id": "87",
    "kind": "music",
-   "name": "BOSS",
+   "name": "ENTREE BOSS",
    "frames": 450,
    "loop_frame": 2,
    "loop_offset": 14,
@@ -648,7 +663,7 @@
   {
    "id": "88",
    "kind": "music",
-   "name": "MUSIQUE 88",
+   "name": "DRACULA FORME 2",
    "frames": 1057,
    "loop_frame": 97,
    "loop_offset": 404,
@@ -664,7 +679,7 @@
   {
    "id": "89",
    "kind": "music",
-   "name": "MORT",
+   "name": "MORT SIMON",
    "frames": 97,
    "loop_frame": null,
    "loop_offset": null,
@@ -711,7 +726,7 @@
   {
    "id": "8C",
    "kind": "music",
-   "name": "MUSIQUE 8C",
+   "name": "VICTOIRE BOSS",
    "frames": 241,
    "loop_frame": null,
    "loop_offset": null,
@@ -727,7 +742,7 @@
   {
    "id": "8D",
    "kind": "music",
-   "name": "MUSIQUE 8D",
+   "name": "DRACULA VAINCU",
    "frames": 247,
    "loop_frame": null,
    "loop_offset": null,
@@ -743,7 +758,7 @@
   {
    "id": "8E",
    "kind": "music",
-   "name": "MUSIQUE 8E",
+   "name": "GENERIQUE",
    "frames": 1118,
    "loop_frame": 350,
    "loop_offset": 836,
@@ -760,7 +775,7 @@
   {
    "id": "FB",
    "kind": "special",
-   "name": "MINUTERIE FB",
+   "name": "ARRET DU TEMPS",
    "frames": 97,
    "loop_frame": 49,
    "loop_offset": 57,
@@ -774,7 +789,7 @@
   {
    "id": "FD",
    "kind": "pause",
-   "name": "PAUSE FD",
+   "name": "PAUSE",
    "frames": 31,
    "loop_frame": null,
    "loop_offset": null,

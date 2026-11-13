@@ -23,6 +23,7 @@ until enemies.alive > 0 max 80
 expect enemies.enemy[0].type == 4 and enemies.enemy[0].x == 0xD0 and enemies.enemy[0].y == 189 # premier tir en X D0, deja une mise a jour
 expect enemies.enemy[1].type == 5 and enemies.enemy[2].type == 5 # deux gouttes
 expect enemies.type2Shots == 1
+expect ram8('vk_psg+22') == 0x08 # A2F9 : l'homme-poisson jaillit de l'eau, effet 08 (priorite 5172 : aucun effet en cours)
 set t0 frame
 until enemies.enemy[3].type == 4 and enemies.enemy[3].active max 20
 expect frame - t0 == 16 # second tir 16 images plus tard
@@ -51,3 +52,4 @@ until enemies.enemy[0].state == 0 max 80
 expect enemies.enemy[0].x == 190 # bord du sol droit (X 191.80 -> 190)
 until not (enemies.enemy[0].active and enemies.enemy[0].type == 4) max 60
 expect enemies.splashCount == 5 # deux gouttes au plongeon
+expect ram8('vk_psg+22') == 0x09 # A386 : le plongeon, effet 09

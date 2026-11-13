@@ -51,8 +51,10 @@ poke vk_boss+7 1
 until ram8('vk_boss+4') >= 4 max 400
 expect ram16('vk_boss+12') == 0 and ram16('vk_boss+14') == 0
 shot zr-vise
+set snd0 ram16('vk_psg+24')
 until ram8('vk_boss+36') == 1 max 200
 wait 6
+expect ram16('vk_psg+24') == snd0 # le tir du boss du stage 3 ne demande aucun effet (BF44 : pas de 509F ; ce n'est pas un 13)
 shot zr-boule
 # Dernier coup : disparition, orbe a Y 40h qui tombe a C0h.
 poke vk_boss+36 0

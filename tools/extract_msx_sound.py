@@ -6,7 +6,7 @@ tools/castle_room_objects.py does. The BIOS entries the driver uses are trapped:
 GIWRTE (0093, AY register in A, value in E) is logged, GIRDPSG (0096) reads back
 the logged registers. Driver entry points (research/audio-driver.md):
     5076  sound init (C097 = BC mixer, then 5085: stop all, C096 = 0)
-    509F  request: A = 01..1C effect, 80..8F music, 00 stop, FB..FF specials
+    509F  request: A = 01..1D effect, 80..8F music, 00 stop, FB..FF specials
           (FB/FC timed item on channel A, FD/FE pause, FF music fade)
     8964  per-frame update (bank 14 at 8000, bank 15 at A000), called by the
           VBLANK handler 4028 once per frame
@@ -49,7 +49,7 @@ MUSIC_TABLE = 0x8DC9         # bank 14: 3 pointers (channels A, B, C) per music 
 STATE = (0xC010, 0xC0C0)     # driver variables, enough to define its future
 MAX_FRAMES = 30000
 
-EFFECTS = list(range(0x01, 0x1D))
+EFFECTS = list(range(0x01, 0x1E))   # 1D: hearts - 5 at the wall (934E), reached through the last pointer of the table
 MUSIC = list(range(0x80, 0x8F))
 SPECIALS = [0xFB, 0xFD]      # FB: timed item loop on channel A (8C95); FD: pause jingle (9463)
 

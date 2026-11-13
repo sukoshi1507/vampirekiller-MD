@@ -1,5 +1,7 @@
 # Déclencheurs sonores du pilote MSX2 de Vampire Killer
 
+**Remplacé** pour l'identification des sons par `research/audio-driver.md` section 3 (2026-11-14) : les 45 sons (et 1D) sont reliés à leur événement et à leur appelant, les appelants étant contrôlés sur la ROM par `tests/test_extract_msx_sound.py`. Ce document garde la méthode de la première capture openMSX.
+
 Statut global : **partiel**. Trois déclencheurs sont établis (fouet, démarrage de musique à deux occasions, arrêt du fouet). Les autres événements (saut, marche, accroupi, dégâts, ramassage, changement de salle, fin) n'ont pas été déclenchés de façon exploitable : ils sont listés comme **inconnu**.
 
 Données : `research/audio/triggers.json` (même contenu, format stable).

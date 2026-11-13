@@ -1686,6 +1686,8 @@ static void fishFace(Enemy *e, EnemyU8 simonX)
     e->pose = (EnemyU8)(simonX >= e->x ? 0x0B : 0x08);
 }
 
+static void fish3Sound(EnemyState *s, EnemyU8 id);   /* enemies_fish3.inc : appels A4E8 de A310 */
+
 /* Type 2 : une mise a jour (une image sur deux), routine A310 puis 99B9 et 99E5. */
 static void fishStep(EnemyState *s, Enemy *e, const EnemyRoomVars *v)
 {
@@ -1702,11 +1704,13 @@ static void fishStep(EnemyState *s, Enemy *e, const EnemyRoomVars *v)
                 e->extraPhase &= (EnemyU8)~ENEMY_FISH_STEP;
                 e->state = 1;
                 e->vy = 0;
+                fish3Sound(s, 0x07);           /* A34D : atterrissage */
             } else if (e->y >= ENEMY_TYPE2_WATER) {
                 const EnemyU8 x = (EnemyU8)e->x, y = e->y;
                 e->active = 0;                 /* A386 : replonge, deux gouttes */
                 splashSpawn(s, x, y);
                 splashSpawn(s, x, y);
+                fish3Sound(s, 0x09);           /* A386 : plongeon */
                 return;
             }
         }
@@ -1748,6 +1752,7 @@ static void fishSpawn(EnemyState *s, EnemyU8 x, const EnemyRoomVars *v)
     e->vy = ENEMY_TYPE2_JUMP_VY;
     splashSpawn(s, x, ENEMY_TYPE2_Y);
     splashSpawn(s, x, ENEMY_TYPE2_Y);
+    fish3Sound(s, 0x08);                       /* A2F9 : saut hors de l'eau */
 }
 
 #include "enemies_fish3.inc"

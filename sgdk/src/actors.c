@@ -526,7 +526,9 @@ static void step_boss(const EnemyRoomVars *v)
     boss15_pool_sync();boss_shots_sync();
     boss9_flash_cells();
     VK_MARK(55);
-    if (events & VK_BOSS_EV_FIRE) vk_psg_effect(vk_boss.kind == 2 ? VK_SFX_WALKER_FIRE : VK_SFX_DAMAGE);   /* A4E8: 0A (stage 9) */
+    /* B9A9: effect 0A for the stage 9 boss ball only. The other boss shots (BF44 -> 9F61, 9F6D,
+     * stages 3, 6, 12, 15) make no sound: no 509F request in 9F61-A0F0 (research/audio-driver.md). */
+    if ((events & VK_BOSS_EV_FIRE) && vk_boss.kind == 2) vk_psg_effect(VK_SFX_WALKER_FIRE);
     if (events & VK_BOSS_EV_FLASH) vk_enemies.flash = ENEMY_FLASH_START;
     if (events & VK_BOSS_EV_ORB_TILES)
     {

@@ -23,6 +23,37 @@ expect front_mode == MODES['TITLE'] # code incomplet
 tap A
 wait 10
 expect front_mode == MODES['SOUND']
+# 28 fois BAS : la 29e entree est l'effet 1D (cœurs - 5 du mur, 934E), joue par A.
+tap DOWN 2
+tap DOWN 2
+tap DOWN 2
+tap DOWN 2
+tap DOWN 2
+tap DOWN 2
+tap DOWN 2
+tap DOWN 2
+tap DOWN 2
+tap DOWN 2
+tap DOWN 2
+tap DOWN 2
+tap DOWN 2
+tap DOWN 2
+tap DOWN 2
+tap DOWN 2
+tap DOWN 2
+tap DOWN 2
+tap DOWN 2
+tap DOWN 2
+tap DOWN 2
+tap DOWN 2
+tap DOWN 2
+tap DOWN 2
+tap DOWN 2
+tap DOWN 2
+tap DOWN 2
+tap DOWN 2
+tap A 2
+expect ram8('vk_psg+21') == 0x1D # le flux 1D existe et est accepte
 shot sound-test
 tap B
 wait 10

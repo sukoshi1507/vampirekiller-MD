@@ -25,7 +25,7 @@ bool vk_konami_step(u16 pressed)
     return FALSE;
 }
 
-/* Entries: effects 01..1C, music 80..8E, then FB (timed item) and FD (pause). */
+/* Entries: effects 01..1D, music 80..8E, then FB (timed item) and FD (pause). */
 #define EFFECT_ENTRIES (VK_MSX_EFFECT_SLOTS - 1)
 #define MUSIC_ENTRIES (VK_MSX_MUSIC_SLOTS - 1)
 #define SOUND_ENTRY_COUNT (EFFECT_ENTRIES + MUSIC_ENTRIES + 2)
@@ -48,8 +48,7 @@ static u8 entry_id(u16 entry)
 
 static const char *entry_name(u8 id)
 {
-    if (id == 0xFB) return "MINUTERIE FB";
-    if (id == 0xFD) return "PAUSE FD";
+    if (id >= 0xFB) return vk_msx_special_names[id == 0xFB ? 0 : 1];
     return id >= 0x80 ? vk_msx_music_names[id - 0x80] : vk_msx_effect_names[id];
 }
 

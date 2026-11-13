@@ -256,6 +256,14 @@ static const VKPsgByte msx_sound_1c[284] = {
     0xC3, 0x03, 0xD6, 0x02, 0xCD, 0x02, 0x02, 0xC7, 0x02, 0x02, 0xC1, 0x02, 0x03, 0xCB, 0x01, 0xD8,
     0x02, 0xC5, 0x01, 0x02, 0xCF, 0x00, 0x02, 0xC9, 0x00, 0x01, 0xDF, 0xFF,
 };
+static const VKPsgByte msx_sound_1d[94] = {
+    0x04, 0xC0, 0x01, 0xDE, 0xFF, 0x00, 0x00, 0x03, 0xC4, 0x01, 0xDC, 0x00, 0x00, 0x03, 0xC8, 0x01,
+    0xDB, 0x00, 0x00, 0x03, 0xCC, 0x01, 0xD9, 0x00, 0x00, 0x03, 0xC0, 0x02, 0xD8, 0x00, 0x00, 0x03,
+    0xC0, 0x01, 0xD6, 0x00, 0x00, 0x03, 0xCE, 0x01, 0xD5, 0x00, 0x00, 0x03, 0xCD, 0x02, 0xD3, 0x00,
+    0x00, 0x03, 0xCC, 0x03, 0xD2, 0x00, 0x00, 0x03, 0xC1, 0x05, 0xD0, 0x00, 0x00, 0x03, 0xCC, 0x06,
+    0xD5, 0x00, 0x00, 0x03, 0xC5, 0x02, 0xD3, 0x00, 0x00, 0x03, 0xC2, 0x03, 0xD5, 0x00, 0x00, 0x03,
+    0xC2, 0x06, 0xD6, 0x00, 0x00, 0x03, 0xC9, 0x04, 0xD5, 0x00, 0x00, 0x01, 0xDF, 0xFF,
+};
 static const VKPsgByte msx_sound_80[6644] = {
     0x4A, 0x80, 0x0C, 0x93, 0xAA, 0x2F, 0xB2, 0xCE, 0x0F, 0xD5, 0xFF, 0x03, 0x95, 0xB3, 0xD6, 0x03,
     0x96, 0xB5, 0xD8, 0x03, 0x98, 0xB6, 0xD9, 0x03, 0x99, 0xB8, 0xDB, 0x01, 0xB9, 0x01, 0xBB, 0x42,
@@ -4580,104 +4588,111 @@ static const VKPsgByte msx_sound_fd[68] = {
 
 const VKSoundStream vk_msx_effects[VK_MSX_EFFECT_SLOTS] = {
     {0, 0xFFFF},
-    {msx_sound_01, 0xFFFF},  /* 01 ENERGIE */
-    {msx_sound_02, 0xFFFF},  /* 02 OBJET 94FC */
-    {msx_sound_03, 0xFFFF},  /* 03 ESCALIER A */
-    {msx_sound_04, 0xFFFF},  /* 04 ARME LANCEE */
-    {msx_sound_05, 0xFFFF},  /* 05 FOUET */
-    {msx_sound_06, 0xFFFF},  /* 06 ESCALIER B */
+    {msx_sound_01, 0xFFFF},  /* 01 SOIN ENERGIE */
+    {msx_sound_02, 0xFFFF},  /* 02 REFUS MARCHAND */
+    {msx_sound_03, 0xFFFF},  /* 03 CROIX TOURNE */
+    {msx_sound_04, 0xFFFF},  /* 04 DAGUE LANCEE */
+    {msx_sound_05, 0xFFFF},  /* 05 COUP DE FOUET */
+    {msx_sound_06, 0xFFFF},  /* 06 HACHE TOURNE */
     {msx_sound_07, 0xFFFF},  /* 07 ATTERRISSAGE */
-    {msx_sound_08, 0xFFFF},  /* 08 ENNEMI A2F9 */
-    {msx_sound_09, 0xFFFF},  /* 09 EAU */
-    {msx_sound_0a, 0xFFFF},  /* 0A ENNEMI B9A9 */
-    {msx_sound_0b, 0xFFFF},  /* 0B ARME TOUCHE */
-    {msx_sound_0c, 0xFFFF},  /* 0C COUP */
-    {msx_sound_0d, 0xFFFF},  /* 0D CONTACT 7EBC */
-    {msx_sound_0e, 0xFFFF},  /* 0E BLOC CACHE */
-    {msx_sound_0f, 0xFFFF},  /* 0F COEUR */
-    {msx_sound_10, 0xFFFF},  /* 10 POINTS */
-    {msx_sound_11, 0xFFFF},  /* 11 COFFRE */
-    {msx_sound_12, 0xFFFF},  /* 12 OBJET */
-    {msx_sound_13, 0xFFFF},  /* 13 DEGATS */
-    {msx_sound_14, 0xFFFF},  /* 14 CLE */
-    {msx_sound_15, 0xFFFF},  /* 15 PORTE */
-    {msx_sound_16, 0xFFFF},  /* 16 OBJET 08 */
-    {msx_sound_17, 0xFFFF},  /* 17 FIN MINUTERIE */
-    {msx_sound_18, 0xFFFF},  /* 18 ARME 7414 */
-    {msx_sound_19, 0xFFFF},  /* 19 OBJET 938F */
-    {msx_sound_1a, 0xFFFF},  /* 1A PORTE 1A */
-    {msx_sound_1b, 0xFFFF},  /* 1B OBJET 05 */
-    {msx_sound_1c, 0xFFFF},  /* 1C SON 7E1C */
+    {msx_sound_08, 0xFFFF},  /* 08 POISSON SAUTE */
+    {msx_sound_09, 0xFFFF},  /* 09 PLONGEON EAU */
+    {msx_sound_0a, 0xFFFF},  /* 0A TIR BOSS 9 */
+    {msx_sound_0b, 0xFFFF},  /* 0B PROJECTILE PARE */
+    {msx_sound_0c, 0xFFFF},  /* 0C COUP TOUCHE */
+    {msx_sound_0d, 0xFFFF},  /* 0D TUE AU CONTACT */
+    {msx_sound_0e, 0xFFFF},  /* 0E BLOC CASSE */
+    {msx_sound_0f, 0xFFFF},  /* 0F COEUR CLE ROUGE */
+    {msx_sound_10, 0xFFFF},  /* 10 BONUS POINTS */
+    {msx_sound_11, 0xFFFF},  /* 11 COFFRE OUVERT */
+    {msx_sound_12, 0xFFFF},  /* 12 OBJET PRIS */
+    {msx_sound_13, 0xFFFF},  /* 13 SIMON BLESSE */
+    {msx_sound_14, 0xFFFF},  /* 14 CLE PRISE */
+    {msx_sound_15, 0xFFFF},  /* 15 PORTE PASSAGE */
+    {msx_sound_16, 0xFFFF},  /* 16 INVULNERABLE */
+    {msx_sound_17, 0xFFFF},  /* 17 FIN INVULNERABLE */
+    {msx_sound_18, 0xFFFF},  /* 18 EAU BENITE SOL */
+    {msx_sound_19, 0xFFFF},  /* 19 MARCHAND CARTE */
+    {msx_sound_1a, 0xFFFF},  /* 1A PORTE STAGE */
+    {msx_sound_1b, 0xFFFF},  /* 1B ENNEMIS DETRUITS */
+    {msx_sound_1c, 0xFFFF},  /* 1C MORT DU BOSS */
+    {msx_sound_1d, 0xFFFF},  /* 1D COEURS PERDUS */
 };
 
 const VKSoundStream vk_msx_music[VK_MSX_MUSIC_SLOTS] = {
     {msx_sound_80, 0x06DD},  /* 80 STAGES 0-3 */
-    {msx_sound_81, 0x09F1},  /* 81 STAGES 4-6 */
+    {msx_sound_81, 0x09F1},  /* 81 STAGES 4-6 11 12 */
     {msx_sound_82, 0x0E83},  /* 82 STAGES 7-9 */
     {msx_sound_83, 0x04F4},  /* 83 STAGES 16-17 */
     {msx_sound_84, 0x04D3},  /* 84 STAGES 13-15 */
     {msx_sound_85, 0x0F2A},  /* 85 STAGES 10 18 */
-    {msx_sound_86, 0x0D69},  /* 86 BOSS FINAL */
-    {msx_sound_87, 0x000E},  /* 87 BOSS */
-    {msx_sound_88, 0x0194},  /* 88 MUSIQUE 88 */
-    {msx_sound_89, 0xFFFF},  /* 89 MORT */
+    {msx_sound_86, 0x0D69},  /* 86 ENTREE DRACULA */
+    {msx_sound_87, 0x000E},  /* 87 ENTREE BOSS */
+    {msx_sound_88, 0x0194},  /* 88 DRACULA FORME 2 */
+    {msx_sound_89, 0xFFFF},  /* 89 MORT SIMON */
     {msx_sound_8a, 0xFFFF},  /* 8A DEPART */
     {msx_sound_8b, 0xFFFF},  /* 8B GAME OVER */
-    {msx_sound_8c, 0xFFFF},  /* 8C MUSIQUE 8C */
-    {msx_sound_8d, 0xFFFF},  /* 8D MUSIQUE 8D */
-    {msx_sound_8e, 0x0344},  /* 8E MUSIQUE 8E */
+    {msx_sound_8c, 0xFFFF},  /* 8C VICTOIRE BOSS */
+    {msx_sound_8d, 0xFFFF},  /* 8D DRACULA VAINCU */
+    {msx_sound_8e, 0x0344},  /* 8E GENERIQUE */
     {0, 0xFFFF},
 };
 
-/* Sound test labels (PROVISIONAL names, see research/audio-driver.md). */
+/* Sound test labels, one per proven event (SOUNDS in tools/build_msx_sound_md.py). */
 const char *const vk_msx_effect_names[VK_MSX_EFFECT_SLOTS] = {
     "",
-    "ENERGIE",
-    "OBJET 94FC",
-    "ESCALIER A",
-    "ARME LANCEE",
-    "FOUET",
-    "ESCALIER B",
+    "SOIN ENERGIE",
+    "REFUS MARCHAND",
+    "CROIX TOURNE",
+    "DAGUE LANCEE",
+    "COUP DE FOUET",
+    "HACHE TOURNE",
     "ATTERRISSAGE",
-    "ENNEMI A2F9",
-    "EAU",
-    "ENNEMI B9A9",
-    "ARME TOUCHE",
-    "COUP",
-    "CONTACT 7EBC",
-    "BLOC CACHE",
-    "COEUR",
-    "POINTS",
-    "COFFRE",
-    "OBJET",
-    "DEGATS",
-    "CLE",
-    "PORTE",
-    "OBJET 08",
-    "FIN MINUTERIE",
-    "ARME 7414",
-    "OBJET 938F",
-    "PORTE 1A",
-    "OBJET 05",
-    "SON 7E1C",
+    "POISSON SAUTE",
+    "PLONGEON EAU",
+    "TIR BOSS 9",
+    "PROJECTILE PARE",
+    "COUP TOUCHE",
+    "TUE AU CONTACT",
+    "BLOC CASSE",
+    "COEUR CLE ROUGE",
+    "BONUS POINTS",
+    "COFFRE OUVERT",
+    "OBJET PRIS",
+    "SIMON BLESSE",
+    "CLE PRISE",
+    "PORTE PASSAGE",
+    "INVULNERABLE",
+    "FIN INVULNERABLE",
+    "EAU BENITE SOL",
+    "MARCHAND CARTE",
+    "PORTE STAGE",
+    "ENNEMIS DETRUITS",
+    "MORT DU BOSS",
+    "COEURS PERDUS",
 };
 const char *const vk_msx_music_names[VK_MSX_MUSIC_SLOTS] = {
     "STAGES 0-3",
-    "STAGES 4-6",
+    "STAGES 4-6 11 12",
     "STAGES 7-9",
     "STAGES 16-17",
     "STAGES 13-15",
     "STAGES 10 18",
-    "BOSS FINAL",
-    "BOSS",
-    "MUSIQUE 88",
-    "MORT",
+    "ENTREE DRACULA",
+    "ENTREE BOSS",
+    "DRACULA FORME 2",
+    "MORT SIMON",
     "DEPART",
     "GAME OVER",
-    "MUSIQUE 8C",
-    "MUSIQUE 8D",
-    "MUSIQUE 8E",
+    "VICTOIRE BOSS",
+    "DRACULA VAINCU",
+    "GENERIQUE",
     "",
+};
+
+const char *const vk_msx_special_names[2] = {
+    "ARRET DU TEMPS",
+    "PAUSE",
 };
 
 const VKSoundStream vk_msx_timed_item = {msx_sound_fb, 0x0039};
