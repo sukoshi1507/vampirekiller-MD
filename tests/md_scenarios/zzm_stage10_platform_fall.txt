@@ -1,0 +1,42 @@
+# (zzm) Stage 10 salle 4 : chute d'un rebord sur la plateforme mobile (Y 167, X 129 a 193, pas +-1, une etape par passe de 2 images).
+# Trace openMSX 2026-11-13 (tools/platform_fall_trace.tcl, compare par tools/platform_fall_compare.py, 210 chutes et sauts
+# sans ecart de pixel au pas pres) : 8524 saute le test tant que C420 = 4 et C428 < 3 ; Y 144 -> 146, 150, 156, 162, 168 (un pas
+# par passe) ; a Y 168 la sonde 8524 voit Y - 167 < 8, 6F6A pose Simon (Y &= F8, C420 := 0) ; la plateforme avance d'abord
+# (90B8, image 1 de la passe) puis la sonde et le transport (6BAF) se suivent dans la meme passe (6B39).
+# Simon en (145, 144), plateforme en 154 allant a gauche : il se pose en 168 sans bouger en X (12 images apres le poke, ligne 13 de la trace), puis la plateforme l emporte de 1 par passe (X 135 a 136 a l image 34 de la trace).
+include zzm_enter10.inc
+poke Enemies_god 1
+include zzb_next.inc
+until game.stage == 10 and game.room == 1 max 200
+include zzb_next.inc
+until game.stage == 10 and game.room == 2 max 200
+include zzb_next.inc
+until game.stage == 10 and game.room == 3 max 200
+include zzb_next.inc
+until game.stage == 10 and game.room == 4 max 200
+wait 10
+poke Enemies_god 1
+poke vk_game+0 40
+poke vk_game+1 144
+poke vk_game+2 0
+wait 4
+poke Enemies_god 1
+poke vk_platforms+2 154
+poke vk_platforms+3 255
+poke vk_platforms+6 39
+poke vk_game+0 145
+poke vk_game+1 144
+poke vk_game+2 0
+wait 1
+echo game.player.y
+until game.player.y == 168 max 30
+echo frame
+wait 2
+echo game.player.mode
+expect game.player.mode == 0 and game.player.y == 168 and game.player.x == 145
+expect ram8('vk_platforms+14') == 1
+wait 21
+echo game.player.x
+echo ram8('vk_platforms+2')
+expect game.player.y == 168 and game.player.mode == 0
+expect 135 <= game.player.x <= 136 and ram8('vk_platforms+14') == 1
