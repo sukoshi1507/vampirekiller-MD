@@ -2,6 +2,7 @@
 # depuis X 70, etage) -> 4 (etage) -> 5 (etage, puis sol par le saut gauche du palier) -> 6 (escalier) -> 7 (saut sur l'etage,
 # escalier, porte en bas a gauche). Poses : invulnerabilite et cle blanche seulement (le test de parcours 12-18 n'avait pas
 # trouve la route des salles 4/5).
+# Ennemis actifs (plus de gel) : en salle 4 etage, le fantome (type 20, va-et-vient X 40..160) ralentit Simon ; on marche donc jusqu a X <= 27 (pied de l escalier) au lieu de tenir LEFT un temps fixe.
 # LOT12 stage14: all8 rooms via controller debug selector.
 # Not a continuous walk: room selection restarts the game. Action fixtures below are explicitly RAM-set.
 until front_mode == MODES['TITLE'] max 2000
@@ -37,7 +38,6 @@ tap DOWN
 tap B
 until game.stage == 14 and game.room == 0 max 300
 poke Enemies_god 1
-poke vk_enemies+162 1
 until game.player.mode == 0 max 300
 wait 10
 write items 8 ram8('items') | 1
@@ -49,7 +49,8 @@ wait 60
 hold LEFT 68
 hold UP 300
 wait 20
-hold LEFT 400
+until game.room == 4 max 400 LEFT
+until game.player.x <= 27 max 300 LEFT
 wait 20
 hold RIGHT 4
 hold RIGHT 4
