@@ -1,0 +1,42 @@
+# Dracula room (stage 18 room 9) with the hourglass (object 0A, jump then DOWN, 5 hearts) and the debug shortcut A+B ("light the candles
+# again"): the decor must stay the one of Dracula's view. A+B redrew the ordinary room 9 (show_hall_room) over the tile blocks that
+# dracula_view.c fills (decor filled with the tiles of the other rooms, tester photo testeur/dracula_sablier_bug.png): main.c now
+# skips that redraw in Dracula's room. Same check with the pause. Walked route, real god mode, items poked as a fixture (C701 bit 6, hearts).
+include zzq_stage18_route.txt
+poke Enemies_god 1
+poke vk_candles+322 0x40
+poke vk_candles+118 20
+wait 120
+# decor references: left tower, top of the frame (no sprite of the fight is there)
+set left colors(0, 40, 48, 190)
+set top colors(60, 34, 200, 42)
+shot zzr-decor-before
+# the hourglass: leave the entrance alcove to the left, jump (C), DOWN in the air
+hold LEFT 10
+hold C 4
+wait 6
+hold DOWN 2
+wait 3
+expect ram8('vk_candles+118') == 15 # 5 hearts spent by the hourglass
+expect enemies.timeStop != 0 # time stopped
+shot zzr-decor-sablier
+# A+B during the stopped time (the debug shortcut)
+wait 30
+hold A+B 4
+wait 10
+expect colors(0, 40, 48, 190) == left and colors(60, 34, 200, 42) == top # decor intact after A+B
+shot zzr-decor-ab
+# pause during the stopped time, then back
+tap START
+wait 10
+expect colors(0, 40, 48, 190) == left and colors(60, 34, 200, 42) == top # decor intact in pause
+shot zzr-decor-pause
+tap START
+wait 60
+expect colors(0, 40, 48, 190) == left and colors(60, 34, 200, 42) == top # decor intact after the pause
+# A+B again once the time runs again
+until enemies.timeStop == 0 max 900
+hold A+B 4
+wait 10
+expect colors(0, 40, 48, 190) == left and colors(60, 34, 200, 42) == top # decor intact at the end of the stopped time
+shot zzr-decor-end

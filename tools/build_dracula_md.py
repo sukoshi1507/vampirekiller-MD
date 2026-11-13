@@ -22,7 +22,7 @@ def generate():
    mem[base+11]=pose;h.call(0x6445);cells=[]
    for k in range(0,mem[base+32],2):
     a=base+34+5*k
-    if not(mem[a+3]&15):continue
+    if not((mem[a+3]|mem[a+8])&15):continue
     dy=(mem[a]-160+128)%256-128;dx=(mem[a+1]-128+128)%256-128
     pixels=[[0]*16 for _ in range(16)]
     for b in (a,a+5):

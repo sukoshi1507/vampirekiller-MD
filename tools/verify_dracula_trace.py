@@ -46,7 +46,7 @@ def compare(lib,h,name,p):
   if mem[a]:
    for k in range(0,mem[a+32],2):
     b=a+34+5*k
-    if mem[b+3]&15:expected.append(list(mem[b:b+3]))
+    if (mem[b+3]|mem[b+8])&15:expected.append(list(mem[b:b+3]))   # a pair is drawn when either layer has a colour (the ball F0: colour 0 then 8, openMSX SAT)
  sprites=(C.c_int*108)();n=lib.d18_sprites(sprites)
  assert [list(sprites[3*i:3*i+3]) for i in range(n)]==expected,(name,p,'sprites',list(sprites)[:3*n],expected)
  ce=(C.c_ubyte*128)();lib.d18_ce(ce)

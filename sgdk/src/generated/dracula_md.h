@@ -2,6 +2,6 @@
 #ifndef VK_DRACULA_MD_H
 #define VK_DRACULA_MD_H
 #include <genesis.h>
-#define VK_DRACULA_TILE_COUNT 92
-extern const u32 vk_dracula_tiles[736];
+#define VK_DRACULA_TILE_COUNT 96
+extern const u32 vk_dracula_tiles[768];
 #endif

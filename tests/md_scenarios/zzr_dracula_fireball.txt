@@ -1,0 +1,17 @@
+# Dracula form 1: the D700 shots (type 05h, pose 3, AC05 -> 9F6D; the ball F0 is drawn by 6445 in the second layer of the pair, colour 8)
+# must be on the screen and move. They were created by the logic but never drawn: the generator of the pose cells dropped a pair when
+# its first layer had colour 0 (tools/build_dracula_md.py). Walked route to room 9, real god mode only (Enemies_god, no freeze).
+include zzq_stage18_route.txt
+poke Enemies_god 1
+# the shots appear 4 passes after the opening of the first form (dracula.c state 4); D700 slot 0 = dracula+224 (VKDracula.shot)
+until ram8('dracula+224') == 5 max 1500
+wait 2
+set x0 ram8('dracula+229')
+# the ball (tile 760 + 44 of the type 5 block) is linked in the sprite list, at X - 8 of the object
+expect any(abs(s[1] - (x0 - 8)) <= 4 for s in linked_sprites(804, 807)) # shot 0 on screen
+shot zzr-fireball-0
+wait 8
+# some passes later the shot has moved (vx 280h per pass) and its sprite followed it
+expect ram8('dracula+229') != x0 # shot moved
+expect any(abs(s[1] - (ram8('dracula+229') - 8)) <= 4 for s in linked_sprites(804, 807)) # sprite followed the shot
+shot zzr-fireball-1

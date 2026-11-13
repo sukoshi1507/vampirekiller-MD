@@ -839,7 +839,10 @@ int main(bool hardReset)
                     vk_candles_relight(&vk_candles);
                     /* Hall room 0 redraws its scene, which holds the baked candles. */
                     if (vk_front_mode == FRONT_COURTYARD) vk_reset_training_target();
-                    else show_hall_room(vk_game.room);
+                    /* Not in Dracula's room: its background lives in the tile blocks of the room cells (dracula_view.c); redrawing the
+                     * ordinary room 9 over them left the decor filled with the tiles of the other rooms (tester photo, A+B pressed
+                     * with the jump of the time stop), and nothing draws Dracula's view again while the room stays the same. */
+                    else if (!(vk_boss.in_room && vk_boss.kind == 5)) show_hall_room(vk_game.room);
                 }
                 vk_game.items = vk_candles.c431;
                 vk_step_platforms();
