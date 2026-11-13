@@ -71,10 +71,13 @@ Ce qui fonctionne dans la ROM Mega Drive :
   par zombie, chauve-souris ou panthère, 200 par homme-poisson, table `81CE`), stage
   (00 dans la cour), cœurs et vies ; « PLAYER » et « ENEMY » à leurs positions MSX.
 - **Pause** : START met le jeu en pause avec le son du MSX2 (silence, jingle, puis
-  reprise de la musique où elle était) ; A+START retourne au titre (raccourci de debug).
-- **Raccourcis de debug** : C au titre lance une partie au stage 2 ; en jeu, A+GAUCHE ou
-  A+DROITE change de salle dans le stage courant ; le code Konami ouvre le test du son au titre,
-  et, en pause, le choix du stage et de la salle ainsi que le god mode (A le coupe ou le remet).
+  reprise de la musique où elle était).
+- **Raccourcis de debug** : C au titre lance une partie au stage 2 ; le code Konami ouvre le test du son au titre,
+  et, en pause, le choix du stage et de la salle (B y va, C quitte) ainsi que le god mode (A le
+  coupe ou le remet) et les raccourcis en jeu (START les active ou les coupe). Ces raccourcis sont
+  coupés par défaut ; actifs : A+START retourne au titre, A+GAUCHE ou A+DROITE change de salle,
+  A+B rallume les bougies (et ne donne pas de coup de fouet). Coupés, A est sans effet sur le
+  fouet et les bords de salle.
 - **Son** : musiques et effets MSX2 émulés depuis le pilote de la ROM sur le PSG
   (`research/audio-driver.md`). Ajout du port : le cri de Wilhelm (CC0) quand Simon
   tombe dans un trou ou dans l'eau.
@@ -171,10 +174,11 @@ L'arrêt du temps garde la touche du MSX2 : BAS nouvellement pressé en l'air, h
 l'image d'un coup de fouet. En l'air, BAS ne sert à rien d'autre (l'accroupi n'existe
 qu'au sol), et aucun bouton A n'entre en jeu : les raccourcis de debug restent libres.
 
-Debug : A+START retourne au titre, A+GAUCHE / A+DROITE change de salle, A+B rallume les
+Debug (raccourcis en jeu coupés par défaut, activés par START dans le sélecteur de stage) :
+A+START retourne au titre, A+GAUCHE / A+DROITE change de salle, A+B rallume les
 bougies de la salle ; au titre, C lance une partie au stage 2 et A ouvre l'explorateur
 de salles (B y lance la partie dans la salle affichée) ; le code Konami ouvre le test du son
-au titre, et en pause le choix du stage et de la salle avec le god mode (A le coupe ou le remet).
+au titre, et en pause le choix du stage et de la salle avec le god mode (A le coupe ou le remet) et les raccourcis (START).
 
 ## Construire la ROM
 

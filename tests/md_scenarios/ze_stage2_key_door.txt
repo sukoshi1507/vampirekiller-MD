@@ -11,6 +11,7 @@ wait 30
 expect game.stage == 2 and game.room == 0
 # Salle 5 : salle 4 par la memoire, puis A+DROITE (debug), comme le scenario l.
 poke vk_game+20 4
+poke vk_debug_keys 1                               # debug shortcuts are off by default
 hold A 3
 hold A+RIGHT 3
 wait 10

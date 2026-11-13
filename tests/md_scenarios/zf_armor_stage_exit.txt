@@ -7,6 +7,7 @@
 include boot_to_courtyard.inc
 until front_mode == MODES['INTERIOR'] max 3000 RIGHT
 # Salle 7 du hall par le changement de salle debug (A tenu, puis A+DROITE).
+poke vk_debug_keys 1                               # debug shortcuts are off by default
 hold A 3
 hold A+RIGHT 3
 wait 10

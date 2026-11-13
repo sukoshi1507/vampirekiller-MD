@@ -3,6 +3,7 @@
 # prise quand le minuteur tombe a 0, 11 images plus tard (MSX : 957 -> 968, research/stage6-boss.md).
 include boot_to_courtyard.inc
 until front_mode == MODES['INTERIOR'] max 3000 RIGHT
+poke vk_debug_keys 1                               # debug shortcuts are off by default
 hold A 3
 hold A+RIGHT 3
 wait 10

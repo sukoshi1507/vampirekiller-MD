@@ -46,6 +46,7 @@ shot zv-salle3
 # Salle 1, plateforme : table 906C, un premier pas au chargement (6398), puis un pas par passe de 2 images.
 # Le god mode (touche A du selecteur) ecarte les objets 08, comme le C42D poke de la trace.
 poke Enemies_god 1
+poke vk_debug_keys 1                               # debug shortcuts are off by default
 hold A 3
 hold A+LEFT 3
 # Salle 2 : un objet 06 (table fixe), memes positions que la trace.

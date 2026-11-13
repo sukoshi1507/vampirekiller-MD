@@ -6,6 +6,7 @@
 include zy_enter4.inc
 poke Enemies_god 1
 poke vk_game+20 3
+poke vk_debug_keys 1                               # debug shortcuts are off by default
 hold A 3
 hold A+RIGHT 3
 until game.room == 4 max 200

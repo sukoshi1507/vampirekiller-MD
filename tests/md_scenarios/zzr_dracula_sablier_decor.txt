@@ -22,6 +22,7 @@ expect enemies.timeStop != 0 # time stopped
 shot zzr-decor-sablier
 # A+B during the stopped time (the debug shortcut)
 wait 30
+poke vk_debug_keys 1                               # debug shortcuts are off by default
 hold A+B 4
 wait 10
 expect colors(0, 40, 48, 190) == left and colors(60, 34, 200, 42) == top # decor intact after A+B

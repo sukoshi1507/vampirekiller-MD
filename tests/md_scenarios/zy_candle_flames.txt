@@ -6,6 +6,7 @@
 #  C (160, 64) objet 02..1D : C800 type 26, motif EC (rond), une ligne plus bas, couleurs 0E, 01, 08, 01 toutes les 2 images (0E jusqu'a T - 1 = 5).
 include boot_to_courtyard.inc
 until front_mode == MODES['INTERIOR'] max 3000 RIGHT
+poke vk_debug_keys 1                               # debug shortcuts are off by default
 hold A 3
 hold A+RIGHT 3
 wait 10

@@ -190,13 +190,13 @@ class Emulator:
 
 def symbol_offsets(path):
     found = {}
-    for match in re.finditer(r'^([0-9a-fA-F]+)\s+[bB]\s+(player|whip|test_target|courtyard_flame)$',
+    for match in re.finditer(r'^([0-9a-fA-F]+)\s+[bB]\s+(player|whip|test_target|courtyard_flame|vk_debug_keys)$',
                              path.read_text(), re.M):
         found[match[2]] = int(match[1], 16) & 0xFFFF
     # La cour teste ses flammes (vk_targets_tick sur courtyard_flame), plus test_target.
     if 'courtyard_flame' in found:
         found['test_target'] = found['courtyard_flame']
-    missing = {'player', 'whip', 'test_target'} - set(found)
+    missing = {'player', 'whip', 'test_target', 'vk_debug_keys'} - set(found)
     if missing:
         raise ValueError(f'symboles absents: {sorted(missing)}')
     return found
@@ -238,6 +238,7 @@ def boot(emu):
     emu.frames(5)
     emu.frames(5, [3])         # START: chateau -> cour
     emu.frames(5)
+    emu.wr8(emu.D, 1)          # debug shortcuts are off by default
     emu.frames(1, [1, 0])      # A+B: reinitialise la cible (FLAME_A, 64,144 dans la cour)
     emu.frames(3)
 
@@ -362,6 +363,7 @@ def main():
     offsets = symbol_offsets(args.symbols)
     emu = Emulator(args.core, args.md_rom)
     emu.set_symbols(offsets['player'], offsets['whip'], offsets['test_target'])
+    emu.D = offsets['vk_debug_keys']
     boot(emu)
     checks, results = [], {}
 

@@ -5,6 +5,7 @@
 # a la main : X objet = Simon + 24 + 22 (cuir : 26, rien ; chaine : 22, mort).
 include boot_to_courtyard.inc
 until front_mode == MODES['INTERIOR'] max 3000 RIGHT
+poke vk_debug_keys 1                               # debug shortcuts are off by default
 hold A 3
 hold A+RIGHT 3
 wait 10

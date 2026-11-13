@@ -520,10 +520,12 @@ static void show_game_over(void)
 
 /* Optional stage selection, reachable ONLY by the Konami code while paused. */
 static bool stage_select;
+/* Debug shortcuts in play (A+B candles, A+LEFT/RIGHT room, A+START title): off by default, toggled in the stage selector. */
+volatile u8 vk_debug_keys;
 static u16 selected_stage, selected_room;
 static void stage_select_draw(void)
 {
-    /* 13 + 10 + 9 cells: within MSX_TEXT_TILE_MAX, the PAUSE text shares these tiles. */
+    /* 13 + 4 + 9 + 7 cells: within MSX_TEXT_TILE_MAX, the PAUSE text shares these tiles. */
     char line[] = "NIV 00 SAL 00";
     line[4] = '0' + selected_stage / 10;
     line[5] = '0' + selected_stage % 10;
@@ -533,15 +535,18 @@ static void stage_select_draw(void)
     vk_msx_text_clear(BG_B, 40, 104, 24);
     vk_msx_text_clear(BG_B, 40, 120, 24);
     vk_msx_text(BG_B, 40, 104, line, MSX_TEXT_TILE_INDEX, TRUE);
-    vk_msx_text(BG_B, 40, 120, "UD LR B OK", MSX_TEXT_TILE_INDEX + 13, TRUE);
+    vk_msx_text(BG_B, 40, 120, "B GO", MSX_TEXT_TILE_INDEX + 13, TRUE);
     vk_msx_text_clear(BG_B, 40, 136, 24);
-    vk_msx_text(BG_B, 40, 136, Enemies_god ? "A GOD ON" : "A GOD OFF", MSX_TEXT_TILE_INDEX + 23, TRUE);
+    vk_msx_text(BG_B, 40, 136, Enemies_god ? "A GOD ON" : "A GOD OFF", MSX_TEXT_TILE_INDEX + 17, TRUE);
+    vk_msx_text_clear(BG_B, 40, 152, 24);
+    vk_msx_text(BG_B, 40, 152, vk_debug_keys ? "S KEY 1" : "S KEY 0", MSX_TEXT_TILE_INDEX + 26, TRUE);
 }
 static void stage_select_clear(void)
 {
     vk_msx_text_clear(BG_B, 40, 104, 24);
     vk_msx_text_clear(BG_B, 40, 120, 24);
     vk_msx_text_clear(BG_B, 40, 136, 24);
+    vk_msx_text_clear(BG_B, 40, 152, 24);
     stage_select = FALSE;
 }
 static void jump_to_stage(u16 stage, u16 room)
@@ -765,7 +770,8 @@ int main(bool hardReset)
                     else if (pressed & BUTTON_RIGHT) { selected_room = (selected_room + 1) % vk_stage_room_count((VKByte)selected_stage); stage_select_draw(); }
                     else if (pressed & BUTTON_B) { jump_to_stage(selected_stage, selected_room); }
                     else if (pressed & BUTTON_A) { Enemies_god ^= 1; stage_select_draw(); }
-                    else if (pressed & (BUTTON_C | BUTTON_START)) { stage_select_clear(); pause_end(); }
+                    else if (pressed & BUTTON_START) { vk_debug_keys ^= 1; stage_select_draw(); }
+                    else if (pressed & BUTTON_C) { stage_select_clear(); pause_end(); }
                 }
                 else if (vk_konami_step(pressed))
                 {
@@ -790,7 +796,7 @@ int main(bool hardReset)
                 if (vk_stage_map_is_open()) vk_candle_view_hud_only();
             }
             /* Debug: A+START goes back to the title. */
-            else if ((pressed & BUTTON_START) && (input.keys & BUTTON_A))
+            else if (vk_debug_keys && (pressed & BUTTON_START) && (input.keys & BUTTON_A))
             {
                 if (vk_game_entrance_locked(&vk_game)) castle_door_front(FALSE);
                 vk_show_title();
@@ -821,7 +827,7 @@ int main(bool hardReset)
                 if (locked) pressed = 0;
                 /* In play, the Konami code only counts while paused. */
                 vk_debug_label_draw();
-                if (vk_front_mode == FRONT_INTERIOR && (held & BUTTON_A) &&
+                if (vk_debug_keys && vk_front_mode == FRONT_INTERIOR && (held & BUTTON_A) &&
                     (pressed & (BUTTON_RIGHT | BUTTON_LEFT)))
                 {
                     int target = (int)vk_game.room + ((pressed & BUTTON_RIGHT) ? 1 : -1);
@@ -833,7 +839,7 @@ int main(bool hardReset)
                     continue;
                 }
                 /* Debug: A+B lights the candles of the room again. */
-                if ((vk_front_mode == FRONT_INTERIOR || vk_front_mode == FRONT_COURTYARD) &&
+                if (vk_debug_keys && (vk_front_mode == FRONT_INTERIOR || vk_front_mode == FRONT_COURTYARD) &&
                     (held & BUTTON_A) && (pressed & BUTTON_B))
                 {
                     vk_candles_relight(&vk_candles);
@@ -857,7 +863,7 @@ int main(bool hardReset)
                 {
                     const bool idle = vk_whip.timer == 0;
                     /* No whip while knocked back: C420 = 5 ignores the controls. */
-                    bool strike = (pressed & BUTTON_B) && !(held & BUTTON_A) && !vk_game_recoiling(&vk_game);
+                    bool strike = (pressed & BUTTON_B) && !(vk_debug_keys && (held & BUTTON_A)) && !vk_game_recoiling(&vk_game);
                     /* 7129-7132: with C416 >= 2 the stroke needs a free slot (71BE). */
                     if (strike && idle && vk_whip_level(&vk_whip) >= VK_WHIP_LEVEL_THROW)
                         strike = vk_weapons_reserve(&vk_weapons, (VKByte)vk_whip_level(&vk_whip));
@@ -894,7 +900,7 @@ int main(bool hardReset)
                     else death_jingle_timer = VK_HEALTH_FALL_JINGLE(VK_HEALTH_FALL_PASSES);
                 }
                 else if (vk_front_mode == FRONT_INTERIOR && direction &&
-                         !(held & BUTTON_A) && !vk_game_recoiling(&vk_game) &&
+                         !(vk_debug_keys && (held & BUTTON_A)) && !vk_game_recoiling(&vk_game) &&
                          vk_room_try_edge(vk_game.stage, &vk_game.room, &vk_game.player, direction))
                 {
                     /* Keep player state across edge; collision map changes on

@@ -9,6 +9,7 @@ wait 4
 hold B 2
 until (ram8('vk_candles+4') & 1) == 0 max 20
 wait 60
+poke vk_debug_keys 1                               # debug shortcuts are off by default
 hold A 3
 set base [pixel(x, y) for x in range(64, 80) for y in range(144, 160)]
 hold A+B 1

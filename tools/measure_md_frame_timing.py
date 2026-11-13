@@ -124,7 +124,7 @@ def main():
 
     # A+B : torches rallumees (vk_reset_training_target) sans fouet : tuiles du support
     # (y 144..151, juste sous la flamme) et flamme (sprite) dans la meme iteration.
-    p.script('wait 30', 'hold A 3')
+    p.script('poke vk_debug_keys 1', 'wait 30', 'hold A 3')
     base = p.image()
     r0 = p.m.frame + 1
     rows = p.record(1, 'A+B', {'lit': 'flames[0].active'}) + p.record(6, 'A', {'lit': 'flames[0].active'})

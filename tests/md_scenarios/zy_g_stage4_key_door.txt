@@ -12,6 +12,7 @@ wait 20
 until ram8('items') & 1 max 200 LEFT
 expect ram8('items+4') == 1 and ram8('items') == 1 # bloc brise par le fouet, cle blanche prise (C701 bit 0)
 poke vk_game+20 2
+poke vk_debug_keys 1                               # debug shortcuts are off by default
 hold A 3
 hold A+RIGHT 3
 until game.room == 3 max 200

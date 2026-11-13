@@ -1,0 +1,25 @@
+# Debug shortcuts (A+B, A+LEFT/RIGHT) are off by default and enabled by the stage selector (START toggles vk_debug_keys).
+# Flag 0: A+B is a plain whip stroke and A+RIGHT changes nothing special. Flag 1: A+B no longer strikes, A+RIGHT changes room.
+include boot_to_courtyard.inc
+until front_mode == MODES['INTERIOR'] max 3000 RIGHT
+expect front_mode == MODES['INTERIOR'] and game.room == 0
+wait 30
+expect ram8('vk_debug_keys') == 0
+# Flag 0: A+B whips.
+hold A+B 2
+expect whip.timer > 0
+until whip.timer == 0 max 60
+wait 5
+# Flag 0: A+RIGHT does not jump to the next room.
+hold A+RIGHT 3
+expect game.room == 0
+wait 10
+# Flag 1: A+RIGHT changes room, A+B does not whip.
+poke vk_debug_keys 1
+hold A 3
+hold A+RIGHT 3
+wait 5
+expect game.room == 1
+wait 20
+hold A+B 2
+expect whip.timer == 0
