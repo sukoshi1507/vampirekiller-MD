@@ -399,7 +399,21 @@ class Harness:
                 return x
             name, _, off = x.partition('+')
             return lookup(self.symbols, name)[0] + (int(off, 0) if off else 0)
+        def linked_sprites(tile_lo=0, tile_hi=0x7FF):
+            # (tile, x, y) of the sprites reachable through the link chain of vdpSpriteCache from entry 0 (stale entries past the end are skipped).
+            base, out, i, seen = addr('vdpSpriteCache'), [], 0, set()
+            while i not in seen and i < 80:
+                seen.add(i)
+                a = base + 8 * i
+                tile = m.rd16(a + 4) & 0x7FF
+                if tile_lo <= tile <= tile_hi:
+                    out.append((tile, m.rd16(a + 6) - 128, m.rd16(a) - 128))
+                i = m.rd16(a + 2) & 0x7F
+                if i == 0:
+                    break
+            return out
         env = {k: ns(v) for k, v in self.state().items()}
+        env['linked_sprites'] = linked_sprites
         env.update(ram8=lambda a: m.rd8(addr(a)), ram16=lambda a: m.rd16(addr(a)),
                    ram32=lambda a: m.rd32(addr(a)), abs=abs, min=min, max=max, any=any, all=all,
                    pixel=lambda x, y: m.image().getpixel((x, y)),

@@ -65,10 +65,11 @@ poke vk_boss+21 8
 poke vk_boss+8 160
 poke vk_boss+10 222
 wait 1
-tap B
-until ram8('vk_boss+21') == 0 max 20
-expect ram8('vk_boss+3') == 0
+until ram8('vk_boss+192') != 0 max 20 B # 7806 -> 9A3A : flamme de mort du corps
+expect ram8('vk_boss+21') == 0 and ram8('vk_boss+3') == 0
 set t3 frame
+set ex [(ram8('vk_boss+10'), ram8('vk_boss+8') - 24)]
+include zzs_boss_flame.inc
 until ram8('vk_boss+28') == 1 max 200
 expect 120 <= frame - t3 <= 130 # trace D : 1897 -> 2021
 shot zz-mort

@@ -61,9 +61,11 @@ poke vk_game+0 28
 poke vk_boss+8 176
 poke vk_boss+10 48
 wait 1
-tap B
-until ram8('vk_boss+21') == 0 max 20
-expect ram8('vk_boss+3') == 0
+until ram8('vk_boss+192') != 0 max 20 B # 7806 -> 9A3A : flamme de mort du corps
+expect ram8('vk_boss+21') == 0 and ram8('vk_boss+3') == 0
+set ex [(ram8('vk_boss+10'), ram8('vk_boss+8') - 24)]
+expect ex[0][0] >= 40 and ex[0][0] <= 60 # le corps du dernier coup, 18h plus haut (trace : Y B9 -> A1)
+include zzs_boss_flame.inc
 wait 4
 until ram8('vk_boss+28') == 1 max 200
 until ram8('vk_boss+34') == 1 max 500

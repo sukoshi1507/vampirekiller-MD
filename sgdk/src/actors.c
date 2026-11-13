@@ -940,6 +940,7 @@ static u16 show_enemy_sprites(u16 tail)
         if(vk_boss.kind==5)boss_count=vk_dracula_view_sprites(&dracula,(u16)(ENEMY_SPRITE_BASE+count),tail);
         else {
         n=vk_boss_sprites(&vk_boss, boss);
+        n=vk_boss_body_flames(&vk_boss, boss, n, (u8)vtimer);   /* death flames of the bodies of stages 3, 6, 9 (boss_body_flames.c) */
         /* Stage15 SAT order: body0..11, C800 loot, then D700 projectiles.
          * Other boss/shared allocations remain under the explicit pool reserve. */
         if(vk_boss.kind==4)boss_body_count=vk_boss.orb?1:vk_boss.walker[0].alive==1?6:vk_boss.walker[0].alive==2?1:0;

@@ -107,3 +107,5 @@ Les flammes 26 utilisent le même test (limite de stage au lieu de `< 9`, plus d
   flammes de mort des boss (`CE00` non nul : aucune différence de forme relevée, mort à script).
 - Comparaison à l'image près avec le MSX : la mise à jour du port et celle de la passe MSX sont alignées par la règle des deux images de `frame-timing.md` ; le calendrier d'affichage du MSX (P + 3)
   n'est pas mesuré sur le port (la flamme suit le retard de tous les sprites d'ennemis).
+
+La flamme des corps de boss des stages 3, 6 et 9 (34 images, relance par `B6AB`) est dans `research/boss-body-flame.md`.

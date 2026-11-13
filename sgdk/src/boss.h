@@ -167,5 +167,9 @@ const VKBossShot *vk_boss_shot_data(const VKBoss *b,int i);
 /* 8390 -> 847A on the landed orb (B832: +E = 2). Sets CE11. */
 int vk_boss_orb_touch(VKBoss *b, int simon_x, int simon_y, int state);
 int vk_boss_sprites(const VKBoss *b, VKBossSprite out[VK_BOSS_MAX_SPRITES]);
+/* boss_body_flames.c (MD build): the 1E flames of the bodies of stages 3, 6, 9 (research/boss-body-flame.md), timed on VBlanks (now = low byte of vtimer);
+ * the pictures are appended, once per frame, to the n sprites of vk_boss_sprites (new count returned). */
+#define VK_BOSS_FLAME_FRAMES 34   /* frames on screen */
+int vk_boss_body_flames(VKBoss *b, VKBossSprite *out, int n, unsigned char now);
 
 #endif

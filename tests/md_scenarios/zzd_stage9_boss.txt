@@ -103,10 +103,12 @@ poke vk_boss+21 4
 poke vk_boss+78 30720 16
 poke vk_boss+98 58880 16
 wait 1
-tap B
-until ram8('vk_boss+21') == 0 max 30
-expect ram8('vk_boss+3') == 0 and ram8('vk_boss+64') == 0 and ram8('vk_boss+84') == 0
+until ram8('vk_boss+192') != 0 max 30 B # 7806 -> 9A3A : une flamme par corps
+expect ram8('vk_boss+21') == 0 and ram8('vk_boss+3') == 0 and ram8('vk_boss+64') == 0 and ram8('vk_boss+84') == 0
+expect ram8('vk_boss+193') != 0
 set t3 frame
+set ex [(ram8('vk_boss+78'), ram8('vk_boss+76') - 24), (ram8('vk_boss+98'), ram8('vk_boss+96') - 24)]
+include zzs_boss_flame.inc
 until ram8('vk_boss+28') == 1 max 200
 expect 120 <= frame - t3 <= 135
 shot zzd-mort
