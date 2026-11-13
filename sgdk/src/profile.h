@@ -1,5 +1,6 @@
 #ifndef VK_PROFILE_H
 #define VK_PROFILE_H
+#ifdef __m68k__
 #include <genesis.h>
 
 /* Frame budget instrumentation (research/room-draw-budget.md).
@@ -39,5 +40,10 @@ static inline u32 vk_prof_lines(void)
 #else
 #define VK_MARK(i) ((void)0)
 #endif
+
+#else   /* native test builds (tests/run_*.sh compile the enemy code with the host compiler) */
+#define VK_MARK(i) ((void)0)
+static volatile unsigned short vk_draws;
+#endif /* __m68k__ */
 
 #endif
