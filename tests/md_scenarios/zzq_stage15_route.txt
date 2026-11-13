@@ -38,7 +38,6 @@ tap DOWN
 tap B
 until game.stage == 15 and game.room == 0 max 300
 poke Enemies_god 1
-poke vk_enemies+162 1
 until game.player.mode == 0 max 300
 wait 10
 write items 8 ram8('items') | 1

@@ -1,0 +1,114 @@
+# (zzq) Stage 16 a la manette, de la salle 0 a la porte de la salle 5 puis au stage 17 : 0 -> 1 -> 2 -> 3 -> 4 -> 5 (tout par la gauche, sauts
+# a gauche en C+LEFT, aucune pose sauf l'invulnerabilite et la cle blanche) -> porte -> stage 17 salle 0. Parcours trouve par recherche
+# (tools/playthrough_12_18_md.py) sans l'objet saut haut, rejoue ici depuis le vrai selecteur.
+# Not a continuous walk: room selection restarts the game. Action fixtures below are explicitly RAM-set.
+until front_mode == MODES['TITLE'] max 2000
+tap START
+tap START
+until front_mode == MODES['COURTYARD'] max 500
+wait 60
+tap START
+until ram8('paused') == 1 max 30
+tap UP
+tap UP
+tap DOWN
+tap DOWN
+tap LEFT
+tap RIGHT
+tap LEFT
+tap RIGHT
+tap B
+tap A
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap B
+until game.stage == 16 and game.room == 0 max 300
+poke Enemies_god 1
+until game.player.mode == 0 max 300
+wait 10
+write items 8 ram8("items") | 1
+hold - 30
+# salle 0
+hold LEFT 65
+hold LEFT+UP 5
+hold C+LEFT 5
+hold - 20
+hold UP 5
+hold C+LEFT 5
+hold - 20
+hold DOWN 5
+hold C+LEFT 5
+hold - 35
+hold LEFT 55
+hold - 16
+expect game.stage == 16 and game.room == 1
+# salle 1
+hold LEFT 50
+hold C+LEFT 5
+hold - 35
+hold LEFT 25
+hold C+LEFT 5
+hold - 35
+hold LEFT 25
+hold C+LEFT 5
+hold - 35
+hold LEFT 25
+hold - 15
+expect game.stage == 16 and game.room == 2
+# salle 2
+hold LEFT 20
+hold C+LEFT 5
+hold - 35
+hold LEFT 55
+hold C+LEFT 5
+hold - 35
+hold LEFT 85
+hold - 19
+expect game.stage == 16 and game.room == 3
+# salle 3
+hold LEFT 90
+hold C+LEFT 5
+hold - 35
+hold LEFT 25
+hold C+LEFT 5
+hold - 35
+hold LEFT 45
+hold - 19
+expect game.stage == 16 and game.room == 4
+# salle 4
+hold LEFT 20
+hold C+LEFT 5
+hold - 35
+hold LEFT 25
+hold C+LEFT 5
+hold - 35
+hold LEFT 25
+hold C+LEFT 5
+hold - 35
+hold LEFT 55
+hold - 16
+expect game.stage == 16 and game.room == 5
+# salle 5
+hold LEFT 35
+hold C+LEFT 5
+hold - 35
+hold LEFT 35
+hold C+LEFT 5
+hold - 35
+hold LEFT 55
+hold C+LEFT 5
+hold - 182
+expect game.stage == 17 and game.room == 0
