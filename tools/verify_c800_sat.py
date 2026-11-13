@@ -4,7 +4,7 @@ import ctypes as C,json,os,sys
 from pathlib import Path
 from probe import ROOT,load_rom,reference_rom
 from verify_item_trace import setup,val
-from build_c800_sat import collect,SPECS
+from build_c800_sat import collect,SPECS,RAW_Y_SPECIES
 
 def unused(lib,m,label):
  for i in range(2,7):
@@ -14,11 +14,34 @@ def unused(lib,m,label):
   b=(C.c_ubyte*32)();sp=(C.c_int*25)();lib.pools_record(i,b,sp)
   assert bytes(b)==bytes(m[0xD700+128*i:0xD720+128*i]),('inactive D70032',label,i)
 
+def raw_y_case(lib,rom,raw,internal,n,visible,dy):
+ # ROM types 01/04: the port's Enemy.y is the SAT byte of the first entry (object Y - 32 for 01, - 15 for 04), see RAW_Y_SPECIES.  Same checks as
+ # the other species for the 18-entry mask and the references of the next constructor, on the Y values that put an entry at E0 and some around them.
+ off=32 if raw==1 else 15
+ ys=sorted({96,160}|{(224-d-off+k)&255 for d in dy for k in (-1,0,1)}|{(224+off-d)&255 for d in dy})
+ for y in ys:
+  # the real 6445 on each Y: expected mask from the real SAT shadow
+  h=setup(rom,13,3);m=h.cpu.memory;h.call(0x63C5);cmap=(C.c_ubyte*768).from_buffer_copy(m[0xD100:0xD400]);lib.pools_begin(cmap)
+  h.cpu.c=raw;h.cpu.de=(128<<8)|y;h.call(0x5F1D);assert m[0xC800]==raw
+  m[0xC803]=y;m[0xC80B]=0x3B if raw==1 else 0x1B
+  h.cpu.ix=0xC800;h.call(0x6445);h.call(0x64EC);h.call(0x64E5)
+  ent=[m[0xC822+5*i] for i in range(m[0xC820])];assert len(ent)==n
+  b=bytearray(m[0xC800:0xC820]);b[3]=(y-off)&255;b[11]=0
+  assert lib.c800_layout_import(internal,(C.c_ubyte*32).from_buffer_copy(b))==0
+  lib.pools_render();expected=sum((m[0xD638+4*j]!=224)<<j for j in range(18))
+  assert lib.pools_mask()==expected,('SAT raw-Y species',raw,internal,y,hex(lib.pools_mask()),hex(expected))
+  h.cpu.c=30;h.cpu.de=0x8040;h.call(0x5F1D);assert lib.pools_sat_alloc(30,128,64)==1
+  m[0xC88C]=255;lib.item_enemy_metadata(1,(C.c_ubyte*32).from_buffer_copy(m[0xC880:0xC8A0]))
+  refs=(m[0xC8A1],m[0xC8A6]);assert lib.pools_owner(1)==sum(1<<r for r in refs),('reallocated refs',raw,internal,y,refs)
+  print('C800 SAT raw-Y species',raw,internal,y,'mask/refs PASS',flush=True)
+
 def main():
  lib=C.CDLL(str(Path(sys.argv[1]).resolve()));lib.pools_begin.argtypes=[C.POINTER(C.c_ubyte)];rom=load_rom(reference_rom());cases=[]
  only={int(x) for x in os.environ['SAT_RAWS'].split(',')} if os.environ.get('SAT_RAWS') else None   # debugging aid: restrict to some ROM types
  for raw,internal,pose,n,visible,dy in collect():
   if only and raw not in only:continue
+  if raw in {r for r,_ in RAW_Y_SPECIES}:
+   raw_y_case(lib,rom,raw,internal,n,visible,dy);continue
   ys=sorted({96}|{(224-dy[i])&255 for i in range(n) if visible&(1<<i)})
   for y in ys:
    # Species outside SPECS (legacy rows): the port renders them from its own pose set and runs its own AI, proven elsewhere; here only the

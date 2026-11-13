@@ -416,17 +416,22 @@ static void boss9_flash_cells(void)
  * C800[1] references 6..11), the stage 12 rider (15h: C800[0] references 0..5, 18h: C800[1] references 6..7), the stage 18 body (11h:
  * C800[0], 8 references; ys 80/B0/E1, never E0, so held until it dies) and the 2-entry D700 shots (types 6, 7, 0Ah, 05h: references 17 16,
  * 15 14, 13 12 for D700[0..2]; port slot k + 1).
- * Not held: the flame that replaces a stage 12 body at its death (alive 2) and the
- * other C800 objects of the stage 18 fight. */
+ * The death flame that replaces a body of stage 12 / 15 (walker alive 2; 7806 -> 9A3A: 99F6 frees the body, 5F1D builds a 1E of 2 entries on the
+ * first two free references, in the order of the blocks) is held for its 16 passes; a body turning into a flame is released first, even when the count
+ * stays 2 (the rider 18h: references 6,7 -> 2,3 when CE0B is set).  Checked on the real 7806 by tools/verify_boss_bodies_sat.py (flames()). */
 /* Stage 12 rider + 0Ah shots held (1) or not (0); checked against 5F1D/9F6D/99F6 by tools/verify_boss_bodies_sat.py. */
 #define BOSS12_SAT_HOLD 1
 static int boss15_pool(int slot,int count){return Enemies_boss15_reserve(&vk_enemies,slot,count);}
-static VKBossU8 boss_held[2];   /* last count requested for C800[0] (which 0, slot 0) and C800[1] (which 1, slot 9) */
+static VKBossU8 boss_held[7];   /* last count requested for C800[which] (which 0: slot 0, 1: slot 9, 2..6: slots 10..14), BOSS_FLAME_HELD when a death flame */
 static VKBossU8 boss_shot_held[VK_BOSS_MAX_SHOTS];   /* D700 shots held for kinds 1, 2, 3 (2 slots) and 5 (8 slots) */
-static void boss_body_hold(int which,int count)
+#define BOSS_SLOT(which) ((which)==0?0:(which)==1?9:(which)+8)   /* allocator slot of C800[which] */
+#define BOSS_FLAME_HELD 0x80   /* boss_held flag: the entries held are those of a death flame */
+static void boss_body_hold(int which,int count,int flame)
 {
- if(boss_held[which]==count)return;
- if(boss15_pool(which?9:0,count)>0)boss_held[which]=(VKBossU8)count;
+ const int want=count|(flame?BOSS_FLAME_HELD:0);
+ if(boss_held[which]==want)return;
+ if(flame && boss_held[which] && !(boss_held[which]&BOSS_FLAME_HELD)){if(boss15_pool(BOSS_SLOT(which),0)<=0)return;boss_held[which]=0;}
+ if(boss15_pool(BOSS_SLOT(which),count)>0)boss_held[which]=(VKBossU8)want;
 }
 static void boss_shot_hold(int i,int active)
 {
@@ -437,10 +442,13 @@ static void boss_shot_hold(int i,int active)
  * reorder the lazy SAT assignment of the objects). */
 static void boss_bodies_sync(void)
 {
- if(vk_boss.kind<=1){if(vk_boss.alive||boss_held[0])boss_body_hold(0,vk_boss.alive?8:0);return;}
+ if(vk_boss.kind<=1){if(vk_boss.alive||boss_held[0])boss_body_hold(0,vk_boss.alive?8:0,0);return;}
  if(vk_boss.walker[0].alive||vk_boss.walker[1].alive||boss_held[0]||boss_held[1]){
-  if(vk_boss.kind==3){boss_body_hold(0,vk_boss.walker[0].alive==1?6:0);boss_body_hold(1,vk_boss.walker[1].alive==1?2:0);return;}
-  boss_body_hold(0,vk_boss.walker[0].alive?6:0);boss_body_hold(1,vk_boss.walker[1].alive?6:0);
+  if(vk_boss.kind==3){
+   const int a0=vk_boss.walker[0].alive,a1=vk_boss.walker[1].alive;
+   boss_body_hold(0,a0==1?6:a0?2:0,a0==2);boss_body_hold(1,a1?2:0,a1==2);return;
+  }
+  boss_body_hold(0,vk_boss.walker[0].alive?6:0,0);boss_body_hold(1,vk_boss.walker[1].alive?6:0,0);
  }
 }
 /* 2-entry D700 shots of the bosses of stages 6, 9 and 12 (two slots). */
@@ -450,18 +458,33 @@ static void boss_shots_sync(void)
  if(vk_boss.kind<1 || vk_boss.kind>2+BOSS12_SAT_HOLD)return;
  for(i=0;i<VK_BOSS_SHOTS;i++)boss_shot_hold(i,vk_boss.shot[i].active!=0);
 }
-/* Stage 18 (dracula.c owns the objects, every other pass): the body 11h is object type 17, the shots are D700 05h / 0Ch. */
+/* Stage 18 (dracula.c owns the objects, every other pass): C800 objects 11h (8 entries), 17h (none), 1Eh flame, 2Ch/2Dh/2Eh shots (2 entries each, the
+ * 5F1D counts of table 6057 read on the ROM) hold the references of their physical block k = index in d->object (slots 0, 9, 10..14 of the allocator)
+ * from their creation until they are killed: 6445 puts their entries at object Y - 15 (flame - 16/15), so the SAT Y reaches E0 only at object Y 239,
+ * beyond the kill threshold E4 (99E5) that dracula.c move() applies (tools/verify_dracula_sat.py).  The D700 shots 05h/0Ch are held per slot.
+ * An object that changed type in its slot (2Ch killed, flame 1E built there) is released first: the ROM frees it with 99F6 and 5F1D takes the lowest
+ * free references again.  Releases come before the new holds, then the holds in block order (the order of 5F1D inside a pass). */
+static VKBossU8 dracula_held_type[7];
+static int dracula_sat_count(int type){return type==17?8:type==23?0:2;}
 static void dracula_sat_sync(void)
 {
- const VKDracula *d=vk_dracula_state();int i,body=0;
- for(i=0;i<7;i++)if(d->object[i][0]==17){body=1;break;}
- if(body||boss_held[0])boss_body_hold(0,body?8:0);
+ const VKDracula *d=vk_dracula_state();int i;
+ for(i=0;i<7;i++){
+  const int t=d->object[i][0];
+  if(boss_held[i] && dracula_held_type[i]!=t){boss_body_hold(i,0,0);if(!boss_held[i])dracula_held_type[i]=0;}
+ }
+ for(i=0;i<7;i++){
+  const int t=d->object[i][0];
+  if(t && !boss_held[i] && dracula_sat_count(t)){boss_body_hold(i,dracula_sat_count(t),0);if(boss_held[i])dracula_held_type[i]=(VKBossU8)t;}
+ }
  for(i=0;i<8;i++)boss_shot_hold(i,d->shot[i][0]!=0);
 }
 static void boss15_pool_sync(void){
  int i;
  if(!vk_boss.in_room || vk_boss.kind!=4)return;
- if(!vk_boss.walker[0].alive)boss15_pool(0,0);
+ if(vk_boss.walker[0].alive==2){   /* the 16h body became a flame (2 entries) */
+  if(boss_held[0]!=(2|BOSS_FLAME_HELD)){if(boss15_pool(0,0)>0 && boss15_pool(0,2)>0)boss_held[0]=2|BOSS_FLAME_HELD;}
+ }else if(!vk_boss.walker[0].alive){boss15_pool(0,0);boss_held[0]=0;}
  for(i=0;i<VK_BOSS_MAX_SHOTS;i++)if(!vk_boss_shot_data(&vk_boss,i)->active)boss15_pool(i+1,0);
 }
 
@@ -474,7 +497,7 @@ __attribute__((noinline)) static void boss_bodies_step(void)
 static void step_boss(const EnemyRoomVars *v)
 {
     int events, hit = 0;
-    if (!vk_boss.in_room) {int k;boss_held[0] = boss_held[1] = 0;for(k=0;k<VK_BOSS_MAX_SHOTS;k++)boss_shot_held[k]=0;return;}   /* leaving the room resets the allocator (Enemies_init) */
+    if (!vk_boss.in_room) {int k;for(k=0;k<7;k++){boss_held[k]=0;dracula_held_type[k]=0;}for(k=0;k<VK_BOSS_MAX_SHOTS;k++)boss_shot_held[k]=0;return;}   /* leaving the room resets the allocator (Enemies_init) */
     if(vk_boss.kind==5){dracula_step(v);dracula_sat_sync();return;}
     boss15_pool_sync();boss_bodies_step();
     events = vk_boss_frame(&vk_boss, v->simonX, v->simonY, v->difficulty, vk_enemies.frozen,
