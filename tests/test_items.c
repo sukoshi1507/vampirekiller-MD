@@ -64,6 +64,7 @@ int main(void)
 
     /* K3: facing right at (228, 96) the door opens and the key goes (7743). */
     g.player.facing = 0;
+    it.c003 = 117;                                   /* C003 of the opening pass in the openMSX trace of the pose phase */
     assert(vk_items_tick(&it, &g) == VK_ITEM_DOOR_OPENED);
     assert(!(it.keys & VK_KEY_WHITE) && vk_items_controls_locked(&it));
     assert(vk_items_door_lift(&it) == 0);
@@ -75,11 +76,12 @@ int main(void)
     /* Simon walks alone: x 229 at t 91 (frame 5890), one pixel every four frames. */
     for (; t < 91; t++) (void)vk_items_tick(&it, &g);
     assert(g.player.x == 229 && it.door == VK_DOOR_WALKING);
-    assert(g.player.pose == 0);                      /* 778A -> 6CA4: walk poses 0, 1, 2, 1, 8 frames each */
-    for (; t < 95; t++) (void)vk_items_tick(&it, &g);
-    assert(g.player.x == 230);
-    for (; t < 95 + 8; t++) (void)vk_items_tick(&it, &g);
+    /* 778A -> 6CA4: pose 2, 1, 0, 1 from bits 3-2 of C003 (117 + (n - 1) / 2): 2 up to row 94, 1 from 95, 0 from 103 */
     assert(g.player.pose == 2);
+    for (; t < 95; t++) (void)vk_items_tick(&it, &g);
+    assert(g.player.x == 230 && g.player.pose == 1);
+    for (; t < 95 + 8; t++) (void)vk_items_tick(&it, &g);
+    assert(g.player.pose == 0);
     for (; t < 167; t++) assert(vk_items_tick(&it, &g) != VK_ITEM_STAGE_EXIT);
     assert(g.player.x == 248);
     /* Frame 5967: D000 1 -> 2. */
@@ -141,8 +143,8 @@ int main(void)
         (void)vk_items_tick(&it, &g);
         assert(g.player.x == 26 && g.player.pose == (t <= 87 ? 4 : 3));
     }
-    (void)vk_items_tick(&it, &g);                    /* t 88: the walk cycle, no pixel yet */
-    assert(g.player.x == 26 && g.player.pose == 3);
+    (void)vk_items_tick(&it, &g);                    /* t 88: first 778A, its pose only shows from row 89, no pixel yet */
+    assert(g.player.x == 26 && g.player.pose == 4);
     (void)vk_items_tick(&it, &g);
     assert(g.player.x == 25 && it.door == VK_DOOR_WALKING);
     for (t = 90; t <= 161; t++)

@@ -6,19 +6,39 @@ include boot_to_courtyard.inc
 until game.room == 2 max 1500 RIGHT                # cour 0 -> 1 -> 2
 until game.entrance == 1 max 600 RIGHT             # zone de la porte (8580)
 set t0 frame
+set c0 enemies.tick                                # C003 de la passe de la porte (7752)
 expect game.player.x == 216 and game.player.y == 176 and game.area == 0 # declenchement a x 216
-wait 40
+until frame - t0 == 1 max 10
+expect player.pose == 0 # pas encore de pose de marche (lignes 1 et 2)
+until frame - t0 == 2 max 10
+expect player.pose == [2, 1, 0, 1][((c0 + (frame - t0) // 2) >> 2) & 3]
+until frame - t0 == 9 max 10
+expect player.pose == [2, 1, 0, 1][((c0 + (frame - t0) // 2) >> 2) & 3]
+until frame - t0 == 17 max 10
+expect player.pose == [2, 1, 0, 1][((c0 + (frame - t0) // 2) >> 2) & 3]
+until frame - t0 == 25 max 10
+expect player.pose == [2, 1, 0, 1][((c0 + (frame - t0) // 2) >> 2) & 3]
+until frame - t0 == 33 max 10
+expect player.pose == [2, 1, 0, 1][((c0 + (frame - t0) // 2) >> 2) & 3]
+until frame - t0 == 40 max 10
 dump marche
 shot h-marche
 expect game.entrance == 1 and game.player.x == 216 + 40 // 4 # marche seule sans DROITE, 1 px / 4 images
 expect ram16('vdpSpriteCache+4') & 0x8000 == 0 # sprite 0 de Simon sans priorite : derriere le montant
-# Cadence des poses retracee sur openMSX (2026-11-13, cour 2 forcee, C42E/C42C par image) : regard a droite, cycle de
-# marche 1, 0, 1, 2 de 8 images par pose pendant que X gagne 1 px toutes les 4 images (2 px par pose).
-until player.pose == 2 max 20
-set k0 frame
-set x0 player.x
-until player.pose == 1 max 20
-expect frame - k0 == 8 and player.x - x0 == 2 and player.facing == 0 # 8 images par pose, 2 px, regard a droite
+# Cadence des poses retracee sur openMSX (2026-11-13, cour 2 forcee, C42E/C42C par image) : regard a droite, 8 images par
+# pose pendant que X gagne 1 px toutes les 4 images (2 px par pose).
+# Phase (openMSX, 63 lignes, C003 172 a la porte) : 6CA4 prend la pose dans les bits 3-2 de C003 (00 -> 2, 01 -> 1,
+# 10 -> 0, 11 -> 1) ; a l'image t apres la porte C003 = C003 de la porte + t // 2, pose 0 pour t < 2
+# (research/door-pose-phase.md). Le cycle suit le compteur global, pas le debut de la marche.
+expect player.facing == 0
+until frame - t0 == 41 max 10
+expect player.pose == [2, 1, 0, 1][((c0 + (frame - t0) // 2) >> 2) & 3]
+until frame - t0 == 49 max 10
+expect player.pose == [2, 1, 0, 1][((c0 + (frame - t0) // 2) >> 2) & 3]
+until frame - t0 == 57 max 10
+expect player.pose == [2, 1, 0, 1][((c0 + (frame - t0) // 2) >> 2) & 3]
+until frame - t0 == 63 max 10
+expect player.pose == [2, 1, 0, 1][((c0 + (frame - t0) // 2) >> 2) & 3]
 until game.entrance == 3 max 60
 expect frame - t0 == 67 # sortie a x 232 (t 64) + 3 images
 expect game.area == 1 and game.room == 0 and front_mode == MODES['COURTYARD'] # hall en logique, ecran noir

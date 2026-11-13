@@ -185,11 +185,14 @@ static VKEvent vk_entrance_tick(VKGame *game)
             vk_player_tick_controls(p, vk_game_collision(game), 0, 0, 0, 0, 0);
             return VK_EVENT_NONE;
         }
+        /* 778A -> 6CA4 (openMSX, cour 2, C003 172 at the door, 63 rows): the pose comes from bits 3-2 of C003
+         * (00 -> 2, 01 -> 1, 10 -> 0, 11 -> 1), C003 of the row n = entrance_c003 + (n - 1) / 2 with n = step + 1;
+         * rows 1 and 2 keep the pose 0 (research/door-pose-phase.md). */
         {
-            /* MSX2 walk cycle (player.c): poses 0,1,2,1 held 8 frames each. */
-            static const VKByte walk_frames[4] = {0, 1, 2, 1};
+            static const VKByte walk_pose[4] = {2, 1, 0, 1};
+            const int step = game->entrance_step + 1;   /* the step counted below */
             p->clock++;
-            p->pose = (VKByte)(walk_frames[(p->clock >> 3) & 3] + (p->facing ? 3 : 0));
+            p->pose = (VKByte)((step >= 2 ? walk_pose[((game->entrance_c003 + (step >> 1)) >> 2) & 3] : 0) + (p->facing ? 3 : 0));
         }
         game->entrance_step++;
         if (!p->facing)
@@ -477,6 +480,7 @@ VKEvent vk_game_tick_controls(VKGame *game, int direction, int jump, int up, int
     else if (vk_entrance_zone(game))
     {
         game->entrance = VK_ENTRANCE_WALK;
+        game->entrance_c003 = game->c003;
         game->entrance_step = 0;
         game->entrance_timer = 0;
         p->crouched = 0;

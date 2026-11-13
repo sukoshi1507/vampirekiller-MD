@@ -54,7 +54,7 @@ int main(void)
         for(t=1;t<=(s->door_x<128?138:168);t++) {
             VKItemEvent ev;oldx=g.player.x;ev=vk_items_tick(&it,&g);
             assert(s->door_x<128 ? g.player.x<=oldx : g.player.x>=oldx);
-            assert(t<=87 || (g.player.pose>=3)==(s->door_x<128)); /* walk poses of the side Simon faces */
+            assert(t<=88 || (g.player.pose>=3)==(s->door_x<128)); /* walk poses (the opening pose is kept up to t 88) of the side Simon faces */
             assert((ev==VK_ITEM_STAGE_EXIT)==(t==(s->door_x<128?138:168)));
         }
         assert(!vk_items_controls_locked(&it));

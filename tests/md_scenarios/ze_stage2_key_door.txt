@@ -53,17 +53,18 @@ shot ze-porte-fermee
 until ram8('items+2') == 1 max 120 RIGHT
 expect game.player.x == 228 # ouverture a x 228, regard a droite (MSX : image 6908)
 expect ram8('items') == 0 # cle consommee (7743)
+set t0 frame
+set c0 enemies.tick
 wait 60
 shot ze-porte-levee
 # 778A -> 6CA4 : Simon marche vers la porte avec le cycle de la marche, poses 0, 1, 2, 1 de 8 images.
-until ram8('items+2') == 2 max 60
-expect game.player.pose == 0 and game.player.facing == 0
-until game.player.pose == 1 max 20
-set k0 frame
-until game.player.pose == 2 max 20
-expect frame - k0 == 8
-until game.player.pose == 1 max 20
-until game.player.pose == 0 max 20
+# Phase de C003 (research/door-pose-phase.md) : pose = [2, 1, 0, 1][(C003 >> 2) & 3], C003 = celui de l'ouverture + (n - 1) // 2.
+until frame - t0 == 89 max 100
+expect game.player.pose == [2, 1, 0, 1][((c0 + (frame - t0 - 1) // 2) >> 2) & 3]
+until frame - t0 == 103 max 20
+expect game.player.pose == [2, 1, 0, 1][((c0 + (frame - t0 - 1) // 2) >> 2) & 3]
+until frame - t0 == 120 max 20
+expect game.player.pose == [2, 1, 0, 1][((c0 + (frame - t0 - 1) // 2) >> 2) & 3]
 until game.stage == 3 max 200                       # porte franchie : stage suivant (D000 + 1)
 expect front_mode == MODES['INTERIOR'] and game.room == 0
 expect game.player.x == 16 and game.player.y == 96

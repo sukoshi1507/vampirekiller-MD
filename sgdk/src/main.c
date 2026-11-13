@@ -359,6 +359,13 @@ static void castle_door_front(bool front)
         }
 }
 
+/* C003 once this frame's pass has counted (414D runs before the door and entrance code): tick, +1 on the first frame of
+ * a pass (itemPhase 1, Enemies_frame runs later in the frame). */
+static VKByte c003_now(void)
+{
+    return (VKByte)(vk_enemies.tick + (vk_enemies.itemPhase ? 1 : 0));
+}
+
 /* One frame of the castle entrance: Simon walks in alone behind the door jamb,
  * the screen goes black for 36 frames, then the hall comes up (gameplay.c). The
  * MSX turns the display off (R1 bit 6); here the four palettes go black instead,
@@ -368,6 +375,7 @@ static void begin_room_freeze(void);
 static void castle_entrance_step(void)
 {
     static const u16 black[64] = {0};
+    vk_game.c003 = c003_now();
     const VKEvent event = vk_game_tick_controls(&vk_game, 0, 0, 0, 0);
     vk_player = vk_game.player;
     if (event == VK_EVENT_ENTER)
@@ -856,6 +864,7 @@ int main(bool hardReset)
                 /* 6DAE: C006 bit 5 is the jump key of 4BBB, UP on the keyboard and button 2 on a joystick (PSG
                  * register 14 bit 5); held DOWN + new UP cannot be done on a D-pad, so the jump button C of the
                  * port opens the passage too (openMSX, stage 12 room 0: DOWN held, UP pressed, C420 = 7). */
+                vk_game.c003 = c003_now();
                 if (!secret_controls(jump || (pressed & BUTTON_UP), &event))
                     event = vk_game_tick_controls(&vk_game, direction,
                         jump, !!(held & BUTTON_UP), !!(held & BUTTON_DOWN));
@@ -912,6 +921,7 @@ int main(bool hardReset)
                 {
                     VK_MARK(46);
                     items.attacking = vk_whip.timer != 0;   /* C422, 7FE2 */
+                    items.c003 = c003_now();
                     const VKItemEvent item = vk_items_tick(&items, &vk_game);
                     VK_MARK(47);
                     vk_player = vk_game.player;
