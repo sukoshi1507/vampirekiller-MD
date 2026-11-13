@@ -58,6 +58,9 @@ def main():
  if not a.free_third:
   # Four MD images elapsed after the hit: two logical C500 passes.
   h.call(0x8A4A);h.call(0x8A4A)
+ # No image is lost any more in this room (research/room-draw-budget.md): the four images are four turns, and whether the hit pass or one more falls
+ # in them depends on the parity of the pass counter at the hit: two or three logical passes.
+ if not a.free_third and native_fallback!=bytes(z[0xC500:0xC510]):h.call(0x8A4A)
  if not a.free_third:assert native_fallback==bytes(z[0xC500:0xC510]),('C500 IX16',native_fallback.hex(),bytes(z[0xC500:0xC510]).hex())
  if a.free_third:assert m.rd8(e)==0 and m.rd8(e+18)==1,'body owns physical C8000, loot must be C8001'
  correct=len(ordinary)==expected_ordinary and after==9
