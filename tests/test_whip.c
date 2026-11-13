@@ -188,7 +188,22 @@ int main(void)
                 frames++;
                 if(!w.timer) break;
             }
-            assert(launches==1 && frames==6 && w.timer==0);
+            assert(launches==1 && frames==(i>=3 ? 9 : 6) && w.timer==0);
+        }
+        /* Axe and cross (traced, research/throw-timing.md): C422 = 1 idle tick, then upper 12 x2,
+         * 13 x3, 14 x3, launch on the 9th tick after the press (the dagger: 6). */
+        for(i=3;i<=4;i++){
+            static const int heavy[9] = {-1,0,0,1,1,1,2,2,2};
+            int k;
+            vk_whip_reset(&w);
+            assert(vk_whip_set_level(&w,i)==0);
+            vk_whip_tick(&w,&p,1);
+            for(k=0;k<9;k++){
+                assert(vk_whip_arm_frame(&w)==(heavy[k]>=0));
+                if(heavy[k]>=0) assert(vk_whip_visual_step(&w)==heavy[k]);
+                vk_whip_tick(&w,&p,0);
+            }
+            assert(w.timer==0 && vk_whip_arm_frame(&w)==0);
         }
         vk_whip_reset(&w);
         assert(vk_whip_set_level(&w,1)==0);

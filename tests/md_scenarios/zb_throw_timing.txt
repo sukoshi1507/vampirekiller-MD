@@ -1,0 +1,59 @@
+# (zb) Duree du lancer : dague 6 ticks, hache et croix 9 ticks (research/throw-timing.md, trace openMSX).
+# L'objet est pose sous Simon dans le premier emplacement C500 de vk_candles (voir
+# t_item_effects) ; C416 = vk_candles+120, coeurs C417 = +118, C701 = +322.
+# vk_weapons : emplacement C450 +0..+8 (etat, type, dy, dx, Y, X, motif, compteur, sens),
+# C460 +9..+17. C434 (enemy_state+143) protege Simon des ennemis pendant le scenario.
+include boot_to_courtyard.inc
+until front_mode == MODES['INTERIOR'] max 3000 RIGHT
+wait 40                                            # fin de l'etat 9 de la salle 0
+poke vk_game+0 136
+wait 2
+poke vk_candles+118 12                             # 12 coeurs
+poke vk_candles+7 128
+poke vk_candles+8 176
+poke vk_candles+9 0x1B
+poke vk_candles+10 0xFF
+poke vk_candles+11 0
+poke vk_candles+6 3
+wait 2
+expect ram8('vk_candles+6') == 0 and ram8('vk_candles+120') == 2 and whip.level == 2 # dague 1B : C416 = 2 (8D70)
+poke enemy_state+143 0x96
+until whip.timer == 0 max 30
+# Image de l'appui = timer 14 ; la dague part au timer 8 (6 ticks), hache et croix au timer 5 (9 ticks).
+hold B 1
+expect whip.timer == 14
+wait 5
+expect whip.timer == 9 and ram8('vk_weapons+4') == 0xE0
+wait 1
+expect whip.timer == 0   # fin du lancer ; l'arme est visible au plus deux images apres
+wait 2
+expect ram8('vk_weapons+4') != 0xE0 # lancee au 6e tick (MSX : 2038 -> 2044)
+wait 150
+until ram8('vk_weapons+0') == 0 max 200
+poke vk_candles+9 0x1C
+poke vk_candles+6 3
+wait 2
+expect whip.level == 3
+until whip.timer == 0 max 30
+hold B 1
+expect whip.timer == 14
+wait 8
+expect whip.timer == 6 and ram8('vk_weapons+4') == 0xE0 # encore dans la pose 14 (3 ticks)
+wait 1
+expect whip.timer == 0   # fin du lancer ; l'arme est visible au plus deux images apres
+wait 2
+expect ram8('vk_weapons+4') != 0xE0 # lancee au 9e tick (MSX : 1938 -> 1947)
+until ram8('vk_weapons+0') == 0 max 300
+poke vk_candles+9 0x1D
+poke vk_candles+6 3
+wait 2
+expect whip.level == 4
+until whip.timer == 0 max 30
+hold B 1
+expect whip.timer == 14
+wait 8
+expect whip.timer == 6 and ram8('vk_weapons+4') == 0xE0
+wait 1
+expect whip.timer == 0   # fin du lancer ; l'arme est visible au plus deux images apres
+wait 2
+expect ram8('vk_weapons+4') != 0xE0 # croix : 9 ticks (MSX : 2201 -> 2210)

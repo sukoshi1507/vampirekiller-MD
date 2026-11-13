@@ -9,6 +9,10 @@
 /* Timer where a throw ends (C422 = 4 -> 7286, the 4th pass of 2 frames): the slot
  * is launched and the stroke is over. */
 #define VK_WHIP_THROW_END 8
+/* Axe and cross (C416 3, 4): each pass takes 3 ticks (heavy graphics load 5593), so the
+ * stroke lasts 9 ticks and ends at timer 5 (research/throw-timing.md). */
+#define VK_WHIP_LEVEL_HEAVY 3
+#define VK_WHIP_HEAVY_END 5
 typedef struct { VKByte timer; VKByte facing; VKByte x; VKByte y; VKByte crouched; VKByte level; } VKWhip;
 void vk_whip_reset(VKWhip *w);
 /* One frame. Returns 1 on the frame a throw (level >= 2) ends: launch the shot. */

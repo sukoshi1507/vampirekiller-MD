@@ -31,7 +31,8 @@ int vk_whip_tick(VKWhip *w, const VKPlayer *p, int attack_pressed)
     else if (attack_pressed) w->timer = 14;
     /* C416 >= 2: the stroke is 4 passes (71FA C42F 12, 7240 13, 7250 14, 7262 ->
      * 7286): at the 4th, C422 = 0 and the reserved slot is launched (weapons.c). */
-    if (w->level >= VK_WHIP_LEVEL_THROW && w->timer == VK_WHIP_THROW_END)
+    if (w->level >= VK_WHIP_LEVEL_THROW
+        && w->timer == (w->level >= VK_WHIP_LEVEL_HEAVY ? VK_WHIP_HEAVY_END : VK_WHIP_THROW_END))
     {
         w->timer = 0;
         return 1;
@@ -103,11 +104,21 @@ static const VKAttackKey vk_attack_keys_level2[15] = {
     {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {1,2,3},
     {1,2,3}, {1,1,2}, {1,1,2}, {1,0,1}, {1,0,1}
 };
+/* Axe and cross (C416 3, 4): the same four passes last 9 ticks instead of 6, because the
+ * decompression 5593 of their larger graphics makes each pass take 3 ticks (C003 +1 per 3 ticks,
+ * traced openMSX, research/throw-timing.md). From the press (timer 14): one idle tick (C422 = 1,
+ * C42F = 0), upper 12 for 2 ticks, 13 for 3, 14 for 3, launch on the 10th tick (timer 5). */
+static const VKAttackKey vk_attack_keys_level3[15] = {
+    {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0},
+    {0,0,0}, {1,2,3}, {1,2,3}, {1,2,3}, {1,1,2},
+    {1,1,2}, {1,1,2}, {1,0,1}, {1,0,1}, {0,0,0}
+};
 #define VK_WHIP_LEVEL_SHORT 2
 
 static const VKAttackKey *vk_attack_key(const VKWhip *w)
 {
-    const VKAttackKey *keys = w->level >= VK_WHIP_LEVEL_SHORT ? vk_attack_keys_level2 : vk_attack_keys;
+    const VKAttackKey *keys = w->level >= VK_WHIP_LEVEL_HEAVY ? vk_attack_keys_level3
+        : (w->level >= VK_WHIP_LEVEL_SHORT ? vk_attack_keys_level2 : vk_attack_keys);
     return &keys[w->timer <= 14 ? w->timer : 0];
 }
 
