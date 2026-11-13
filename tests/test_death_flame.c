@@ -36,6 +36,8 @@ static const int kTypes[][4] = {
     { ENEMY_TYPE_8, 0x64, 0xC4, 0xC4 },     { ENEMY_TYPE_7, 0x58, 0x78, 0x78 },     { ENEMY_TYPE_STATUE, 0xC0, 0x50, 0x40 },
     { ENEMY_TYPE_HOPPER, 0x44, 0x90, 0x80 }, { ENEMY_TYPE_FLEA, 0x78, 0xBB, 0xBB }, { ENEMY_TYPE_LEAPER, 0x70, 0x80, 0x80 },
     { ENEMY_TYPE_GHOST, 0x40, 0x70, 0x70 },
+    /* Z80 (tools/verify_death_flame_z80.py, 9A3E run on the ROM): 9B33[03] = 9B33[21h] = 10h (the port had 0), 9B33[0F] = 18h. */
+    { ENEMY_TYPE_FISH3, 0x78, 0xB0, 0xA0 },   { ENEMY_TYPE_EAGLE, 0x78, 0xB0, 0x98 },
 };
 
 /* Trace A, flame created in the pass 631, state at the start of the passes 632 to 647: (+B, +C). */

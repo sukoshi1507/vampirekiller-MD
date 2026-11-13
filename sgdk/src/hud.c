@@ -125,38 +125,67 @@ static void show_labels(void)
                            0, HUD_ROW, LABEL_COLS, HUD_ROWS);
 }
 
+/* Changed fields go through the DMA queue (static buffers: the transfer is at the next V-Int); a forced redraw (room drawing,
+ * display off) writes the tiles at once. A score change used to cost ~160 lines of CPU writes in the turn. */
+static char shown_score_text[16];
+static bool score_text_shown;   /* the score tiles hold shown_score_text (set by a forced draw) */
+static u32 status_buf[4][16 * 8];   /* longest field: SCORE-000000, 12 cells */
+static void status_text(u16 x, const char *text, u16 tile, u32 *buf, bool all)
+{
+    if (all) vk_msx_text(BG_A, x, 0, text, tile, TRUE);
+    else vk_msx_text_queued(BG_A, x, 0, text, tile, TRUE, buf);
+}
+
 /* The four fields of the top line, drawn when forced or changed. */
 static void draw_status(bool all, u32 score, u16 stage, u16 hearts, u16 lives)
 {
     char text[16];
     if (all || score != shown_score)
     {
-        u32 v = score;
+        /* score < 10^6: one 32-bit division, the digits by 16-bit ones (the 32-bit libgcc division is ~600 cycles). */
+        const u32 hi = score / 1000;
+        u16 a = (u16)hi, b = (u16)(score - hi * 1000);
         int i;
         strcpy(text, "SCORE-000000");
-        for (i = 11; i >= 6; i--) { text[i] = (char)('0' + v % 10); v /= 10; }
-        vk_msx_text(BG_A, 8, 0, text, SCORE_TILE, TRUE);
+        for (i = 11; i >= 9; i--) { text[i] = (char)('0' + b % 10); b /= 10; }
+        for (i = 8; i >= 6; i--) { text[i] = (char)('0' + a % 10); a /= 10; }
+        if (all || !score_text_shown) status_text(8, text, SCORE_TILE, status_buf[0], all);
+        else
+        {
+            /* x = 8: one cell per character, only the changed ones are composed and queued; the tile map is unchanged. */
+            int k = 0;
+            while (k < 12)
+            {
+                int n;
+                if (text[k] == shown_score_text[k]) { k++; continue; }
+                for (n = k; n < 12 && text[n] != shown_score_text[n]; n++) vk_msx_glyph_cell(&status_buf[0][n * 8], text[n]);
+                VDP_loadTileData(&status_buf[0][k * 8], (u16)(SCORE_TILE + k), (u16)(n - k), DMA_QUEUE);
+                k = n;
+            }
+        }
+        strcpy(shown_score_text, text);
+        score_text_shown = TRUE;
         shown_score = score;
     }
     if (all || stage != shown_stage)
     {
         strcpy(text, "STAGE-00");
         digits2(text + 6, stage);
-        vk_msx_text(BG_A, 108, 0, text, STAGE_TILE, TRUE);
+        status_text(108, text, STAGE_TILE, status_buf[1], all);
         shown_stage = stage;
     }
     if (all || hearts != shown_hearts)
     {
         strcpy(text, "`-00");
         digits2(text + 2, hearts);
-        vk_msx_text(BG_A, 176, 0, text, HEART_TILE, TRUE);
+        status_text(176, text, HEART_TILE, status_buf[2], all);
         shown_hearts = hearts;
     }
     if (all || lives != shown_lives)
     {
         strcpy(text, "P-00");
         digits2(text + 2, lives);
-        vk_msx_text(BG_A, 212, 0, text, LIVES_TILE, TRUE);
+        status_text(212, text, LIVES_TILE, status_buf[3], all);
         shown_lives = lives;
     }
 }

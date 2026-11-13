@@ -15,6 +15,10 @@
 /* Draws text (ASCII, letters, digits, space, '-', '`' heart) at pixel x, cell row y / 8 (y is a
  * multiple of 8), from tile index tile on. Returns the number of cells used. */
 u16 vk_msx_text(VDPPlane plane, u16 x, u16 y, const char *text, u16 tile, bool priority);
+/* Same, the tiles go through the DMA queue at the next V-Int: buf (at least cells * 8 u32, static) must stay valid until then. */
+u16 vk_msx_text_queued(VDPPlane plane, u16 x, u16 y, const char *text, u16 tile, bool priority, u32 *buf);
+/* One opaque 8x8 cell of the glyph of c (a text drawn at a multiple of 8 is one such cell per character). */
+void vk_msx_glyph_cell(u32 *cell, char c);
 /* Writes text (opaque 8x8 cells as above) into a block of cols x rows tiles
  * (cells[(row * cols + col) * 8 + line]), at pixel (x, y) of the block; the
  * pixels outside the block are dropped. '-' is the HUD dash, '`' the heart. */

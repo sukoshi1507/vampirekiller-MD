@@ -60,3 +60,19 @@ le jeu reprend 1 image plus tot, donc Simon avance de 2 pixels en avance, et la 
 Le rejeu doit etre re-enregistre (RECORD=1) ; la recherche de route s'est bloquee a l'etape 13 avec
 la nouvelle duree (aucun candidat pour la salle 1 -> 2), a reprendre par l'auteur du rejeu.
 Avec `vk_fast_room_draw = FALSE` (ancien chemin) le rejeu repasse a l'identique.
+
+## Images perdues en jeu dans les salles de boss (2026-11-13)
+
+Le test de fumee (`tools/smoke_rooms_md.py`, 153 salles) comptait 4 a 8 salles avec 1 ou 2 images perdues (tour de boucle qui ne finit pas dans l'image : la passe ne
+bascule pas `itemPhase`). **Le dessin de salle n'est pas en cause** : les tours perdus sont des tours de jeu normaux, mesures par une instrumentation temporaire (lignes
+`vtimer * 262 + compteur V` lues entre les etapes du tour, par le harnais) ; un tour normal fait ~130 lignes sur ~237 disponibles. Les trois couts mesures :
+
+| salle | tour lent | cause | correction |
+|---|---|---|---|
+| stage 9 salle 7 (boss 9) | 340 lignes | `boss9_flash_cells` : tuiles du clignotement des walkers recalculees quartet par quartet (96 mots x 8) et ecrites par CPU, afficheur allume : ~200 lignes | calcul par masques (nibbles 12 -> 8, 14 -> 2, verifie sur 200 000 mots), DMA en file (`actors.c`) |
+| stage 18 salle 9 (Dracula) | 130 a 185 lignes dans `vk_dracula_view_pass` | recomposition du buste (4 couches x 128 mots) a chaque changement de couches : 50 a 120 lignes | les 65 listes de couches possibles (sous-ensembles ordonnes de 1..4, `dracula.c`) sont composees par `tools/build_dracula_background.py` ; le jeu met un DMA en file depuis la ROM (`dracula_view.c`) |
+| stage 9 salle 8 (avant le boss), toute salle ou l'on marque | +100 lignes quand le score change | `vk_msx_text` : composition de 12 caracteres a chaque changement, 6 divisions 32 bits, ecriture CPU des tuiles | une division 32 bits + chiffres 16 bits, seuls les caracteres changes sont composes et mis en file DMA (`hud.c`, `msx_text.c`) |
+
+Faux positif corrige : le tour qui ferme le marchand (stage 7 salle 8) laisse `vk_walls.shop` a 0 alors que le monde est encore fige : le test ignore l'image suivant un tour de marchand.
+Apres correction : 153 salles, 0 image perdue ; le test de fumee echoue desormais s'il en trouve une (`run_smoke_rooms_md.sh`). Les dessins de reapparition et de debut de stage
+gardent l'ancien chemin lent (non en cause, scenarios `zzj_ghost5`, `zzb_stage8` inchanges).

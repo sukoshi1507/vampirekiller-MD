@@ -65,7 +65,7 @@ def main():
             m.image().save(a.out / f'fail-{s:02d}-{room:02d}.png')
             continue
         last, still, lost, worst = None, 0, 0, None
-        where, settle = None, 0
+        where, settle, shop_before = None, 0, 0
         for keys in INPUTS:
             m.wr(addr('Enemies_god'), 1)
             m.run(1, {BUTTONS[k] for k in keys})
@@ -76,9 +76,10 @@ def main():
             settle = 0 if here != where else settle + 1
             where = here
             if (settle > 40 and last is not None and beat[1] == last[1] and m.rd8(addr('health') + 1) == 0 and m.rd8(f) == 0
-                    and not m.rd8(addr('paused')) and not m.rd8(addr('vk_walls') + 348) and m.rd16(mode) == 4):
+                    and not m.rd8(addr('paused')) and not m.rd8(addr('vk_walls') + 348) and not shop_before and m.rd16(mode) == 4):
                 lost += 1; worst = worst or (m.frame, m.rd8(g + 20), m.rd8(g), m.rd8(g + 1))
-                if a.trace: print('  lost', m.frame, beat, [m.rd16(addr('vk_dbg_p') + 2 * i) for i in range(8)])
+                if a.trace: print('  lost', m.frame, beat, keys)
+            shop_before = m.rd8(addr('vk_walls') + 348)   # the turn that closes the merchant leaves 0 with the world still frozen
             still = still + 1 if beat == last else 0
             last = beat
             if still > 60:
@@ -103,7 +104,7 @@ def main():
         print('SLOW stage %d room %d: %d lost frames, first at %s (frame, room, x, y)' % x)
     for x in failures:
         print('FAIL stage %d room %d: %s' % x)
-    raise SystemExit(1 if failures else 0)
+    raise SystemExit(1 if failures or slow else 0)
 
 
 if __name__ == '__main__':

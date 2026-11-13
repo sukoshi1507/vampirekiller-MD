@@ -3,9 +3,12 @@
 #define VK_DRACULA_BACKGROUND_H
 #include <genesis.h>
 #define VK_DRACULA_BACKGROUND_TILES 283
+#define VK_DRACULA_BUST_SETS 65
 extern const u32 vk_dracula_background_tiles[2264];
 extern const u16 vk_dracula_background_map[6][704];
 extern const u16 vk_dracula_background_palette[16];
 extern const u8 vk_dracula_initial_palette[32];
 extern const u32 vk_dracula_bust_tiles[512];
+extern const u32 vk_dracula_bust_sets[VK_DRACULA_BUST_SETS][128];
+extern const u8 vk_dracula_bust_set_of[625];
 #endif

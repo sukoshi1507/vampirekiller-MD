@@ -45,20 +45,15 @@ static void background(const VKDracula *d)
 }
 static void bust(const VKDracula *d)
 {
- int i,n;u16 key=d->bust_count;
- for(i=0;i<d->bust_count;i++)key=(u16)(key*5+d->bust_layers[i]);
- if(last_bust==(s16)key)return;
- for(i=0;i<128;i++)row_words[i]=0;
- for(n=0;n<d->bust_count;n++)for(i=0;i<128;i++){
-  /* Opaque pixels of the layer replace those below: F in each non-zero nibble (bit 0 of every nibble
-   * gathered, then times 15 without a 32-bit multiply). Was a loop of 8 tests a word: ~200 lines a
-   * recomposition, one frame lost every 5 in the Dracula room. */
-  const u32 src=vk_dracula_bust_tiles[(d->bust_layers[n]-1)*128+i];
-  u32 mask=(src|src>>1|src>>2|src>>3)&0x11111111UL;mask=(mask<<4)-mask;
-  row_words[i]=(row_words[i]&~mask)|src;
- }
- /* row_words is only written here, once a frame: the queued DMA reads it at the next V-blank. */
- VDP_loadTileData(row_words,ENEMY4_TILE_INDEX,16,DMA_QUEUE);last_bust=(s16)key;
+ int i,code=0,mul=1;u8 set;
+ /* The bust script keeps an ordered subset of the layers 1..4 (dracula.c): the 65 composites are generated
+  * (tools/build_dracula_background.py), the frame only queues a DMA from ROM. Composing them here took 50 to 120 lines,
+  * one frame lost every 5 in the Dracula room. */
+ for(i=0;i<d->bust_count&&i<4;i++){code+=d->bust_layers[i]*mul;mul*=5;}
+ if(last_bust==(s16)code)return;
+ set=vk_dracula_bust_set_of[code];
+ if(set==255)return;
+ VDP_loadTileData(vk_dracula_bust_sets[set],ENEMY4_TILE_INDEX,16,DMA_QUEUE);last_bust=(s16)code;
 }
 static void credit_row(u16 row)
 {

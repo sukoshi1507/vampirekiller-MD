@@ -28,7 +28,7 @@ wait 100
 poke vk_game+0 44
 poke vk_game+1 104
 expect game.player.y == 104
-wait 3
+wait 4   # pass phase: 3 before the HUD score redraw stopped costing a frame (research/room-draw-budget.md)
 expect game.player.y == 106 and game.player.mode == 4
 wait 2
 expect game.player.y == 110

@@ -25,12 +25,18 @@ Tuiles : `tools/build_boss_md.py`, lancé sur deux traces openMSX non versionné
 - Score 2000 : paire 17 de 81CE (`20 02`), non mesuré.
 - Armes lancées : `shot_touch` h 18h, l 0Ch, 8 ou 12 de dégâts selon C416.
 
+- **Sortie d'écran de la boule (corrigé)** : la boule (D700 type 01, créée par `9F61`, `A08E[12h]` = 01, routine de type `9E77` = RET) passe dans la boucle D700
+  `9E31` comme toutes les boules (`9E58`, déplacement `99B9`, dessin `6445`, puis `99E5` : Y >= E4h, X >= F1h ou X < 7 ; Y et X sont les octets hauts, un Y négatif
+  se replie en FFh). Le port avait des limites « observées » (X < 8, Y >= E0h, Y < 10h) : bille supprimée trop tôt en haut (la ROM la garde jusqu'à Y 0, puis le repli),
+  trop tôt à gauche d'un pixel, trop tôt en bas de 4 px, et sans limite à droite. `boss.c` (`shots_pass`) applique `99E5` pour tous les stages.
+  Preuve : `tools/gen_boss3_ball_vectors.py` crée 85 boules par `9F61` (9 départs, 10 vitesses, stage 3 salle 5) et exécute la boucle ROM `9E31` passe par passe dans l'émulateur Z80 ;
+  `tests/test_boss3_ball.c` rejoue chaque boule dans `shots_pass` : même nombre de passes vivantes, même Y et X à la dernière (haut, gauche, droite et bas couverts).
+
 ## Provisoire, ouvert
 
 - BF32 : `40h - (R >> 2)`, R tracé en 60 appels (A < 80h, uniforme) : `Enemies_randomR() >> 2` (`research/hasard-R.md`).
 - Armes lancées : réarmement désormais lu dans la ROM (`999F`, `research/stage4-enemies.md`), soit 2 coups par
   hache et 6 haches ; non mesuré en jeu.
-- Limites de sortie d'écran de la boule : observées, pas lues dans la ROM.
 - Barre ENEMY remise pleine hors de la salle du boss : instant prouvé au passage de stage (`C418` 0 -> 80h dans l'état 8, trace du
   stage 6, `research/stage6-boss.md`) ; le port la remet à la création de la salle suivante.
 - Recul sur le boss : à l'opposé de son X ; non mesuré.

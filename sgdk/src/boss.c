@@ -318,13 +318,9 @@ static void shots_pass(VKBoss *b)
         else if (b->kind == 1) s->anim++;     /* 9E78 */
         s->y = (unsigned short)(s->y + (unsigned short)s->vy);
         s->x = (unsigned short)(s->x + (unsigned short)s->vx);
-        if (b->kind)
-        {
-            /* 99E5 after the move: Y >= E4h, X >= F1h or X < 7. */
-            if (HI(s->y) >= 0xE4 || HI(s->x) >= 0xF1 || HI(s->x) < 7) s->active = 0;
-        }
-        /* Stage 3, trace: gone past either side (X wraps) and at the bottom. */
-        else if (HI(s->x) < 8 || HI(s->y) >= 0xE0 || HI(s->y) < 0x10) s->active = 0;
+        /* 9E31 (D700 loop: 9E58, 99B9, 6445, then 99E5) for every kind, the stage 3 ball included (type 01, 9E77 = RET): after the move
+         * Y >= E4h, X >= F1h or X < 7 (Y wraps: a ball going up stays until it passes under 0). tests/test_boss3_ball.c runs the ROM loop in a Z80 emulator. */
+        if (HI(s->y) >= 0xE4 || HI(s->x) >= 0xF1 || HI(s->x) < 7) s->active = 0;
     }
 }
 

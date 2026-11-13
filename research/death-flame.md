@@ -27,7 +27,7 @@ en bloc 0 -> bloc 0), à la position **(X, Y - D)** de l'ennemi, D lu dans la ta
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | D | 10 | 10 | 10 | 10 | 10 | 10 | 10 | 18 | 10 | 20 | 18 | 10 | 0 |
 
-Vérifié en trace : 01 (Y A0 -> 90), 02 (BD -> AD, 4A -> 3A), 04 (B2 -> B2), 05 (80 -> 80), 06 (C0 -> B0), 07 (78 -> 78), 08 (C4 -> C4), 0A (50 -> 40), 0B (90 -> 80), 0D (BB -> BB) ;
+**Table lue et exécutée sur la ROM** (`tools/verify_death_flame_z80.py`, `tests/run_death_flame_z80.sh` : `9A3E` dans l'émulateur Z80, un objet de chaque type tué en (120, 176), flamme relevée) : D = octet `9B33 + type` (type 1 en `9B34`), 22 types de la table, 20 flammes créées en (X, Y - D) ; le type 09 devient dormant (`9AA9`), 11h n'est pas effacé par ce chemin. **Types 03 et 21h (homme-poisson du stage 10) : D = 10h**, comme le type 02 ; 0F (aigle) 18h ; 12h-16h 18h ; 11h 20h. Le port avait 0 pour 03 et 21h (`deathOffset` : flamme dessinée 16 px trop bas) : corrigé, `tests/test_death_flame.c` (`kTypes`, FISH3 et EAGLE). Vérifié en trace openMSX : 01 (Y A0 -> 90), 02 (BD -> AD, 4A -> 3A), 04 (B2 -> B2), 05 (80 -> 80), 06 (C0 -> B0), 07 (78 -> 78), 08 (C4 -> C4), 0A (50 -> 40), 0B (90 -> 80), 0D (BB -> BB) ;
 X identique. Octets de la flamme à la création : `+0` 1E, `+1` 0, `+2/+3` Y, `+4/+5` X, `+6` 0 (immobile : `99B9` ne la déplace pas), `+9/+A` 0220 (sans effet), `+B` 85, `+C` 10h,
 `+D` 1, `+E` 0, `+1F` 0 ou 1 (le `B` de `9A58` : tirage du drop), `+7E` 0, `+7F` 1. Le nombre d'entrées SAT de l'objet (table `6057`, type 1E) est 2 : la seconde est
 hors écran (Y 225, couleur 0).
