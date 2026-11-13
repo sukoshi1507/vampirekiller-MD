@@ -33,7 +33,6 @@ tap DOWN
 tap B
 until game.stage == 13 and game.room == 0 max 300
 poke Enemies_god 1
-poke vk_enemies+162 1
 until game.player.mode == 0 max 300
 wait 20
 until game.room == 1 max 600 RIGHT
