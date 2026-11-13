@@ -455,6 +455,7 @@ def fight(G, s, shots, limit=6000):
                 print(f'    dracula fight {i}: simon {G.px},{G.py} dracula energy {G.rd(dr + 608)} front {G.front}', flush=True)
             continue
         bx = G.m.rd16(G.boss + 10) >> 8
+        if G.rd(G.boss + 21) == 0: bx = 0x78         # dead boss: the orb (vk_boss_orb_touch, X 78h) is where to walk, not where the boss fell
         d = bx - G.px
         toward = 7 if d > 0 else 6
         keys = set()

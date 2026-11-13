@@ -181,12 +181,18 @@ void Enemies_loot_handler(EnemyLootHandler callback){loot_handler=callback;}
  *   the poses the ROM handlers reach without the traces showing them (build_c800_sat.py LEGACY_EXTRA, checked by tools/verify_legacy_poses.py);
  * - the stage 6/9/18 D700 shots and the stage 18 body (11h): held by actors.c through Enemies_boss15_reserve, compared with 5F1D/9F6D/99F6 by
  *   tests/run_boss_bodies_sat.sh (including the stage 12 rider 15h + 18h and its 0Ah shots);
- * PROVISIONAL, limited to: the stage 12 death flame that replaces a body, the other stage 18 C800 objects
- * (44h/45h/46h/30/23 of dracula.c) and types 01/04, whose port Y is a SAT Y (their entries stay reserved). */
+ * - the death flame that replaces a body of stage 12 / 15 (2 entries, 16 passes) and the C800 objects of the stage 18 fight (11h, 17h, 1Eh, 2Ch/2Dh/2Eh):
+ *   held by actors.c (boss_bodies_sync, boss15_pool_sync, dracula_sat_sync) in the allocator slots 0, 9, 10..14 = C800[0..6], from 5F1D to the kill
+ *   (tools/verify_boss_bodies_sat.py flames(), tools/verify_dracula_sat.py: no entry of those objects can be at E0 while alive);
+ * - ROM types 01 and 04: their Enemy.y is the SAT byte of the first entry (object Y - 32 / - 15), so their rows (c800_sat.h, build_c800_sat.py
+ *   RAW_Y_SPECIES) are relative to it; compared with 5F1D/6445 on the Y values around E0 by tools/verify_c800_sat.py (raw_y_case).
+ * Nothing in this allocator is provisional any more. */
 static unsigned long sat_used,c800_sat[ENEMY_MAX],d700_sat[ENEMY_PROJECTILE_MAX];
 static EnemyU8 sat_boss,renderStage;
 /* LOT14G: boss15 owns physical C800[0] and D700 slots in this same allocator. */
-static unsigned long boss15_sat[10]; /* 0: C800[0], 1..8: D700[0..7], 9: C800[1] (second 14h walker of stage 9) */
+#define BOSS_SAT_SLOTS 15
+static unsigned long boss15_sat[BOSS_SAT_SLOTS]; /* 0: C800[0], 1..8: D700[0..7], 9: C800[1] (second 14h walker of stage 9), 10..14: C800[2..6] (stage 18 objects) */
+static int bossSlotOfC800(int k){return k==0?0:k==1?9:k+8;}
 static int isProjectile(EnemyU8 type);
 static EnemyU8 satCount(EnemyU8 type);
 static unsigned long *sat_owner(int i){return i<ENEMY_MAX?&c800_sat[i]:&d700_sat[i-ENEMY_MAX];}
@@ -206,18 +212,18 @@ static void sat_sync(EnemyState *s){
  for(i=0,e=s->enemy,o=c800_sat;i<ENEMY_MAX;i++,e++,o++)if(e->active && !*o)*o=sat_reserve(isProjectile(e->type),isProjectile(e->type)?2:satCount(e->type));
  for(i=0,e=vk_projectiles,o=d700_sat;i<ENEMY_PROJECTILE_MAX;i++,e++,o++)if(e->active && !*o)*o=sat_reserve(isProjectile(e->type),isProjectile(e->type)?2:satCount(e->type));
 }
-/* count=0 releases; slot0 is the body, slots1..8 are physical D700 indices, slot9 is C800[1].
+/* count=0 releases; slot0 is the body, slots1..8 are physical D700 indices, slot9 is C800[1], slots10..14 are C800[2..6].
  * Persistent masks retain holes: do not recompute them from active counts. */
 int Enemies_boss15_reserve(EnemyState *s,int slot,int count){
  unsigned long mask;int i,n=0;
- if(slot<0 || slot>9)return 0;
+ if(slot<0 || slot>=BOSS_SAT_SLOTS)return 0;
  sat_sync(s);mask=boss15_sat[slot];
  for(i=0;i<18;i++)n+=(int)((mask>>i)&1);
  if(n==count)return 1;
  if(mask){sat_used&=~mask;boss15_sat[slot]=0;}
  if(!count)return 1;
- if(slot==9 ? s->enemy[1].active : slot ? vk_projectiles[slot-1].active : s->enemy[0].active)return -1;
- mask=sat_reserve(slot!=0 && slot!=9,count);if(!mask)return 0;
+ if(slot>=1 && slot<=8 ? vk_projectiles[slot-1].active : s->enemy[slot==0?0:slot==9?1:slot-8].active)return -1;
+ mask=sat_reserve(slot>=1 && slot<=8,count);if(!mask)return 0;
  boss15_sat[slot]=mask;return 1;
 }
 /* Executed6445 ->64EC/64E5: 1E/0C pose85/86 has one coloured
@@ -298,7 +304,7 @@ void Enemies_setRoom(EnemyState *s)
 {
     EnemyU8 i;
     for (i = 0; i < ENEMY_ALL; i++) clearEnemy(Enemies_slot(s,i));
-    {int j;sat_used=0;sat_boss=0;for(j=0;j<10;j++)boss15_sat[j]=0;for(j=0;j<ENEMY_MAX;j++)c800_sat[j]=0;for(j=0;j<ENEMY_PROJECTILE_MAX;j++)d700_sat[j]=0;}
+    {int j;sat_used=0;sat_boss=0;for(j=0;j<BOSS_SAT_SLOTS;j++)boss15_sat[j]=0;for(j=0;j<ENEMY_MAX;j++)c800_sat[j]=0;for(j=0;j<ENEMY_PROJECTILE_MAX;j++)d700_sat[j]=0;}
     s->parity = 0;
     s->type4Count = ENEMY_TYPE4_COUNT;   /* 9CA9 : CF06 = 08, CF07 = 00 */
     s->type4Side = ENEMY_SIDE_RIGHT;
@@ -1611,7 +1617,7 @@ static Enemy *newObject(EnemyState *s,EnemyU8 type)
    int k,busy=0;for(k=0;k<ENEMY_MAX;k++)if(s->enemy[k].active && isProjectile(s->enemy[k].type) && ext(s,&s->enemy[k])->c10==i)busy=1;
    if(!busy){slot=&vk_projectiles[i];break;}
   }
- }else for(i=0;i<ENEMY_MAX;i++)if(!s->enemy[i].active && !(i==0 && boss15_sat[0]) && !(i==1 && boss15_sat[9])){slot=&s->enemy[i];break;}
+ }else for(i=0;i<ENEMY_MAX;i++)if(!s->enemy[i].active && !boss15_sat[bossSlotOfC800(i)]){slot=&s->enemy[i];break;}
  if(!slot)return 0;
  mask=sat_reserve(isProjectile(type),isProjectile(type)?2:satCount(type));if(!mask)return 0;
  *sat_owner(objectIndex(s,slot))=mask;clearEnemy(slot);slot->active=1;slot->type=type;
