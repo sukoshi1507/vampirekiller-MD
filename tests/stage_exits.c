@@ -49,10 +49,13 @@ int main(void)
         assert(vk_items_tick(&it,&g)==VK_ITEM_NONE);g.player.on_stairs=0;
         assert(vk_items_tick(&it,&g)==VK_ITEM_DOOR_OPENED);
         assert(!(it.keys&VK_KEY_WHITE) && vk_items_controls_locked(&it));
-        for(t=1;t<=168;t++) {
+        /* The walk starts from the X of the opening: right 228 -> 248 at t 167, exit at t 168; left 20 -> 7 at
+         * t 85 + 4 * 13 = 137, exit at t 138 (openMSX: 26 -> 7 at t 161, research/door-room7.md). */
+        for(t=1;t<=(s->door_x<128?138:168);t++) {
             VKItemEvent ev;oldx=g.player.x;ev=vk_items_tick(&it,&g);
             assert(s->door_x<128 ? g.player.x<=oldx : g.player.x>=oldx);
-            assert((ev==VK_ITEM_STAGE_EXIT)==(t==168));
+            assert(t<=87 || (g.player.pose>=3)==(s->door_x<128)); /* walk poses of the side Simon faces */
+            assert((ev==VK_ITEM_STAGE_EXIT)==(t==(s->door_x<128?138:168)));
         }
         assert(!vk_items_controls_locked(&it));
         vk_items_enter_stage(&it);assert(it.door==VK_DOOR_CLOSED && !it.white_key_taken);

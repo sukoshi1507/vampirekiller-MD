@@ -12,6 +12,13 @@ dump marche
 shot h-marche
 expect game.entrance == 1 and game.player.x == 216 + 40 // 4 # marche seule sans DROITE, 1 px / 4 images
 expect ram16('vdpSpriteCache+4') & 0x8000 == 0 # sprite 0 de Simon sans priorite : derriere le montant
+# Cadence des poses retracee sur openMSX (2026-11-13, cour 2 forcee, C42E/C42C par image) : regard a droite, cycle de
+# marche 1, 0, 1, 2 de 8 images par pose pendant que X gagne 1 px toutes les 4 images (2 px par pose).
+until player.pose == 2 max 20
+set k0 frame
+set x0 player.x
+until player.pose == 1 max 20
+expect frame - k0 == 8 and player.x - x0 == 2 and player.facing == 0 # 8 images par pose, 2 px, regard a droite
 until game.entrance == 3 max 60
 expect frame - t0 == 67 # sortie a x 232 (t 64) + 3 images
 expect game.area == 1 and game.room == 0 and front_mode == MODES['COURTYARD'] # hall en logique, ecran noir

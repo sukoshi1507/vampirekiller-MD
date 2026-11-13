@@ -236,3 +236,17 @@ Sans clé (run K2, même route) : le barreau arrête Simon à x 228 sur le rebor
 **Porté** (2026-10-29) : `items.c` (table par stage : clé (salle, X, Y), salle de la porte ; `vk_items_enter_stage` referme la porte et remet la clé dans son bloc à chaque nouveau stage), `item_view.c` (clé du stage 2 = tuiles du décor de la salle + objet 0x18 de la feuille, transparent, comme la copie de `8C7E` ; décor rétabli à la prise ; barreau dessiné dans la salle de porte du stage courant), `main.c`. Tests : `tests/test_items.c`, scénario MD `ze_stage2_key_door` (saut + fouet depuis le bloc immergé, clé au pixel (205,113), prise, porte de la salle 1 à x 228, sortie).
 
 **Sortie du stage 2 (historique, remplacé le 2026-11-04 : la porte mène au stage 3, `research/stages-1-10/GLOBAL_LEVEL_VALIDATION.md`, section « Progression et sélecteur de salle »)** : le MSX passe au stage 3 (alors non porté). Le port effaçait la salle comme pour le GAME OVER (sprites cachés, HUD gardé avec STAGE-03 comme `434F` le compte), coupe la musique, écrit « FIN DU STAGE 2 » et « SUITE NON PORTEE » à la police MSX, puis revient au titre après 378 images (durée du GAME OVER).
+
+## Marche de sortie : sens du regard et X de départ (2026-11-13)
+
+Bug testeur : « au passage des portes, Simon fait du moonwalk ». Trace openMSX image par image (salles forcées, `C701` bit 0 posé, `C427`, `C42C`, `C42E`, `C5AC` à chaque `4028`) : stage 1 salle 7 (porte à droite), stage 4 salle 3 et stage 5 salle 5 (portes à gauche, `C5AE` = 12), cour 2 (entrée du château). t compté depuis l'image de l'ouverture (`7752`).
+
+| Fait | Mesure |
+|---|---|
+| Levée (`C5AC` = 2, 88 images) | Simon garde la pose de marche de la passe d'ouverture (`C42E` 1 ou 11, 12...), pas la pose debout |
+| Porte à droite | X 229 (ouverture) -> 230 à t 91, puis 1 px / 4 images, 248 à t 163, `C000` = 10 à t 164 |
+| Porte à gauche | ouverture à X 26, `C42C` = 1 ; X 25 à t 89 (le premier demi-pixel retire déjà 1), puis 1 px / 4 images, X 7 à t 161, stage + 1 à t 162 |
+| Poses de marche | `6CA4` par `C003` : 8 images par pose, cycle 2, 1, 0, 1 ; à gauche `765F` ajoute 10 (`C42E` 10..12) : Simon regarde la porte |
+| Entrée du château | inchangée : regard à droite, 8 images par pose pour 2 px (identique au port) |
+
+Écarts du port corrigés (`items.c`) : à gauche, les poses 0..2 (regard à droite) étaient utilisées en reculant vers la gauche (le « moonwalk ») ; X sautait de 26 à 20 au début de la marche et finissait à 0 ; pendant la levée Simon reprenait la pose debout. Maintenant : pose de l'ouverture gardée pendant la levée, poses du côté du regard, marche depuis le X de l'ouverture avec le calendrier ci-dessus, sortie à X 248 ou X 7. La phase du cycle de poses reste calée sur le début de la marche (sur MSX elle dépend de `C003` à l'ouverture). Tests : `tests/test_items.c` (porte gauche), scénarios `zy_g_stage4_key_door` (porte gauche, image par image) et `h_castle_entrance` (cadence des poses).

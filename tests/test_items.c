@@ -125,6 +125,34 @@ int main(void)
     vk_items_enter_stage(&it);
     assert(it.door == VK_DOOR_CLOSED && !it.white_key_taken);
 
+    /* Left door, stage 4 room 3 (12, 48), openMSX forced room (Simon from X 34, facing left, C701 bit 0):
+     * opening at X 26 in walk pose C42E = 11, kept 88 frames; then the left walk compositions (C42E 10..12,
+     * 765F), X 25 at t 89 and one pixel every four frames, X 7 at t 161, D000 4 -> 5 at t 162. */
+    vk_items_begin(&it);
+    it.keys = VK_KEY_WHITE;
+    hall(&g, 3, 26, 96);
+    g.stage = 4;
+    g.player.facing = 1;
+    g.player.pose = 4;                               /* left walk pose of the opening pass */
+    assert(vk_items_tick(&it, &g) == VK_ITEM_DOOR_OPENED);
+    for (t = 1; t < 88; t++)
+    {
+        g.player.pose = 3;                           /* the locked controls give the idle pose each frame */
+        (void)vk_items_tick(&it, &g);
+        assert(g.player.x == 26 && g.player.pose == (t <= 87 ? 4 : 3));
+    }
+    (void)vk_items_tick(&it, &g);                    /* t 88: the walk cycle, no pixel yet */
+    assert(g.player.x == 26 && g.player.pose == 3);
+    (void)vk_items_tick(&it, &g);
+    assert(g.player.x == 25 && it.door == VK_DOOR_WALKING);
+    for (t = 90; t <= 161; t++)
+    {
+        assert(vk_items_tick(&it, &g) == VK_ITEM_NONE);
+        assert(g.player.pose >= 3 && g.player.pose <= 5);   /* never the right poses: no moonwalk */
+        assert(g.player.x == 26 - (t - 85) / 4);
+    }
+    assert(g.player.x == 7 && vk_items_tick(&it, &g) == VK_ITEM_STAGE_EXIT);
+
     printf("test_items: OK\n");
     /* New life: a white key not used is lost and back in its hidden block. */
     vk_items_begin(&it);

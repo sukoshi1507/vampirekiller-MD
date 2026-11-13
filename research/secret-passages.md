@@ -71,3 +71,15 @@ PATH=/workspace/toolchains/mars/m68k-elf/bin:/workspace/vk-venv/bin:$PATH PYTHON
 ```
 
 Les scripts sont exécutables et intégrés à run_native.sh (MD optionnel via VK_MD_CORE). research/secret-trace.json est régénérable et exclu des livraisons.
+
+## Touche réelle et manette MD (2026-11-13)
+
+Bug testeur : « niveau 12, le téléporteur ne marche pas ». `C006` bit 5 n'est pas « HAUT » mais la **touche de saut** de `4BBB` : HAUT du clavier (ligne 8, `C007` = 33 : bits 0 et 5) ou **bouton 2 du joystick** (registre PSG 14, bit 5). Trace openMSX (stage 12 salle 0 forcée, Simon en 92,176, une ligne par image) :
+
+| Plan | Résultat |
+|---|---|
+| BAS tenu 20 images, puis BAS + HAUT | `C420` 2 -> 7 à la passe suivante, `C42D` 63, 62... ; `D001` 0 -> 3 après 128 images, X/Y gardés |
+| BAS tenu, puis HAUT seul à l'image même où BAS est relâché | `C420` 2 -> 7 (l'état accroupi de la passe précédente suffit) |
+| BAS tenu, 2 images sans touche, puis HAUT | `C420` 2 -> 0 -> 1 : Simon se relève et saute, pas de passage |
+
+Le port n'acceptait que le front de HAUT, Simon accroupi : sur une croix directionnelle, BAS tenu + HAUT est impossible, et BAS -> HAUT sans image neutre ne se fait pas à la main. Seul le rejeu automatique y arrivait. Correction (`main.c`) : le front du bouton de saut du port (**C**) ouvre aussi le passage, comme le bouton 2 du joystick MSX ; le front de HAUT reste accepté. Pour le joueur : entrer dans l'arche sombre (salle 0 : X 88 à 103, voir la table), **tenir BAS puis appuyer sur C** ; Simon clignote 128 images puis la salle change. Scénario `tests/md_scenarios/zzt_secret_passage_pad.txt` (marche réelle jusqu'à l'arche, BAS / neutre / HAUT sans effet, BAS + C : salle 0 -> 3 -> 0).

@@ -767,7 +767,10 @@ int main(bool hardReset)
                 vk_game.items = vk_candles.c431;
                 vk_step_platforms();
                 VKEvent event;
-                if (!secret_controls(!!(pressed & BUTTON_UP), &event))
+                /* 6DAE: C006 bit 5 is the jump key of 4BBB, UP on the keyboard and button 2 on a joystick (PSG
+                 * register 14 bit 5); held DOWN + new UP cannot be done on a D-pad, so the jump button C of the
+                 * port opens the passage too (openMSX, stage 12 room 0: DOWN held, UP pressed, C420 = 7). */
+                if (!secret_controls(jump || (pressed & BUTTON_UP), &event))
                     event = vk_game_tick_controls(&vk_game, direction,
                         jump, !!(held & BUTTON_UP), !!(held & BUTTON_DOWN));
                 vk_player = vk_game.player;
