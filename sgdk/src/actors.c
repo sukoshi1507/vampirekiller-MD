@@ -12,6 +12,7 @@ _Static_assert(LATE_ENEMY_TILE_INDEX+128<=SHIELD_TILE_INDEX,"late sprites before
 #include "frontend.h"
 #include "room_view.h"
 #include "generated/whip_level2_md.h"
+#include "generated/simon_crouch_levels_md.h"
 #include "generated/enemy_sprites_md.h"
 #include "hud.h"
 #include "generated/boss_md.h"
@@ -1152,7 +1153,8 @@ void vk_show_player(const VKPlayer *shown)
         const bool body = (crouch_mode && shield < 0) || attack_frame;
         const u16 frame_index = attack_frame ? (u16)vk_whip_visual_step(&vk_whip) : 0;
         /* Levels 1 and 2 hold their left-facing standing frames (3..5) as decoded
-         * pictures, so they are drawn without flip. Crouch frames stay on level 0. */
+         * pictures, so they are drawn without flip. The crouch frames 1..3 are replaced by
+         * the level's (load_whip_level) and the left ones are their exact mirror. */
         const bool level_frames = !crouch_mode && attack_frame && vk_whip_level(&vk_whip) != 0;
         const u16 flip = level_frames ? 0 : facing;
         const u16 base = crouch_mode
@@ -1231,11 +1233,28 @@ static void load_whip_level(int level)
         VDP_loadTileData((const u32 *)vk_whip_level2_tiles, WHIP_LEVEL_TILE_INDEX, WHIP_LEVEL_TILE_COUNT, VK_TM);
 }
 
+/* Crouched attack frames 1..3 (C42E 6, upper 6..8 / 9..11 / 12..14 by level, 3 x 32 tiles
+ * right after the idle crouch frame): the level 0 ones are the ones of vk_simon_crouch_tiles,
+ * the other levels' ones are copied over them and level 0 restores them. */
+#define CROUCH_ATTACK_TILES (3 * VK_CROUCH_TILES_PER_FRAME)
+static int crouch_loaded = 0;   /* 0, 1 or 2 (levels 2..4): what the frames 1..3 hold */
+static void load_crouch_level(int level)
+{
+    const int kind = level >= VK_WHIP_LEVEL_THROW ? 2 : level;
+    const unsigned long *src = vk_simon_crouch_tiles + VK_CROUCH_TILES_PER_FRAME * 8;
+    if (level == 1) src = vk_simon_crouch_level_tiles;
+    else if (level >= VK_WHIP_LEVEL_THROW) src = vk_simon_crouch_level_tiles + CROUCH_ATTACK_TILES * 8;
+    if (kind == crouch_loaded) return;
+    crouch_loaded = kind;
+    VDP_loadTileData((const u32 *)src, CROUCH_TILE_INDEX + VK_CROUCH_TILES_PER_FRAME, CROUCH_ATTACK_TILES, DMA_QUEUE);
+}
+
 void vk_set_whip_level(int level)
 {
     if (vk_whip_set_level(&vk_whip, level) < 0) return;
     whip_level_choice = level;
     load_whip_level(level);
+    load_crouch_level(level);
 }
 
 void vk_load_whip_graphics(void)
@@ -1252,9 +1271,11 @@ void vk_load_whip_graphics(void)
     simon_flash_color = 0;
     vk_actors_flush();
     VDP_loadTileData((const u32 *)vk_simon_crouch_tiles, CROUCH_TILE_INDEX, VK_CROUCH_TILE_COUNT, VK_TM);
+    crouch_loaded = 0;
     vk_whip_reset(&vk_whip);
     vk_whip_set_level(&vk_whip, whip_level_choice);
     load_whip_level(vk_whip_level(&vk_whip));
+    load_crouch_level(vk_whip_level(&vk_whip));
     shot_loaded[0] = shot_loaded[1] = -1;
     VDP_loadTileData(vk_death_flame_tiles, DEATH_FLAME_TILE_INDEX, VK_DEATH_FLAME_TILE_COUNT, VK_TM);
     VDP_loadTileData(vk_loot_tiles,LOOT_TILE_INDEX,VK_LOOT_TILE_COUNT, VK_TM);

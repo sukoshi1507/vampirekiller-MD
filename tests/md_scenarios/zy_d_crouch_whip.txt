@@ -1,0 +1,77 @@
+# (zy_d) Fouet accroupi par niveau (research/whip-variants.md, « Accroupi ») : C42E = 6 (droite) / 16 (gauche),
+# meme haut que debout selon C416 : niveau 0 -> 6/7/8, niveau 1 (chaine) -> 9/10/11, niveaux 2-4 (lancer) -> 12/13/14.
+# Les images accroupies sont celles de la ROM (tools/build_simon_crouch_md.py), choisies au chargement du niveau
+# (actors.c, load_crouch_level). L'objet est pose sous Simon comme dans zb_secondary_weapons (1A = fouet chaine,
+# 1B = dague). On compare les pixels de l'ecran avec ceux de l'accroupi au repos : la pointe du fouet niveau 1
+# (x +33..+39, y -17..-11) n'existe qu'a partir de la composition 6/11 ; la pose de lancer 6/14 n'a ni pointe ni
+# fouet au dela de x +12.
+include boot_to_courtyard.inc
+until front_mode == MODES['INTERIOR'] max 3000 RIGHT
+wait 40
+poke vk_game+0 136
+wait 2
+poke enemy_state+143 0x96
+hold DOWN 6
+expect game.player.crouched == 1
+set bx game.player.x
+set by game.player.y
+# Niveau 0 : fouet de cuir, portee x +32 : rien a x +33..+39.
+set base0 colors(bx + 33, by - 17, bx + 40, by - 10)
+hold DOWN+B 1
+expect whip.timer == 14 and whip.crouched == 1 and whip.level == 0
+until whip.timer == 6 max 20 DOWN
+expect len([1 for i, p in enumerate(colors(bx + 33, by - 17, bx + 40, by - 10)) if p != base0[i]]) == 0
+shot crouch-level0
+until whip.timer == 0 max 30
+# Niveau 1 : fouet chaine (objet 1A), pointe jusqu'a x +39.
+poke vk_candles+118 12
+poke vk_candles+7 128
+poke vk_candles+8 176
+poke vk_candles+9 0x1A
+poke vk_candles+10 0xFF
+poke vk_candles+11 0
+poke vk_candles+6 3
+wait 2
+expect whip.level == 1 and ram8('vk_candles+120') == 1
+hold DOWN 6
+expect game.player.crouched == 1
+set base1 colors(bx + 33, by - 17, bx + 40, by - 10)
+hold DOWN+B 1
+expect whip.timer == 14 and whip.crouched == 1 and whip.level == 1
+until whip.timer == 6 max 20 DOWN
+expect len([1 for i, p in enumerate(colors(bx + 33, by - 17, bx + 40, by - 10)) if p != base1[i]]) >= 10
+shot crouch-level1
+until whip.timer == 0 max 30
+# Niveau 1, a gauche : meme pointe, en miroir (x -39..-33).
+hold LEFT 2
+hold DOWN 6
+expect game.player.crouched == 1 and game.player.facing == 1
+set bx game.player.x
+set by game.player.y
+set basel colors(bx - 39, by - 17, bx - 32, by - 10)
+hold DOWN+B 1
+expect whip.timer == 14 and whip.crouched == 1 and whip.facing == 1
+until whip.timer == 6 max 20 DOWN
+expect len([1 for i, p in enumerate(colors(bx - 39, by - 17, bx - 32, by - 10)) if p != basel[i]]) >= 10
+shot crouch-level1-left
+until whip.timer == 0 max 30
+# Niveaux 2-4 : dague (1B), pose de lancer 6/12..14 : pas de pointe a x +33..+39, bras jusqu'a x +12.
+poke vk_candles+9 0x1B
+poke vk_candles+6 3
+wait 2
+expect whip.level == 2
+hold RIGHT 2
+hold DOWN 6
+expect game.player.crouched == 1 and game.player.facing == 0
+set bx game.player.x
+set by game.player.y
+set base2f colors(bx + 33, by - 17, bx + 40, by - 10)
+set base2 colors(bx + 8, by - 17, bx + 13, by - 9)
+hold DOWN+B 1
+expect whip.timer == 14 and whip.crouched == 1 and whip.level == 2
+until whip.timer == 9 max 20 DOWN
+hold DOWN 1
+expect len([1 for i, p in enumerate(colors(bx + 8, by - 17, bx + 13, by - 9)) if p != base2[i]]) >= 6
+expect len([1 for i, p in enumerate(colors(bx + 33, by - 17, bx + 40, by - 10)) if p != base2f[i]]) == 0 # pas de pointe
+shot crouch-level2
+until whip.timer == 0 max 30

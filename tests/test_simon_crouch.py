@@ -55,4 +55,50 @@ class TestCrouch(unittest.TestCase):
                                 idx=(word>>(4*(7-px)))&15
                                 alpha=cand.getpixel((half*32+tx*8+px,ty*8+py))[3]
                                 assert (idx!=0)==(alpha!=0), (f['png'],half,tx,ty,py,px)
+    def test_level_frames(self):
+        # Crouched attack of whip levels 1 (upper 9-11) and 2 (12-14), lower 6: 3 frames each,
+        # right facing, in simon_crouch_levels_md.c (research/whip-variants.md, "Accroupi").
+        header=(GEN/'simon_crouch_levels_md.h').read_text()
+        assert 'VK_CROUCH_LEVEL_FRAME_COUNT 6' in header
+        assert 'VK_CROUCH_LEVEL_TILES_PER_FRAME 32' in header
+        assert len((GEN/'simon_crouch_levels_md.c').read_text().split('0x'))==6*32*8+1
+        meta=json.loads((GEN/'simon_crouch_manifest.json').read_text())
+        lv=meta['level_frame_assignments']
+        assert [(f['level'],f['lower_index'],f['upper_index']) for f in lv]==\
+            [(1,6,9),(1,6,10),(1,6,11),(2,6,12),(2,6,13),(2,6,14)]
+        from PIL import Image
+        def right(name):
+            im=Image.open(GEN/name).convert('RGBA')
+            return max(x for x in range(im.width) for y in range(im.height) if im.getpixel((x,y))[3])-24
+        # Level 0 lash tip x +32, level 1 x +39, thrown pose arm up to x +12.
+        assert right('crouch-candidate-3.png')==32
+        assert right('crouch-level1-2.png')==39
+        assert right('crouch-level2-2.png')==12
+    def test_left_is_exact_mirror_of_right(self):
+        # The engine draws the crouched left attack (C42E 16, upper +15) by flipping the right
+        # frames: checked against the ROM compositions on the shared 64x32 canvas (origin x-24
+        # right, x-39 left), levels 0, 1 and 2.
+        import sys
+        sys.path.insert(0,str(ROOT/'tools'))
+        from PIL import Image, ImageOps
+        from probe import load_rom, reference_rom
+        from extract_rooms import decode_room
+        if not reference_rom().exists():
+            self.skipTest('reference ROM not available')
+        import build_simon_crouch_md as b
+        rom=load_rom(reference_rom())
+        palette=decode_room(rom,1,0)[0]['palette_rgb333']
+        colors=[tuple(round(v*255/7) for v in rgb) for rgb in palette]
+        def left(low,up):
+            from decode_extended_simon import components, render
+            lo=components(rom,low,'lower'); u=components(rom,up,'upper')
+            lo['offsets_dy_dx']=[(dy-6,dx) for dy,dx in lo['offsets_dy_dx']]
+            pic,_,bd=render([lo,u],colors)
+            bb=pic.getbbox(); c=Image.new('RGBA',(64,32))
+            c.alpha_composite(pic.crop(bb),(bd['min_x']+bb[0]+39,bd['min_y']+bb[1]+30))
+            return c
+        for r,l in [((6,6),(16,21)),((6,7),(16,22)),((6,8),(16,23)),((6,9),(16,24)),((6,10),(16,25)),
+                    ((6,11),(16,26)),((6,12),(16,27)),((6,13),(16,28)),((6,14),(16,29))]:
+            canvas,_=b.build_frame(rom,*r,colors,allow_unplaced=True)
+            assert ImageOps.mirror(canvas).tobytes()==left(*l).tobytes(), (r,l)
 if __name__=='__main__':unittest.main()

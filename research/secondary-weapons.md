@@ -123,7 +123,7 @@ Captures (hors dépôt) : `scratchpad/secondary-weapons/` (MSX `msx_f02466.png` 
 
 ## 9. Ouvert
 
-- Lancer accroupi : la pose accroupie (composition 6 / 12-14) n'est pas dessinée à part.
+- Lancer accroupi : la pose accroupie (composition 6 / 12-14) est dessinée (13 novembre, `whip-variants.md` section 6 ; `simon_crouch_levels_md`).
 - Cadence des passes : le port fait une passe toutes les deux images avec sa propre phase,
   non calée sur `C003` de la ROM (à ±1 image).
 - Objets muraux (`80DC`) touchés par les projectiles : non portés.

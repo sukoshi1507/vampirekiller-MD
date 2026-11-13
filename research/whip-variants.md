@@ -70,6 +70,20 @@ Les niveaux 2 et 3 n'ont été mesurés qu'une fois chacun. Les durées diffère
 
 Les frames (6,6), (6,7), (6,8) générées depuis la ROM (`tools/build_simon_crouch_md.py`, canevas 64x32 à l'ancrage de l'attaque) montrent un fouet qui se déploie : enroulé puis tendu vers l'avant (rendu inspecté visuellement, non comparé à une capture MSX).
 
+### 6. Port : accroupi selon le niveau du fouet (corrigé le 13 novembre)
+
+Défaut signalé : accroupi, le port affichait toujours le fouet de base, car seules (6,6..8) existaient. La mesure par niveau (« Accroupi » plus bas, prouvée) donne `C42E` = 6 (droite) / 16 (gauche) avec le même haut que debout : niveau 0 → 6/7/8, niveau 1 → 9/10/11, niveaux 2 à 4 (lancer) → 12/13/14 (gauche : 21-23, 24-26, 27-29).
+
+- `tools/build_simon_crouch_md.py` génère maintenant `sgdk/src/generated/simon_crouch_levels_md.{c,h}` : (6,9..11) et (6,12..14), 3 images de 32 tuiles chacune, avec le même décalage de 6 px sur le bas que (6,6..8) (mêmes ancrage 64x32, origine x-24, y-25).
+- Pas de frames gauches séparées : les compositions gauches ROM (16 + 21..29) sont, sur le canevas partagé (origine x-39), **l'image miroir exacte** (0 pixel de différence, 9 paires, `tests/test_simon_crouch.py::test_left_is_exact_mirror_of_right`) des droites. Le port garde donc le retournement des images accroupies du niveau 0.
+- (6,12) porte 4 couches de masque sans position dans la ROM (couches 2 à 5 du haut) : jamais dessinées, comme pour la pose debout 12 (la VRAM du MSX ne les contient pas, voir `whip_levels_manifest.json`).
+- Moteur (`actors.c`, `load_crouch_level`) : les images accroupies 1 à 3 de la zone `CROUCH_TILE_INDEX` (l'image 0 reste l'accroupi au repos) sont remplacées à l'acquisition du fouet chaîne (objet 1A) ou d'une arme lancée (1B-1D), et restaurées à 0 : 96 tuiles recopiées au changement de niveau seulement (file DMA : une copie synchrone au ramassage faisait perdre un appui B d'une image dans zb_secondary_weapons), aucune zone VRAM nouvelle. Le chargement de salle ne recopie que si le niveau n'est pas 0.
+- Séquence : inchangée (même table de temps que debout, `whip.c` colonne `crouched`) : niveaux 0-1 en 12 ticks (2/2/8), lancer en 6 ticks (2/2/2).
+- Boîte accroupie (`vk_whip_bounds`) : le MSX (84A7, `whip-hitbox.md`) ne change que la hauteur (`B` = 10 accroupi au lieu de 18) et la portée (`C416` = 1 : 24 au lieu de 20). Le port garde la lanière visible : niveau 0 x +8..+32, niveau 1 x +8..+39 (pointe de la composition 6/11, lignes -17..-11, mesurée sur l'image générée), y -17..-10 dans les deux cas. Niveaux 2 à 4 : pas de contact de fouet (7D7E), la boîte ne sert pas.
+- Lancer accroupi : la pose est maintenant dessinée (6/12..14, bras jusqu'à x +12) ; l'origine du projectile accroupi (Y = `C425` - 10) était déjà portée (`weapons.c`, `SHOT_CROUCH_DY`).
+- Tests : `tests/test_whip.c` (boîte et séquence d'images accroupies par niveau, droite et gauche), `tests/test_simon_crouch.py` (images de niveau, miroir ROM), scénario MD `tests/md_scenarios/zy_d_crouch_whip.txt` (captures `crouch-level0/1/1-left/2` : pixels de la pointe du fouet niveau 1 à droite et à gauche, absence de pointe au niveau 0 et en pose de lancer).
+- Limite : le niveau 3 (hache/croix, `C451`) dure 8 ticks (2/3/3) à la mesure, alors que le port utilise la table de 6 ticks du niveau 2 pour tous les lancers, debout comme accroupi (inchangé ici). Pas de capture MSX comparée image à image de l'accroupi niveau 1.
+
 ## Mesures par niveau (2026-10-27, répétées)
 
 Méthode : `tools/measure_whip_levels.py NIVEAU SORTIE` (Tcl : `tools/measure_whip_levels.tcl`), deux runs par niveau (`-r1`, `-r2`), `C416` forcé à 41 s. Chaque run fait trois coups debout face à droite, un accroupi à droite, deux coups debout à gauche (après LEFT) et deux accroupis à gauche. Analyse : `tools/analyze_whip_levels.py SORTIE`. Par run : 3 coups debout, 1 accroupi droite, 2 debout gauche, 2 accroupi gauche, soit 8 coups par niveau. Un coup naturel (C416 non forcé, 36 s) sert de contrôle pour le niveau 0.

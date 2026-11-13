@@ -119,6 +119,37 @@ int main(void)
     for(i=0;i<4;i++) vk_whip_tick(&w,&p,0);
     vk_whip_bounds(&w,&l,&t,&r,&b);
     assert(l==68 && r==72 && t==141 && b==145);
+    /* Crouched attack by level (research/whip-variants.md, "Accroupi": C42E 6, upper 6..8 / 9..11 /
+     * 12..14): the hit box is y -17..-10, x +8..+32 for level 0 and x +8..+39 for the chain whip
+     * (crouch frame 6/11 reaches x +39), mirrored to the left; the crouch frames 1..3 steps are the
+     * same 12 ticks (2/2/8) for levels 0 and 1 and 6 ticks (2/2/2) for the thrown levels. */
+    {
+        static const int reach[2] = {32, 39};
+        static const int steps12[12] = {1,1,2,2,3,3,3,3,3,3,3,3};
+        static const int steps6[6] = {1,1,2,2,3,3};
+        int lvl, facing, n;
+        for(lvl=0;lvl<=2;lvl++) for(facing=0;facing<2;facing++){
+            vk_whip_reset(&w);
+            assert(vk_whip_set_level(&w,lvl)==0);
+            p.facing=facing; p.crouched=1; p.x=80; p.y=160;
+            vk_whip_tick(&w,&p,1);
+            assert(w.crouched==1 && w.facing==facing);
+            if(lvl<2){
+                vk_whip_bounds(&w,&l,&t,&r,&b);
+                assert(t==143 && b==150);
+                assert(facing ? (l==80-reach[lvl] && r==72) : (l==88 && r==80+reach[lvl]));
+            }
+            /* From the start tick (timer 14) to the last drawn frame (timer 3, or 9 for the throw). */
+            n = lvl<2 ? 12 : 6;
+            for(i=0;i<n;i++){
+                assert(vk_whip_arm_frame(&w)==1);
+                assert(vk_whip_crouch_visual_step(&w)==(lvl<2 ? steps12[i] : steps6[i]));
+                vk_whip_tick(&w,&p,0);
+            }
+            assert(vk_whip_crouch_visual_step(&w)==0 || lvl>=2);
+        }
+        p.crouched=0; p.facing=0;
+    }
     /* Body duration per level, counted from attack start (timer 14) until the
      * arm frame returns to 0. Level 0 and 1: 12 frames (2/2/8). Level 2: 6 frames
      * (2/2/2, measured in openMSX), with the standing frames 0,0,1,1,2,2. */
