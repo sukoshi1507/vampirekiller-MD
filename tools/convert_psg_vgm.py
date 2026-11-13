@@ -231,7 +231,15 @@ def build_vgm(events, total_samples):
 # - envelope (R11-R13, volume bit 4): the AY envelope is run in software and its
 #   mean amplitude over the frame becomes the volume. A continuous envelope faster
 #   than the frame on a channel without an audible tone (tone off or P < 16) is
-#   heard as a buzz: the SN tone takes the envelope frequency (PROVISIONAL).
+#   heard as a buzz: the SN tone takes the envelope frequency. Proven (frequency):
+#   the AY envelope steps every 16 x EP clocks (datasheet; i.e. at clock / 8
+#   every 2 x EP samples) and a saw (shapes 8, 12) has 16 steps per cycle, a
+#   triangle (10, 14) 32, so f = 1 789 773 / (256 x EP) (saw) or half of that
+#   (triangle); the SN square wave of period N has f = 3 579 545 / (32 x N), hence
+#   N = round(3 579 545 x cycle / 32): the pitch is exact up to the rounding of N
+#   (measured in openMSX by tools/measure_ay_envelope.py: 6991.3 Hz on both sides at EP = 1; tests/test_convert_psg_vgm.py). Only sound 0B (frames 25
+#   and 26: EP = 1, shape 12, tone period 1) is concerned in the whole ROM. What
+#   stays approximate is the waveform (a square instead of a saw), not the pitch.
 # ---------------------------------------------------------------------------
 FRAME_SECONDS = 1 / 60
 SN_TONE_MAX = 1023

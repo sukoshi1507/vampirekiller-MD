@@ -9,12 +9,13 @@
 #define VK_MSX_SOUND_MD_H
 #include "../psg_core.h"
 
-#define VK_MSX_EFFECT_SLOTS 29  /* index = MSX effect id 00..1C (00: none) */
+#define VK_MSX_EFFECT_SLOTS 30  /* index = MSX effect id 00..1D (00: none) */
 #define VK_MSX_MUSIC_SLOTS 16   /* index = MSX music id - 0x80 (8F: none) */
 extern const VKSoundStream vk_msx_effects[VK_MSX_EFFECT_SLOTS];
 extern const VKSoundStream vk_msx_music[VK_MSX_MUSIC_SLOTS];
 extern const char *const vk_msx_effect_names[VK_MSX_EFFECT_SLOTS];
 extern const char *const vk_msx_music_names[VK_MSX_MUSIC_SLOTS];
+extern const char *const vk_msx_special_names[2];  /* labels of FB, FD */
 extern const VKSoundStream vk_msx_timed_item;  /* FB: channel A loop until FC */
 extern const VKSoundStream vk_msx_pause;       /* FD: pause jingle, channel A */
 

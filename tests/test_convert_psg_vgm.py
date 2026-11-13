@@ -1,5 +1,7 @@
+import shutil
 import struct
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -73,6 +75,47 @@ class FrameConversionTests(unittest.TestCase):
         self.assertEqual(conv.envelope_level(10, 16), 0)    # triangle: decay then attack
         self.assertEqual(conv.envelope_level(10, 31), 15)
 
+    def test_envelope_buzz_pitch_is_exact(self):
+        """A fast continuous envelope on a channel without tone is rendered by an SN tone
+        of the same fundamental. The AY envelope is simulated with the datasheet model (clock / 8,
+        one envelope step every 2 x EP samples, 16 steps per saw cycle, 32 per triangle) and
+        its cycle is measured from the level sequence; the SN square wave toggles every
+        16 x N SN clocks (period 32 x N). The pitches agree within the rounding of N."""
+        sample_hz = conv.AY_CLOCK / 8
+        for shape, steps in ((8, 16), (12, 16), (10, 32), (14, 32)):
+            for ep in (1, 2, 3, 5, 8, 13):
+                regs = [0] * 16
+                regs[11], regs[12], regs[13] = ep & 0xFF, ep >> 8, shape
+                # Simulated chip: level after each envelope step, cycle found by the first repeat.
+                levels = [conv.envelope_level(shape, step) for step in range(3 * steps)]
+                self.assertEqual(levels[:steps], levels[steps:2 * steps], (shape, ep))
+                cycle_samples = steps * 2 * ep
+                ay_hz = sample_hz / cycle_samples
+                n = conv.envelope_buzz_period(regs)
+                self.assertIsNotNone(n, (shape, ep))
+                sn_hz = conv.SN_CLOCK / (32 * n)
+                self.assertLessEqual(abs(sn_hz - ay_hz) / ay_hz, 0.5 / n + 1e-9, (shape, ep, n))
+        # EP = 1, saw: 6991.3 Hz, SN period 16 (6991.1 Hz, 0.003 % apart).
+        regs = [0] * 16
+        regs[11], regs[13] = 1, 12
+        self.assertEqual(conv.envelope_buzz_period(regs), 16)
+
+    def test_envelope_buzz_only_when_faster_than_a_frame_and_continuous(self):
+        regs = [0] * 16
+        regs[11], regs[13] = 39, 12      # saw at 179 Hz: three cycles per frame, still a buzz
+        self.assertIsNotNone(conv.envelope_buzz_period(regs))
+        regs[11], regs[12] = 0, 4        # EP = 1024: 0.146 s per cycle, slower than a frame
+        self.assertIsNone(conv.envelope_buzz_period(regs))
+        regs[11], regs[12], regs[13] = 1, 0, 9    # single decay held low: not continuous
+        self.assertIsNone(conv.envelope_buzz_period(regs))
+
+    def test_buzz_replaces_a_tone_of_period_one(self):
+        fc = conv.FrameConverter(channels=(2,))
+        out = fc.frame([(7, 0xB8), (10, 0x10), (11, 1), (12, 0), (13, 12), (4, 1), (5, 0)])
+        self.assertEqual(fc.stats['envelope_buzz'], 1)
+        self.assertEqual(fc.sn_tone[2], 16)
+        self.assertIn(bytes(conv.sn_latch_tone(2, 16)), out)
+
     def test_effect_on_channel_c_only(self):
         fc = conv.FrameConverter(channels=(2,))
         out = fc.frame([(7, 0xB8), (4, 0x80), (5, 0), (10, 15), (8, 15), (0, 0x10)])
@@ -91,6 +134,24 @@ class FrameConversionTests(unittest.TestCase):
         out, _ = conv.convert_frames(frames, (0,), loop=2)
         self.assertEqual(out[1], b'')
         self.assertEqual(out[2], bytes([0x84, 0x06, 0x90, 0xFF]))   # noise silence too
+
+
+@unittest.skipUnless(shutil.which('openmsx'), 'openmsx not installed')
+class EnvelopeInOpenMsxTests(unittest.TestCase):
+    """The pitch the converter gives the SN tone is the one openMSX plays (audio capture,
+    tools/measure_ay_envelope.py): saw and triangle, fastest envelope of the ROM (EP = 1)
+    and the EP = 5 of effect 0B image 0."""
+
+    def test_sn_buzz_matches_the_emulated_envelope(self):
+        try:
+            import measure_ay_envelope as mea
+        except ImportError as error:        # numpy missing
+            self.skipTest(str(error))
+        with tempfile.TemporaryDirectory() as workdir:
+            for shape, ep in ((12, 1), (10, 1), (12, 5)):
+                seen = mea.measure(shape, ep, workdir)
+                _, sn_hz, _ = mea.predicted(shape, ep)
+                self.assertLess(abs(sn_hz / seen - 1), 0.002, (shape, ep, seen, sn_hz))
 
 
 if __name__ == '__main__':

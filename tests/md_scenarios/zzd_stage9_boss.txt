@@ -62,6 +62,7 @@ poke vk_boss+46 0
 until ram8('vk_boss+36') == 1 max 10
 expect ram16('vk_boss+38') == 0xACB8 and ram16('vk_boss+40') == 0x9802 and ram16('vk_boss+42') == 0xFFB8 and ram16('vk_boss+44') == 0xFE02
 expect ram8('vk_boss+66') == 2 and ram8('vk_boss+67') == 1
+expect ram8('vk_psg+22') == 0x0A # B9A9 : la boule du boss 9, effet 0A
 shot zzd-boule
 # Contact de la boule : energie 32 -> 31 (trace R et B : -1) ; contact du corps : -4 (trace C2 : 28).
 poke vk_boss+36 0

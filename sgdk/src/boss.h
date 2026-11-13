@@ -37,7 +37,7 @@ typedef unsigned char VKBossU8;
 #define VK_BOSS_EV_HEAL 0x04         /* B742: energy + 1, effect 01 */
 #define VK_BOSS_EV_EXIT 0x08         /* B772: C409 = 1, next stage */
 #define VK_BOSS_EV_FLASH 0x10        /* 75D4: C445 ran out, C43E = 18h */
-#define VK_BOSS_EV_FIRE 0x20         /* BF44: fireball, effect 13 */
+#define VK_BOSS_EV_FIRE 0x20         /* BF44: a shot was created (sound 0A only for kind 2, B9A9) */
 #define VK_BOSS_EV_STOP 0x80         /* B725: explicit stop before music after orb pickup */
 #define VK_BOSS_EV_ERASE 0x40        /* BD01, 490A: the bust (80h, 70h, 20h x 20h) is wiped to colour 0 */
 
