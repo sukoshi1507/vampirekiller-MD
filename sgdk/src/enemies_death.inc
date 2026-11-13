@@ -3,7 +3,7 @@
  *
  * 9A3E (appelee par le fouet 7DFC, les armes lancees 8075 et le contact avec C434 7EB9) : l'ennemi tue est efface (99F6), puis
  * 5F1D cree un objet de type 1E dans le premier bloc libre, en (X, Y - D) de l'ennemi (D : table 9B33, 10h pour les types 1, 2, 3, 6, 9,
- * 0A, 0B, 0 pour les autres), avec +B = 85, +C = 10h, +E = 0 (ni contact ni fouet), +6 = 0 (immobile), +7E = 0 (D010 ne la fige pas).
+ * 0A, 0B, 0 pour les autres ; 10h aussi pour 03 et 21h, 18h pour 0F et 12-16, 20h pour 11h), avec +B = 85, +C = 10h, +E = 0 (ni contact ni fouet), +6 = 0 (immobile), +7E = 0 (D010 ne la fige pas).
  * Routine 9B71, une fois par passe : +B = 85 si le bit 2 de +C est nul, 86 sinon ; +C - 1 ; a 0 l'objet est efface (sans dessin).
  * Elle dure 16 passes dans la boucle des objets, dessinee des la passe de la mort (pose 85) : 32 images a l'ecran.
  * Dessin : une entree SAT (X - 8, Y - 16 pose 85 / Y - 15 pose 86), motifs F4 / F8, couleur 8 (une couche).
@@ -64,8 +64,8 @@ static int deathOffset(EnemyU8 type)
 {
     switch (type) {
     case ENEMY_TYPE_A: case ENEMY_TYPE_B: case ENEMY_TYPE_2: case ENEMY_TYPE_6:
-    case ENEMY_TYPE_STATUE: case ENEMY_TYPE_HOPPER: case ENEMY_TYPE_10:
-        return 0x10;
+    case ENEMY_TYPE_STATUE: case ENEMY_TYPE_HOPPER: case ENEMY_TYPE_10: case ENEMY_TYPE_FISH3:
+        return 0x10;               /* 9B33[03] et [21h] : 10h, comme le type 02 (le port le laissait a 0 pour l'homme-poisson du stage 10) */
     case ENEMY_TYPE_EAGLE: case ENEMY_TYPE_12:
         return 0x18;               /* 9B33[0F] (lue dans la ROM, flamme de l'aigle non tracee) */
     default:

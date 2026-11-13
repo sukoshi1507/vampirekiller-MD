@@ -384,6 +384,8 @@ static void boss_erase_bust(void)
  * per pose, into the tiles after the boss cells; vk_boss_sprites picks them on the passes with +11 even. */
 static u8 boss9_flash_pose[2];
 
+/* Static: the DMA queue reads the cells at the next V-Int, after this function returns. */
+static u32 boss9_flash_cells_buf[VK_BOSS9_WALKERS][12 * 8];
 static void boss9_flash_cells(void)
 {
     int w, i;
@@ -391,21 +393,19 @@ static void boss9_flash_cells(void)
     for (w = 0; w < VK_BOSS9_WALKERS; w++)
     {
         const VKBossWalker *k = &vk_boss.walker[w];
-        u32 cells[12 * 8];
+        u32 *const cells = boss9_flash_cells_buf[w];
         if (!k->alive || k->state != 3 || boss9_flash_pose[w] == k->pose) continue;
         for (i = 0; i < 12 * 8; i++)
         {
             const u32 v = vk_boss9_tiles[((k->pose - 0x33) * 12) * 8 + i];
-            u32 o = 0;
-            int nib;
-            for (nib = 0; nib < 8; nib++)
-            {
-                const u32 c = (v >> (4 * nib)) & 15;
-                o |= (c == 12 ? 8u : c == 14 ? 2u : c) << (4 * nib);
-            }
+            /* Nibble 12 -> 8 and 14 -> 2, the others kept, by bit tricks (a per-nibble loop cost ~200 lines in the boss pass). */
+            const u32 t12 = v ^ 0xCCCCCCCCu, t14 = v ^ 0xEEEEEEEEu;
+            const u32 e12 = ~(t12 | (t12 >> 1) | (t12 >> 2) | (t12 >> 3)) & 0x11111111u;
+            const u32 e14 = ~(t14 | (t14 >> 1) | (t14 >> 2) | (t14 >> 3)) & 0x11111111u;
+            const u32 o = (v & ~((e12 | e14) * 15u)) | (e12 * 8u) | (e14 * 2u);
             cells[i] = o;
         }
-        VDP_loadTileData(cells, (u16)(ENEMY5_TILE_INDEX + VK_BOSS9_FLASH_TILE + w * 12), 12, CPU);
+        VDP_loadTileData(cells, (u16)(ENEMY5_TILE_INDEX + VK_BOSS9_FLASH_TILE + w * 12), 12, DMA_QUEUE);
         boss9_flash_pose[w] = k->pose;
     }
 }
