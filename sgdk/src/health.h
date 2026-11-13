@@ -63,6 +63,10 @@ typedef struct {
 
 /* Start of play: VK_HEALTH_LIVES_START lives, alive. */
 void vk_health_begin(VKHealth *h);
+/* 174 here against 182 for a fall: same code, same 90 passes after 709E; a pass lasts 2 frames when its work overruns a frame
+ * (C005, 4053 / 405C: 19-24 ms) and 1 frame when it does not (16.3 ms). In the contact death of the hall two of the 8 enemy blocks
+ * have left by the last passes (C428 = 14..0 alternate 1 and 2 frames), in the fall they stay and every pass has 2 frames
+ * (one openMSX session, tools/player_health_pass_trace.tcl, research/player-health.md). The load is not modelled. */
 /* Fall out of the room (7093, C420 = 6, openMSX 2026-11-12, tools/run_jump_cases.py cases water_s2r4b and
  * air_s15r3): C428 = 30 passes in the water stages (D000 2 or 10, splash sound 9) or 1 elsewhere, one pass
  * = 2 frames (C003), then C428 = 90 (jingle 89, 709E) and 90 more passes: C413 = 0 (70D9) 182 frames after
