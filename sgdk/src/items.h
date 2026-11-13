@@ -33,6 +33,8 @@ typedef struct {
     VKByte timer;                    /* frames since the door opened */
     VKByte white_key_revealed;       /* the whip opened its hidden block (candles.c) */
     VKByte attacking;                /* C422 != 0: set by the caller before vk_items_tick */
+    VKByte c003;                     /* C003 after this frame's pass (tick + 1 on the first frame of a pass): set by the caller */
+    VKByte door_c003;                /* C003 of the opening pass (7752), phase of the walk poses of 6CA4 */
     VKWord late_keys_taken[7];      /* LOT11: one stream flag per late room, appended. */
 } VKItems;
 

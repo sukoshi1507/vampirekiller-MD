@@ -39,6 +39,8 @@ typedef struct {
                               * bit 4 (object 0D) = jump of 21 steps */
     VKByte x_frac;           /* C426: fraction of X, moved by the recoil steps (6C94) */
     VKByte stair_steps;      /* C42B: stair steps, up or down, since the last stair exit (6EF5) */
+    VKByte c003;             /* C003 after this frame's pass, set by main.c before the tick (phase of the entrance walk poses) */
+    VKByte entrance_c003;    /* C003 of the pass that started the entrance walk (7752) */
 } VKGame;
 #define VK_ITEM_FAST_RECOIL 0x08    /* C431 bit 3: recoil step FD80 / 0280 (6C44, 6C67) */
 #define VK_ITEM_HIGH_JUMP 0x10      /* C431 bit 4 (object 0D): jump table 6D94, 21 steps (6CE7) */

@@ -30,6 +30,7 @@ expect ram8('items') == 0 and game.player.x < 34 # cle consommee a l'ouverture (
 set t0 frame
 set xo game.player.x
 set po player.pose
+set c0 enemies.tick                                # C003 de la passe d'ouverture (phase des poses : research/door-pose-phase.md)
 expect xo == 26 and player.facing == 1 and 4 <= po <= 5 # pose de marche, regard a gauche
 wait 60
 expect player.x == xo and player.pose == po # pose gardee pendant la levee (C5AC = 2)
@@ -37,8 +38,10 @@ until ram8('items+2') == 2 max 60
 expect player.x == xo
 until player.x == xo - 1 max 8
 expect frame - t0 == 89 and player.facing == 1 and 3 <= player.pose <= 5
+expect player.pose == [2, 1, 0, 1][((c0 + (frame - t0 - 1) // 2) >> 2) & 3] + 3 # 6CA4 : pose par les bits 3-2 de C003, + 3 a gauche
 until player.x == xo - 9 max 40
 expect frame - t0 == 121 and 3 <= player.pose <= 5 # 1 px toutes les 4 images, poses gauches
+expect player.pose == [2, 1, 0, 1][((c0 + (frame - t0 - 1) // 2) >> 2) & 3] + 3
 shot zy-g-porte-gauche
 until player.x == 7 max 100
 expect frame - t0 == 161 and 3 <= player.pose <= 5 # sortie a X 7 (77BA)

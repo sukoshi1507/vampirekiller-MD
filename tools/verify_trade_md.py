@@ -10,7 +10,7 @@ def main():
  symbols=load_symbols(elf=ROOT/'sgdk/out/rom.out');m=Machine(args.core,ROOT/'sgdk/out/rom.bin');view=Game_View(m,symbols)
  def addr(name):return lookup(symbols,name)[0]
  g,w=addr('vk_game'),addr('vk_walls');c=addr('vk_candles');f=addr('room_freeze')
- assert lookup(symbols,'vk_enemies')[1]==166 and lookup(symbols,'vk_game')[1]==36 and lookup(symbols,'vk_walls')[1]==693
+ assert lookup(symbols,'vk_enemies')[1]==166 and lookup(symbols,'vk_game')[1]==38 and lookup(symbols,'vk_walls')[1]==693
  def until(fn,n=400):
   for _ in range(n):
    if fn():return

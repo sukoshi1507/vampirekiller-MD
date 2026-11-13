@@ -45,6 +45,7 @@ int main(void)
     g.player.y = 176;
     g.player.mode = 0;
     g.player.facing = 0;
+    g.c003 = 172;                                    /* C003 of the door pass in the openMSX trace of the pose phase */
     assert(vk_game_tick(&g, 1, 0, 0) == VK_EVENT_ENTRANCE);
     assert(g.entrance == VK_ENTRANCE_WALK && vk_game_entrance_locked(&g));
     {
@@ -55,7 +56,12 @@ int main(void)
             assert(vk_game_tick(&g, t & 1 ? -1 : 0, 1, 0) == VK_EVENT_NONE);
             assert(g.player.x == 216 + t / 4);
             assert(g.area == VK_AREA_COURTYARD && g.player.y == 176);
-            if (t == 8) assert(g.player.pose == 1);   /* walk cycle 0,1,2,1 */
+            /* 6CA4: pose 2, 1, 0, 1 from bits 3-2 of C003 (172 + t / 2), measured rows t + 1: 1 from row 3, 2 from 9, 1 from 17, 0 from 25 */
+            if (t == 1) assert(g.player.pose == 0);
+            if (t == 2) assert(g.player.pose == 1);
+            if (t == 8) assert(g.player.pose == 2);
+            if (t == 16) assert(g.player.pose == 1);
+            if (t == 24) assert(g.player.pose == 0);
         }
         assert(g.entrance == VK_ENTRANCE_EXIT);
         /* Courtyard shown 2 more frames, then 36 black frames, then the hall. */

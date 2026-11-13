@@ -59,7 +59,20 @@ shot f-porte-fermee
 until ram8('items+2') == 1 max 120 RIGHT
 expect game.player.x == 228 # ouverture a x 228, regard a droite
 expect ram8('items') == 0 # cle consommee (7743)
+# Phase des poses de marche (openMSX, 4 ouvertures, C003 117 a 124 : research/door-pose-phase.md) : 6CA4 prend la pose
+# dans les bits 3-2 de C003 (00 -> 2, 01 -> 1, 10 -> 0, 11 -> 1), donc le cycle suit le compteur global et non le debut
+# de la marche. Ligne n apres l'ouverture : C003 = C003 de la passe d'ouverture + (n - 1) // 2, pose visible des n = 89.
+set t0 frame
+set c0 enemies.tick
 wait 40
+until frame - t0 == 89 max 100
+expect player.pose == [2, 1, 0, 1][((c0 + (frame - t0 - 1) // 2) >> 2) & 3] # debut de la marche : premiere pose du cycle de C003
+until frame - t0 == 103 max 100
+expect player.pose == [2, 1, 0, 1][((c0 + (frame - t0 - 1) // 2) >> 2) & 3]
+until frame - t0 == 135 max 100
+expect player.pose == [2, 1, 0, 1][((c0 + (frame - t0 - 1) // 2) >> 2) & 3]
+until frame - t0 == 150 max 100
+expect player.pose == [2, 1, 0, 1][((c0 + (frame - t0 - 1) // 2) >> 2) & 3]
 shot f-porte-levee
 set music0 ram32('vk_psg+4')
 until game.stage == 2 max 200
