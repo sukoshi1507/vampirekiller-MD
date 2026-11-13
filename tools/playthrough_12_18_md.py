@@ -21,7 +21,7 @@ RAM help, all applied identically in record and play, none of it moves Simon:
   - from stage 13: object 0D (high jump, 'J', see Game.high_jump): picked in the early stages of a real game, skipped
     here by the RAM entry; some ledges of the late stages are out of reach of the basic jump.
 Replay file lines: 'B stage' (cold boot + RAM entry), 'H n KEYS' (n frames held), 'M n KEYS' (macro of the search:
-n frames then a save/load round trip, see Game.roundtrip), 'K', 'J', 'C stage room' (checkpoint), 'E' (end of a
+n frames then a save/load round trip, see Game.roundtrip), 'R' (a round trip alone: the recording restored a saved state there), 'K', 'J', 'C stage room' (checkpoint), 'E' (end of a
 segment). Same ROM + same core = same frames."""
 import argparse, ctypes as C, shutil, subprocess, sys, time, zlib
 from pathlib import Path
@@ -171,7 +171,14 @@ class Game:
     def roundtrip(self):
         """Save + load of the emulator. The search branches on save states, and the core keeps a few bytes outside its
         state (found: 5 bytes differ after a load), which is enough to make a long input sequence diverge. So every
-        macro of the recorded path is followed by this same round trip, in the recording and in the replay."""
+        macro of the recorded path is followed by this same round trip, in the recording and in the replay.
+        Cause found by comparing the RAM frame by frame: after a load the next frames are a pure function of the saved
+        state (what ran before the load is forgotten, checked), but they differ from the same frames run without a load
+        by a hidden core detail (V counter phase: SGDK lastVCnt/cpuFrameLoad differ at once). On a heavy frame (boss) the
+        game then misses or keeps a vblank and its logic is one frame out of phase (vk_game timer 58 vs 57 at frame 2906
+        of the stage 12 segment), which shifts the end of the segment by a few frames. So every load of the recording
+        that stays on the recorded path must be in the replay too: the restore of a leg start is the 'R' line (run_legs),
+        and a recording is replayed at once on a fresh console (main) to prove it."""
         self.load(self.save())
 
     def macro(self, buttons, n, log=True):
@@ -419,6 +426,7 @@ def run_legs(G, s, legs, i, droom_xy, width, shots, depth=0):
                   f'frozen {G.rd(G.f)} door {G.rd(G.items + 2)} player {[G.rd(G.g + k) for k in range(15)]}', flush=True)
         for path, arr in hits:
             G.load(st0); G.pending = None; del G.log[logn:]
+            G.log.append('R')       # this load is part of the played sequence: the replay repeats it (see roundtrip)
             if apply_leg(G, s, leg, path) and run_legs(G, s, legs, i + 1, droom_xy, width, shots, depth + 1):
                 return True
             print('  ' * depth + f'  {tag}: arrival {arr} leads nowhere, next candidate', flush=True)
@@ -538,6 +546,8 @@ def play(G, replay, shots):
             booted = True
             G.boot()
             if not G.entry(int(w[1]) if len(w) > 1 else 12, 0): fail('entry: room freeze never ended')
+        elif w[0] == 'R':
+            G.roundtrip()           # a leg of the recording started from a restored state (see Game.roundtrip)
         elif w[0] == 'K':
             G.m.wr(G.items, G.m.rd8(G.items) | 1)
         elif w[0] == 'J':
@@ -595,6 +605,11 @@ def main():
             a.replay.parent.mkdir(parents=True, exist_ok=True)
             a.replay.write_text('\n'.join(G.log) + '\n')
         print('recorded', a.replay)
+        # The recording is checked at once by its own replay on a fresh console: what was recorded must replay as is.
+        a.out.mkdir(parents=True, exist_ok=True)
+        G.m.close()
+        V = Game(a.core)
+        play(V, a.replay, a.out)
         return
     try:
         play(G, a.replay, a.out)
