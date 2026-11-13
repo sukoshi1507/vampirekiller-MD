@@ -914,15 +914,15 @@ static void test_fall_to_floor(void)
     (void)Enemies_frame(&s, &t, &v);
     CHECK(s.enemy[0].y == 0xA0 + ENEMY_FALL_SPEED, "chute sans sol : 2 px par image (obtenu %d)", s.enemy[0].y);
     /* Sol en rangee 22 de la carte (ligne de 32 tuiles, pieds a Y 192). Le spawn a 0xA0
-     * (pieds 191) tombe d'un pixel et s'arrete. */
+     * (octet SAT ; objet = SAT + 32 = 192) est deja pose : la ROM ne le fait pas bouger (5F1D + 6445 : objet C0 -> SAT A0). */
     memset(map, 0, sizeof map);
     for (i = 0; i < 32; i++) map[22 * 32 + i] = 1;
     Enemies_init(&s);
     (void)Enemies_spawn(&s, ENEMY_SIDE_LEFT, ENEMY_TYPE_B, 0xA0, 15);
     (void)Enemies_frame(&s, &t, &v);
-    CHECK(s.enemy[0].y == 0xA1, "chute sur sol : s'arrete a Y 0xA1 (pieds 192), obtenu %d", s.enemy[0].y);
+    CHECK(s.enemy[0].y == 0xA0, "sur le sol (objet 192) : reste a Y 0xA0, obtenu %d", s.enemy[0].y);
     (void)Enemies_frame(&s, &t, &v);
-    CHECK(s.enemy[0].y == 0xA1, "sur le sol : reste a Y 0xA1");
+    CHECK(s.enemy[0].y == 0xA0, "sur le sol : reste a Y 0xA0");
 }
 
 #define T4_OBJ_X 8    /* objet MSX = SAT + 8 en X (enemies.c, ENEMY_OBJ_X) */
@@ -1273,7 +1273,7 @@ static void test_stage2_type1_contact_whip(void)
     put_stage2_type1(&s, 250, 160, ENEMY_SIDE_LEFT);
     CHECK(Enemies_whipHitType1Rom(&s, 240, 160, 0, 0, 0) == 0, "fouet : retenue a droite, pas de coup");
 
-    /* Chute : pose sur le sol de la salle 2 (rang Y A0), Y affiche 81 comme au hall (A1). */
+    /* Chute : pose sur le sol de la salle 2 (rang Y A0), octet SAT 80 (objet A0, affiche 81). */
     memset(map, 0, sizeof map);
     for (i = 0; i < 32; i++) map[18 * 32 + i] = 1;
     vars_stage2_room2(&v);
@@ -1281,7 +1281,7 @@ static void test_stage2_type1_contact_whip(void)
     Enemies_init(&s);
     Enemies_spawnTimerInit(&t);
     for (i = 0; i < 40; i++) { (void)Enemies_frame(&s, &t, &v); }
-    CHECK(s.enemy[0].active && s.enemy[0].y == 0x81, "stage 2 : pose au sol, Y 81 (obtenu %02X)", s.enemy[0].y);
+    CHECK(s.enemy[0].active && s.enemy[0].y == 0x80, "stage 2 : pose au sol, SAT 80 (obtenu %02X)", s.enemy[0].y);
 }
 
 /* Type 2 (homme-poisson), stage 2 salle 4, carte du port (vk_stage2_collision[4]).

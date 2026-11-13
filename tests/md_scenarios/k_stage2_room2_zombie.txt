@@ -25,7 +25,7 @@ until enemies.alive > 0 max 80
 expect enemies.enemy[0].type == 0 and enemies.enemy[0].x == 0xE5 and enemies.enemy[0].y == 0x80 # premier tir a droite, Y SAT 80
 expect enemies.enemy[0].romBox == 1 # type 1 du stage 2
 wait 2
-expect enemies.enemy[0].y == 0x81 # pose sur le sol (pieds en A0), comme au hall (A1)
+expect enemies.enemy[0].y == 0x80 # pose sur le sol : octet SAT 80 (objet A0 = SAT + 32, affiche 81)
 wait 20
 shot j-zombie-droite
 # Fouet debout a droite : X du fouet 165, touche si |165 - X| < 17 (X = x SAT + 8).
