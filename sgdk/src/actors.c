@@ -1124,11 +1124,15 @@ static int shield_pose(const VKPlayer *player, bool crouch_mode, int attack_fram
 }
 
 static void whip_pending_queue(void);
+static void load_crouch_level(int level);
+static void crouch_pending_start(int level);
+static void crouch_pending_queue(void);
 
 void vk_show_player(const VKPlayer *shown)
 {
     VK_MARK(19);
     whip_pending_queue();
+    crouch_pending_queue();
     /* After a fall Simon is parked at Y FA, whose top rows would still reach the
      * 224-line screen: he is drawn lower, out of sight. */
     VKPlayer parked = *shown;
@@ -1346,11 +1350,34 @@ static void load_crouch_level(int level)
     VDP_loadTileData((const u32 *)src, CROUCH_TILE_INDEX + VK_CROUCH_TILES_PER_FRAME, CROUCH_ATTACK_TILES, DMA_QUEUE);
 }
 
+/* The same, in two halves, for the crouched attack frames, once the whip chunks are done. */
+static const u32 *crouch_pending;
+static u16 crouch_step = 2;
+static void crouch_pending_start(int level)
+{
+    const int kind = level >= VK_WHIP_LEVEL_THROW ? 2 : level;
+    const unsigned long *src = vk_simon_crouch_tiles + VK_CROUCH_TILES_PER_FRAME * 8;
+    if (level == 1) src = vk_simon_crouch_level_tiles;
+    else if (level >= VK_WHIP_LEVEL_THROW) src = vk_simon_crouch_level_tiles + CROUCH_ATTACK_TILES * 8;
+    if (kind == crouch_loaded) { crouch_step = 2; return; }
+    crouch_loaded = kind;
+    crouch_pending = (const u32 *)src;
+    crouch_step = 0;
+}
+static void crouch_pending_queue(void)
+{
+    const u16 half = CROUCH_ATTACK_TILES / 2;
+    if (crouch_step >= 2 || whip_step < 3) return;
+    VDP_loadTileData(crouch_pending + crouch_step * half * 8, (u16)(CROUCH_TILE_INDEX + VK_CROUCH_TILES_PER_FRAME + crouch_step * half), half, DMA_QUEUE);
+    crouch_step++;
+}
+
 void vk_set_whip_level(int level)
 {
     if (vk_whip_set_level(&vk_whip, level) < 0) return;
     whip_level_choice = level;
     load_whip_level(level);
+    crouch_step = 2;   /* an immediate load cancels a pending one */
     load_crouch_level(level);
 }
 
@@ -1361,6 +1388,7 @@ void vk_set_whip_level_pickup(int level)
     whip_level_choice = level;
     whip_pending = whip_level_tiles(level);
     whip_step = whip_pending ? 0 : 3;
+    crouch_pending_start(level);   /* the crouched frames of the level (91e0265): 3 KB, queued after the whip chunks */
     whip_pending_queue();
 }
 
