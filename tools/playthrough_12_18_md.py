@@ -8,11 +8,15 @@ Two modes:
           mode and the game loop (C003 tick and itemPhase). It fails when a checkpoint is missed, when no checkpoint
           is reached for STALL_PROGRESS frames, when the front mode leaves play, or when the loop freezes.
           --video FILE.mp4 also writes the run (60 fps, H.264, yuv420p, x2 nearest neighbour; ffmpeg, frames piped).
-  record  (--record) searches the inputs again: beam search over controller macros of 5 frames (12 pad combinations),
+  record  (--record) searches the inputs again: beam search over controller macros (12 pad combinations of 5 frames, plus 1-2 frame walk steps),
           the expansions spread over forked workers with their own emulator, branching on save states. A leg is a room
           exit (left/right/up/down), a stage 12 secret passage (crouch + UP at the BBCD point, walked to by search),
           the exit door (key + door), then the boss (walk to it and whip). Dead ends (an arrival from which the next
           leg has no path) are backtracked: other arrivals (several heights, lower then upper floor), other routes.
+
+Search refinements: a leg is searched with the coarse macros first, then (only if it leads nowhere) with 1-2 frame walk steps
+and a bonus for Simon on a staircase; a door leg has a 'climb' variant (vertical first). PREFER gives the room order of the
+manual routes of stages 13-15; fly bosses (stage 15) are fought by jump + whip.
 
 RAM help, all applied identically in record and play, none of it moves Simon:
   - Enemies_god = 1 at every frame: invincibility; the test checks transitions, not combat;
@@ -32,7 +36,7 @@ NAMES = {v: k for k, v in BUTTONS.items()}
 REPLAY = ROOT / 'tests/md_playthrough/playthrough_12_18.txt'
 DRACULA_FIGHT = False  # the stage 18 fight is not solved by this test (fight() has the attempt), see record()
 STALL_BEAT = 150      # frames with C003 tick and itemPhase unchanged = frozen game loop
-STALL_PROGRESS = 4500  # frames between two checkpoints
+STALL_PROGRESS = 15000  # frames between two checkpoints (the stage 15 fight alone is about 9500)
 LINKS = {}            # (stage, room) -> (up, down, left, right)
 ENTRIES = {12: (16, 176, 0), 13: (56, 176, 0), 14: (200, 176, 1), 15: (232, 176, 1), 16: (232, 176, 1), 17: (232, 80, 1), 18: (232, 176, 1)}   # kStageEntries (stage_exits.h)
 
@@ -210,8 +214,12 @@ class Game:
 
 
 # ---- recording: beam search --------------------------------------------------------------------
-ACTS = [frozenset(), {7}, {6}, {7, 8}, {6, 8}, {8}, {4}, {5}, {4, 7}, {4, 6}, {5, 7}, {5, 6}, {0}]
 MACRO = 5
+# (buttons, frames). Coarse macros of MACRO frames, plus fine ones (1-2 frames of walk) that place Simon to the pixel
+# before a jump (stage 17 room 7: the leap to the bar must start from X 156-158 exactly).
+ACTS = [(frozenset(k), MACRO) for k in (set(), {7}, {6}, {7, 8}, {6, 8}, {8}, {4}, {5}, {4, 7}, {4, 6}, {5, 7}, {5, 6}, {0})]
+NCOARSE = len(ACTS)   # a search first uses the coarse macros only; the fine ones are a second pass (run_legs) when the leg leads nowhere
+ACTS += [(frozenset({6}), 1), (frozenset({7}), 1), (frozenset({6}), 2), (frozenset({7}), 2)]
 BEST = [1e9, 0, 0, 0, 0]
 
 
@@ -228,10 +236,10 @@ WORKERS = 7
 
 def _expand(st):
     """In a forked worker: the 12 macros from a state; returns what the main process needs to rank them."""
-    G, goal, h, valid = _CTX
+    G, goal, h, valid, nacts = _CTX
     out = []
-    for ai, act in enumerate(ACTS):
-        G.load(st); G.step(act, MACRO, log=False)
+    for ai, act in enumerate(ACTS[:nacts]):
+        G.load(st); G.step(act[0], act[1], log=False)
         if goal(G): out.append((ai, 1, (G.px, G.py))); continue
         if not valid(G): out.append((ai, 0)); continue
         out.append((ai, 2, key_of(G), h(G), (G.px // 8, G.py // 16), (G.px, G.py, G.room)))
@@ -241,17 +249,17 @@ def _expand(st):
 def _advance(args):
     st, ai = args
     G = _CTX[0]
-    G.load(st); G.step(ACTS[ai], MACRO, log=False)
+    G.load(st); G.step(ACTS[ai][0], ACTS[ai][1], log=False)
     return G.save()
 
 
-def search(G, goal, h, valid, width=24, depth=260, want=10, extra=8):
+def search(G, goal, h, valid, width=24, depth=260, want=10, extra=8, nacts=NCOARSE):
     """Beam search (expansions spread over forked workers, each with its own emulator copy); returns the list of
     distinct goal hits [(path, arrival)] (several arrival heights, because the first one can be a dead end such as
     an alcove closed on the next room)."""
     import multiprocessing as mp
     global _CTX
-    _CTX = (G, goal, h, valid)
+    _CTX = (G, goal, h, valid, nacts)
     pool = mp.get_context('fork').Pool(WORKERS)
     try:
         beam = [(h(G), G.save(), ())]
@@ -322,6 +330,22 @@ def routes(stage, a, b, limit=9, cap=60):
     return sorted(out, key=len)[:cap]
 
 
+# Room sequences of the manual routes (tests/md_scenarios/zzq_stage13/14/15_route*.txt), tried before the shortest paths of
+# the link graph: these stages need a detour (a room crossed twice, the same link used twice) that routes() does not
+# enumerate or only after many slow dead ends. Only the order of the rooms is borrowed; the inputs are searched.
+PREFER = {13: (1, 0, 3, 4, 5, 6, 11, 10, 9, 8), 14: (3, 4, 3, 4, 5, 4, 5, 6, 7), 15: (1, 0, 2, 3, 2, 4, 7, 8)}
+
+
+def preferred(stage, a, b):
+    seq = PREFER.get(stage)
+    if not seq or seq[-1] != b: return []
+    out = []
+    for t in seq:
+        di = next(i for i, v in enumerate(LINKS[(stage, a)]) if v == t)
+        out.append((t, di)); a = t
+    return [out]
+
+
 def route(stage, a, b):
     """Shortest list of (room, direction index) from room a to room b in the link graph of the stage."""
     from collections import deque
@@ -359,13 +383,14 @@ class Stop(Exception):
     pass
 
 
-def leg_goal(G, s, leg, droom_xy):
+def leg_goal(G, s, leg, droom_xy, climb=False):
     """(goal, heuristic, valid) of a leg ('dir', room, next)."""
     kind, cur, nxt = leg
     if kind == 'door':
         dx, dy = droom_xy
         return (lambda g: g.rd(g.items + 2) != 0,
-                lambda g: abs(g.px - dx) + max(0, dy - g.py, g.py - (dy + 40)),
+                (lambda g: abs(g.px - dx) + max(0, dy - g.py, g.py - (dy + 40))) if not climb else
+                (lambda g: 0.1 * abs(g.px - dx) + max(0, dy - g.py, g.py - (dy + 40)) - 20 * (g.rd(g.g + 8) == 1)),   # climb: stairs lead away from the door first (stage 17 room 11): favour the stair mode
                 lambda g: g.stage == s and g.room == cur and alive(g))
     if kind == 'secret':
         _, sx, sy = SECRETS[(s, cur)]
@@ -373,12 +398,12 @@ def leg_goal(G, s, leg, droom_xy):
                 lambda g: abs(g.px - sx) + abs(g.py - 2 - sy - 8),
                 lambda g: g.stage == s and g.room == cur and alive(g))
     h = {'up': lambda g: g.py, 'down': lambda g: 255 - g.py, 'left': lambda g: g.px, 'right': lambda g: 255 - g.px}[kind]
-    return (lambda g: g.stage == s and g.room == nxt, h, lambda g: g.stage == s and g.room in (cur, nxt) and alive(g))
+    return (lambda g: g.stage == s and g.room == nxt and g.rd(g.health + 1) == 0, h, lambda g: g.stage == s and g.room in (cur, nxt) and alive(g))
 
 
 def apply_leg(G, s, leg, path):
     kind, cur, nxt = leg
-    for ai in path: G.macro(ACTS[ai], MACRO)
+    for ai in path: G.macro(*ACTS[ai])
     if kind == 'secret':
         G.step(frozenset({5}), 10); G.step(frozenset({4}), 2)   # crouch, then UP (new press) in the zone
         for _ in range(200):
@@ -409,18 +434,21 @@ def run_legs(G, s, legs, i, droom_xy, width, shots, depth=0):
     fkey = (tuple(legs[i:]), zlib.crc32(st0))
     if fkey in FAILED:      # same leg from the very same emulator state (a route sharing a failed prefix)
         return False
-    goal, h, valid = leg_goal(G, s, leg, droom_xy)
-    tried = []
-    for tier in (('low', 'high') if leg[0] in ('left', 'right') else (None,)):
-        if tier:
+    tiers = ('low', 'high') if leg[0] in ('left', 'right') else ('flat', 'climb') if leg[0] == 'door' else (None,)
+    for nacts, tier in [(NCOARSE, t) for t in tiers] + [(len(ACTS), t) for t in tiers]:
+        goal, h, valid = leg_goal(G, s, leg, droom_xy, climb=tier == 'climb')
+        if tier in ('low', 'high'):
             goal_t = lambda g, goal=goal, tier=tier: goal(g) and ((g.py <= 100) == (tier == 'high'))
             h_t = (lambda g, h=h: h(g) + 1.5 * max(0, g.py - 80)) if tier == 'high' else h
         else:
             goal_t, h_t = goal, h
+        if nacts > NCOARSE and tier != 'climb':
+            # second pass: fine macros, and Simon on a staircase is favoured (a stair often leads away from the exit first)
+            h_t = lambda g, h_t=h_t: h_t(g) - 20 * (g.rd(g.g + 8) == 1)
         t = time.time(); BEST[:] = [1e9, 0, 0, 0, 0]
         G.load(st0)
-        hits, d = search(G, goal_t, h_t, valid, width=width)
-        print('  ' * depth + f'{tag} [{tier}]: {len(hits)} candidates, search {time.time() - t:.0f}s, best {BEST}', flush=True)
+        hits, d = search(G, goal_t, h_t, valid, width=width, nacts=nacts)
+        print('  ' * depth + f'{tag} [{tier}{"+fine+stairs" if nacts > NCOARSE else ""}]: {len(hits)} candidates, search {time.time() - t:.0f}s, best {BEST}', flush=True)
         if not hits and time.time() - t < 3:
             print('  ' * depth + f'  root state: stage {G.stage} room {G.room} x {G.px} y {G.py} front {G.front} health {[G.rd(G.health + k) for k in range(3)]} '
                   f'frozen {G.rd(G.f)} door {G.rd(G.items + 2)} player {[G.rd(G.g + k) for k in range(15)]}', flush=True)
@@ -436,12 +464,32 @@ def run_legs(G, s, legs, i, droom_xy, width, shots, depth=0):
     return False
 
 
+FLYING = {15}
+
+
 def fight(G, s, shots, limit=6000):
     """Boss room: walk toward the boss, turn to it and whip it (B tapped every 12 frames), controller only; the
     invincibility (Enemies_god) holds. The boss's orb is picked by walking where the boss was.
     Stage 18 (Dracula, a big face in the middle of the room): walk left up to the face, whip it (and jump now and then
     for its upper boxes); the end is the credits, i.e. the front mode leaving play ('X' then 'F n' in the replay)."""
     last = s == 18
+    if s in FLYING:
+        # a boss that flies (stage 15, Death: Y 64..166) is out of reach of the whip from the floor: jump (C) and whip (B) in the
+        # air every 40 frames, walking toward it
+        for i in range(limit * 3):
+            if G.stage != s: return True
+            bx = G.m.rd16(G.boss + 10) >> 8
+            if G.rd(G.boss + 21) == 0: bx = 0x78
+            d = bx - G.px
+            keys, ph = set(), i % 40
+            if abs(d) > 24 or ph == 0: keys.add(7 if d > 0 else 6)
+            if ph < 4: keys.add(8)
+            if 14 <= ph <= 16: keys.add(0)
+            G.step(frozenset(keys), 1)
+            if i % 600 == 0:
+                print(f'    fight {i}: simon {G.px},{G.py} boss x {bx} energy {G.rd(G.boss + 21)}', flush=True)
+        G.m.image().save(shots / 'boss-fail.png')
+        return False
     if last:
         G.flush(); G.log.append('X')
         limit = 24000
@@ -494,7 +542,7 @@ def record(G, lo, hi, width, shots):
         s = stage
         st_stage = G.save(); G.flush(); logn = len(G.log)
         ok = False
-        for rt in routes(s, G.room, droom):
+        for rt in preferred(s, G.room, droom) + routes(s, G.room, droom):
             legs, cur = [], G.room
             for nxt, di in rt:
                 legs.append((('up', 'down', 'left', 'right', 'secret')[di], cur, nxt)); cur = nxt
