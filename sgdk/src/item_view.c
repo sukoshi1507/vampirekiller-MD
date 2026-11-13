@@ -49,7 +49,8 @@ static void draw_door(int lift)
             door_tiles[((row / 8) * DOOR_COLS + col) * 8 + row % 8] =
                 source < VK_DOOR_ROWS ? vk_door_bar_rows[source * 2 + col] : 0;
     }
-    VDP_loadTileData(door_tiles, DOOR_TILE_INDEX, DOOR_COLS * DOOR_CELLS, VK_TM);
+    /* The opening redraws it every other turn for 80 frames: by the CPU (display on) it cost ~45 lines of the turn. */
+    VDP_loadTileData(door_tiles, DOOR_TILE_INDEX, DOOR_COLS * DOOR_CELLS, vk_tiles_by_dma ? DMA : DMA_QUEUE);
 }
 
 /* Stage 2 key (room 5): 8C7E copies sheet object 0x18 over the bitmap with

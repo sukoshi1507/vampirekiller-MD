@@ -1,6 +1,7 @@
 #include "secret.h"
 #include "item_shield.h"
 #include "actors.h"
+#include "profile.h"
 #include "generated/late_graphics.inc"
 #include "generated/loot_md.h"
 _Static_assert(LOOT_TILE_INDEX+VK_LOOT_TILE_COUNT<=1536 && LOOT_TILE_INDEX>1440+('Z'-' '),"loot in the lower case font tiles");
@@ -493,7 +494,14 @@ static void boss15_pool_sync(void){
  if(vk_boss.walker[0].alive==2){   /* the 16h body became a flame (2 entries) */
   if(boss_held[0]!=(2|BOSS_FLAME_HELD)){if(boss15_pool(0,0)>0 && boss15_pool(0,2)>0)boss_held[0]=2|BOSS_FLAME_HELD;}
  }else if(!vk_boss.walker[0].alive){boss15_pool(0,0);boss_held[0]=0;}
- for(i=0;i<VK_BOSS_MAX_SHOTS;i++)if(!vk_boss_shot_data(&vk_boss,i)->active)boss15_pool(i+1,0);
+ /* A release of a slot that holds nothing is only the allocator sync, and a sync that finds nothing changed does nothing again:
+  * 8 calls of boss15_pool(.,0) cost ~55 lines of the turn, twice per turn. */
+ {int synced=0;
+  for(i=0;i<VK_BOSS_MAX_SHOTS;i++)if(!vk_boss_shot_data(&vk_boss,i)->active){
+   if(Enemies_boss15_held(i+1))boss15_pool(i+1,0);
+   else if(!synced)Enemies_sat_sync(&vk_enemies);
+   synced=1;
+  }}
 }
 
 __attribute__((noinline)) static void boss_bodies_step(void)
@@ -507,11 +515,15 @@ static void step_boss(const EnemyRoomVars *v)
     int events, hit = 0;
     if (!vk_boss.in_room) {int k;for(k=0;k<7;k++){boss_held[k]=0;dracula_held_type[k]=0;}for(k=0;k<VK_BOSS_MAX_SHOTS;k++)boss_shot_held[k]=0;return;}   /* leaving the room resets the allocator (Enemies_init) */
     if(vk_boss.kind==5){dracula_step(v);dracula_sat_sync();return;}
+    VK_MARK(52);
     boss15_pool_sync();boss_bodies_step();
+    VK_MARK(53);
     events = vk_boss_frame(&vk_boss, v->simonX, v->simonY, v->difficulty, vk_enemies.frozen,
                            vk_enemies.energy);
+    VK_MARK(54);
     boss15_pool_sync();boss_shots_sync();
     boss9_flash_cells();
+    VK_MARK(55);
     if (events & VK_BOSS_EV_FIRE) vk_psg_effect(vk_boss.kind == 2 ? VK_SFX_WALKER_FIRE : VK_SFX_DAMAGE);   /* A4E8: 0A (stage 9) */
     if (events & VK_BOSS_EV_FLASH) vk_enemies.flash = ENEMY_FLASH_START;
     if (events & VK_BOSS_EV_ORB_TILES)
@@ -521,8 +533,8 @@ static void step_boss(const EnemyRoomVars *v)
         static const u16 red[2] = { 0x006, 0x00A };
         const u16 first = vk_boss.kind ? 5 : 4;   /* stages 6 and 9: trace, entries 5 and 7 */
         u16 pal;
-        if (vk_boss.kind) VDP_loadTileData(vk_orb6_tiles, ENEMY5_TILE_INDEX, VK_ORB6_TILE_COUNT, CPU);
-        else VDP_loadTileData(vk_orb_tiles, ENEMY5_TILE_INDEX, VK_ORB_TILE_COUNT, CPU);
+        if (vk_boss.kind) VDP_loadTileData(vk_orb6_tiles, ENEMY5_TILE_INDEX, VK_ORB6_TILE_COUNT, DMA_QUEUE);
+        else VDP_loadTileData(vk_orb_tiles, ENEMY5_TILE_INDEX, VK_ORB_TILE_COUNT, DMA_QUEUE);
         for (pal = PAL0; pal <= PAL2; pal = (u16)(pal + PAL2))
         {
             PAL_setColor((u16)(pal * 16 + first), red[0]);
@@ -659,6 +671,27 @@ static void room_cells(u16 key)
                 const VKLateGraphicsRoom *g=&late_graphics_rooms[vk_game.stage-12][vk_game.room];
                 if(g->tiles)VDP_loadTileData(&late_graphics_words[g->first*8],LATE_ENEMY_TILE_INDEX,g->tiles, VK_TM);
             }
+    /* The boss block replaces the enemy cells of the room. It used to be loaded by the CPU (display on, ~200 lines) in the first
+     * game turn, which lost a frame; the draw loads it (DMA while the display is off). Dracula has its own view (dracula_view.c). */
+    if (key && vk_boss_room(vk_game.stage, vk_game.room))
+    {
+        const int stage = vk_game.stage;
+        if (stage == 18) {}
+        else if (stage == VK_BOSS15_STAGE)
+        {
+            VDP_loadTileData(vk_boss15_tiles, ENEMY5_TILE_INDEX, VK_BOSS15_TILE_COUNT, VK_TM);
+            VDP_loadTileData(vk_death_flame_tiles, ENEMY5_TILE_INDEX + 44, 8, VK_TM);
+        }
+        else if (stage == VK_BOSS12_STAGE)
+        {
+            VDP_loadTileData(vk_boss12_tiles, ENEMY5_TILE_INDEX, VK_BOSS12_TILE_COUNT, VK_TM);
+            VDP_loadTileData(vk_boss_tiles + 28 * 8, ENEMY5_TILE_INDEX + VK_BOSS12_SHOT_TILE, 4, VK_TM);
+            VDP_loadTileData(vk_death_flame_tiles, ENEMY5_TILE_INDEX + 64, 8, VK_TM);
+        }
+        else if (stage == VK_BOSS9_STAGE) VDP_loadTileData(vk_boss9_tiles, ENEMY5_TILE_INDEX, VK_BOSS9_TILE_COUNT, VK_TM);
+        else if (stage == VK_BOSS6_STAGE) VDP_loadTileData(vk_boss6_tiles, ENEMY5_TILE_INDEX, VK_BOSS6_TILE_COUNT, VK_TM);
+        else VDP_loadTileData(vk_boss_tiles, ENEMY5_TILE_INDEX, VK_BOSS_TILE_COUNT, VK_TM);
+    }
 }
 
 void vk_enemy_room_cells(void)
@@ -671,6 +704,7 @@ void vk_step_enemies(void)
 {
     const u16 key = room_key();
     EnemyRoomVars vars;
+    VK_MARK(32);
     if (key != enemy_room_key)
     {
         enemy_room_key = key;
@@ -693,24 +727,14 @@ void vk_step_enemies(void)
             vk_boss_begin_stage(&vk_boss, vk_game.stage);
             vk_boss_set_collision(&vk_boss,vk_game_collision(&vk_game));
             if(vk_boss.kind==5){vk_dracula_init(&dracula);dracula.shot_clock=dracula_shot_clock;vk_dracula_view_begin(&dracula);}
-            else if(vk_boss.kind==3) {
-                VDP_loadTileData(vk_boss12_tiles,ENEMY5_TILE_INDEX,VK_BOSS12_TILE_COUNT,CPU);
-                VDP_loadTileData(vk_boss_tiles+28*8,ENEMY5_TILE_INDEX+VK_BOSS12_SHOT_TILE,4,CPU);
-                VDP_loadTileData(vk_death_flame_tiles,ENEMY5_TILE_INDEX+64,8,CPU);
-            }
-            else if(vk_boss.kind==4) {
-                VDP_loadTileData(vk_boss15_tiles,ENEMY5_TILE_INDEX,VK_BOSS15_TILE_COUNT,CPU);
-                VDP_loadTileData(vk_death_flame_tiles,ENEMY5_TILE_INDEX+44,8,CPU);
-            }
-            else if (vk_boss.kind == 2) VDP_loadTileData(vk_boss9_tiles, ENEMY5_TILE_INDEX, VK_BOSS9_TILE_COUNT, CPU);
-            else if (vk_boss.kind) VDP_loadTileData(vk_boss6_tiles, ENEMY5_TILE_INDEX, VK_BOSS6_TILE_COUNT, CPU);
-            else VDP_loadTileData(vk_boss_tiles, ENEMY5_TILE_INDEX, VK_BOSS_TILE_COUNT, CPU);
+            /* The boss tiles are loaded with the room cells (room_cells), while the room is drawn. */
             boss9_flash_pose[0] = boss9_flash_pose[1] = 0;
         }
         else vk_boss_reset(&vk_boss);
         boss_exit = 0;
         vk_hud_enemy(VK_BOSS_ENERGY);
     }
+    VK_MARK(33);
     if (!key) return;
     vars.stage = vk_game.stage;
     vars.room = vk_game.room;
@@ -735,7 +759,9 @@ void vk_step_enemies(void)
         vk_game_hit(&vk_game, vk_enemies.recoilDir, vk_enemies.energy == 0);
         vk_enemies.recoil = (EnemyU8)vk_game_recoiling(&vk_game);
     }
+    VK_MARK(34);
     step_boss(&vars);
+    VK_MARK(35);
     /* 85A6: after the move of the crushers, the guards C420 = 6, C42D and C43A; no armor, damage 8 or 16. The knockback
      * keeps the side of the last hit (C43C is not written, trace: left from the start). */
     {
@@ -755,6 +781,7 @@ void vk_step_enemies(void)
     }
     /* 819C: the last armor hit (C441 = 0) clears C701 bit 4 and redraws the
      * item box (8EE6): the shield goes from the HUD and from Simon. */
+    VK_MARK(36);
     if (armor && !vk_enemies.armor) vk_candles_armor_out(&vk_candles);
     /* Object 09 (C434): an enemy touched is destroyed, scored as by the whip (81AB),
      * effect 0D (7EBC). Object 08 (C43A): effect 17 when it drops to 10h (75ED). */
@@ -767,6 +794,7 @@ void vk_step_enemies(void)
     }
     /* 75FA-7601: C43B ran out, D010 bit 0 cleared, FC gives the music back. */
     if (vk_enemies.timeStopEnd) vk_psg_timer_end();
+    VK_MARK(37);
     if (vk_whip_active(&vk_whip))
     {
         int left = 0, top = 0, right = 0, bottom = 0;
@@ -856,6 +884,25 @@ void vk_reset_enemy_clock(void)
 /* Enemy layers as hardware sprites from ENEMY_SPRITE_BASE, one 16x16 sprite each,
  * chained in order, the last one linking to tail. Returns the count, 0 outside the
  * hall room the state belongs to. */
+/* Cell of a (type, pattern) of the late room table, 0xFF for none; patterns are multiples of 4 (checked here). */
+#define LATE_LUT_TYPES 32
+static u8 late_lut[LATE_LUT_TYPES][64];
+static u16 late_lut_key = 0xFFFF;
+static void late_lut_room(void)
+{
+    const u16 key=(u16)(vk_game.stage<<8|vk_game.room);
+    const VKLateGraphicsRoom *g;
+    u16 j;
+    if(key==late_lut_key)return;
+    late_lut_key=key;
+    memset(late_lut,0xFF,sizeof late_lut);
+    g=&late_graphics_rooms[vk_game.stage-12][vk_game.room];
+    for(j=0;j<g->cells;j++){
+        const VKLateGraphicsCell *c=&late_graphics_cells[g->cell_first+j];
+        if(c->type<LATE_LUT_TYPES && !(c->pattern&3) && late_lut[c->type][c->pattern>>2]==0xFF)late_lut[c->type][c->pattern>>2]=c->cell;
+    }
+}
+
 static u16 show_enemy_sprites(u16 tail)
 {
     /* Static, not on the stack: with Enemies_sprites inlined, GCC 16.1 (-O3, LTO) wrote
@@ -866,15 +913,28 @@ static u16 show_enemy_sprites(u16 tail)
     u16 count = 0,boss_count=0,boss_body_count=0;
     u16 i;
     if (!enemy_room_key || enemy_room_key != room_key()) return 0;
+    VK_MARK(25);
     Enemies_sat_render(&vk_enemies);
+    VK_MARK(26);
+    if(vk_game.stage>=12 && vk_game.stage<=18 && vk_game.room<12)late_lut_room();
     for (i = 0; i < ENEMY_ALL; i++){
         u16 start=count,k;count=(u16)(count+Enemies_sprites(&vk_enemies,(EnemyU8)i,&list[count]));
+
         if(vk_game.stage>=12 && vk_game.stage<=18 && vk_game.room<12){
             const VKLateGraphicsRoom *g=&late_graphics_rooms[vk_game.stage-12][vk_game.room];
+            const EnemyU8 type=Enemies_object(&vk_enemies,(EnemyU8)i)->type;
             for(k=start;k<count;k++)if(list[k].bank==1){
-                u16 j;for(j=0;j<g->cells;j++){
+                u16 j;
+                /* The first cell of the room table with this type and pattern (a search of up to 32 cells per sprite cost ~100 lines
+                 * in the busiest rooms): a table by type and pattern / 4 made when the room changes gives the same cell. */
+                if(type<LATE_LUT_TYPES && !(list[k].pattern&3)){
+                    const u8 cell=late_lut[type][list[k].pattern>>2];
+                    if(cell!=0xFF){list[k].bank=3;list[k].pattern=cell;}
+                    continue;
+                }
+                for(j=0;j<g->cells;j++){
                     const VKLateGraphicsCell *c=&late_graphics_cells[g->cell_first+j];
-                    if(c->type==Enemies_object(&vk_enemies,(EnemyU8)i)->type && c->pattern==list[k].pattern){list[k].bank=3;list[k].pattern=c->cell;break;}
+                    if(c->type==type && c->pattern==list[k].pattern){list[k].bank=3;list[k].pattern=c->cell;break;}
                 }
                 /* Every species created in a room of stages 12-18 has cells in its table: openMSX creates, in the 74 rooms, only
                  * the fixed list (6154), the 9DE7 channel (flag 64: eagle 0F + flea 23h), the bones 04 and shot D700 of 0B/10h, and
@@ -884,6 +944,7 @@ static u16 show_enemy_sprites(u16 tail)
             }
         }
     }
+    VK_MARK(27);
     /* 90D8, 9112: two cells per platform; the pattern takes a free slot of the block (patterns D0, D4 on the MSX). */
     for (i = 0; i < VK_PLATFORM_MAX; i++)
     {
@@ -933,6 +994,7 @@ static u16 show_enemy_sprites(u16 tail)
             list[count].bank = 1;
         }
     }
+    VK_MARK(28);
     if (vk_boss.in_room)
     {
         static VKBossSprite boss[VK_BOSS_MAX_SPRITES];
@@ -1060,11 +1122,16 @@ static int shield_pose(const VKPlayer *player, bool crouch_mode, int attack_fram
     return -1;
 }
 
+static void whip_pending_queue(void);
+
 void vk_show_player(const VKPlayer *shown)
 {
+    VK_MARK(19);
+    whip_pending_queue();
     /* After a fall Simon is parked at Y FA, whose top rows would still reach the
      * 224-line screen: he is drawn lower, out of sight. */
     VKPlayer parked = *shown;
+
     const VKPlayer *player = &parked;
     if (parked.y == VK_FALL_Y) parked.y = 255;
     /* 78CC: while C42D runs, Simon's sprites go to Y E0 when bit 1 of the 30 Hz
@@ -1078,10 +1145,12 @@ void vk_show_player(const VKPlayer *shown)
      * objects of candle_view.c close the chain. The enemies shown are those of the
      * previous turn (late_enemy_count), see swap_entries. */
     const u16 candle_count = vk_candle_view_sprites();
+    VK_MARK(20);
     const u16 candle_link = candle_count ? CANDLE_SPRITE_BASE : 0;
     const u16 enemy_count = show_enemy_sprites(candle_link);
     const u16 shown_enemies = late_valid ? late_enemy_count : 0;
     const u16 enemy_link = shown_enemies ? ENEMY_SPRITE_BASE : candle_link;
+    VK_MARK(21);
     const bool target_visible = vk_targets_visible();
     const int attack_frame = vk_whip_arm_frame(&vk_whip);
     const int crouch_mode = !player->on_stairs && (player->crouched || (attack_frame && vk_whip.crouched));
@@ -1178,6 +1247,7 @@ void vk_show_player(const VKPlayer *shown)
     /* This turn's Simon and enemies go to late_*, the previous turn's to the table,
      * with the shield tiles and the silhouette colour they need (same VBlank). */
     {
+        VK_MARK(22);
         const int shield_now = shield;
         swap_entries(late_simon, 0, SIMON_SPRITES);
         swap_entries(late_enemies, ENEMY_SPRITE_BASE,
@@ -1210,25 +1280,52 @@ void vk_show_player(const VKPlayer *shown)
         late_color = color;
         late_valid = TRUE;
     }
+    VK_MARK(23);
     /* Courtyard flames or training target on sprites 7.. (room_view.c). */
     if (vk_draw_targets(enemy_link))
     {
         VDP_updateSprites(candle_count ? CANDLE_SPRITE_BASE + candle_count : 7 + COURTYARD_MAX_FLAMES,
                           DMA_QUEUE);
+        VK_MARK(24);
         return;
     }
     VDP_updateSprites(candle_count ? CANDLE_SPRITE_BASE + candle_count
                       : shown_enemies ? ENEMY_SPRITE_BASE + shown_enemies : (target_visible ? 8 : 7), DMA_QUEUE);
+    VK_MARK(24);
 }
 
 /* Whip level given by an object (C416, candles.c): loads its standing frames, the
  * level 2 frames (throw pose, upper compositions 12-14) for the thrown weapons 2..4. */
+/* The whip tiles of a level: 6 frames of 32 tiles. A load by the CPU (display on) took 330 lines of a turn and one DMA of 6 KB runs past the
+ * VBlank, so a pickup queues them in three steps, one per turn (the frames 0 and 3, 1 and 4, 2 and 5: the first pictures of an attack facing
+ * either way come first). The draws (stage start, respawn) still load them at once. */
+#define WHIP_FRAMES 6
+#define WHIP_FRAME_TILES (WHIP_LEVEL_TILE_COUNT / WHIP_FRAMES)
+static const u32 *whip_pending;
+static u16 whip_step = 3;
+
+static void whip_pending_queue(void)
+{
+    u16 k;
+    if (whip_step >= 3) return;
+    for (k = 0; k < 2; k++)
+    {
+        const u16 f = (u16)(whip_step + 3 * k);
+        VDP_loadTileData(whip_pending + f * WHIP_FRAME_TILES * 8, (u16)(WHIP_LEVEL_TILE_INDEX + f * WHIP_FRAME_TILES), WHIP_FRAME_TILES, DMA_QUEUE);
+    }
+    whip_step++;
+}
+
+static const u32 *whip_level_tiles(int level)
+{
+    return level == 1 ? (const u32 *)vk_whip_level1_tiles : level >= VK_WHIP_LEVEL_THROW ? (const u32 *)vk_whip_level2_tiles : 0;
+}
+
 static void load_whip_level(int level)
 {
-    if (level == 1)
-        VDP_loadTileData((const u32 *)vk_whip_level1_tiles, WHIP_LEVEL_TILE_INDEX, WHIP_LEVEL_TILE_COUNT, VK_TM);
-    else if (level >= VK_WHIP_LEVEL_THROW)
-        VDP_loadTileData((const u32 *)vk_whip_level2_tiles, WHIP_LEVEL_TILE_INDEX, WHIP_LEVEL_TILE_COUNT, VK_TM);
+    const u32 *tiles = whip_level_tiles(level);
+    whip_step = 3;
+    if (tiles) VDP_loadTileData(tiles, WHIP_LEVEL_TILE_INDEX, WHIP_LEVEL_TILE_COUNT, VK_TM);
 }
 
 void vk_set_whip_level(int level)
@@ -1236,6 +1333,16 @@ void vk_set_whip_level(int level)
     if (vk_whip_set_level(&vk_whip, level) < 0) return;
     whip_level_choice = level;
     load_whip_level(level);
+}
+
+/* The whip given by an object (candles.c), in play: the same, with the tiles queued over three turns. */
+void vk_set_whip_level_pickup(int level)
+{
+    if (vk_whip_set_level(&vk_whip, level) < 0) return;
+    whip_level_choice = level;
+    whip_pending = whip_level_tiles(level);
+    whip_step = whip_pending ? 0 : 3;
+    whip_pending_queue();
 }
 
 void vk_load_whip_graphics(void)

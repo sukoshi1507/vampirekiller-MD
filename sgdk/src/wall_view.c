@@ -1,4 +1,5 @@
 #include "wall_view.h"
+#include "profile.h"
 #include "frontend.h"
 #include "hud.h"
 #include "msx_text.h"
@@ -169,6 +170,7 @@ static u16 make_tiles(void)
 void vk_shop_view_open(void)
 {
     VKByte wx, wy;
+    vk_draws++;   /* the window is composed and written at once while the game is frozen: a draw turn (profile.h) */
     u16 r, c, count;
     vk_shop_window(&vk_walls, &wx, &wy);
     /* Generated direct/hidden wall positions are multiples of8. */
@@ -196,6 +198,7 @@ void vk_shop_view_close(void)
 {
     u16 r;
     if (!win_open) return;
+    vk_draws++;
     SYS_disableInts();
     for (r = 0; r < WIN_ROWS; r++)
         VDP_setTileMapDataRow(BG_A, saved[r], (u16)(win_row + r), win_col, WIN_COLS, CPU);

@@ -16,10 +16,18 @@ static void type10ShotSpawn(EnemyState *s, const Enemy *src, const EnemyRoomVars
     EnemyU8 i, slot;
     Enemy *e;
     S8Ext *q;
-    for (slot = 0; slot < 8; slot++) {
-        for (i = 0; i < ENEMY_ALL; i++)
-            if (Enemies_slot(s,i)->active && isProjectile(Enemies_slot(s,i)->type) && ext(s, Enemies_slot(s,i))->c10 == slot) break;
-        if (i == ENEMY_ALL) break;
+    /* The first of the 8 D700 slots that no active projectile holds (c10): one pass over the objects, not 8 scans of 15 (~23 lines). */
+    {
+        EnemyU8 held = 0;
+        for (i = 0; i < ENEMY_MAX; i++) {
+            const Enemy *o = &s->enemy[i];
+            if (o->active && isProjectile(o->type) && s8x[i].c10 < 8) held |= (EnemyU8)(1u << s8x[i].c10);
+        }
+        for (i = 0; i < ENEMY_PROJECTILE_MAX; i++) {
+            const Enemy *o = &vk_projectiles[i];
+            if (o->active && isProjectile(o->type) && s8q[i].c10 < 8) held |= (EnemyU8)(1u << s8q[i].c10);
+        }
+        for (slot = 0; slot < 8 && (held & (1u << slot)); slot++) ;
     }
     if (slot == 8) return;
     e = newObject(s, ENEMY_TYPE_10_SHOT);

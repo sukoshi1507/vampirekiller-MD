@@ -41,6 +41,7 @@
  * section « Contact selon la posture de Simon »).
  */
 #include "enemies.h"
+#include "profile.h"
 #include "item_shield.h"
 #include "player.h"
 #include "generated/enemy_rooms.h"
@@ -207,11 +208,19 @@ static void sat_sync(EnemyState *s){
  /* Same two passes as before (release the inactive owners, then assign in index order), without the per-slot calls: this runs several
   * times per frame and in every allocation. */
  int i;Enemy *e;unsigned long *o;
+ /* Nothing to do when every owner already matches its slot (the usual case): one cheap pass instead of four. */
+ for(i=0,e=s->enemy,o=c800_sat;i<ENEMY_MAX;i++,e++,o++)if(!e->active!=!*o)break;
+ if(i==ENEMY_MAX){
+  for(i=0,e=vk_projectiles,o=d700_sat;i<ENEMY_PROJECTILE_MAX;i++,e++,o++)if(!e->active!=!*o)break;
+  if(i==ENEMY_PROJECTILE_MAX)return;
+ }
  for(i=0,e=s->enemy,o=c800_sat;i<ENEMY_MAX;i++,e++,o++)if(!e->active && *o){sat_used&=~*o;*o=0;}
  for(i=0,e=vk_projectiles,o=d700_sat;i<ENEMY_PROJECTILE_MAX;i++,e++,o++)if(!e->active && *o){sat_used&=~*o;*o=0;}
  for(i=0,e=s->enemy,o=c800_sat;i<ENEMY_MAX;i++,e++,o++)if(e->active && !*o)*o=sat_reserve(isProjectile(e->type),isProjectile(e->type)?2:satCount(e->type));
  for(i=0,e=vk_projectiles,o=d700_sat;i<ENEMY_PROJECTILE_MAX;i++,e++,o++)if(e->active && !*o)*o=sat_reserve(isProjectile(e->type),isProjectile(e->type)?2:satCount(e->type));
 }
+void Enemies_sat_sync(EnemyState *s){sat_sync(s);}
+int Enemies_boss15_held(int slot){return slot>=0 && slot<BOSS_SAT_SLOTS && boss15_sat[slot]!=0;}
 /* count=0 releases; slot0 is the body, slots1..8 are physical D700 indices, slot9 is C800[1], slots10..14 are C800[2..6].
  * Persistent masks retain holes: do not recompute them from active counts. */
 int Enemies_boss15_reserve(EnemyState *s,int slot,int count){
@@ -1296,11 +1305,15 @@ static void boneSpawn(EnemyState *s, const Enemy *src, int vy, int vx)
     if (!e) return;
     q = ext(s, e);
     /* Emplacement D700 : le premier libre parmi 8 (9F97). */
-    for (slot = 0; slot < 8; slot++) {
-        used = 0;
-        for (i = 0; i < ENEMY_ALL; i++)
-            if (Enemies_slot(s,i)->active && isProjectile(Enemies_slot(s,i)->type) && Enemies_slot(s,i) != e && ext(s,Enemies_slot(s,i))->c10 == slot) used = 1;
-        if (!used) break;
+    /* One pass for the slots held by the other projectiles (8 scans of 15 objects cost ~16 lines). */
+    {
+        EnemyU8 held = 0;
+        for (i = 0; i < ENEMY_ALL; i++) {
+            const Enemy *o = Enemies_slot(s, i);
+            if (o->active && isProjectile(o->type) && o != e && ext(s, o)->c10 < 8) held |= (EnemyU8)(1u << ext(s, o)->c10);
+        }
+        for (slot = 0; slot < 8 && (held & (1u << slot)); slot++) ;
+        used = 0; (void)used;
     }
     if (slot > 7) slot = 7;
     q->c10 = slot;
@@ -1613,10 +1626,10 @@ static Enemy *newObject(EnemyState *s,EnemyU8 type)
  int i;Enemy *slot=0;unsigned long mask;
  sat_sync(s);
  if(isProjectile(type)){
-  for(i=0;i<ENEMY_PROJECTILE_MAX;i++)if(!vk_projectiles[i].active && !boss15_sat[i+1]){
-   int k,busy=0;for(k=0;k<ENEMY_MAX;k++)if(s->enemy[k].active && isProjectile(s->enemy[k].type) && ext(s,&s->enemy[k])->c10==i)busy=1;
-   if(!busy){slot=&vk_projectiles[i];break;}
-  }
+  /* D700 numbers held by projectile-type objects of the C800 array (rare): one pass, not one per candidate slot. */
+  unsigned busy=0;int k;
+  for(k=0;k<ENEMY_MAX;k++)if(s->enemy[k].active && isProjectile(s->enemy[k].type) && ext(s,&s->enemy[k])->c10<ENEMY_PROJECTILE_MAX)busy|=1u<<ext(s,&s->enemy[k])->c10;
+  for(i=0;i<ENEMY_PROJECTILE_MAX;i++)if(!vk_projectiles[i].active && !boss15_sat[i+1] && !(busy&(1u<<i))){slot=&vk_projectiles[i];break;}
  }else for(i=0;i<ENEMY_MAX;i++)if(!s->enemy[i].active && !boss15_sat[bossSlotOfC800(i)]){slot=&s->enemy[i];break;}
  if(!slot)return 0;
  mask=sat_reserve(isProjectile(type),isProjectile(type)?2:satCount(type));if(!mask)return 0;
@@ -1855,7 +1868,9 @@ int Enemies_frame(EnemyState *s, EnemySpawnTimer *t, const EnemyRoomVars *v)
         if(s->killTimer)s->killTimer--;
         if(s->guardTimer && --s->guardTimer==ENEMY_GUARD_WARNING)guardWarning=0x17;
     }
+    VK_MARK(38);
     Enemies_update(s);
+    VK_MARK(39);
     if (v->map) {
         for (i = 0; i < ENEMY_MAX; i++) {
             Enemy *e = &s->enemy[i];
@@ -1866,6 +1881,7 @@ int Enemies_frame(EnemyState *s, EnemySpawnTimer *t, const EnemyRoomVars *v)
                 fall(e, v->map, v->stage);
         }
     }
+    VK_MARK(40);
     /* Shared98E5 traversal.9B90 can return an earlier IX, so legacy
      * panther/fish3 AI must be revisited too, without advancing frame phase. */
     {
@@ -1909,6 +1925,7 @@ int Enemies_frame(EnemyState *s, EnemySpawnTimer *t, const EnemyRoomVars *v)
         }
     }
 
+    VK_MARK(41);
     /* Une passe de l'etat 5 sur deux images, a partir de la premiere image de jeu de la
      * salle : canal type 1 (9CE6, cote alterne par tir, provisoire) puis canal type 4 (9D97,
      * hall salle 4, stage 2 salles 0, 1, 3), dans l'ordre des bits de la boucle 5ED8. */
@@ -1965,8 +1982,10 @@ int Enemies_frame(EnemyState *s, EnemySpawnTimer *t, const EnemyRoomVars *v)
         }
     }
 
+    VK_MARK(42);
     /* Type 2 (stage 2, salles 4 et 5) et ses gouttes. */
     type2Frame(s, t, v);
+    VK_MARK(43);
 
     /* Contact (7E67) : desactive pendant le recul, l'invulnerabilite et C43A (objet 08) ;
      * avec C434 (objet 09) ces gardes sont sautees et le contact detruit l'ennemi.
@@ -1986,6 +2005,7 @@ int Enemies_frame(EnemyState *s, EnemySpawnTimer *t, const EnemyRoomVars *v)
         if(s4Remove(e))e->active=0;
     }
 
+    VK_MARK(44);
     s->itemSound = guardWarning;
     if(guardWarning)contactSound(s,guardWarning);
     { int contact_pool;for(contact_pool=0;contact_pool<2;contact_pool++)
@@ -1994,16 +2014,17 @@ int Enemies_frame(EnemyState *s, EnemySpawnTimer *t, const EnemyRoomVars *v)
             Enemy *e = Enemies_slot(s,i);
             if (!e->active || e->exiting || isProjectile(e->type)!=contact_pool) continue;
             if (e->type == ENEMY_TYPE_SPLASH || (e->type == ENEMY_TYPE_DEATH || e->type == ENEMY_TYPE_SHIELD_SPARK) || ghostInert(e)) continue;   /* goutte, flamme de mort, objet 1C attendant : +E = 0, ni contact ni fouet */
+            if(isLoot(e->type) && !s->itemPhase)continue;
+            if (!isLoot(e->type) && Enemies_god && !s->killTimer)continue;
+            if (!Enemies_touches(e, v)) continue;
+            if(isLoot(e->type)){vk_loot_pick(&enemyLoot[i],&Enemies_lootPick);lootSync(e,&enemyLoot[i]);if(loot_handler){loot_handler(s,Enemies_lootPick);Enemies_lootPick=0;}break;}
+            /* The damage is computed here, not before the guards: it was ~15 type tests for each active object, every turn. */
             EnemyU8 damage = e->type == ENEMY_TYPE_10 ? 6 : e->type == ENEMY_TYPE_DRAGON ? DRAGON_DAMAGE : (e->type == ENEMY_TYPE_6 || e->type == ENEMY_TYPE_8 || e->type == ENEMY_TYPE_GHOST || e->type == ENEMY_TYPE_FISH3 || e->type == ENEMY_TYPE_EAGLE || e->type == ENEMY_TYPE_12 || e->type == ENEMY_TYPE_10) ? ENEMY_STAGE4_DAMAGE :
                              (e->type == ENEMY_TYPE_7 || e->type == ENEMY_TYPE_STATUE ||
                               e->type == ENEMY_TYPE_HOPPER || e->type == ENEMY_TYPE_LEAPER || e->type == ENEMY_TYPE_FLEA) ? 2 :   /* 81CE : base 1, doublee */
                              isProjectile(e->type) ? 1 :                                       /* 7F3D : 462B avec B = 1 */
                              e->type == ENEMY_TYPE_5 ? ENEMY_TYPE5_DAMAGE :
                              e->type == ENEMY_TYPE_2 ? ENEMY_TYPE2_DAMAGE : ENEMY_CONTACT_DAMAGE;
-            if(isLoot(e->type) && !s->itemPhase)continue;
-            if (!isLoot(e->type) && Enemies_god && !s->killTimer)continue;
-            if (!Enemies_touches(e, v)) continue;
-            if(isLoot(e->type)){vk_loot_pick(&enemyLoot[i],&Enemies_lootPick);lootSync(e,&enemyLoot[i]);if(loot_handler){loot_handler(s,Enemies_lootPick);Enemies_lootPick=0;}break;}
             if (s->killTimer) {
                 /* 7EB0 : 81AB (points de la table 81CE, comme au fouet), 9A3E, effet 0D ;
                  * un seul ennemi par passe (JP 509F). */
@@ -2046,6 +2067,7 @@ int Enemies_frame(EnemyState *s, EnemySpawnTimer *t, const EnemyRoomVars *v)
 
     }
 
+    VK_MARK(45);
     /* 75C0-75E9 : C440, C434 et C43A baissent a chaque passe de la routine de Simon,
      * comme C42D (une image sur deux). C43A tombe a 10h : effet 17. */
     s->itemPhase ^= 1;

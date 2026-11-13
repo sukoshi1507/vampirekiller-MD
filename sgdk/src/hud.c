@@ -221,6 +221,7 @@ void vk_hud_show_frame(void)
 void vk_hud_show(void)
 {
     u16 row, col;
+    if (!bar_ready) prepare_bar();   /* once, here: the first bar update of play took ~100 lines of a turn */
     for (row = 0; row < HUD_ROWS; row++)
         for (col = 0; col < HUD_COLS; col++)
             VDP_setTileMapXY(BG_A, TILE_ATTR_FULL(PAL1, FALSE, FALSE, FALSE,
@@ -260,5 +261,6 @@ void vk_hud_update(int energy)
     if (filled == drawn_pixels) return;
     drawn_pixels = filled;
     build_bar(filled);
-    VDP_loadTileData(bar_tiles, HUD_TILE_INDEX, HUD_ROWS * HUD_COLS, VK_TM);
+    /* The bar changes with every hit on the boss: the CPU load of 27 tiles with the display on took ~100 lines of a turn. */
+    VDP_loadTileData(bar_tiles, HUD_TILE_INDEX, HUD_ROWS * HUD_COLS, vk_tiles_by_dma ? DMA : DMA_QUEUE);
 }

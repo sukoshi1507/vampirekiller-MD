@@ -1,4 +1,5 @@
 #include "boss.h"
+#include "profile.h"
 #include "player.h"
 #include "enemies.h"   /* Enemies_randomR: the common LD A,R generator (research/hasard-R.md) */
 
@@ -604,15 +605,19 @@ int vk_boss_frame(VKBoss *b, int simon_x, int simon_y, int d012, int frozen, int
         return events;
     }
     if(b->kind==3 && !b->room_step)boss12_init(b); /* BA26 runs before 98E5. */
+    VK_MARK(48);
     if(b->kind==4)boss15_room(b); /* Room script runs even during D010. */
+    VK_MARK(49);
     boss12_bursts_pass(b); /* +7E=0, including while D010 freezes the fighters. */
     if (frozen) return events;           /* 98E5 */
+    VK_MARK(50);
     if(b->kind==4)boss15_body(b);
     else if (b->kind == 3) events |= room12_pass(b,simon_x,simon_y,d012);
     else if (b->kind == 2) events |= room9_pass(b, simon_x, simon_y, d012);
     else if (b->kind) events |= room_pass(b, simon_x, simon_y, d012);
     else if (!b->alive) spawn(b);
     else boss_pass(b, simon_x, simon_y, d012);
+    VK_MARK(51);
     if(b->kind==4)boss15_shots_pass(b,simon_x,simon_y,d012);else shots_pass(b);
     if (b->fired) { b->fired = 0; events |= VK_BOSS_EV_FIRE; }
     return events;

@@ -85,6 +85,7 @@ void vk_step_platforms(void);
 void vk_reset_enemy_clock(void);
 /* Whip level picked up (C416); levels without an asset are ignored. */
 void vk_set_whip_level(int level);
+void vk_set_whip_level_pickup(int level);   /* in play: the tiles are queued over three turns */
 /* Loads the whip, attack, crouch, target and flame tiles and resets the whip. */
 void vk_load_whip_graphics(void);
 /* Simon, the whip, the hall enemies and the targets of room_view.c, as hardware

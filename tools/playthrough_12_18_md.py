@@ -27,13 +27,14 @@ RAM help, all applied identically in record and play, none of it moves Simon:
 Replay file lines: 'B stage' (cold boot + RAM entry), 'H n KEYS' (n frames held), 'M n KEYS' (macro of the search:
 n frames then a save/load round trip, see Game.roundtrip), 'R' (a round trip alone: the recording restored a saved state there), 'K', 'J', 'C stage room' (checkpoint), 'E' (end of a
 segment). Same ROM + same core = same frames."""
-import argparse, ctypes as C, shutil, subprocess, sys, time, zlib
+import argparse, ctypes as C, os, shutil, subprocess, sys, time, zlib
 from pathlib import Path
 from probe import ROOT
 from md_harness import Machine, Game_View, load_symbols, lookup, BUTTONS
 
 NAMES = {v: k for k, v in BUTTONS.items()}
 REPLAY = ROOT / 'tests/md_playthrough/playthrough_12_18.txt'
+ROM = Path(os.environ.get('VK_MD_ROM', ROOT / 'sgdk/out/rom.bin'))   # VK_MD_ROM / VK_MD_ELF: another build (measurement)
 DRACULA_FIGHT = False  # the stage 18 fight is not solved by this test (fight() has the attempt), see record()
 STALL_BEAT = 150      # frames with C003 tick and itemPhase unchanged = frozen game loop
 STALL_PROGRESS = 15000  # frames between two checkpoints (the stage 15 fight alone is about 9500)
@@ -66,8 +67,8 @@ def parse_exits():
 class Game:
     def __init__(self, core, video=None):
         self.core = core
-        self.syms = load_symbols(elf=ROOT / 'sgdk/out/rom.out')
-        self.m = Machine(core, ROOT / 'sgdk/out/rom.bin')
+        self.syms = load_symbols(elf=Path(os.environ.get('VK_MD_ELF', ROOT / 'sgdk/out/rom.out')))
+        self.m = Machine(core, ROM)
         Game_View(self.m, self.syms)
         a = lambda n: lookup(self.syms, n)[0]
         self.a = a
@@ -77,6 +78,7 @@ class Game:
         self.cand = a('vk_candles')
         self.rm = a('room_map')
         self.video = None
+        self.watch = None      # LateTurns checked at every frame of the search (record mode)
         self.log = []          # replay lines
         self.pending = None    # [buttons, frames] being run-length encoded
         self.nsize = self.m.lib.retro_serialize_size()
@@ -86,7 +88,7 @@ class Game:
     def reboot(self):
         """Cold start of the console (a new segment of the replay starts from a fresh boot, as when recorded)."""
         self.m.close()
-        self.m = Machine(self.core, ROOT / 'sgdk/out/rom.bin')
+        self.m = Machine(self.core, ROM)
         Game_View(self.m, self.syms)
 
     # ---- video -----------------------------------------------------------------------------
@@ -130,6 +132,7 @@ class Game:
 
     def load(self, st):
         self.m.lib.retro_unserialize(st, self.nsize)
+        if self.watch: self.watch.reset()
 
     def entry(self, stage, room, x=None, y=None, facing=None):
         """Initial entry by RAM (same as tools/smoke_rooms_md.py): the only teleport of the test."""
@@ -171,6 +174,7 @@ class Game:
         for _ in range(n):
             self.m.wr(self.god, 1)
             self.frame(buttons)
+            if self.watch: self.watch.check(buttons)
 
     def roundtrip(self):
         """Save + load of the emulator. The search branches on save states, and the core keeps a few bytes outside its
@@ -577,12 +581,113 @@ def record(G, lo, hi, width, shots):
     if G.front == 4: G.checkpoint()
     G.flush(); G.log.append('E')
 
-def play(G, replay, shots):
-    """Replays the recorded inputs and checks checkpoints, front mode and game loop."""
+PROF_STEPS = [(0, 1, 'input'), (1, 2, 'tick+whip'), (2, 3, 'items'), (3, 4, 'water+tstop'), (4, 5, 'enemies'), (5, 6, 'weapons'), (6, 7, 'shield'),
+              (7, 8, 'candles'), (8, 9, 'walls'), (9, 10, 'flames'), (10, 11, 'player'), (11, 12, 'health'), (12, 13, 'end'), (13, 14, 'reveal'),
+              (15, 16, 'health.tick'), (16, 17, 'health.bar'), (17, 18, 'health.status'), (19, 20, 'show.candles'), (20, 21, 'show.enemies'), (21, 22, 'show.simon'), (22, 23, 'show.tail'), (23, 24, 'show.update'), (10, 19, 'to-show'), (24, 11, 'show.ret'), (25, 26, 'sat_render'), (26, 27, 'enemy.sprites'), (27, 28, 'plat+crush'), (32, 33, 'en.room'), (33, 34, 'en.frame'), (34, 35, 'en.boss'), (35, 36, 'en.crushers'), (36, 37, 'en.misc'), (38, 39, 'ef.update'), (39, 40, 'ef.fall'), (40, 41, 'ef.ai'), (41, 42, 'ef.spawn'), (42, 43, 'ef.type2'), (43, 44, 'ef.shots'), (44, 45, 'ef.contact'), (2, 46, 'it.events'), (46, 47, 'it.tick'), (47, 3, 'it.rest'), (52, 53, 'boss.pool+bodies'), (53, 54, 'boss.frame'), (54, 55, 'boss.sync'), (48, 49, 'b15.room'), (49, 50, 'b15.bursts'), (50, 51, 'b15.body'), (51, 54, 'b15.shots')]   # VK_MARK pairs (main.c)
+
+
+class LateTurns:
+    """Frame budget of the loop turns, read from the RAM counters of main.c (vk_turn_sync) after every frame.
+    A turn starts at the VBlank and should end before the next one. A turn that ends a few lines inside that VBlank is absorbed (its
+    VBlank work runs at once, no frame lost: counted in `absorbed`); any other turn that ends after the VBlank started is a lost frame
+    (vk_late_plain), unless it drew a room (vk_draws: the freeze draw, a door, a stage start), which is allowed to take its frames.
+    play() fails on a lost frame. `slack` = lines left before the VBlank at the end of each ordinary turn (negative: lines past its start).
+    With a VK_PROFILE ROM (EXTRA_FLAGS=-DVK_PROFILE) the cost of each step of a turn is listed too (lines of 489 cycles)."""
+    def __init__(self, G):
+        a = G.a
+        self.G, self.n, self.absorbed, self.list, self.prof, self.now = G, 0, 0, [], None, None
+        self.c_late, self.c_plain, self.c_abs, self.c_drew = a('vk_late_turns'), a('vk_late_plain'), a('vk_absorbed'), a('vk_late_drew')
+        self.c_delta, self.c_turns, self.c_slack, self.c_draws = a('vk_late_delta'), a('vk_turns'), a('vk_last_slack'), a('vk_draws')
+        try: self.prof, self.now = a('vk_prof_late'), a('vk_prof')
+        except BaseException: pass
+        self.cost = {}        # profile ROM: step -> [sum, turns, max] over the ordinary turns
+        self.slack = []
+        self.prev_freeze = 0
+        self.reset()
+
+    def reset(self):
+        m = self.G.m
+        self.last_plain, self.last_abs, self.last_late = m.rd16(self.c_plain), m.rd16(self.c_abs), m.rd16(self.c_late)
+        self.last_turns, self.last_draws, self.prev_freeze = m.rd16(self.c_turns), m.rd16(self.c_draws), 0
+        self.last_end = m.rd32(self.now + 4 * 31) if self.now else 0
+
+    def check(self, keys):
+        G, m = self.G, self.G.m
+        freeze = G.rd(G.f)
+        plain, ab, tn, dr = m.rd16(self.c_plain), m.rd16(self.c_abs), m.rd16(self.c_turns), m.rd16(self.c_draws)
+        lt = m.rd16(self.c_late)
+        dplain, dab = (plain - self.last_plain) & 0xFFFF, (ab - self.last_abs) & 0xFFFF
+        if dplain > 4 or dab > 4: dplain = dab = 0       # a restored state, not a frame
+        was = self.prev_freeze
+        self.prev_freeze = freeze
+        ordinary = tn == (self.last_turns + 1) & 0xFFFF and dr == self.last_draws and not freeze and not was and lt == self.last_late
+        if tn != self.last_turns and ordinary:
+            v = m.rd16(self.c_slack)
+            self.slack.append(v - 65536 if v >= 32768 else v)
+        if self.now and tn != self.last_turns:
+            end = m.rd32(self.now + 4 * 31)
+            if end != self.last_end and ordinary and not dplain and not dab:
+                v = [m.rd32(self.now + 4 * i) for i in range(56)]
+                for x, y, name in PROF_STEPS:
+                    if v[x] and v[y] and 0 <= v[y] - v[x] < 2000:
+                        t = self.cost.setdefault(name, [0, 0, 0]); t[0] += v[y] - v[x]; t[1] += 1; t[2] = max(t[2], v[y] - v[x])
+            self.last_end = end
+        self.last_plain, self.last_abs, self.last_turns, self.last_draws, self.last_late = plain, ab, tn, dr, lt
+        if not dplain and not dab:
+            # A turn that drew a room and overran is neither: the draw may take its frames.
+            return
+        rec = dict(frame=m.frame, stage=G.stage, room=G.room, x=G.px, y=G.py, kind='lost' if dplain else 'absorbed',
+                   delta=G.rd(self.c_delta), keys='+'.join(sorted(NAMES[b] for b in keys)) or '-')
+        if self.prof:
+            v = [m.rd32(self.prof + 4 * i) for i in range(56)]
+            rec['steps'] = [(name, v[y] - v[x]) for x, y, name in PROF_STEPS if v[x] and v[y] and 0 < v[y] - v[x] < 2000]
+            rec['total'] = v[31] - v[0] if v[31] and v[0] else 0
+        self.list.append(rec)
+        if dplain: self.n += dplain
+        else: self.absorbed += dab
+
+    def summary(self):
+        """Record mode: the lost frames of every frame of the search, by room (stage, room): count, worst total, steps of the worst."""
+        rooms = {}
+        for r in self.list:
+            if r['kind'] == 'lost':
+                rooms.setdefault((r['stage'], r['room']), []).append(r)
+        for (st, rm), rs in sorted(rooms.items()):
+            w = max(rs, key=lambda r: r.get('total', 0))
+            top = sorted(w.get('steps', []), key=lambda t: -t[1])[:5]
+            print(f"  lost frames stage {st} room {rm}: {len(rs)} (worst total {w.get('total', 0)} lines, x {w['x']} y {w['y']}: "
+                  f"{' '.join(f'{k}={v}' for k, v in top)})", flush=True)
+        print(f'  absorbed turns (ended a few lines inside the VBlank, no frame lost): {self.absorbed}', flush=True)
+        self.margin_report()
+
+    def margin_report(self):
+        m = sorted(self.slack)
+        if not m: return
+        pct = lambda q: m[min(len(m) - 1, int(len(m) * q))]
+        self.min_slack = m[0]
+        print(f'  turn slack before the VBlank (lines, 262 per frame; negative = absorbed in the VBlank): {len(m)} turns, min {m[0]}, 0.1% {pct(0.001)}, '
+              f'1% {pct(0.01)}, median {pct(0.5)}, max {m[-1]}; {self.absorbed} absorbed, {self.n} lost', flush=True)
+        if self.cost:
+            print('  cost of each step, ordinary turns (lines): ' + ', '.join(f'{n} mean {t[0] / t[1]:.1f} max {t[2]}' for n, t in self.cost.items() if t[1]), flush=True)
+
+    def report(self):
+        self.margin_report()
+        for r in self.list:
+            if r['kind'] == 'absorbed' and not self.G is None and False: continue
+            st = ' '.join(f'{k}={v}' for k, v in r.get('steps', []))
+            print(f"  {r['kind']} turn: frame {r['frame']} stage {r['stage']} room {r['room']} x {r['x']} y {r['y']} keys {r['keys']} "
+                  f"{('total ' + str(r['total']) + ' lines: ' + st) if st else ''}", flush=True)
+        print(f'lost frames: {self.n}, absorbed turns: {self.absorbed}')
+
+
+def play(G, replay, shots, strict=True):
+    """Replays the recorded inputs and checks checkpoints, front mode and game loop, and lost frames (LateTurns)."""
+    late = LateTurns(G)
     lines = [l.strip() for l in replay.read_text().splitlines() if l.strip() and not l.startswith('#')]
     last_beat, still, since_cp, cps, started, booted, ending = None, 0, 0, 0, time.time(), False, False
 
     def fail(msg):
+        late.report()
         G.m.image().save(shots / 'playthrough-fail.png')
         G.end_video()
         raise SystemExit(f'FAIL frame {G.m.frame} stage {G.stage} room {G.room} x {G.px} y {G.py} front {G.front}: {msg}')
@@ -590,10 +695,11 @@ def play(G, replay, shots):
     for ln in lines:
         w = ln.split()
         if w[0] == 'B':
-            if booted: G.reboot()
+            if booted: G.reboot(); late.__init__(G)
             booted = True
             G.boot()
             if not G.entry(int(w[1]) if len(w) > 1 else 12, 0): fail('entry: room freeze never ended')
+            late.reset()
         elif w[0] == 'R':
             G.roundtrip()           # a leg of the recording started from a restored state (see Game.roundtrip)
         elif w[0] == 'K':
@@ -615,6 +721,7 @@ def play(G, replay, shots):
             for _ in range(int(w[1])):
                 G.step(keys, 1, log=False)
                 since_cp += 1
+                late.check(keys)
                 beat = G.beat()
                 still = still + 1 if beat == last_beat else 0
                 last_beat = beat
@@ -628,7 +735,10 @@ def play(G, replay, shots):
             if w[0] == 'M': G.roundtrip()
         elif w[0] == 'E':
             pass                    # end of a segment; the next 'B' boots again
-    print(f'playthrough OK: {cps} checkpoints, {G.m.frame} frames, {time.time() - started:.0f} s')
+    late.report()
+    if strict and late.n:
+        raise SystemExit(f'FAIL: {late.n} lost frame(s) outside room draws (listed above)')
+    print(f'playthrough OK: {cps} checkpoints, {G.m.frame} frames, {time.time() - started:.0f} s, {late.n} lost frames, {late.absorbed} absorbed turns')
 
 
 def main():
@@ -637,6 +747,7 @@ def main():
     ap.add_argument('--record', action='store_true')
     ap.add_argument('--replay', type=Path, default=REPLAY)
     ap.add_argument('--video', type=Path)
+    ap.add_argument('--no-late-fail', action='store_true', help='play: list the lost frames but do not fail on them (measurement)')
     ap.add_argument('--out', type=Path, default=Path('scratchpad/playthrough'))
     ap.add_argument('--width', type=int, default=24)
     ap.add_argument('--last', type=int, default=18, help='record: last stage to play (the replay ends on entering the next one)')
@@ -646,21 +757,24 @@ def main():
     load_links()
     G = Game(a.core, a.video)
     if a.record:
+        G.watch = LateTurns(G)
         try:
             record(G, a.start, a.last, a.width, a.out)
         finally:
+            G.watch.summary()
             G.flush()
             a.replay.parent.mkdir(parents=True, exist_ok=True)
             a.replay.write_text('\n'.join(G.log) + '\n')
         print('recorded', a.replay)
         # The recording is checked at once by its own replay on a fresh console: what was recorded must replay as is.
         a.out.mkdir(parents=True, exist_ok=True)
+        G.watch = None
         G.m.close()
         V = Game(a.core)
         play(V, a.replay, a.out)
         return
     try:
-        play(G, a.replay, a.out)
+        play(G, a.replay, a.out, not a.no_late_fail)
     finally:
         G.end_video()
 

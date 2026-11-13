@@ -26,6 +26,7 @@
 #include "secret.h"
 #include "item_reveal_view.h"
 #include "wilhelm_audio.h"
+#include "profile.h"
 
 /* Front-end state machine and game loop. Display lives in scene.c (logo, title,
  * castle), room_view.c (rooms, flames, target) and actors.c (Simon, whip, enemies). */
@@ -43,6 +44,7 @@ static bool secret_up_pending;
 static bool map_a_pending;
 
 static void show_courtyard(u16 room);
+static void hud_status(void);
 
 /* Stage music (research/audio-driver.md): table 7972 indexed by D000, played by
  * 794F in state 4 at the start of play and after a lost life. The courtyard is
@@ -126,21 +128,25 @@ static void wall_room(void)
 /* A courtyard screen, then its torches' objects and the heart count. */
 static void show_courtyard(u16 room)
 {
+    vk_draws++;
     vk_show_courtyard(room);
     vk_candle_view_room();
     wall_room();
+    hud_status();   /* the changed fields (stage...) are composed here, in the draw turn, not in the first game turn */
 }
 
 /* A castle room of the current stage, then the key, door and HUD key box of
  * items.c and the candles of candle_view.c over it. */
 static void show_hall_room(u16 room)
 {
+    vk_draws++;
     vk_show_castle_room(vk_game.stage, room);
     vk_items_enter_room(&items);
     vk_item_view_room(&items, &vk_game);
     vk_candle_view_room();
     wall_room();
     vk_enemy_room_cells();
+    hud_status();   /* same */
     vk_room_display_on();
     if(vk_game.stage==18 && room==9)vk_step_enemies();
 }
@@ -208,7 +214,7 @@ static void candle_taken(int events, VKByte gold_keys, bool audio)
     if (events & (VK_CANDLE_EVENT_HEARTS | VK_CANDLE_EVENT_WEAPON | VK_CANDLE_EVENT_GOLD_KEY |
                   VK_CANDLE_EVENT_ITEM | VK_CANDLE_EVENT_PICK | VK_CANDLE_EVENT_BOX_ITEM))
         vk_weapons_pick(&vk_weapons);
-    if (events & VK_CANDLE_EVENT_WEAPON) vk_set_whip_level(vk_candles.weapon);
+    if (events & VK_CANDLE_EVENT_WEAPON) vk_set_whip_level_pickup(vk_candles.weapon);
     /* Energy, armor, timers C434/C43A/C440, enemy wipe (8D3E, enemies.c). */
     if (events & VK_CANDLE_EVENT_PICK)
     {
@@ -563,6 +569,7 @@ static void step_health(void)
     const bool fell = health.fell;
     const VKHealthEvent life = vk_health_tick(&health, vk_enemies.energy);
     if (life == VK_HEALTH_TITLE) { vk_show_title(); return; }
+    VK_MARK(15);
     step_death_jingle();
     /* 7070: the fatal recoil ended (C420 = 6); the clock of 7093 starts there. A recoil
      * that falls further ends later. */
@@ -593,9 +600,76 @@ static void step_health(void)
         show_game_over();
         vk_psg_music(VK_MUSIC_GAME_OVER);   /* 42AB, state 6 without lives */
     }
+    VK_MARK(16);
     vk_hud_update(vk_enemies.energy);
+    VK_MARK(17);
     hud_status();
+    VK_MARK(18);
 }
+/* Loop turn accounting (profile.h). A turn starts when SYS_doVBlankProcess returns (VBlank start) and normally ends, in
+ * vk_turn_sync, before the next VBlank: SGDK then waits for it. When the turn overruns the VBlank start by a few lines
+ * (the turn ends inside the VBlank that started during it), SGDK's wait would take the VBlank out and the next one: a whole
+ * frame lost for a few lines, and whether it happens depends on the exact code layout. Such a turn is now absorbed: its
+ * VBlank work runs at once (still inside that VBlank, 38 lines long) and the next turn starts; the game never loses a pass.
+ * Turns that end later than the VBlank, or that spent several, are lost frames (vk_late_plain), as before. */
+volatile u16 vk_late_turns;     /* turns that ended after the VBlank had started: absorbed or lost */
+volatile u16 vk_absorbed;       /* of which absorbed in the VBlank */
+volatile u8 vk_late_delta;      /* VBlanks the last lost turn spanned */
+volatile u16 vk_draws;
+volatile u16 vk_late_plain;     /* lost frames, outside room draws */
+volatile u8 vk_late_drew;
+static u16 turn_draws;
+static bool last_drew;
+#ifdef VK_PROFILE
+volatile u32 vk_prof[VK_PROF_MARKS];
+volatile u32 vk_prof_late[VK_PROF_MARKS];
+#endif
+static u32 turn_start_vt;
+volatile u16 vk_turns;
+volatile s16 vk_last_slack;     /* lines left before the VBlank at the end of the last turn (negative: lines past its start) */
+
+void vk_turn_sync(void)
+{
+    const u16 vc = GET_VCOUNTER;
+    const bool blank = GET_VDP_STATUS(VDP_VBLANK_FLAG) != 0;
+    const u32 now = vtimer;
+    const u32 crossed = now - turn_start_vt;      /* VBlanks that started during the turn */
+    const bool drew = vk_draws != turn_draws;
+    bool absorb = FALSE;
+    VK_MARK(31);
+    vk_turns++;
+    if (!crossed) vk_last_slack = blank ? (s16)(vc <= 0xEA ? 224 - vc : 224 - (vc + 6)) : (s16)(224 - vc);
+    else vk_last_slack = blank ? (s16)(vc <= 0xEA ? 224 - vc : 224 - (vc + 6)) : (s16)(-38 - vc);
+    if (crossed)
+    {
+        vk_late_turns++;
+        if (crossed == 1 && blank && !drew && !last_drew)
+        {
+            absorb = TRUE;
+            vk_absorbed++;
+        }
+        else
+        {
+            vk_late_drew = drew || last_drew;   /* the turn after a draw also waits out a VBlank */
+            if (!vk_late_drew) vk_late_plain++;
+            vk_late_delta = (u8)(crossed > 255 ? 255 : crossed);
+        }
+#ifdef VK_PROFILE
+        for (u16 i = 0; i < VK_PROF_MARKS; i++) vk_prof_late[i] = vk_prof[i];
+#endif
+    }
+    turn_draws = vk_draws;
+    last_drew = drew;
+    if (absorb) SYS_doVBlankProcessEx(IMMEDIATELY);
+    else
+    {
+        SYS_doVBlankProcess();
+        while (vtimer == now) ;   /* the V-Int has run: the next turn counts its VBlanks from here */
+    }
+    turn_start_vt = vtimer;
+    VK_MARK(30);   /* end of the VBlank work (DMA queue) */
+}
+
 int main(bool hardReset)
 {
     VKInput input = {0};
@@ -610,10 +684,12 @@ int main(bool hardReset)
     SND_PCM_loadDriver(TRUE);
     vk_psg_init();   /* the PSG player runs in V-Int from now on */
     vk_logo_start();
+    turn_start_vt = vtimer;
     while (TRUE)
     {
         u16 pressed;
         bool dirty = FALSE;
+        VK_MARK(0);
         int throw_launch = 0;
         /* Once the new room is drawn, the freeze no longer reads the pads: the draw used to
          * take its last frames in one loop turn, so a key pressed there was an edge for the
@@ -622,6 +698,7 @@ int main(bool hardReset)
         if (freeze_drawn && vk_room_freeze_active(&room_freeze)) input.pressed = 0;
         else handleInput(&input);
         pressed = input.pressed;
+        VK_MARK(1);
         if (vk_front_mode == FRONT_LOGO)
             vk_logo_tick(pressed);
         else if (vk_front_mode == FRONT_TITLE)
@@ -752,7 +829,7 @@ int main(bool hardReset)
                     {
                         show_hall_room((u16)target);
                     }
-                    SYS_doVBlankProcess();
+                    vk_turn_sync();
                     continue;
                 }
                 /* Debug: A+B lights the candles of the room again. */
@@ -783,6 +860,7 @@ int main(bool hardReset)
                     if (idle && vk_whip.timer == 14 && vk_whip_level(&vk_whip) < VK_WHIP_LEVEL_THROW)
                         vk_psg_effect(VK_SFX_WHIP);
                 }
+                VK_MARK(2);
                 if (event == VK_EVENT_ENTRANCE)
                 {
                     castle_door_front(TRUE);
@@ -820,8 +898,10 @@ int main(bool hardReset)
                 }
                 else
                 {
+                    VK_MARK(46);
                     items.attacking = vk_whip.timer != 0;   /* C422, 7FE2 */
                     const VKItemEvent item = vk_items_tick(&items, &vk_game);
+                    VK_MARK(47);
                     vk_player = vk_game.player;
                     if (item == VK_ITEM_STAGE_EXIT && vk_boss_door(vk_game.stage, vk_game.room))
                     {
@@ -833,13 +913,13 @@ int main(bool hardReset)
                         vk_player = vk_game.player;
                         show_hall_room((VKByte)vk_boss_room_of(vk_game.stage));
                         vk_psg_music(vk_game.stage==18?VK_DRACULA_ENTRY_MUSIC:VK_MUSIC_BOSS);
-                        SYS_doVBlankProcess();
+                        vk_turn_sync();
                         continue;
                     }
                     if (item == VK_ITEM_STAGE_EXIT)
                     {
                         next_stage();
-                        SYS_doVBlankProcess();
+                        vk_turn_sync();
                         continue;
                     }
                     vk_item_view_event(item, &items, &vk_game);
@@ -861,20 +941,23 @@ int main(bool hardReset)
                     {
                         /* 6F9A: effect 13 when a contact starts the recoil (C42D set). */
                         const EnemyU8 invuln = vk_enemies.invuln;
+                        VK_MARK(3);
                         /* 6B21 -> 710D: object 0A before the timers of 6B27-6B2D. */
                         /* 713B: object 1E (714D) before object 0A (715F). */
                         vk_step_water(!!(pressed & BUTTON_LEFT), !!(pressed & BUTTON_RIGHT),
                                       !!(pressed & BUTTON_B));
                         vk_step_time_stop(!!(pressed & BUTTON_DOWN), !!(pressed & BUTTON_B));
+                        VK_MARK(4);
                         vk_step_enemies();
+                        VK_MARK(5);
                         if (!invuln && vk_enemies.invuln) vk_psg_effect(VK_SFX_DAMAGE);
                         if (vk_boss_take_exit())
                         {
-                            if(vk_game.stage==18){dracula_finish();SYS_doVBlankProcess();continue;}
+                            if(vk_game.stage==18){dracula_finish();vk_turn_sync();continue;}
                             /* B772: C409 = 1, Simon out of the screen, then state 8. */
                             hide_sprites();
                             stage_blank = BOSS_EXIT_FRAMES;
-                            SYS_doVBlankProcess();
+                            vk_turn_sync();
                             continue;
                         }
                     }
@@ -883,12 +966,19 @@ int main(bool hardReset)
                         const int shot_hit = vk_step_weapons(throw_launch, &shot_events);
                         candle_hit_view(shot_events, shot_hit);
                     }
+                    VK_MARK(6);
                     vk_step_projectile_shield();
+                    VK_MARK(7);
                     step_candles();
+                    VK_MARK(8);
                     step_walls();
+                    VK_MARK(9);
                     vk_flames_tick();
+                    VK_MARK(10);
                     vk_show_player(&vk_player);
+                    VK_MARK(11);
                     step_health();
+                    VK_MARK(12);
                 }
             }
         }
@@ -934,8 +1024,10 @@ int main(bool hardReset)
                 if (dirty) vk_show_room(stage, room, atlas);
             }
         }
+        VK_MARK(13);
         if(!paused)vk_item_reveal_refresh();
-        SYS_doVBlankProcess();
+        VK_MARK(14);
+        vk_turn_sync();
         vk_show_backdrop();
 #ifdef VK_MEASURE_PSG
         vk_psg_measure();   /* measurement build only (research/audio-driver.md) */

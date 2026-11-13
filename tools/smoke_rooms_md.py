@@ -32,6 +32,7 @@ def main():
     addr = lambda n: lookup(syms, n)[0]
     g, e, f, p = map(addr, ('vk_game', 'vk_enemies', 'room_freeze', 'vk_player'))
     mode = addr('vk_front_mode')
+    plain = addr('vk_late_plain')   # lost frames counted by the game itself (main.c vk_turn_sync, research/room-draw-budget.md)
 
     def until(fn, n):
         for _ in range(n):
@@ -65,6 +66,7 @@ def main():
             m.image().save(a.out / f'fail-{s:02d}-{room:02d}.png')
             continue
         last, still, lost, worst = None, 0, 0, None
+        plain0 = m.rd16(plain)
         where, settle, shop_before = None, 0, 0
         for keys in INPUTS:
             m.wr(addr('Enemies_god'), 1)
@@ -85,6 +87,8 @@ def main():
             if still > 60:
                 break
         front = m.rd16(mode)
+        if m.rd16(plain) != plain0 and not lost:
+            lost = (m.rd16(plain) - plain0) & 0xFFFF; worst = (m.frame, m.rd8(g + 20), m.rd8(g), m.rd8(g + 1))
         if lost:
             slow.append((s, room, lost, worst))
         if a.shots:

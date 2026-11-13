@@ -419,6 +419,9 @@ void Enemies_sat_render(EnemyState *s);
 void Enemies_sat_boss(EnemyU8 on);
 /* count0 releases;1 success,0 SAT exhaustion,-1 occupied physical slot. */
 int Enemies_boss15_reserve(EnemyState *s,int slot,int count);
+/* SAT allocator sync alone, and whether boss slot 'slot' holds entries: Enemies_boss15_reserve(s,slot,0) on a slot that holds none is only a sync. */
+void Enemies_sat_sync(EnemyState *s);
+int Enemies_boss15_held(int slot);
 unsigned long Enemies_sat_mask(EnemyState *s);
 extern Enemy vk_projectiles[ENEMY_PROJECTILE_MAX];
 Enemy *Enemies_slot(EnemyState *s,EnemyU8 index);
