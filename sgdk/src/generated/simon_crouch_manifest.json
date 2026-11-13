@@ -18,9 +18,9 @@
   "frame_assignments": [
     {
       "frame": 0,
+      "png": "crouch-candidate-0.png",
       "lower_index": 6,
       "upper_index": 0,
-      "png": "crouch-candidate-0.png",
       "bounds": {
         "min_x": -8,
         "min_y": -30,
@@ -39,13 +39,14 @@
         1
       ],
       "gap_adjustments": [],
+      "unplaced_layers": 0,
       "classification": "ROM-derived candidate frame, lower component raised by 6 px; temporal role not dynamically confirmed"
     },
     {
       "frame": 1,
+      "png": "crouch-candidate-1.png",
       "lower_index": 6,
       "upper_index": 6,
-      "png": "crouch-candidate-1.png",
       "bounds": {
         "min_x": -32,
         "min_y": -30,
@@ -64,13 +65,14 @@
         1
       ],
       "gap_adjustments": [],
+      "unplaced_layers": 0,
       "classification": "ROM-derived candidate frame, lower component raised by 6 px; temporal role not dynamically confirmed"
     },
     {
       "frame": 2,
+      "png": "crouch-candidate-2.png",
       "lower_index": 6,
       "upper_index": 7,
-      "png": "crouch-candidate-2.png",
       "bounds": {
         "min_x": -32,
         "min_y": -30,
@@ -89,13 +91,14 @@
         1
       ],
       "gap_adjustments": [],
+      "unplaced_layers": 0,
       "classification": "ROM-derived candidate frame, lower component raised by 6 px; temporal role not dynamically confirmed"
     },
     {
       "frame": 3,
+      "png": "crouch-candidate-3.png",
       "lower_index": 6,
       "upper_index": 8,
-      "png": "crouch-candidate-3.png",
       "bounds": {
         "min_x": -8,
         "min_y": -30,
@@ -114,7 +117,166 @@
         2
       ],
       "gap_adjustments": [],
+      "unplaced_layers": 0,
       "classification": "ROM-derived candidate frame, lower component raised by 6 px; temporal role not dynamically confirmed"
+    }
+  ],
+  "level_frame_assignments": [
+    {
+      "level": 1,
+      "step": 0,
+      "png": "crouch-level1-0.png",
+      "lower_index": 6,
+      "upper_index": 9,
+      "bounds": {
+        "min_x": -32,
+        "min_y": -30,
+        "max_x_exclusive": 8,
+        "max_y_exclusive": 2,
+        "anchor_relative": "ROM signed dx/dy (no invented 24x32 crop)"
+      },
+      "content_bbox": [
+        8,
+        1,
+        40,
+        32
+      ],
+      "canvas_offset_xy": [
+        0,
+        1
+      ],
+      "gap_adjustments": [],
+      "unplaced_layers": 0
+    },
+    {
+      "level": 1,
+      "step": 1,
+      "png": "crouch-level1-1.png",
+      "lower_index": 6,
+      "upper_index": 10,
+      "bounds": {
+        "min_x": -32,
+        "min_y": -30,
+        "max_x_exclusive": 8,
+        "max_y_exclusive": 2,
+        "anchor_relative": "ROM signed dx/dy (no invented 24x32 crop)"
+      },
+      "content_bbox": [
+        8,
+        1,
+        40,
+        25
+      ],
+      "canvas_offset_xy": [
+        0,
+        1
+      ],
+      "gap_adjustments": [],
+      "unplaced_layers": 0
+    },
+    {
+      "level": 1,
+      "step": 2,
+      "png": "crouch-level1-2.png",
+      "lower_index": 6,
+      "upper_index": 11,
+      "bounds": {
+        "min_x": -8,
+        "min_y": -30,
+        "max_x_exclusive": 40,
+        "max_y_exclusive": 2,
+        "anchor_relative": "ROM signed dx/dy (no invented 24x32 crop)"
+      },
+      "content_bbox": [
+        0,
+        2,
+        48,
+        25
+      ],
+      "canvas_offset_xy": [
+        16,
+        2
+      ],
+      "gap_adjustments": [],
+      "unplaced_layers": 0
+    },
+    {
+      "level": 2,
+      "step": 0,
+      "png": "crouch-level2-0.png",
+      "lower_index": 6,
+      "upper_index": 12,
+      "bounds": {
+        "min_x": -16,
+        "min_y": -30,
+        "max_x_exclusive": 8,
+        "max_y_exclusive": 2,
+        "anchor_relative": "ROM signed dx/dy (no invented 24x32 crop)"
+      },
+      "content_bbox": [
+        0,
+        1,
+        24,
+        25
+      ],
+      "canvas_offset_xy": [
+        8,
+        1
+      ],
+      "gap_adjustments": [],
+      "unplaced_layers": 4
+    },
+    {
+      "level": 2,
+      "step": 1,
+      "png": "crouch-level2-1.png",
+      "lower_index": 6,
+      "upper_index": 13,
+      "bounds": {
+        "min_x": -16,
+        "min_y": -30,
+        "max_x_exclusive": 8,
+        "max_y_exclusive": 2,
+        "anchor_relative": "ROM signed dx/dy (no invented 24x32 crop)"
+      },
+      "content_bbox": [
+        7,
+        1,
+        24,
+        25
+      ],
+      "canvas_offset_xy": [
+        15,
+        1
+      ],
+      "gap_adjustments": [],
+      "unplaced_layers": 0
+    },
+    {
+      "level": 2,
+      "step": 2,
+      "png": "crouch-level2-2.png",
+      "lower_index": 6,
+      "upper_index": 14,
+      "bounds": {
+        "min_x": -8,
+        "min_y": -30,
+        "max_x_exclusive": 24,
+        "max_y_exclusive": 2,
+        "anchor_relative": "ROM signed dx/dy (no invented 24x32 crop)"
+      },
+      "content_bbox": [
+        0,
+        2,
+        21,
+        25
+      ],
+      "canvas_offset_xy": [
+        16,
+        2
+      ],
+      "gap_adjustments": [],
+      "unplaced_layers": 0
     }
   ]
 }

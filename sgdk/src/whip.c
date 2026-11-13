@@ -54,10 +54,11 @@ void vk_whip_bounds(const VKWhip *w, int *left, int *top, int *right, int *botto
     if (w->crouched)
     {
         /* Crouched lash measured on the Mega Drive frames (timers 9..2, right and
-         * left facing mirror exactly): x +12..+32 (lash tip), y -17..-10. The
-         * hit box is x +8..+32 and y -17..-10, constant over the attack. */
-        *left = w->facing ? (int)w->x - 32 : (int)w->x + 8;
-        *right = w->facing ? (int)w->x - 8 : (int)w->x + 32;
+         * left facing mirror exactly): level 0 reaches x +32 (lash tip), level 1
+         * (crouch frame 6/11, research/whip-variants.md) x +39; y -17..-10 for both. */
+        const int reach = w->level == 1 ? 39 : 32;
+        *left = w->facing ? (int)w->x - reach : (int)w->x + 8;
+        *right = w->facing ? (int)w->x - 8 : (int)w->x + reach;
         *top = (int)w->y - 17;
         *bottom = (int)w->y - 10;
         return;
