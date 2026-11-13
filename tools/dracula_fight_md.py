@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
 """Mega Drive port: Simon beats Dracula (stage 18 room 9, both forms) with the controller only.
 
-Entry: the real pause/Konami/room selector (tests/md_scenarios/zzq_entry.inc, same as zzp_stage18), Simon at the
-room entrance, Enemies_god = 1 (the only allowed poke: invulnerability). No Simon position, no boss energy.
+Entry: the walked route of stage 18 (tests/md_scenarios/zzq_stage18_route.txt: real room selector to the start of stage 18,
+rooms 0..8 on foot, the real door of room 8 -> arrival X 246), only Enemies_god = 1 and the white key poked. The door puts
+Simon in the entrance alcove under the first slab of the right tower (the walk stops at X 230 as on the MSX, traced on
+openMSX): a jump to the left leaves it. `--entry zzq_entry.inc` keeps the old RAM entry (selector straight to room 9, X 64).
 Form 1 (object 11h): the head is hit by the whip in a jump (vk_dracula_whip, 827C: Y object - 32).
 Form 2 (object 17h at X128,Y73): the whip box (Y 73, H 10h) is out of reach of the floor (feet 192, apex 160), so
 Simon climbs the zigzag of tile-6 slabs of the side towers (7C5E: CE00 = 6 -> solid tiles 1..6 only) up to feet Y 80 and
 throws his secondary weapon across the room. A secondary weapon and its hearts come from the castle candles on the real
 route; this script gives them with `--weapon N --hearts N` (RAM inventory fixture, the only other poke) because the
-route from stage 18 room 0 is not walked here.
+secondary weapon candles of the route are not walked here.
 Usage: dracula_fight_md.py [--weapon 2] [--hearts 99] [--out DIR] [--shots]"""
 import argparse
 import sys
@@ -78,12 +80,19 @@ class Fight:
         if self.shots:
             self.h.shot(name)
 
-    # phase 0: the real room selector up to stage 18 room 9
-    def enter(self):
-        self.h.run_script((ROOT / 'tests/md_scenarios/zzq_entry.inc').read_text().splitlines(),
+    # phase 0: the controller route of stage 18 (room selector to the stage 18 start, then rooms 0..8 on foot and the real door)
+    def enter(self, scenario='zzq_stage18_route.txt'):
+        self.h.run_script((ROOT / 'tests/md_scenarios' / scenario).read_text().splitlines(),
                           ROOT / 'tests/md_scenarios')
-        assert self.front == FRONT_MODES.index('INTERIOR') or True
+        assert self.front == FRONT_MODES.index("INTERIOR")
         self.t0 = self.m.frame
+        if self.sx > 224:
+            # The door puts Simon at X 246 (77D1), in the alcove under the first slab of the right tower: the slab (row 20,
+            # tile 6) stops the walk at X 230 (same on the MSX, traced on openMSX: X 246 -> 230 and stays), a jump to the
+            # left clears it and lands on the floor of the room (X ~198).
+            self.run(10, ('LEFT',) * 1)
+            self.jump('LEFT')
+            print(f'[{self.m.frame - self.t0:6d}] out of the entrance alcove: x={self.sx} y={self.sy}')
         print(f'[{self.m.frame - self.t0:6d}] room 9 entered: Simon x={self.sx} y={self.sy}, boss type={self.boss_type} energy={self.energy}')
         self.shot('dracula-entry')
 
@@ -167,11 +176,13 @@ def main():
     ap.add_argument('--out', default=str(ROOT / 'scratchpad/dracula-fight'))
     ap.add_argument('--weapon', type=int, default=2)
     ap.add_argument('--hearts', type=int, default=99)
+    ap.add_argument('--entry', default='zzq_stage18_route.txt',
+                    help='entry scenario: the walked route (default) or zzq_entry.inc (room selector straight to room 9)')
     ap.add_argument('--shots', action='store_true')
     ap.add_argument('--only-climb', action='store_true')
     a = ap.parse_args()
     f = Fight(a.out, a.shots)
-    f.enter()
+    f.enter(a.entry)
     f.score0 = f.m.rd32(f.A('vk_hud_score'))
     if a.only_climb:
         f.climb()

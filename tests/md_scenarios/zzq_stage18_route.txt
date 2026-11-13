@@ -1,0 +1,258 @@
+# (zzq) Stage 18 a la manette, de la salle 0 a la porte puis a l'entree de la salle de Dracula (9, arrivee X 246) : 0 -> 1 -> 2 -> 3 -> 5 -> 4 -> 6 -> 7 -> 8 -> porte -> 9.
+# Parcours trouve par recherche (tools/playthrough_12_18_md.py) sans l'objet saut haut ; poses : invulnerabilite et cle blanche seulement.
+# Not a continuous walk: room selection restarts the game. Action fixtures below are explicitly RAM-set.
+until front_mode == MODES['TITLE'] max 2000
+tap START
+tap START
+until front_mode == MODES['COURTYARD'] max 500
+wait 60
+tap START
+until ram8('paused') == 1 max 30
+tap UP
+tap UP
+tap DOWN
+tap DOWN
+tap LEFT
+tap RIGHT
+tap LEFT
+tap RIGHT
+tap B
+tap A
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap B
+until game.stage == 18 and game.room == 0 max 300
+poke Enemies_god 1
+until game.player.mode == 0 max 300
+wait 10
+write items 8 ram8("items") | 1
+hold - 30
+# salle 0
+hold LEFT 65
+hold LEFT+UP 5
+hold C+LEFT 5
+hold - 20
+hold UP 5
+hold C+LEFT 5
+hold - 20
+hold DOWN 5
+hold C+LEFT 5
+hold - 35
+hold LEFT 55
+hold - 19
+expect game.stage == 18 and game.room == 1
+# salle 1
+hold C+LEFT 5
+hold - 15
+hold LEFT 165
+hold C+LEFT 5
+hold - 35
+hold LEFT 15
+hold RIGHT 5
+hold C+RIGHT 5
+hold - 55
+hold LEFT 5
+hold C+LEFT 5
+hold - 35
+hold LEFT 20
+hold - 22
+expect game.stage == 18 and game.room == 2
+# salle 2
+hold LEFT 5
+hold C+LEFT 5
+hold - 45
+hold LEFT 5
+hold UP 5
+hold C+LEFT 5
+hold - 20
+hold UP 5
+hold C+LEFT 5
+hold - 20
+hold UP 5
+hold - 5
+hold C+LEFT 5
+hold - 25
+hold LEFT 10
+hold C+LEFT 5
+hold - 10
+hold UP 5
+hold - 22
+expect game.stage == 18 and game.room == 3
+# salle 3
+hold - 5
+hold RIGHT 5
+hold C+RIGHT 5
+hold UP 5
+hold C+RIGHT 5
+hold - 20
+hold LEFT 5
+hold C+LEFT 5
+hold UP 5
+hold C+RIGHT 5
+hold UP 5
+hold C+RIGHT 5
+hold - 25
+hold C+RIGHT 5
+hold UP 5
+hold C+LEFT 5
+hold UP 5
+hold C+LEFT 5
+hold UP 5
+hold C+LEFT 5
+hold UP 5
+hold C+LEFT 5
+hold - 15
+hold LEFT 5
+hold C+LEFT 5
+hold DOWN 5
+hold - 17
+expect game.stage == 18 and game.room == 5
+# salle 5
+hold C+LEFT 5
+hold - 15
+hold C+LEFT 5
+hold - 20
+hold LEFT 5
+hold - 18
+expect game.stage == 18 and game.room == 4
+# salle 4
+hold - 15
+hold LEFT 5
+hold C+LEFT 5
+hold - 35
+hold C+LEFT 5
+hold - 25
+hold LEFT 5
+hold C+LEFT 5
+hold - 25
+hold LEFT 5
+hold C+LEFT 5
+hold - 20
+hold UP 5
+hold C+RIGHT 5
+hold - 20
+hold UP 5
+hold - 20
+expect game.stage == 18 and game.room == 6
+# salle 6
+hold - 5
+hold RIGHT 5
+hold C+RIGHT 5
+hold UP 5
+hold C+RIGHT 5
+hold - 20
+hold UP 5
+hold C+RIGHT 5
+hold - 25
+hold C+LEFT 5
+hold - 20
+hold C+RIGHT 5
+hold - 20
+hold C+RIGHT 5
+hold UP 5
+hold C+LEFT 5
+hold UP 5
+hold - 17
+expect game.stage == 18 and game.room == 7
+# salle 7
+hold LEFT 15
+hold C+LEFT 5
+hold UP 5
+hold - 10
+hold LEFT 5
+hold - 10
+hold C+LEFT 5
+hold - 30
+hold LEFT 15
+hold RIGHT 5
+hold LEFT 10
+hold C+RIGHT 5
+hold - 35
+hold RIGHT 10
+hold C+RIGHT 5
+hold - 25
+hold UP 5
+hold - 10
+hold LEFT 5
+hold - 10
+hold C+LEFT 5
+hold - 30
+hold LEFT 25
+hold RIGHT 5
+hold C+RIGHT 5
+hold - 35
+hold RIGHT 10
+hold - 25
+hold LEFT 10
+hold DOWN 5
+hold - 15
+hold C+LEFT 5
+hold - 35
+hold LEFT 10
+hold RIGHT 5
+hold LEFT 5
+hold C+RIGHT 5
+hold - 35
+hold RIGHT 10
+hold LEFT 5
+hold C+RIGHT 5
+hold - 20
+hold UP 5
+hold - 15
+hold RIGHT 5
+hold C+LEFT 5
+hold - 25
+hold LEFT 40
+hold RIGHT 5
+hold LEFT 5
+hold C+RIGHT 5
+hold - 35
+hold RIGHT 20
+hold - 25
+hold LEFT 10
+hold C+RIGHT 5
+hold - 10
+hold UP 5
+hold - 15
+hold LEFT 5
+hold - 10
+hold LEFT 5
+hold - 10
+hold LEFT 5
+hold - 15
+hold LEFT 40
+hold C+LEFT 5
+hold - 15
+hold LEFT 55
+hold - 35
+hold LEFT 45
+hold - 19
+expect game.stage == 18 and game.room == 8
+# salle 8
+hold LEFT 45
+hold LEFT+UP 5
+hold C+LEFT 5
+hold UP 5
+hold C+LEFT 5
+hold - 40
+hold LEFT 95
+hold C+LEFT 5
+hold - 582
+expect game.stage == 18 and game.room == 9
+# salle 9
+expect game.player.x == 246
