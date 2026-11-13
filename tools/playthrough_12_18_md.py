@@ -695,7 +695,7 @@ def play(G, replay, shots, strict=True):
     for ln in lines:
         w = ln.split()
         if w[0] == 'B':
-            if booted: G.reboot(); late.__init__(G)
+            if booted: G.reboot()
             booted = True
             G.boot()
             if not G.entry(int(w[1]) if len(w) > 1 else 12, 0): fail('entry: room freeze never ended')
