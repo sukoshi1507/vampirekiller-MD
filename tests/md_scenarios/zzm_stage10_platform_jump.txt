@@ -1,0 +1,42 @@
+# (zzm) Stage 10 salle 4 : saut vertical depuis la plateforme mobile et retour sur elle (X fixe en l'air, la plateforme file dessous).
+# Trace openMSX 2026-11-14 (tools/platform_jump_trace.tcl, research/platform-jump-landing.md) : la plateforme avance a la
+# premiere image de la passe (90B8), Simon (sonde 8524, transport 6BAF, marche) a la seconde. Atterrissage C420 := 0 en n = 44 :
+# X fixe, plateforme en n = 45, transport de Simon en n = 46 (L + 2), jamais a l image du pas de la plateforme (L + 1).
+# Avec une touche de marche le transport se cumule a la marche en UNE image (+3, n = 46 : 166 -> 169). Le port faisait le transport
+# a l image de pas de la plateforme, une image avant la marche : +1 puis +2 (un pixel d ecart pendant une image).
+include zzm_enter10.inc
+poke Enemies_god 1
+include zzb_next.inc
+until game.stage == 10 and game.room == 1 max 200
+include zzb_next.inc
+until game.stage == 10 and game.room == 2 max 200
+include zzb_next.inc
+until game.stage == 10 and game.room == 3 max 200
+include zzb_next.inc
+until game.stage == 10 and game.room == 4 max 200
+wait 10
+poke Enemies_god 1
+poke vk_platforms+2 100
+poke vk_platforms+3 1
+poke vk_platforms+6 8
+poke vk_game+0 130
+poke vk_game+1 168
+poke vk_game+2 0
+wait 14
+poke Enemies_god 1
+expect game.player.y == 168 and game.player.mode == 0 and ram8('vk_platforms+14') == 1
+hold C 4
+until game.player.mode == 1 max 10
+until game.player.mode == 0 max 80
+set x0 game.player.x
+set px0 ram8('vk_platforms+2')
+wait 1
+echo game.player.x
+expect game.player.x == x0 and game.player.y == 168
+wait 1
+echo game.player.x
+expect game.player.x == x0 + 1 and ram8('vk_platforms+2') == px0 + 1
+wait 1
+expect game.player.x == x0 + 1
+wait 1
+expect game.player.x == x0 + 2
