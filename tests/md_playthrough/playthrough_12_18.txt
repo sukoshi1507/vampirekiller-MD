@@ -181,13 +181,14 @@ M 5 -
 M 5 -
 M 5 B
 M 5 RIGHT
-M 5 RIGHT
-M 5 RIGHT
-M 5 RIGHT
-M 5 RIGHT
-M 5 RIGHT
-M 5 RIGHT
-M 5 RIGHT
+M 5 C+RIGHT
+M 5 -
+M 5 -
+M 5 -
+M 5 -
+M 5 -
+M 5 -
+M 5 -
 M 5 RIGHT
 M 5 RIGHT
 M 5 RIGHT
@@ -196,8 +197,7 @@ M 5 RIGHT
 M 5 C+RIGHT
 M 5 -
 M 5 -
-M 5 -
-H 567 -
+H 504 -
 C 12 6
 H 100 RIGHT
 H 1 C+RIGHT
@@ -1130,7 +1130,7 @@ M 5 LEFT
 M 5 LEFT
 M 5 LEFT
 M 5 LEFT
-H 168 -
+H 162 -
 K
 J
 C 14 0
@@ -1639,7 +1639,7 @@ M 5 LEFT
 M 5 C+LEFT
 M 5 -
 M 5 -
-H 168 -
+H 98 -
 K
 J
 C 15 0
@@ -2251,7 +2251,7 @@ M 5 LEFT
 M 5 C+LEFT
 M 5 -
 M 5 -
-H 566 -
+H 488 -
 C 15 9
 H 4 C+LEFT
 H 10 LEFT
@@ -4066,7 +4066,7 @@ M 5 C+LEFT
 M 5 -
 M 5 -
 M 5 -
-H 167 -
+H 113 -
 K
 J
 C 17 0
@@ -4451,6 +4451,6 @@ M 5 LEFT
 M 5 C+LEFT
 M 5 -
 M 5 -
-H 166 -
+H 92 -
 C 18 0
 E

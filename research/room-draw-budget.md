@@ -128,8 +128,10 @@ traverse plusieurs, reste une image perdue (`vk_late_plain`) et fait echouer le 
 ### Resultat
 
 Sonde de salles (stages 12-17, 60 salles, 3 passes d'inputs, ROM de mesure) : 0 image perdue, marge minimale 6 lignes, 1 % des tours a moins de 17-30 lignes selon la salle.
-Rejeu re-enregistre sur la ROM normale apres fusion du fouet accroupi par niveau (91e0265) (`tools/playthrough_12_18_md.py --record`, segments 12-15 puis 16-17, `--width 64`, 55 points de controle) :
-0 image perdue, 0 tour absorbe sur 29 158 tours ; marge (`slack`) : mediane 112 lignes, 1 % des tours a 59 lignes ou plus, 0,1 % a -6 (quelques tours isoles de debut de segment, ni perdus ni absorbes), maximum de charge 198 lignes de 250.
+Rejeu re-enregistre sur la ROM normale apres fusion du fouet accroupi par niveau (91e0265), du passage secret BAS+C et des portes a gauche (b02095f) (`tools/playthrough_12_18_md.py --record`, segments 12-15 puis 16-17, `--width 64`, 55 points de controle) :
+0 image perdue, 0 tour absorbe sur 28 813 tours ; marge (`slack`) : mediane 111 lignes, 1 % des tours a 59 lignes ou plus, 0,1 % a -6 (quelques tours isoles de debut de segment, ni perdus ni absorbes), maximum de charge 198 lignes de 250.
 Segment 16-17 seul : marge minimale 50 lignes. `tests/run_playthrough_layout_md.sh` rejoue ce meme fichier sur deux
 copies de sgdk/ dont seule la disposition change (fonction morte ajoutee a main.c ; 4 octets de remplissage dans VKBoss) : meme resultat, sans desynchronisation.
 `tools/smoke_rooms_md.py` lit aussi `vk_late_plain` (153 salles, 0 perte).
+
+Effet de bord : `tools/reproduce_boss15_pool_gap.py` supposait deux passes logiques de C500 en quatre images (la salle du boss 15 perdait une image sur deux) ; il accepte maintenant la troisieme.
