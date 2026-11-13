@@ -131,6 +131,7 @@ static EnemySpawnTimer enemy_timer;
 VKPlatforms vk_platforms;
 VKCrushers vk_crushers;
 static u8 platform_pass;
+static u8 platform_carry;   /* the platform stepped (5C80) and Simon has not taken its 6BAF carry yet */
 static u16 enemy_room_key = 0xFFFF;   /* room_key() while the enemies belong to it, else 0 */
 /* vk_player_shield_tiles pose now at SHIELD_TILE_INDEX, -1 none. */
 static int shield_loaded = -1;
@@ -589,17 +590,22 @@ void vk_step_platforms(void)
     {
         vk_platforms_step(&vk_platforms);   /* 5C80 */
         vk_crushers_step(&vk_crushers);     /* 5C7D */
+        platform_carry = 1;
     }
     /* 6B39 -> 8524. The end of a jump is a mode 4 of the port but stays in state 1 on the MSX (6D1C): no wait. */
     vk_platforms_probe(&vk_platforms, p->x, p->y, p->mode == 4 && vk_game.ground_fall, p->phase);
     vk_player_platform = vk_platforms.under;
     /* 6B6B, 6DCC, 7021: on a platform Simon follows it unless a wall stops him (7BA9, 7C05). */
-    if (platform_pass && p->mode == 0 && !p->on_stairs &&
+    /* The platform steps on the first frame of the pass and Simon (probe, carry, walk) on the second (openMSX,
+     * tools/platform_jump_trace.tcl: landing +3 = walk 2 + carry 1 on one frame): the carry waits for Simon's walk
+     * frame (the tick that follows has an even clock), not for the step frame. */
+    if (platform_carry && (p->clock & 1) && p->mode == 0 && !p->on_stairs &&
         (vk_game.recoil == VK_RECOIL_NONE || vk_game.recoil == VK_RECOIL_FLOOR))
     {
         const int dx = vk_platforms_carry(&vk_platforms);
         /* 6BAF calls 7BA9/7C05 with C420 as it is: crouched (C420 = 2) the probe has 3 rows, not 4 (stage 10 room 4:
          * the stalactite tile (176, 143) stops the standing Simon, the crouched one goes under it). */
+        platform_carry = 0;
         if (dx && !vk_wall(vk_game_collision(&vk_game), p->x, p->y, dx, p->crouched, vk_game.stage, 0))
             p->x = (VKByte)(p->x + dx);
     }
@@ -715,6 +721,7 @@ void vk_step_enemies(void)
         vk_platforms_room(&vk_platforms, key ? vk_game.stage : 0, vk_game.room);
         vk_platforms_step(&vk_platforms);
         platform_pass = 0;
+        platform_carry = 0;
         vk_crushers_room(&vk_crushers, key ? vk_game.stage : 0, vk_game.room);
         if (key != cells_key) room_cells(key);
         cells_key = 0xFFFF;   /* one use: VRAM may be overwritten before the next room change */
