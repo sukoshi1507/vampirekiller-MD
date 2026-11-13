@@ -43,7 +43,8 @@ def main():
  assert bool(z[0xC500])==(not a.free_third)
  entry(15,9);
  if a.free_third:
-  assert lookup(syms,'vk_boss')[1]==192;m.wr(addr('vk_boss')+116,0) #extra_shot[0], m68k offset retained
+  assert lookup(syms,'vk_boss')[1]==194;   # 192 + flame[2] appended (offsets of extra_shot unchanged)
+  m.wr(addr('vk_boss')+116,0) #extra_shot[0], m68k offset retained
  m.wr(e+162,1);pin(20,114);m.run(4,set());before=m.rd16(addr('late_enemy_count'));m.image().save(a.out/'boss-before-candle.png')
  for frame in range(20):
   pin(20,114);m.wr(addr('vk_whip')+5,0);m.run(1,{BUTTONS['B']} if frame<2 else set())

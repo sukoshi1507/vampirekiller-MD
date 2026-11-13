@@ -152,9 +152,11 @@ int main(void)
     /* Defeat and the script: 60 passes, the orb, 90 passes, the fall to C0h, 180 passes. */
     b.energy = 8;
     assert(vk_boss_hit(&b, 0) && !b.alive && b.flash_wait == 0x14 && !b.shot[0].active);
+    assert(b.flame[0] == 16 && !b.flame[1]);      /* 7806 -> 9A3A: 1E flame, 16 passes */
     frames = 0;
     do { events = vk_boss_frame(&b, 10, 192, 0, 0, 32); frames++; } while (!(events & VK_BOSS_EV_ORB_TILES));
     assert(frames >= 120 && frames <= 130);       /* trace: 1366 -> 1492 */
+    assert(!b.flame[0]);
     assert(b.orb && b.orb_y == 0x40);
     while (!b.orb_landed) vk_boss_frame(&b, 10, 192, 0, 0, 32);
     assert(b.orb_y == 0xC0);

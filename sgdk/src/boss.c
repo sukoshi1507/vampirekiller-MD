@@ -561,6 +561,8 @@ static int room9_pass(VKBoss *b, int simon_x, int simon_y, int d012)
     return 0;
 }
 
+/* 9B71: the death flame of a body of stages 3, 6, 9 ends after 16 passes. */
+static void boss_body_flames_pass(VKBoss *b){int i;for(i=0;i<2;i++)if(b->flame[i])b->flame[i]--;}
 #include "boss12.inc"
 #include "boss15.inc"
 
@@ -574,7 +576,7 @@ int vk_boss_frame(VKBoss *b, int simon_x, int simon_y, int d012, int frozen, int
     if (b->flash_wait && --b->flash_wait == 0) events |= VK_BOSS_EV_FLASH;
     if (b->ending)
     {
-        if(b->kind<3)boss12_bursts_pass(b);
+        if(b->kind<3)boss12_bursts_pass(b),boss_body_flames_pass(b);
         if(b->kind==3 || b->kind==4) {
             int script_events;
             if(b->script==0) {
@@ -594,7 +596,7 @@ int vk_boss_frame(VKBoss *b, int simon_x, int simon_y, int d012, int frozen, int
     {
         b->ending = 1;
         b->script = 0;
-        if(b->kind<3)boss12_bursts_pass(b);
+        if(b->kind<3)boss12_bursts_pass(b),boss_body_flames_pass(b);
         if(b->kind==3 || b->kind==4) {
             if(b->kind==3 && b->walker[1].alive==1)boss12_rider(b,simon_x,simon_y,d012);
             boss12_flames_pass(b);boss12_bursts_pass(b);
@@ -734,6 +736,10 @@ int vk_boss_hit(VKBoss *b, int c416)
     if (b->energy && !(b->energy & 0x80)) return 0;
     /* 7E17: C445 = 14h, 7806 empties the objects. */
     b->energy = 0;
+    if(b->kind<3){   /* 7806 -> 9A3A: 99F6 frees the body, CE00 (1, 2, 3 in these rooms) != 0: a 1E flame of 2 entries, 16 passes (9B71) */
+        if(b->kind==2){b->flame[0]=b->walker[0].alive?16:0;b->flame[1]=b->walker[1].alive?16:0;}
+        else b->flame[0]=16;
+    }
     b->alive = 0;
     if(b->kind==3 || b->kind==4) {
         boss12_flame(b,0,24);

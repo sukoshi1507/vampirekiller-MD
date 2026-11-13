@@ -96,6 +96,9 @@ typedef struct {
     /* Appended for stage15: the first two slots above retain their offsets. */
     VKBossShot extra_shot[VK_BOSS_MAX_SHOTS-VK_BOSS_SHOTS];
     VKBossU8 shot_state[VK_BOSS_MAX_SHOTS], shot_pose[VK_BOSS_MAX_SHOTS];
+    /* Kinds 0-2: passes left of the 2-entry 1E flame that 7806 -> 9A3A builds in the C800 block of each body killed (12h/13h: [0]; 14h: [0], [1]);
+     * only the SAT entries it holds are modelled (actors.c), not its picture. */
+    VKBossU8 flame[2];
 } VKBoss;
 
 /* One sprite: size 2 (16 x 16) or 4 (32 x 32), tile from the first boss or orb tile. */

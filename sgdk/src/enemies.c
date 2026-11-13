@@ -72,7 +72,7 @@ EnemyU8 Enemies_roomFlags(EnemyU8 stage, EnemyU8 room)
 #define ENEMY_S2_TYPE1_Y      (ENEMY_S2_TYPE1_E - 0x20) /* Y SAT du rang haut : 80 (trace : 128 a chaque tir) */
 #define ENEMY_S2_EXIT_X_RIGHT 0xE7 /* 99E5 : objet supprime a X >= F1 ; dernier X SAT E7 (trace) */
 #define ENEMY_OBJ_X 8              /* X de l'objet = X SAT + 8 (enregistrements +21 de l'objet) */
-#define ENEMY_OBJ_Y 31             /* Y de l'objet = Y affiche du rang haut + 31 (une fois pose) */
+#define ENEMY_OBJ_Y 32             /* type 01 (A/B) : Y de l'objet = octet SAT du rang haut + 32 (5F1D + 6445 reels : objet A0 -> SAT 80) */
 #define ENEMY_TYPE4_OBJ_Y 15       /* type 4 : Y de l'objet = Y SAT + 15 (+3 de l'objet, prouve) */
 
 /* Tables ROM salle de stage 1 (D000 = 1).
@@ -572,12 +572,12 @@ int Enemies_spawnTimerTick(EnemySpawnTimer *t, const EnemyRoomVars *v, EnemyStat
 
 /* Chute : un ennemi sans sol sous lui tombe (ENEMY_FALL_SPEED px par image). Le sol se teste
  * comme celui de Simon (vk_grounded) : centre du sprite en X (sprite X + 8 en repere de jeu),
- * pieds en Y + 31 (bas du sprite de 32 px). Vitesse provisoire. */
+ * pieds en Y de l'objet = octet SAT + 32 (ENEMY_OBJ_Y ; la ROM ne fait pas tomber l'objet : Y fixe a la creation). Vitesse provisoire. */
 static void fall(Enemy *e, const EnemyU8 *map, EnemyU8 stage)
 {
     int step;
     for (step = 0; step < ENEMY_FALL_SPEED; step++) {
-        if (vk_grounded(map, (VKByte)(e->x + 8), (VKByte)(e->y + 31), stage, 0)) break;
+        if (vk_grounded(map, (VKByte)(e->x + 8), (VKByte)(e->y + ENEMY_OBJ_Y), stage, 0)) break;
         e->y++;
     }
 }
@@ -2326,10 +2326,10 @@ int Enemies_sprites(const EnemyState *s, EnemyU8 index, EnemySprite out[ENEMY_SP
         /* Une cellule 16x16, deux couches (N et N+4), 4 poses de 16 images. Les motifs
          * portent ENEMY_PATTERN_TYPE4 : leurs numeros recouvrent ceux des types A et B. */
         const EnemyU8 pattern = kType4Patterns[e->dx < 0 ? 0 : 1][(e->age / 16) & 3];
-        out[0].y = e->y;
+        out[0].y = (EnemyU8)(e->y + 1);   /* e->y = octet SAT ; ligne affichee = octet + 1 (V9938) */
         out[0].x = e->x;
         out[0].pattern = (EnemyU8)(ENEMY_PATTERN_TYPE4 | pattern);
-        out[1].y = e->y;
+        out[1].y = (EnemyU8)(e->y + 1);
         out[1].x = e->x;
         out[1].pattern = (EnemyU8)(ENEMY_PATTERN_TYPE4 | (pattern + 4));
         out[0].bank = out[1].bank = 0;
@@ -2339,7 +2339,7 @@ int Enemies_sprites(const EnemyState *s, EnemyU8 index, EnemySprite out[ENEMY_SP
     pose = poseOf(e->age);
     t = (e->type == ENEMY_TYPE_B) ? 1 : 0;
     for (k = 0; k < ENEMY_SPRITES; k++) {
-        out[k].y = (EnemyU8)(k < 2 ? e->y : e->y + ENEMY_ROW_OFFSET);
+        out[k].y = (EnemyU8)((k < 2 ? e->y : e->y + ENEMY_ROW_OFFSET) + 1);   /* octet SAT + 1 = ligne affichee, comme les autres especes */
         out[k].x = e->x;
         out[k].pattern = kPatterns[t][k < 2 ? 0 : pose][k];
         out[k].bank = 0;

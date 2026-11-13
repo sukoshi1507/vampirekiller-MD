@@ -90,7 +90,9 @@ def flames():
  rider only gets its 9AB3 delay and keeps its entries) and stage 15 (16h, 12 entries).  The port holds 2 entries for a walker with alive = 2 (actors.c:
  boss_bodies_sync, boss15_pool_sync), in the order of the blocks; they are released when the flame ends (16 passes, 9B71)."""
  lib=C.CDLL(str(Path(sys.argv[1]).resolve()));lib.pools_begin.argtypes=[C.POINTER(C.c_ubyte)];rom=load_rom(reference_rom())
- for label,bodies,ce0b in (('stage 12 rider+flames',(0x15,0x18),1),('stage 12 rider delayed',(0x15,0x18),0),('stage 15 body 16h',(0x16,),0)):
+ for label,bodies,ce0b in (('stage 12 rider+flames',(0x15,0x18),1),('stage 12 rider delayed',(0x15,0x18),0),('stage 15 body 16h',(0x16,),0),
+  ('stage 3 body 12h',(0x12,),0),('stage 6 body 13h',(0x13,),0),('stage 9 walkers 14h x2',(0x14,0x14),0)):
+  rider=bodies[-1]==0x18   # only the 18h rider has the 9AB3 CE0B delay; 12h/13h/14h always turn into 1E flames (CE00 = 1, 2, 3 on openMSX 3:5, 6:5, 9:7)
   h=setup(rom,13,3);m=h.cpu.memory;h.call(0x63C5);cmap=(C.c_ubyte*768).from_buffer_copy(m[0xD100:0xD400]);lib.pools_begin(cmap)
   m[0xCE00]=1;m[0xCE0B]=ce0b
   for t in bodies:h.cpu.c=t;h.cpu.de=0x8060;h.call(0x5F1D)
@@ -102,20 +104,20 @@ def flames():
   # the port: the flame of walker 0 first, then walker 1 (a delayed rider keeps its 2 entries)
   assert lib.boss15_reserve(0,0)==1 and lib.boss15_reserve(0,2)==1
   if len(bodies)==2:
-   flame=m[0xC880]==0x1E;assert flame==bool(ce0b),(label,hex(m[0xC880]))
-   if ce0b:assert lib.boss15_reserve(9,0)==1 and lib.boss15_reserve(9,2)==1   # body -> flame: released first even when the count is the same (the ROM frees 6,7 and takes the first two free references)
+   flame=m[0xC880]==0x1E;assert flame==(bool(ce0b) or not rider),(label,hex(m[0xC880]))
+   if ce0b or not rider:assert lib.boss15_reserve(9,0)==1 and lib.boss15_reserve(9,2)==1   # body -> flame: released first even when the count is the same (the ROM frees 6,7 and takes the first two free references)
   assert lib.pools_mask()==zmask(m),(label,'flames',hex(lib.pools_mask()),hex(zmask(m)))
   refs=[(m[0xC821],m[0xC826])]+([(m[0xC8A1],m[0xC8A6])] if len(bodies)==2 else [])
-  assert refs[0]==(0,1) and (len(refs)==1 or refs[1]==((2,3) if ce0b else (6,7))),(label,refs)
+  assert refs[0]==(0,1) and (len(refs)==1 or refs[1]==((2,3) if ce0b or not rider else (6,7))),(label,refs)
   # the flames end: 16 real passes, then 9B71 frees the blocks (rider delayed: its block stays, only the flame of walker 0 ends)
   for p in range(22):
    m[0xC003]=(p+1)&255;m[0xC440]=255;m[0xC43A]=255;m[0xD010]=0;h.call(0x98E5);h.call(0x9E31)
    for k in range(2):
     if m[0xC800+128*k]:h.cpu.ix=0xC800+128*k;h.call(0x6445)
    h.call(0x64E5);h.call(0x64EC)
-  assert m[0xC800]==0 and (ce0b==0 or m[0xC880]==0) or len(bodies)==1 and m[0xC800]==0,(label,'flames did not end')
+  assert m[0xC800]==0 and (ce0b==0 and rider or len(bodies)==1 or m[0xC880]==0),(label,'flames did not end')
   assert lib.boss15_reserve(0,0)==1
-  if len(bodies)==2 and ce0b:assert lib.boss15_reserve(9,0)==1
+  if len(bodies)==2 and (ce0b or not rider):assert lib.boss15_reserve(9,0)==1
   assert lib.pools_mask()==zmask(m),(label,'ended',hex(lib.pools_mask()),hex(zmask(m)))
   h.cpu.c=30;h.cpu.de=0x8040;h.call(0x5F1D);assert lib.pools_sat_alloc(30,128,64)==0,label
   assert lib.pools_owner(0)==(1<<m[0xC821])|(1<<m[0xC826]),(label,'reuse')

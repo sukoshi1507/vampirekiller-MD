@@ -442,11 +442,19 @@ static void boss_shot_hold(int i,int active)
  * reorder the lazy SAT assignment of the objects). */
 static void boss_bodies_sync(void)
 {
- if(vk_boss.kind<=1){if(vk_boss.alive||boss_held[0])boss_body_hold(0,vk_boss.alive?8:0,0);return;}
- if(vk_boss.walker[0].alive||vk_boss.walker[1].alive||boss_held[0]||boss_held[1]){
+ if(vk_boss.kind<=1){
+  const int f=vk_boss.flame[0]!=0;   /* death flame 1E (7806): 2 entries on the first free references */
+  if(vk_boss.alive||f||boss_held[0])boss_body_hold(0,f?2:vk_boss.alive?8:0,f);
+  return;
+ }
+ if(vk_boss.walker[0].alive||vk_boss.walker[1].alive||boss_held[0]||boss_held[1]||vk_boss.flame[0]||vk_boss.flame[1]){
   if(vk_boss.kind==3){
    const int a0=vk_boss.walker[0].alive,a1=vk_boss.walker[1].alive;
    boss_body_hold(0,a0==1?6:a0?2:0,a0==2);boss_body_hold(1,a1?2:0,a1==2);return;
+  }
+  if(vk_boss.kind==2){   /* stage 9: both 14h blocks, in block order */
+   const int f0=vk_boss.flame[0]!=0,f1=vk_boss.flame[1]!=0;
+   boss_body_hold(0,f0?2:vk_boss.walker[0].alive?6:0,f0);boss_body_hold(1,f1?2:vk_boss.walker[1].alive?6:0,f1);return;
   }
   boss_body_hold(0,vk_boss.walker[0].alive?6:0,0);boss_body_hold(1,vk_boss.walker[1].alive?6:0,0);
  }

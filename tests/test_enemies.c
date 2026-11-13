@@ -270,8 +270,8 @@ static void test_e1_trajectory(void)
         advance_to(&s, &rf, e1[i].n);
         CHECK(Enemies_sprites(&s, 0, sp) == ENEMY_SPRITES, "E1 inactif a l'image %d", e1[i].n);
         CHECK(sp[0].x == e1[i].x, "E1 x a l'image %d : attendu %d, obtenu %d", e1[i].n, e1[i].x, sp[0].x);
-        CHECK(sp[0].y == 0xA0 && sp[1].y == 0xA0, "E1 rang haut doit etre en Y=A0 (image %d)", e1[i].n);
-        CHECK(sp[2].y == 0xB0 && sp[3].y == 0xB0, "E1 rang bas doit etre en Y=B0 (image %d)", e1[i].n);
+        CHECK(sp[0].y == 0xA1 && sp[1].y == 0xA1, "E1 rang haut doit etre en Y=A0 + 1 (ligne affichee) (image %d)", e1[i].n);
+        CHECK(sp[2].y == 0xB1 && sp[3].y == 0xB1, "E1 rang bas doit etre en Y=B0 + 1 (ligne affichee) (image %d)", e1[i].n);
         CHECK(sp[0].pattern == 0x40 && sp[1].pattern == 0x44, "E1 motifs haut (image %d)", e1[i].n);
         CHECK(sp[2].pattern == e1[i].bottom, "E1 motif bas a l'image %d : attendu %02X, obtenu %02X",
               e1[i].n, e1[i].bottom, sp[2].pattern);
@@ -351,7 +351,7 @@ static void test_type4_motion(void)
     (void)Enemies_spawn(&s, ENEMY_SIDE_RIGHT, ENEMY_TYPE_4, ENEMY_TYPE4_Y, 0);
     CHECK(s.enemy[0].x == 0xE5 && s.enemy[0].dx == -1, "type 4 droite : x=E5, dx=-1");
     CHECK(Enemies_sprites(&s, 0, sp) == ENEMY_TYPE4_SPRITES, "type 4 : deux entrees SAT");
-    CHECK(sp[0].pattern == (T4 | 0x48) && sp[1].pattern == (T4 | 0x4C) && sp[0].y == 0xAA,
+    CHECK(sp[0].pattern == (T4 | 0x48) && sp[1].pattern == (T4 | 0x4C) && sp[0].y == 0xAB,
           "type 4 vers la gauche : 48/4C a Y=AA");
     Enemies_update(&s);
     CHECK(s.enemy[0].x == 229 && s.enemy[0].y == 170, "type 4 : age 1, pas encore de pas");
@@ -415,7 +415,7 @@ static void test_stage10_bat_first_sat(void)
         CHECK(s.enemy[slot].x == 229 && s.enemy[slot].y == 122,
               "stage 10 salle 0 : SAT premiere apparition (229,122), lu dans trace R");
         CHECK(Enemies_sprites(&s, slot, sp) == ENEMY_TYPE4_SPRITES &&
-              sp[0].x == 229 && sp[0].y == 122 &&
+              sp[0].x == 229 && sp[0].y == 123 &&
               sp[0].pattern == (ENEMY_PATTERN_TYPE4 | 0x48) &&
               sp[1].pattern == (ENEMY_PATTERN_TYPE4 | 0x4C),
               "stage 10 salle 0 : deux couches SAT 48/4C au spawn");
@@ -1131,7 +1131,7 @@ static void test_stage2_type1_spawn(void)
         CHECK(s.enemy[0].x == (side[shots] == ENEMY_SIDE_RIGHT ? 0xE5 : 0x0A), "stage 2 : X SAT du tir %d", shots);
         CHECK(Enemies_sprites(&s, 0, sp) == ENEMY_SPRITES &&
               sp[0].pattern == (side[shots] == ENEMY_SIDE_RIGHT ? 0x40 : 0x58) &&
-              sp[0].y == 0x80 && sp[2].y == 0x90, "stage 2 : motifs et rangs (80, 90) du tir %d", shots);
+              sp[0].y == 0x81 && sp[2].y == 0x91, "stage 2 : motifs et rangs (80, 90) du tir %d", shots);
         last = call;
         shots++;
         Enemies_setRoom(&s);
@@ -1213,7 +1213,7 @@ static void put_stage2_type1(EnemyState *s, int objX, int objY, int side)
                                 0x80, side == ENEMY_SIDE_RIGHT ? 1 : 15);
     s->enemy[k].romBox = 1;
     s->enemy[k].x = (EnemyS16)(objX - 8);
-    s->enemy[k].y = (EnemyU8)(objY - 31);
+    s->enemy[k].y = (EnemyU8)(objY - 32);
 }
 
 static int stage2_contact(int objX, int objY)
@@ -1482,7 +1482,7 @@ static void test_type2_sat_budget(void)
 
 /* Contact selon la posture de Simon (8290 -> 847A, C420) : bornes Y de l'objet MSX (pieds)
  * pour chaque classe de 82CB, a X egal, puis bornes X. Simon en (120, 160). Objet en (X, Y) :
- * type 1 romBox et type 4 stockes en coordonnees de sprite (X - 8 ; Y - 31 ou Y - 15). */
+ * type 1 romBox et type 4 stockes en coordonnees de sprite (X - 8 ; Y - 32 ou Y - 15, octet SAT). */
 static int posture_touch(int type, int romBox, int state, int dx, int objY)
 {
     EnemyRoomVars v;
@@ -1498,7 +1498,7 @@ static int posture_touch(int type, int romBox, int state, int dx, int objY)
     e.romBox = (EnemyU8)romBox;
     e.x = (EnemyS16)(120 + dx);
     e.y = (EnemyU8)objY;
-    if (romBox) { e.x -= 8; e.y = (EnemyU8)(objY - 31); }
+    if (romBox) { e.x -= 8; e.y = (EnemyU8)(objY - 32); }
     if (type == ENEMY_TYPE_4) { e.x -= 8; e.y = (EnemyU8)(objY - 15); }
     return Enemies_touches(&e, &v);
 }
