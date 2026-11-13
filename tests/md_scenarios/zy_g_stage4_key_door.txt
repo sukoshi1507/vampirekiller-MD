@@ -23,6 +23,24 @@ wait 4
 expect ram8('items+2') == 0 # porte fermee
 until ram8('items+2') == 1 max 160 LEFT
 expect ram8('items') == 0 and game.player.x < 34 # cle consommee a l'ouverture (porte de gauche)
+# Porte de gauche, openMSX (salle forcee, Simon depuis X 34) : ouverture a X 26 en pose de marche gauche (C42E 11) gardee
+# pendant la levee ; puis marche seule avec les compositions gauches (765F, C42E 10..12), X 25 a t 89, 1 px / 4 images,
+# X 7 a t 161. Avant : poses droites en reculant vers la gauche (« moonwalk »), X saute de 26 a 20.
+set t0 frame
+set xo game.player.x
+set po player.pose
+expect xo == 26 and player.facing == 1 and 4 <= po <= 5 # pose de marche, regard a gauche
+wait 60
+expect player.x == xo and player.pose == po # pose gardee pendant la levee (C5AC = 2)
+until ram8('items+2') == 2 max 60
+expect player.x == xo
+until player.x == xo - 1 max 8
+expect frame - t0 == 89 and player.facing == 1 and 3 <= player.pose <= 5
+until player.x == xo - 9 max 40
+expect frame - t0 == 121 and 3 <= player.pose <= 5 # 1 px toutes les 4 images, poses gauches
+shot zy-g-porte-gauche
+until player.x == 7 max 100
+expect frame - t0 == 161 and 3 <= player.pose <= 5 # sortie a X 7 (77BA)
 until game.stage == 5 max 400 LEFT
 wait 30
 expect game.stage == 5 and game.room == 0 and game.player.x == 232 and game.player.y == 96 # entree du stage 5 (232, 96)

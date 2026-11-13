@@ -9,9 +9,10 @@
 
 /* K3, frames from the opening (5799): C5AF = t / 2 lifts the bar by one pixel per
  * two frames; Simon starts walking at t 91 (X 229) and gains one pixel every four
- * frames up to X 248 at t 167; the stage changes at t 168 (D000 1 -> 2). */
+ * frames up to X 248 at t 167; the stage changes at t 168 (D000 1 -> 2). The walk
+ * starts from the X of the opening (229: X 248 at t 163). */
 #define DOOR_WALK_T0 87
-#define DOOR_EXIT_T 168
+static VKByte door_pose;   /* pose of Simon at the opening, kept during the lift */
 
 static const VKStageItems *stage_items(const VKGame *game)
 {
@@ -138,24 +139,30 @@ VKItemEvent vk_items_tick(VKItems *items, VKGame *game)
     if (items->door == VK_DOOR_OPENING || items->door == VK_DOOR_WALKING)
     {
         const int before = vk_items_door_lift(items);
+        const int left = s->door_x < 128;
         items->timer++;
-        if (items->timer >= DOOR_EXIT_T)
+        /* 77BA: X - 8 >= F0, so X 248 on the right and X 7 on the left; 7802 one frame later (openMSX, doors of
+         * the stages 1, 4 and 5: X 248 or 7 then C000 = 10 at the next frame). */
+        if (items->door == VK_DOOR_WALKING && (left ? p->x <= 7 : p->x >= 248))
         {
             items->door = VK_DOOR_DONE;
             return VK_ITEM_STAGE_EXIT;
         }
         if (items->timer > DOOR_WALK_T0)
         {
-            const int left = s->door_x < 128;
-            const int step = (items->timer - DOOR_WALK_T0) / 4;
-            const int x = left ? 20 - step : 228 + step;
-            /* 778A -> 6CA4: the same walk cycle as the castle entrance (poses 0, 1, 2, 1 held
-             * 8 frames each), the routine that moves Simon by 80h a pass also animates him. */
+            /* 778A: 80h a pass from the X of the opening (6C94), with the walk cycle of 6CA4 (poses 0, 1, 2, 1 held
+             * 8 frames each) and, facing left, the left compositions of 765F (C42E + 10: Simon looks at the door he
+             * walks to). openMSX, forced rooms: on the right X + 1 at t 91 then every 4 frames (229 -> 248 at t 163);
+             * on the left the first half pixel already takes one (X.00 - 0.80), X - 1 at t 89 then every 4 frames
+             * (stage 4 room 3 and stage 5 room 5: 26 -> 25 at t 89, 7 at t 161, stage + 1 at t 162). */
             static const VKByte walk_frames[4] = {0, 1, 2, 1};
-            p->pose = walk_frames[((items->timer - DOOR_WALK_T0) >> 3) & 3];
+            const int t = items->timer - DOOR_WALK_T0;
+            p->pose = (VKByte)(walk_frames[(t >> 3) & 3] + (p->facing ? 3 : 0));
             items->door = VK_DOOR_WALKING;
-            p->x = (VKByte)(x < 0 ? 0 : x > 248 ? 248 : x);
+            if (left) { if ((t & 3) == 2 && p->x > 7) p->x--; }
+            else if ((t & 3) == 0 && p->x < 248) p->x++;
         }
+        else p->pose = door_pose;   /* C5AC = 2 (7805: RET): Simon keeps the pose of the opening pass while the bar lifts */
         return vk_items_door_lift(items) != before ? VK_ITEM_DOOR_STEP : VK_ITEM_NONE;
     }
     /* 7FE2: RET NZ while C422 != 0, so nothing is picked up during an attack. The key
@@ -180,6 +187,7 @@ VKItemEvent vk_items_tick(VKItems *items, VKGame *game)
             items->keys &= (VKByte)~VK_KEY_WHITE;          /* 7743: RES 0,(C701) */
             items->door = VK_DOOR_OPENING;
             items->timer = 0;
+            door_pose = p->pose;
             return VK_ITEM_DOOR_OPENED;
         }
     }
