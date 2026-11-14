@@ -201,6 +201,8 @@ int main(void)
             for(k=0;k<9;k++){
                 assert(vk_whip_arm_frame(&w)==(heavy[k]>=0));
                 if(heavy[k]>=0) assert(vk_whip_visual_step(&w)==heavy[k]);
+                /* Crouched throw (traced, same C422/C42F as standing, C42E = 6): same steps, crouch frames 1..3. */
+                assert(vk_whip_crouch_visual_step(&w)==(heavy[k]>=0 ? heavy[k]+1 : 0));
                 vk_whip_tick(&w,&p,0);
             }
             assert(w.timer==0 && vk_whip_arm_frame(&w)==0);

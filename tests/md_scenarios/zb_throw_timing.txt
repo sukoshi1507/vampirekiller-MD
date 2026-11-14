@@ -27,7 +27,7 @@ expect whip.timer == 9 and ram8('vk_weapons+4') == 0xE0
 wait 1
 expect whip.timer == 0   # fin du lancer ; l'arme est visible au plus deux images apres
 wait 2
-expect ram8('vk_weapons+4') != 0xE0 # lancee au 6e tick (MSX : 2038 -> 2044)
+expect ram8('vk_weapons+4') != 0xE0 # lancee au 6e tick (MSX : 2038 -> 2044, minimum observe ; 6 a 9 selon la charge)
 wait 150
 until ram8('vk_weapons+0') == 0 max 200
 poke vk_candles+9 0x1C
@@ -57,3 +57,37 @@ wait 1
 expect whip.timer == 0   # fin du lancer ; l'arme est visible au plus deux images apres
 wait 2
 expect ram8('vk_weapons+4') != 0xE0 # croix : 9 ticks (MSX : 2201 -> 2210)
+until ram8('vk_weapons+0') == 0 max 300
+# Lancer ACCROUPI (research/throw-timing.md, trace openMSX : C420 = 2, C42E = 6, C422/C42F image par image
+# identiques au lancer debout) : hache et croix partent aussi au 9e tick ; la dague : voir la doc, 6 a 9 ticks selon la charge.
+poke vk_candles+9 0x1C
+poke vk_candles+6 3
+wait 2
+expect whip.level == 3
+until whip.timer == 0 max 30
+hold DOWN 6
+expect game.player.crouched == 1
+hold DOWN+B 1
+expect whip.timer == 14 and whip.crouched == 1
+wait 8
+expect whip.timer == 6 and ram8('vk_weapons+4') == 0xE0
+wait 1
+expect whip.timer == 0
+wait 2
+expect ram8('vk_weapons+4') != 0xE0 # hache accroupie : 9 ticks (MSX : 2526 -> 2535)
+until ram8('vk_weapons+0') == 0 max 300
+poke vk_candles+9 0x1D
+poke vk_candles+6 3
+wait 2
+expect whip.level == 4
+until whip.timer == 0 max 30
+hold DOWN 6
+expect game.player.crouched == 1
+hold DOWN+B 1
+expect whip.timer == 14 and whip.crouched == 1
+wait 8
+expect whip.timer == 6 and ram8('vk_weapons+4') == 0xE0
+wait 1
+expect whip.timer == 0
+wait 2
+expect ram8('vk_weapons+4') != 0xE0 # croix accroupie : 9 ticks (MSX : 3079 -> 3088)
