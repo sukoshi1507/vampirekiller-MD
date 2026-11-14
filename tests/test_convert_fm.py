@@ -162,7 +162,7 @@ class FmConversionTests(unittest.TestCase):
             if t > 0:
                 self.assertEqual(p, 0)
                 by_frame[int((t - 40 + 100) // proto.SPF)].append((r, v))
-        mine = fm.convert(ay, s['loop'])
+        mine = fm.convert(ay, s['loop'], master=0)   # the prototype has no master level
         loop = s['loop']
         for i in range(n):
             if i == loop:

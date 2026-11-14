@@ -10,7 +10,7 @@ instrument set 'A_cuivres'), moved into the build chain. Same rules, same write 
 - a note start (8AF1, `notes` of tools/extract_msx_sound.py) on an active voice: key off,
   then (re)write frequency, carrier TL, key on;
 - the frequency is written when the AY period changes; the carrier TL (instrument TL +
-  4 x (15 - volume)) when the volume changes; key off when a keyed voice becomes inactive;
+  MASTER_TL + 4 x (15 - volume)) when the volume changes; key off when a keyed voice becomes inactive;
 - block/fnum from the AY frequency 1 789 772,5 / 16 / period with the YM2612 sample
   rate 7 670 453 / 144 (fnum = f x 2^21 / rate, block raised until fnum < 2048).
 
@@ -44,6 +44,10 @@ PATCHES = ('saw_lead', 'bass_slap', 'saw_soft')
 CARRIERS = {0: [3], 1: [3], 2: [3], 3: [3], 4: [1, 3], 5: [1, 2, 3], 6: [1, 2, 3], 7: [0, 1, 2, 3]}
 OPOFF = [0, 8, 4, 12]         # register offsets of S1, S2, S3, S4
 MAX_WRITES = 63               # per frame (stream header, 6 bits)
+# Carrier TL steps (0.75 dB) added to every level of the ROM streams: the music 6 dB lower, so
+# that the effects (PSG, already at full level) come out of it (research/audio-fm.md, levels).
+# The prototype has none (master=0).
+MASTER_TL = 8
 
 
 def fnum(hz):
@@ -82,7 +86,7 @@ def ay_voice(regs, ch):
     return per, vol, tone and vol > 0 and per > 1
 
 
-def convert(frames, loop=None, patches=PATCHES):
+def convert(frames, loop=None, patches=PATCHES, master=MASTER_TL):
     """frames: [{'regs': [14+ AY registers], 'notes': [voices starting a note]}].
     Returns one list of (reg, value) per frame."""
     unknown = [False] * 3
@@ -90,13 +94,13 @@ def convert(frames, loop=None, patches=PATCHES):
         # Key state on arrival at the loop frame (first pass) and at the end of the
         # stream (wrap): a voice whose two states differ is keyed off and on again there.
         first, end = {}, {}
-        _run(frames, None, patches, first, loop)
-        _run(frames, None, patches, end, len(frames))
+        _run(frames, None, patches, first, loop, master=master)
+        _run(frames, None, patches, end, len(frames), master=master)
         unknown = [first['keyed'][ch] != end['keyed'][ch] for ch in range(3)]
-    return _run(frames, loop, patches, None, None, unknown)
+    return _run(frames, loop, patches, None, None, unknown, master)
 
 
-def _run(frames, loop, patches, snapshot, snap_at, unknown=(False, False, False)):
+def _run(frames, loop, patches, snapshot, snap_at, unknown=(False, False, False), master=MASTER_TL):
     keyed = [False] * 3
     lastp = [0] * 3
     lastv = [-1] * 3
@@ -130,7 +134,7 @@ def _run(frames, loop, patches, snapshot, snap_at, unknown=(False, False, False)
                 lastp[ch] = per
             if v != lastv[ch] or start:
                 for c in CARRIERS[p['alg']]:
-                    g_tl.append((0x40 + OPOFF[c] + ch, min(127, p['ops'][c][2] + 4 * (15 - v))))
+                    g_tl.append((0x40 + OPOFF[c] + ch, min(127, p['ops'][c][2] + master + 4 * (15 - v))))
                 lastv[ch] = v
             if not keyed[ch]:
                 g_on.append((0x28, 0xF0 | ch))

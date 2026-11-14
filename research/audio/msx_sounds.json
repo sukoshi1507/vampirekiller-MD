@@ -111,7 +111,7 @@
   ]
  },
  "total_bytes": 71522,
- "fm_total_bytes": 225481,
+ "fm_total_bytes": 225396,
  "fm_musics": [
   {
    "id": "80",
@@ -129,7 +129,7 @@
    "id": "82",
    "frames": 4062,
    "fm_bytes": 30705,
-   "noise_bytes": 5310
+   "noise_bytes": 5241
   },
   {
    "id": "83",
@@ -147,7 +147,7 @@
    "id": "85",
    "frames": 3818,
    "fm_bytes": 21777,
-   "noise_bytes": 4372
+   "noise_bytes": 4356
   },
   {
    "id": "86",

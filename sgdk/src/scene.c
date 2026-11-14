@@ -11,7 +11,8 @@ static u16 front_timer;
  * switches the music between the PSG and the YM2612 (research/audio-fm.md). */
 void vk_title_sound_draw(void)
 {
-    VDP_drawText(vk_sound_fm ? "SOUND  < FM  >" : "SOUND  < PSG >", 13, 23);
+    /* 13 characters from column 9: same centre as "PRESS START" (11 from column 10). */
+    VDP_drawText(vk_sound_fm ? "SOUND < FM  >" : "SOUND < PSG >", 9, 23);
 }
 
 void vk_show_title(void)
