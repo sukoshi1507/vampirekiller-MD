@@ -4,7 +4,7 @@ Etat : les deux routes sont jouees **de l'entree a la porte de sortie**, a la ma
 `tests/md_scenarios/zzq_stage10_route.txt` (stage 10, salles 0-3-4-5-0-5-8, porte, entree du stage 11) et `zzq_stage11_route.txt` (stage 11, salles 0 a 5, porte, entree du stage 12).
 Les deux scenarios entrent par le vrai selecteur de stage (pause + Konami + B + A). **Ils sont joues en mode invulnerable** (`Enemies_god` = 1 apres le Konami) : un `tap A` de plus
 le coupe (`zzm_enter10.inc`), mais la salle 0 du stage 10 (chauve-souris, une passe toutes les ~160 images) et la salle 0 du stage 11 (2 ennemis lents) touchent Simon pendant les marches
-chronometrees et le repoussent hors de la route : **les degats des ennemis ne sont pas testes** (a jouer par un testeur humain, en tuant ou en evitant les ennemis).
+chronometrees et le repoussent hors de la route : les variantes sans invulnerabilite sont decrites plus bas.
 
 ## Les deux « blocages » des premieres notes : verdict
 
@@ -57,9 +57,39 @@ Salle 1 : cle blanche cachee dans le bloc (96, 80) ; cle doree (128, 64) sur le 
 Le scenario (`zzq_stage11_route.txt`) fait les salles 3 a 5 par une serie de 10 sauts en avant (C+DROITE 1 image, DROITE 45 images, DROITE 20 images entre deux sauts) apres le coup de fouet de la salle 3 : les positions de chaque saut sont dans le scenario
 (les attentes `until game.player.x >= 88` etc. sont la reference). Un humain peut faire plus simple (sauter a chaque marche), mais cette serie est reproductible.
 
+## Sans invulnerabilite (scenarios `zzq_stage10_route_nogod.txt` et `zzq_stage11_route_nogod.txt`)
+
+Le portage est joue a la manette avec `Enemies_god` = 0 (`zzm_enter10/11.inc` coupent le mode invulnerable par un `tap A` de plus apres le Konami). Les attentes chronometrees sont remplacees par des
+attentes conditionnelles qui fouettent ce qui s'approche (`zzq_guard.inc`, `zzq_walk.inc`, `zzq_walkl.inc`, `zzq_clear.inc`, `zzq_guard_platform.inc`, `zzq_guard_pmax.inc`). Chaque scenario lance 3 fois
+donne exactement la meme trace image par image (les ennemis ne dependent que de la minuterie de la salle et des positions de Simon). Energie maximale = 32 ; contact avec un homme-poisson ou une puce : -4 / -2 selon l'ennemi.
+
+**Stage 10 : de l'entree a la porte, vivant, 31 / 32 d'energie** (un seul point perdu, une boule de feu en salle 8). Conseils pour un humain :
+- Salle 0 (ennemi volant, type 2, une passe toutes les ~160 images, alternativement de droite et de gauche) : le fouet porte ~31 px devant Simon et ne touche l'ennemi qu'au milieu de sa vague (y <= ~122) :
+  l'attendre au bord du sol (X 98), le fouetter quand il est a ~35 px. Celui qui vient de derriere ne se fouette pas depuis le sol (il est trop bas) : sauter sur la plateforme quand elle est a X <= 166 (saut a droite en gardant DROITE),
+  puis se retourner et le fouetter depuis la plateforme (il est alors haut). Accroupi ne protege pas. Un coup recu au bord du sol par derriere jette Simon vers la plateforme (il peut tomber a l'eau si elle n'est pas la).
+- Salles 1 a 5 : hommes-poissons (type 17, **2 coups de fouet**). Ils sautent de l'eau, marchent sur les rebords hauts et **tombent aux memes endroits** (salle 1 : X 108 et X 157 ; salle 3 : X 85 ; salle 5 : X 125 et X 157) :
+  ne pas s'arreter sous ces points. Attendre a ~20 px d'un point de chute, fouetter ceux qui viennent a pied. Ne sauter sur un bloc (salles 1 et 5) que quand la salle est vide d'hommes-poissons
+  (le scenario attend `aucun type 17 vivant`, puis monte sur le bloc et y attend la vague suivante avant de sauter plus haut). Les sorties d'eau reviennent toutes les ~200 images.
+- Salle 3 : marcher vers l'avant sur la plateforme (jusqu'a ~18 px de son bord gauche) avant de casser le bloc, sinon l'homme-poisson qui tombe en X 85 retombe sur Simon arrete au bloc.
+- Salle 4 : ne pas attendre au bout du rebord (X 122) quand l'homme-poisson sort de l'eau en X 112/128 ; sauter sur la plateforme quand elle descend (X ~150) plutot que quand elle remonte.
+- Salle 8 : deux hommes-poissons fixes au sol (X ~51 et ~205) crachent des boules de feu (-1) a hauteur de la poitrine ; les fouetter (elles disparaissent) et tuer les deux hommes-poissons qui s'avancent avant de marcher vers la porte.
+
+**Stage 11 : salles 0 a 2 passees sans aucun degat (32 / 32 a l'arrivee en salle 3). Salles 3 a 5 : NON passees sans degat.** Conseils verifies :
+- Salle 0 : le premier ennemi (X 229) se fouette de face ; le second (de gauche) est plus lent que Simon : continuer a marcher.
+- Salle 1 : saut + fouet casse le mur ; **ne pas rester immobile apres le saut** : l'oiseau/puce posee en (144, 80) plonge sur l'endroit ou Simon se pose (-2). Enchainer en marchant vers le bloc (128, 112).
+- Salles 2 a 4 : toutes les ~200 images (tant que Simon est en X < 192) un aigle entre en (E0, 30/40), vole vers la gauche a y 48-64 et porte une puce (type 14, 1 point de vie) qui **plonge en spirale sur la position de Simon** quand l'aigle est a moins de 60 px.
+  La puce ne se fouette pas pendant la descente (elle arrive en diagonale, trop haut, puis au contact) ; elle se fouette quand elle a atterri et saute vers Simon. L'aigle (8 points de vie) fait -4 s'il touche Simon sur un rebord haut (bloc y 80 de la salle 3).
+  Il y a aussi une puce posee en (112, 112) dans la salle 2 (palier) qui bondit des que Simon est a moins de 60 px. En salle 2 attendre a gauche, fouetter les deux puces, puis traverser ~90 images plus tard est sans degat.
+- Salles 3 et 4 : aucun des rythmes essayes (attente 0 a 190 images avant de traverser, par pas de 10, puis un joueur pilote par la position) n'evite la plongee d'une puce ; chaque coup recu repousse Simon en arriere et la
+  vague suivante arrive avant qu'il ait refait le chemin. Non resolu : la route complete du stage 11 sans invulnerabilite reste a faire (voir "suspect" ci-dessous).
+
+**Points suspects (non compares au MSX)** : (1) en stage 11 la puce suit Simon en plongee et ne peut pas etre fouettee a temps depuis le sol : degat quasi inevitable a chaque aigle sur la route (si le MSX permet de l'eviter, voir enemies_stage7.inc `fleaStep` : etat 0, |X Simon - X puce| < 3C) ;
+(2) stage 10 salle 0, l'ennemi volant arrivant de derriere ne peut pas etre fouette depuis le sol (hauteur de la vague) ; (3) au bord du sol de la salle 0, un coup par derriere jette Simon dans le vide si la plateforme n'est pas dessous.
+Ces comportements viennent de traductions ligne a ligne du Z80 (boites de contact `romContact`) et n'ont pas ete rejoues sur openMSX.
+
 ## Ce qui n'est PAS verifie
 
-- Aucun degat ni combat contre un ennemi (routes jouees en invulnerable). La salle 0 des deux stages a des ennemis qui touchent Simon pendant les attentes.
+- Stage 11 salles 3 a 5 : aucun combat sans invulnerabilite reussi jusqu'a la porte (stage 10 : verifie, voir ci-dessus). Aucune des mecaniques d'ennemis n'a ete comparee au MSX.
 - Sur MSX : seuls les blocs de la salle 3 du stage 10 et de la salle 1 du stage 11 ont ete rejoues (positions, `D100`). Les salles 2 a 5 du stage 11 et les salles 4, 5, 8 du stage 10 n'ont ete jouees que sur le portage ; la cle blanche (48, 48) de la salle 0 du stage 10 a ete prise sur le MD.
 - Le mur de la salle 3 du stage 11 est suppose etre le meme mecanisme (bloc (96, 80) de la liste de bougies) ; verifie sur le portage seulement.
 - Les coffres, les salles 6 et 7 du stage 10, la cle doree du stage 11 : non joues.
