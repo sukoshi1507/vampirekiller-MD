@@ -1,0 +1,112 @@
+# (zzq) Stage 11 complet a la manette depuis le vrai selecteur (de l'entree a la porte, sortie vers le stage 12), sans aucune pose de position.
+# Salle 0 : marcher a droite -> salle 1. Salle 1 : marche de pierre (X 56) : sauter dessus (Y 144), marcher jusqu au mur (X 88).
+#   MUR DE BRIQUES (blocs 4x4 de bougie, mode 3) : le coup de fouet DONNE EN SAUT casse le bloc (96, 80) (celui qui cache la cle blanche) : sauter depuis X 88 (C+DROITE)
+#   et frapper (B) vers le sommet du saut (~15 images apres le depart du saut, Simon en Y ~115-120) : le bloc part, la cle blanche (96, 80) est prise (items bit 0), Simon retombe
+#   en (92, 112) sur le palier. Hors de ce coup de fouet, le saut ne franchit pas le mur (trace openMSX : arret en X 88, saut sans effet, meme chose que le portage).
+# Salle 1 (suite) : marcher a droite jusqu a X 120, sauter sur le bloc (128, 112) (sommet Y 80), marcher a droite, descendre -> salle 2.
+# Salle 2 : marcher a droite, sauter depuis X >= 84 sur le palier (Y 112), puis descendre au sol (Y 176) et marcher a droite -> salle 3.
+# Salle 3 : meme mur qu en salle 1 : marche (X 64) puis mur en X 96 : sauter + coup de fouet depuis X 88 (bloc (96, 80)), puis enchainer les sauts vers la droite -> salles 4 et 5.
+# Salle 5 : marcher a droite jusqu a la porte (X 228), cle blanche consommee -> stage 12.
+# God mode : le selecteur (Konami, touche A) active Enemies_god. Un tap A de plus le coupe (zzm_enter11.inc) mais les 2 ennemis lents de la salle 0 touchent Simon pendant la marche
+# chronometree (hold RIGHT 532) : ce scenario est donc joue en mode invulnerable et les degats ne sont pas testes.
+# Not a continuous walk: room selection restarts the game.
+until front_mode == MODES['TITLE'] max 2000
+tap START
+tap START
+until front_mode == MODES['COURTYARD'] max 500
+wait 60
+tap START
+until ram8('paused') == 1 max 30
+tap UP
+tap UP
+tap DOWN
+tap DOWN
+tap LEFT
+tap RIGHT
+tap LEFT
+tap RIGHT
+tap B
+tap A
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap B
+until game.stage == 11 and game.room == 0 max 300
+until game.player.mode == 0 max 300
+wait 10
+hold RIGHT 532
+hold C+RIGHT 1
+hold RIGHT 22
+expect game.stage == 11 and game.room == 1 and game.player.y == 144 and game.player.x >= 56
+hold RIGHT 60
+expect game.room == 1 and game.player.x == 88 and game.player.y == 144 # au pied du mur
+hold C+RIGHT 1
+hold RIGHT 16
+hold B 3
+wait 40
+expect game.player.x == 92 and game.player.y == 112 and ram8('items') & 1 == 1 # bloc casse, cle blanche prise
+hold RIGHT 60
+expect game.player.x == 120 and game.player.y == 112 # contre le bloc (128, 112)
+hold C+RIGHT 1
+hold RIGHT 60
+hold RIGHT 40
+hold RIGHT 100
+expect game.room == 2 and game.player.y == 112
+hold RIGHT 40
+until game.player.x >= 84 max 200 RIGHT
+hold C+RIGHT 1
+hold RIGHT 60
+hold RIGHT 80
+hold RIGHT 150
+expect game.room == 3 and game.player.y == 176
+hold C+RIGHT 1
+hold RIGHT 45
+until game.player.x >= 88 max 100 RIGHT
+hold C+RIGHT 1
+hold RIGHT 16
+hold B 3
+wait 40
+expect game.room == 3 and game.player.x == 92 and game.player.y == 112 # mur de la salle 3 casse
+hold RIGHT 40
+hold RIGHT 20
+hold C+RIGHT 1
+hold RIGHT 45
+hold RIGHT 20
+hold C+RIGHT 1
+hold RIGHT 45
+hold RIGHT 20
+hold C+RIGHT 1
+hold RIGHT 45
+hold RIGHT 20
+hold C+RIGHT 1
+hold RIGHT 45
+hold RIGHT 20
+hold C+RIGHT 1
+hold RIGHT 45
+hold RIGHT 20
+hold C+RIGHT 1
+hold RIGHT 45
+hold RIGHT 20
+hold C+RIGHT 1
+hold RIGHT 45
+hold RIGHT 20
+hold C+RIGHT 1
+hold RIGHT 45
+hold RIGHT 20
+hold C+RIGHT 1
+hold RIGHT 45
+hold RIGHT 20
+hold C+RIGHT 1
+hold RIGHT 45
+expect game.room == 5 and game.player.y == 176
+hold RIGHT 90
+expect game.stage == 11 and game.room == 5 and game.player.x == 228 and ram8('items') == 0 # porte : cle consommee
+until game.stage == 12 and game.room == 0 max 400
+shot zzq-stage12-entree
