@@ -20,6 +20,8 @@ Output (JSON, one entry per sound): frames = list of [[reg, value], ...] per
 frame, loop = frame index the stream jumps back to (null when it ends), plus
 note_c = frames where a music note starts on channel C (8AF1 with C095 = 2),
 which is when the driver unmutes the channel after an effect (8B00), and
+notes = per frame, the music channels (0..2 = AY A..C, C095) that start a note
+(8AF1; used by the FM conversion, tools/convert_fm.py), and
 lock = frames after which C0A8 is set (music command E6, cleared by EB): the
 request routine refuses every effect while it is set (516B).
 
@@ -77,6 +79,7 @@ class Driver:
         self.regs = [0] * 16
         self.writes = []
         self.note_c = False
+        self.notes = []          # music channels (C095 = 0..2) that start a note, in order
 
     def map_sound_banks(self):
         """What 4028 does before CALL 8964: bank 14 at 8000, bank 15 at A000."""
@@ -111,6 +114,7 @@ class Driver:
                 m.a = self.regs[m.a & 0x0F]
                 m.pc = self._pop()
             elif pc == NOTE_START:
+                self.notes.append(m.memory[0xC095])
                 if m.memory[0xC095] == 2:
                     self.note_c = True
                 m.step_over_breakpoint()
@@ -123,6 +127,7 @@ class Driver:
         """One VBLANK: returns the AY writes of this frame and the note-C flag."""
         self.writes = []
         self.note_c = False
+        self.notes = []
         self.map_sound_banks()
         self.call(SOUND_UPDATE)
         return self.writes, self.note_c
@@ -145,6 +150,7 @@ def run_sound(data, sound, max_frames=MAX_FRAMES):
     drv.call(SOUND_REQUEST, a=sound)
     request_writes = drv.writes
     frames, note_c, lock, seen = [], [], [], {}
+    notes = []
     loop = None
     is_music = sound >= 0x80
     ended = {
@@ -167,6 +173,7 @@ def run_sound(data, sound, max_frames=MAX_FRAMES):
         if index == 0:
             writes = request_writes + writes
         frames.append([list(w) for w in writes])
+        notes.append(sorted(set(c for c in drv.notes if c < 3)))
         if note:
             note_c.append(index)
         if drv.ram(0xC0A8):
@@ -186,7 +193,7 @@ def run_sound(data, sound, max_frames=MAX_FRAMES):
     else:
         raise RuntimeError(f'sound {sound:02X}: no end and no loop in {max_frames} frames')
     return {'id': sound, 'kind': kind,
-            'frames': frames, 'loop': loop, 'note_c': note_c, 'lock': lock}
+            'frames': frames, 'loop': loop, 'note_c': note_c, 'lock': lock, 'notes': notes}
 
 
 def table_pointers(data):

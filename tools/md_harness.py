@@ -11,6 +11,7 @@ Usage :
          [--symbols symbol.txt] [--core CORE.so] [--dump-at 100,200] [--shot-at 300]
          [--trace N] [--quiet]
   python3 tools/md_harness.py --symbols-only        # liste les variables RAM du jeu
+  python3 tools/md_harness.py SCRIPT.txt --wav SORTIE.wav   # enregistre l'audio du core (YM2612 + PSG, 16 bits stereo)
 
 Exemple : python3 tools/md_harness.py tests/md_scenarios/a_courtyard_walk.txt --out scratchpad/md-a
 Code de sortie : 0 si toutes les assertions `expect` passent, 1 sinon, 2 sur erreur.
@@ -56,8 +57,10 @@ import ctypes as C
 import json
 import re
 import shutil
+import struct
 import subprocess
 import sys
+import wave
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -138,8 +141,9 @@ def lookup(symbols, name):
 class Machine:
     """Core libretro charge par ctypes : images, boutons, RAM 68k (lecture/ecriture), capture."""
 
-    def __init__(self, core, rom):
+    def __init__(self, core, rom, wav=None):
         self.lib = lib = C.CDLL(str(Path(core).resolve()))
+        self.audio = bytearray() if wav else None   # echantillons stereo 16 bits du core (option --wav)
         self.format = 2
         self.buttons = frozenset()
         self.frame_buffer = None
@@ -171,8 +175,17 @@ class Machine:
             if data and data != C.c_void_p(-1).value:
                 self.frame_buffer = (C.string_at(data, pitch * height), width, height, pitch)
 
-        self._callbacks = [Env(environment), Video(video), Audio(lambda l, r: None),
-                           Batch(lambda d, n: n), Poll(lambda: None),
+        def audio_sample(left, right):
+            if self.audio is not None:
+                self.audio += struct.pack('<hh', left, right)
+
+        def audio_batch(data, frames):
+            if self.audio is not None and data:
+                self.audio += C.string_at(data, frames * 4)
+            return frames
+
+        self._callbacks = [Env(environment), Video(video), Audio(audio_sample),
+                           Batch(audio_batch), Poll(lambda: None),
                            Input(lambda port, dev, idx, btn: int(port == 0 and btn in self.buttons))]
         for name, cb in zip(('environment', 'video_refresh', 'audio_sample', 'audio_sample_batch',
                              'input_poll', 'input_state'), self._callbacks):
@@ -194,6 +207,23 @@ class Machine:
         if not pointer or size != 0x10000:
             raise RuntimeError('RAM 68k (64 Ko) non exposee par le core')
         self.ram = (C.c_uint8 * size).from_address(pointer)
+
+    def sample_rate(self):
+        """Cadence audio annoncee par le core (retro_get_system_av_info : geometrie puis timing)."""
+        class AV(C.Structure):
+            _fields_ = [('base_width', C.c_uint), ('base_height', C.c_uint), ('max_width', C.c_uint),
+                        ('max_height', C.c_uint), ('aspect_ratio', C.c_float),
+                        ('fps', C.c_double), ('sample_rate', C.c_double)]
+        av = AV()
+        self.lib.retro_get_system_av_info(C.byref(av))
+        return int(round(av.sample_rate)) or 44100
+
+    def save_wav(self, path):
+        with wave.open(str(path), 'wb') as w:
+            w.setnchannels(2)
+            w.setsampwidth(2)
+            w.setframerate(self.sample_rate())
+            w.writeframes(bytes(self.audio))
 
     def close(self):
         self.lib.retro_unload_game()
@@ -373,8 +403,8 @@ def flatten(prefix, value, out):
 
 
 class Harness:
-    def __init__(self, core, rom, symbols, out, quiet=False):
-        self.machine = Machine(core, rom)
+    def __init__(self, core, rom, symbols, out, quiet=False, wav=None):
+        self.machine = Machine(core, rom, wav)
         self.symbols = symbols
         self.view = Game_View(self.machine, symbols)
         self.out = Path(out)
@@ -581,6 +611,7 @@ def main(argv=None):
     parser.add_argument('--trace', type=int, default=0, help='ligne trace.csv toutes les N images')
     parser.add_argument('--symbols-only', action='store_true', help='liste les symboles RAM et quitte')
     parser.add_argument('--quiet', action='store_true')
+    parser.add_argument('--wav', type=Path, help="enregistre l'audio du core pendant tout le script dans ce WAV")
     args = parser.parse_args(argv)
 
     symbols = load_symbols(args.elf, args.symbols)
@@ -592,7 +623,7 @@ def main(argv=None):
         parser.error('script ou --dump-at/--shot-at requis')
     if not args.core.exists():
         parser.error(f'core absent: {args.core}')
-    harness = Harness(args.core, args.rom, symbols, args.out, args.quiet)
+    harness = Harness(args.core, args.rom, symbols, args.out, args.quiet, args.wav)
     harness.trace_every = args.trace
     lines = args.script.read_text().splitlines() if args.script else []
     marks = sorted({(int(f), 'dump') for f in args.dump_at.split(',') if f} |
@@ -634,6 +665,9 @@ def main(argv=None):
     result = harness.save()
     passed = sum(c['ok'] for c in result['checks'])
     print(f"{passed}/{len(result['checks'])} assertions OK, {result['frames']} images -> {args.out}")
+    if args.wav:
+        harness.machine.save_wav(args.wav)
+        print(f'audio: {len(harness.machine.audio) // 4} echantillons -> {args.wav}')
     harness.machine.close()
     if status:
         return status

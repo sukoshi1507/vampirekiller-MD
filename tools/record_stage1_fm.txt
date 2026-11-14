@@ -1,0 +1,13 @@
+# Enregistre ~45 s de la musique du stage 1 en mode FM, depuis la ROM (research/audio-fm.md) :
+#   python3 tools/md_harness.py tools/record_stage1_fm.txt --out DIR --wav SORTIE.wav --quiet
+# Le WAV contient aussi le titre et le chateau : couper a l image `music_start` (affichee ci-dessous) sur 45 s.
+until front_mode == MODES['TITLE'] max 300
+tap RIGHT
+expect ram8('vk_sound_fm') == 1
+tap START
+until front_mode == MODES['CASTLE'] max 30
+tap START
+until front_mode == MODES['COURTYARD'] max 30
+until ram8('vk_psg+20') == 0x80 max 30
+echo ('music_start', frame)
+wait 2700

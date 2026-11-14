@@ -44,6 +44,9 @@ ${CC:-cc} -std=c99 -Wall -Wextra -Werror -Isgdk/src tests/test_weapons.c sgdk/sr
 ${CC:-cc} -std=c99 -Wall -Wextra -Werror -Isgdk/src tests/test_psg_core.c sgdk/src/psg_core.c \
     sgdk/src/generated/msx_sound_md.c -o "$BIN"
 "$BIN"
+${CC:-cc} -std=c99 -Wall -Wextra -Werror -Isgdk/src tests/test_fm_core.c sgdk/src/psg_core.c sgdk/src/psg_core_fm.c sgdk/src/fm_core.c \
+    sgdk/src/generated/msx_sound_md.c sgdk/src/generated/msx_fm_md.c -o "$BIN"
+"$BIN"
 ${CC:-cc} -std=c99 -Wall -Wextra -Werror -Isgdk/src tests/test_room_freeze.c sgdk/src/room_freeze.c -o "$BIN"
 "$BIN"
 MAPS="sgdk/src/generated/stage2_maps.c sgdk/src/generated/stage3_maps.c sgdk/src/generated/stage4_maps.c sgdk/src/generated/stage5_maps.c sgdk/src/generated/stage6_maps.c sgdk/src/generated/stage7_maps.c sgdk/src/generated/stage8_maps.c sgdk/src/generated/stage9_maps.c sgdk/src/generated/stage10_maps.c sgdk/src/generated/stage11_maps.c"

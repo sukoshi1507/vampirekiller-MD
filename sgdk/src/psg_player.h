@@ -3,7 +3,9 @@
 
 #include <genesis.h>
 #include "psg_core.h"
+#include "fm_core.h"
 #include "generated/msx_sound_md.h"
+#include "generated/msx_fm_md.h"
 
 /* MSX2 sound requests on the Mega Drive PSG. The ids are those the game passes to
  * the MSX request routine 509F (research/audio-driver.md): 0x01..0x1D effects,
@@ -11,6 +13,12 @@
  * installs the player in the vertical interrupt (one step per VBLANK, as the MSX
  * driver in H.TIMI); the requests below are safe from the main loop. */
 extern VKPsg vk_psg;
+extern VKFm vk_fm;               /* FM music mode: the YM2612 side of the music (fm_core.h) */
+
+/* Music on the YM2612 (three FM voices, drums on the PSG) instead of the PSG: 0 = PSG, the
+ * default, 1 = FM. Set by the title screen with vk_psg_set_fm; read when a music starts. */
+extern volatile u8 vk_sound_fm;
+void vk_psg_set_fm(bool on);
 
 void vk_psg_init(void);
 #ifdef VK_MEASURE_PSG

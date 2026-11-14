@@ -734,6 +734,12 @@ int main(bool hardReset)
                 show_hall_room(0);
                 play_stage_music();
             }
+            else if ((pressed & (BUTTON_LEFT | BUTTON_RIGHT)) && !vk_konami_pending())
+            {
+                /* Music on the PSG or the YM2612; the Konami code keeps its own LEFT / RIGHT. */
+                vk_psg_set_fm(!vk_sound_fm);
+                vk_title_sound_draw();
+            }
             else if (vk_konami_step(pressed)) { vk_sound_test_enter(); vk_front_mode = FRONT_SOUND; }
             else if (pressed & BUTTON_A)
             {
