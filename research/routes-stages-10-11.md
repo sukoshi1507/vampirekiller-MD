@@ -83,13 +83,63 @@ donne exactement la meme trace image par image (les ennemis ne dependent que de 
 - Salles 3 et 4 : aucun des rythmes essayes (attente 0 a 190 images avant de traverser, par pas de 10, puis un joueur pilote par la position) n'evite la plongee d'une puce ; chaque coup recu repousse Simon en arriere et la
   vague suivante arrive avant qu'il ait refait le chemin. Non resolu : la route complete du stage 11 sans invulnerabilite reste a faire (voir "suspect" ci-dessous).
 
-**Points suspects (non compares au MSX)** : (1) en stage 11 la puce suit Simon en plongee et ne peut pas etre fouettee a temps depuis le sol : degat quasi inevitable a chaque aigle sur la route (si le MSX permet de l'eviter, voir enemies_stage7.inc `fleaStep` : etat 0, |X Simon - X puce| < 3C) ;
+**Points suspects** (le point (1) a depuis ete compare au MSX : conforme, voir la section suivante ; (2) et (3) non compares) : (1) en stage 11 la puce suit Simon en plongee et ne peut pas etre fouettee a temps depuis le sol : degat quasi inevitable a chaque aigle sur la route (si le MSX permet de l'eviter, voir enemies_stage7.inc `fleaStep` : etat 0, |X Simon - X puce| < 3C) ;
 (2) stage 10 salle 0, l'ennemi volant arrivant de derriere ne peut pas etre fouette depuis le sol (hauteur de la vague) ; (3) au bord du sol de la salle 0, un coup par derriere jette Simon dans le vide si la plateforme n'est pas dessous.
 Ces comportements viennent de traductions ligne a ligne du Z80 (boites de contact `romContact`) et n'ont pas ete rejoues sur openMSX.
 
+## Aigle et puce de la salle 3 : MSX contre portage (2026-11-14)
+
+Question : les salles 3 et 4 du stage 11 sans mode invulnerable (une vague d'aigle + puce toutes les ~200 images, la puce plonge sur Simon, l'aigle prend 4 d'energie sur le bloc haut) sont-elles aussi dures sur MSX ?
+**Verdict : le portage est conforme, aucun ecart trouve, aucun code modifie.** Ce que l'on subit dans le portage est ce que subit Simon sur le MSX.
+
+Methode. MSX : `tools/run_eagle_flea_trace.py` (`tools/eagle_flea_trace.tcl`, openMSX, ROM d'origine) force D000 = 11, D001 = 3, D002, C000 = 4 comme `species_trace.tcl`, cloue Simon par poke a chaque image
+(C427, C425), journalise a chaque VBLANK Simon, C415 (energie), C42D (invulnerabilite), C420, CF0C/CF0D/CF10, R et les blocs C800 (type, etat, Y, X, vitesses, pose, +C, PV).
+Portage : meme salle par le menu de pause (3 « salle suivante »), `Enemies_god` remis a 0 (**le menu de pause le met a 1** : c'est pourquoi un essai a la manette via le menu ne montre jamais de degat), Simon cloue par poke a chaque image. Journal image par image des objets et de l'energie.
+Les origines d'image different (MSX : premiere image apres le rechargement de la salle ; MD : premiere image jouable) : l'aigle apparait a l'image 64 (MSX) et 71 (MD), un decalage constant de 7 images, on compare donc par rapport a la creation.
+Positions : A = Simon (40, 176) au sol, B = (140, 80) sur le bloc haut, C = (175, 64), H = Simon en (140, 80) avec 1000 images, plus un fouet toutes les 10 images.
+
+| Grandeur | MSX (trace) | Portage | Verdict |
+| --- | --- | --- | --- |
+| Periode des vagues (position A, 2600 images) | creations aux images 64, 264, 464, 664 (puis plus rien : voir plus bas) | 71, 271, 471, 671 | identique, 200 images |
+| Cote d'arrivee, X a la creation | droite, X 221 (E0h - 3), puce en (225, 60) | idem | identique |
+| Y de l'aigle | 48 puis 64 en alternance (CF0D impair = 48) | 48, 64, 48, 64 | identique |
+| Trajectoire de l'aigle, 170 images apres la creation (etat, X, Y) | vol a -2,5 px par passe (1,25 px/image) en Y constant ; arret a X 114 (Simon 40 : ecart < 56), 8 passes, repart | 170 images sur 170 egales (decalage 0) | identique |
+| Lacher de la puce | etat 0 -> 1 quand `|X Simon - X puce| < 3Ch` (X puce 98, ecart 58), 2 passes en etat 1 puis etat 3 en plongee a 110 images | etat 1 a 104, etat 2 a 106, etat 3 a 110 (X 98 / 98 / 95, Y 60 / 56 / 53) | identique image pour image |
+| Plongee, atterrissage, rebonds | vy +A0 par passe jusqu'a 2047 (8 px/passe), atterrissage etat 2 pendant 2 passes, puis saut vers Simon vx ±220h, vy -260h, ou (1 fois sur 4, si Y >= 50h) -720h au hasard R | meme code (`fleaStep`, 10 920 passes egales a la ROM) | identique ; seul le choix saut bas / haut depend de R (generateur 7 bits uniforme du portage) |
+| Boite de contact puce (classe 2) | |dX| < 13, Y Simon - Y puce de -14 a +27 debout (-6..27 en saut, -14..19 accroupi) | `romContact` 8/10h | identique (coup MSX a (50, 173) pour Simon (60, 176), coup MD a (56, 153) : dans les deux cas dans la boite) |
+| Boite de contact aigle (classe 4) | |dX| < 17, Y Simon - Y aigle de -22 a +27 | `romContact` 0Ch/18h | identique : a Y 48 il touche des pieds de Simon a Y 26..75, a Y 64 de 42 a 91 |
+| Premier coup de la puce, Simon en A | 156 images apres la creation de l'aigle (image 220) | 156 images (227 - 71) | identique |
+| Premier coup de l'aigle, Simon en C (175, 64) | 40 images apres la creation (104 - 64), energie 32 -> 28 | 40 images (111 - 71), 32 -> 28 | identique |
+| Degats | puce 2, aigle 4 | puce 2, aigle 4 | identique |
+| Invulnerabilite apres un coup | C42D = 5Ah au coup, -1 toutes les 2 images : 180 images ; 89 deux images apres le coup | 90 au coup (89 deux images apres), 180 images | identique (une image de decalage de phase) |
+| Recul | C420 = 5 ; Simon recule de 1 px/image dans le sens de la vitesse X de l'ennemi (C43C = bit 7 de +A), arc de ~16 px de haut ; (40, 176) -> (18, 160) en 24 images | (40, 176) -> (18, 160) en 24 images, meme arc image par image | identique (sens de la puce : gauche si elle va vers la gauche) |
+| Hits d'un Simon immobile en A (energie remise a 32 sous 8) | 13 coups de puce en 2600 images, espaces de 180 a 208 images (des que l'invulnerabilite finit) | 13 coups, espaces de 180 a 196 images | identique |
+| Simon en A, fouet toutes les 10 images, 1200 images | 5 coups aux images 221, 418, 622, 818, 1022 | 227, 423, 627, 823, 1027 (+5 / +6 constants) | identique |
+| Fouet sur la puce en vol | tuee en etat 3 (X Simon + 11 a + 32, Y 164 a 174, pour Simon en (40, 176)), devient une flamme (objet 1Eh) | tuee en etat 3 aux memes endroits (X +11 a +32, Y 164 a 172) | identique |
+
+Boite du fouet sur la puce (classe 2, `research/enemy-boxes.md`) : pointe a X Simon ± 20, la puce doit etre a 1..39 px devant Simon et, debout, a 2..21 px au-dessus de ses pieds (Y puce de Y Simon - 21 a Y Simon - 2).
+Pendant la plongee la puce traverse cette fenetre de Y en 2 ou 3 passes ; elle y reste plus longtemps posee (etat 2, 2 passes) ou en rebond bas. Elle se fouette donc **en vol comme au sol**, sur MSX comme sur le portage : ce qui donne l'impression contraire est le timing, pas une regle.
+L'aigle a 8 PV (boite 0Ch x 18h) ; le fouet sur l'aigle n'a **pas** ete mesure (la boite de fouet de sa classe n'est pas dans `research/enemy-boxes.md`).
+
+Autres faits mesures, identiques des deux cotes :
+- l'aigle ne descend jamais (Y constant 48 ou 64 jusqu'a la sortie en X 9) : au sol (Y 144 ou 176) et sur la marche Y 112 il ne touche jamais Simon ; seul le bloc haut (Y 80) est expose, et seulement aux vagues paires (Y 64) ; les vagues impaires (Y 48) ne le touchent pas, sauf un saut depuis le bloc ;
+- les vagues recommencent a 200 images ; `9CA9` remet les compteurs a la charge de la salle : la premiere vague arrive ~64 images apres l'entree (aigle a Y 48), la deuxieme (Y 64) a ~264 ;
+- **aucune nouvelle vague tant que Simon est en X >= C0h** au moment de la creation (CF0C = 1, nouvel essai 8 images plus tard) : de la, le mur de la salle 3 franchi, on n'a plus d'aigle neuf ;
+- l'aigle et la puce sont independants apres la creation : la puce plonge des que Simon est a moins de 3Ch (60 px) d'elle, vivant ou non l'aigle (code `fleaStep`, verifie par vecteurs ; **tuer l'aigle d'abord n'est pas trace**) ;
+- les puces non tuees restent (jusqu'a 4 en position A apres 4 vagues) et sautent vers Simon sans fin ; quand les blocs d'objets sont pleins la creation de l'aigle echoue et le canal est repousse (CF0C = 1) : c'est la, et non un blocage, que s'arretent les vagues de la trace A apres l'image 664 ;
+- le coup d'une puce peut pousser Simon hors de la salle (position A : X 18 puis 246 par le bord gauche de l'ecran), toujours dans les deux emulateurs.
+
+Comment un humain passe ces salles (deduit de ces mesures, **pas rejoue a la manette sur le MSX**) :
+1. Ne pas attendre : une vague arrive toutes les 200 images, chaque coup coute 2 (puce) ou 4 (aigle) puis 180 images d'invulnerabilite, et un Simon immobile en position A a pris un coup de puce par vague dans les deux emulateurs.
+2. Fouetter les puces plutot que les esquiver : face au cote d'ou elles viennent, fouet toutes les ~10 images quand une puce est a moins de 40 px devant Simon et a moins de 20 px au-dessus de ses pieds. Une puce morte ne revient pas (200 points). Ne pas laisser les puces s'accumuler (4 puces = plus de vague, mais 4 sauteuses sur Simon).
+3. Ne pas rester sur le bloc haut (Y 80) quand l'aigle passe a Y 64 : traverser le bloc pendant la vague a Y 48 (la premiere, ~64 images apres l'entree dans la salle, puis toutes les deux vagues), ou en dehors de la fenetre d'une vague (l'aigle met ~110 images pour aller de X 221 a X 98 (Simon 40) et ~190 pour sortir).
+4. Une fois en X >= C0h (salle 3 apres le dernier bloc, salle 4), on ne recoit plus d'aigle neuf ; il ne reste que les puces deja la.
+
+Ce qui reste a verifier (non fait) : un passage complet de la salle 3 puis de la salle 4 a la manette avec ces regles, sur le MSX comme sur le portage.
+
 ## Ce qui n'est PAS verifie
 
-- Stage 11 salles 3 a 5 : aucun combat sans invulnerabilite reussi jusqu'a la porte (stage 10 : verifie, voir ci-dessus). Aucune des mecaniques d'ennemis n'a ete comparee au MSX.
+- Stage 11 salles 3 a 5 : aucun passage sans invulnerabilite reussi jusqu'a la porte (stage 10 : verifie, voir plus haut). La mecanique aigle + puce de la salle 3 est comparee au MSX dans la section precedente (conforme) ; les autres ennemis ne l'ont pas ete.
 - Sur MSX : seuls les blocs de la salle 3 du stage 10 et de la salle 1 du stage 11 ont ete rejoues (positions, `D100`). Les salles 2 a 5 du stage 11 et les salles 4, 5, 8 du stage 10 n'ont ete jouees que sur le portage ; la cle blanche (48, 48) de la salle 0 du stage 10 a ete prise sur le MD.
 - Le mur de la salle 3 du stage 11 est suppose etre le meme mecanisme (bloc (96, 80) de la liste de bougies) ; verifie sur le portage seulement.
 - Les coffres, les salles 6 et 7 du stage 10, la cle doree du stage 11 : non joues.
