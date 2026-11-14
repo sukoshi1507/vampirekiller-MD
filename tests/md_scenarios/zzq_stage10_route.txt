@@ -1,0 +1,119 @@
+# (zzq) Stage 10 complet a la manette depuis le vrai selecteur de stage (joue en mode invulnerable : voir plus bas), de l'entree a la porte, sans aucune pose de position.
+# Salle 0 : marcher a droite, attendre la plateforme mobile (X 97), monter dessus, la quitter a droite (X 247) -> salle 1.
+# Salle 1 : saut au-dessus du trou (X 34), marche jusqu au bloc (X 120), saut sur le bloc (Y 112), saut sur le rebord haut (Y 80), marche a droite (saut au bord) -> salle 2.
+# Salle 2 : attendre 390 images, sauter sur la plateforme (X 75, Y 168), avancer sur elle, S ACCROUPIR (DOWN) pour passer sous la stalactite, sauter sur le rebord droit -> salle 3.
+# Salle 3 : attendre 606 images, monter sur la plateforme (X ~35). Elle porte Simon jusqu a X 88 ou un BLOC CACHE (bougie 17, mode 3, en (96, 112), carte de collision en RAM) l arrete :
+#   c est le comportement du jeu d origine (trace openMSX : arret en X 88 puis chute a l eau). Il faut CASSER LE BLOC AU FOUET (B) depuis X 86 : la plateforme porte ensuite Simon
+#   jusqu a X 192, descendre a droite -> salle 4.
+# Salle 4 : marcher au bout du rebord (X 122), attendre 90 images, sauter sur la plateforme (elle revient vers la gauche), rester sur elle ACCROUPI (DOWN) sous la stalactite (X 176),
+#   quand elle est a son maximum (X >= 189) sauter a droite -> salle 5.
+# Salle 5 : saut au-dessus du trou (X 30), marche jusqu a X 120, saut sur le bloc (Y 112), saut sur le rebord haut (Y 80), marche a droite jusqu a X 255 -> salle 0 (rebord haut gauche).
+# Salle 0 (haut) : marcher a droite jusqu a la cle blanche (48, 48) : ramassee (items bit 0). Retour a gauche -> salle 5 (rebord haut, X 246).
+# Salle 5 : aller en X 186 sur le rebord haut, HAUT au pied de l escalier -> salle 8 (X 175, Y 224), HAUT encore jusqu au sol (Y 176), marche a droite : la porte s ouvre en X 228, cle consommee.
+# God mode : le selecteur (Konami, touche A) active Enemies_god. Un tap A de plus le coupe (zzm_enter10.inc), mais la salle 0 a une chauve-souris (type 2, passe toutes les ~160 images
+# de droite a gauche, Y 110-130) qui touche Simon pendant les longues attentes de la plateforme et le repousse hors de la route chronometree ; les passages non chronometres seraient jouables sans
+# l'invulnerabilite, pas ce scenario. Les degats ne sont donc PAS testes ici.
+# Not a continuous walk: room selection restarts the game.
+until front_mode == MODES['TITLE'] max 2000
+tap START
+tap START
+until front_mode == MODES['COURTYARD'] max 500
+wait 60
+tap START
+until ram8('paused') == 1 max 30
+tap UP
+tap UP
+tap DOWN
+tap DOWN
+tap LEFT
+tap RIGHT
+tap LEFT
+tap RIGHT
+tap B
+tap A
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap B
+until game.stage == 10 and game.room == 0 max 300
+until game.player.mode == 0 max 300
+wait 10
+hold RIGHT 64
+hold - 310
+hold RIGHT 17
+hold - 155
+hold RIGHT 95
+hold C+RIGHT 1
+hold RIGHT 98
+hold C+RIGHT 1
+hold RIGHT 522
+hold C+RIGHT 1
+hold RIGHT 92
+hold C+RIGHT 1
+hold RIGHT 85
+expect game.stage == 10 and game.room == 2 and game.player.y == 144
+hold - 390
+hold C+RIGHT 1
+hold RIGHT 67
+hold DOWN 263
+hold C+RIGHT 1
+hold RIGHT 46
+expect game.stage == 10 and game.room == 3 and game.player.x <= 12 and game.player.y == 144
+hold - 606
+hold RIGHT 40
+expect ram8('vk_platforms+2') > 30 and game.player.y == 144
+until game.player.x >= 86 max 400
+expect ram8('vk_platforms+2') > 70 # bloc encore la : Simon est a X 86, pas plus loin
+hold B 3
+until game.player.x >= 100 max 100
+expect game.player.y == 144 # bloc casse, Simon passe sur la plateforme
+until ram8('vk_platforms+2') >= 185 max 800
+hold RIGHT 80
+expect game.stage == 10 and game.room == 4 and game.player.x <= 12 and game.player.y == 144
+wait 10
+until game.player.x >= 122 max 200 RIGHT
+hold - 90
+hold C+RIGHT 1
+hold RIGHT 70
+expect game.player.y == 168 # sur la plateforme, arretee par la stalactite
+hold DOWN 40
+until ram8('vk_platforms+2') >= 189 max 800 DOWN
+hold DOWN 4
+hold C+RIGHT 1
+hold RIGHT 50
+expect game.stage == 10 and game.room == 5 and game.player.x <= 12 and game.player.y == 144
+wait 10
+until game.player.x >= 30 max 200 RIGHT
+hold C+RIGHT 1
+hold RIGHT 60
+expect game.player.y == 144 and game.player.x >= 64
+until game.player.x >= 120 max 200 RIGHT
+hold C+RIGHT 1
+hold RIGHT 60
+expect game.player.y == 112
+hold C+RIGHT 1
+hold RIGHT 60
+expect game.player.y == 80
+hold RIGHT 90
+expect game.stage == 10 and game.room == 0 and game.player.y == 80
+hold RIGHT 40
+expect ram8('items') & 1 == 1 # cle blanche (48, 48)
+until game.room == 5 max 300 LEFT
+until game.player.x <= 186 max 200 LEFT
+hold UP 80
+expect game.room == 8
+hold UP 120
+expect game.room == 8 and game.player.y == 176
+until game.player.x >= 200 max 400 RIGHT
+hold RIGHT 80
+shot zzq-stage10-porte
+expect game.stage == 10 and game.room == 8 and game.player.x == 228
+expect ram8('items') == 0 # la porte a consomme la cle
+until game.stage == 11 and game.room == 0 max 400
+shot zzq-stage11-entree
