@@ -111,25 +111,25 @@
   ]
  },
  "total_bytes": 71522,
- "fm_total_bytes": 225396,
+ "fm_total_bytes": 225012,
  "fm_musics": [
   {
    "id": "80",
    "frames": 2388,
    "fm_bytes": 18333,
-   "noise_bytes": 2909
+   "noise_bytes": 2841
   },
   {
    "id": "81",
    "frames": 3073,
    "fm_bytes": 15668,
-   "noise_bytes": 3321
+   "noise_bytes": 3320
   },
   {
    "id": "82",
    "frames": 4062,
    "fm_bytes": 30705,
-   "noise_bytes": 5241
+   "noise_bytes": 5005
   },
   {
    "id": "83",
@@ -147,7 +147,7 @@
    "id": "85",
    "frames": 3818,
    "fm_bytes": 21777,
-   "noise_bytes": 4356
+   "noise_bytes": 4277
   },
   {
    "id": "86",

@@ -152,7 +152,7 @@ def encode(sound):
     return bytes(stream), loop, stats
 
 
-NOISE_ATT = 2                # extra SN steps (2 dB) on the drums in FM mode: the FM voices are 6 dB down (convert_fm.MASTER_TL), the drums 4 dB, which gives the prototype balance (noise 1/3 of the FM peak, research/audio-fm.md)
+NOISE_ATT = 5                # extra SN steps (2 dB) on the drums in FM mode: the FM voices are 12 dB down (convert_fm.MASTER_TL), the drums 10 dB, which gives the prototype balance (noise 1/3 of the FM peak, research/audio-fm.md)
 
 
 def ay_registers(sound):

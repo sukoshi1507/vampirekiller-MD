@@ -44,10 +44,10 @@ PATCHES = ('saw_lead', 'bass_slap', 'saw_soft')
 CARRIERS = {0: [3], 1: [3], 2: [3], 3: [3], 4: [1, 3], 5: [1, 2, 3], 6: [1, 2, 3], 7: [0, 1, 2, 3]}
 OPOFF = [0, 8, 4, 12]         # register offsets of S1, S2, S3, S4
 MAX_WRITES = 63               # per frame (stream header, 6 bits)
-# Carrier TL steps (0.75 dB) added to every level of the ROM streams: the music 6 dB lower, so
+# Carrier TL steps (0.75 dB) added to every level of the ROM streams: the music 12 dB lower, so
 # that the effects (PSG, already at full level) come out of it (research/audio-fm.md, levels).
 # The prototype has none (master=0).
-MASTER_TL = 8
+MASTER_TL = 16
 
 
 def fnum(hz):
