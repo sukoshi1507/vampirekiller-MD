@@ -36,6 +36,11 @@ VKPlayer vk_player;
 VKWhip vk_whip;
 /* Lives, death and game over (health.c); the energy is vk_enemies.energy. */
 static VKHealth health;
+
+int vk_simon_pose6(void)
+{
+    return health.fell || vk_game.recoil == VK_RECOIL_DEAD;
+}
 /* White key and room 7 door (items.c). */
 static VKItems items;
 /* State 9 after a room change (room_freeze.c). */

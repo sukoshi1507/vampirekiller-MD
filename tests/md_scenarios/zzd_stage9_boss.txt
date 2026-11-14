@@ -51,7 +51,22 @@ until ram8('vk_boss+66') == 2 max 100
 expect ram16('vk_boss+82') == 0xFDD0 and ram8('vk_boss+71') == 1
 wait 2
 expect ram8('vk_boss+68') == 0x34 and ram8('vk_boss+72') == 0
+# Garde A4E8 (research/audio-driver.md, section 7) : pendant la pose de mort de Simon (C420 = 6 ; ici health.fell = 1,
+# octet +4 de `health`) l'enveloppe de la banque 3 ne demande rien : la boule part sans effet 0A. Puis le garde est leve.
+poke health+4 1
+poke vk_psg+22 0
+wait 2
 # Boule : objet 0 pose en (9Ah, C5h) a l'etat 3, +11 = 1, Simon en (16, 128) : vy -48 (FFB8), vx FE02, depart (9Ah, ADh) (trace R 4877).
+poke vk_boss+78 39424 16
+poke vk_boss+66 3
+poke vk_boss+67 0
+poke vk_boss+70 1
+poke vk_boss+71 1
+poke vk_boss+36 0
+poke vk_boss+46 0
+until ram8('vk_boss+36') == 1 max 10
+expect ram8('vk_psg+22') == 0 # C420 = 6 : A4E8 ne demande pas l'effet 0A
+poke health+4 0
 poke vk_boss+78 39424 16
 poke vk_boss+66 3
 poke vk_boss+67 0

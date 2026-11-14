@@ -528,7 +528,7 @@ static void step_boss(const EnemyRoomVars *v)
     VK_MARK(55);
     /* B9A9: effect 0A for the stage 9 boss ball only. The other boss shots (BF44 -> 9F61, 9F6D,
      * stages 3, 6, 12, 15) make no sound: no 509F request in 9F61-A0F0 (research/audio-driver.md). */
-    if ((events & VK_BOSS_EV_FIRE) && vk_boss.kind == 2) vk_psg_effect(VK_SFX_WALKER_FIRE);
+    if ((events & VK_BOSS_EV_FIRE) && vk_boss.kind == 2 && !vk_simon_pose6()) vk_psg_effect(VK_SFX_WALKER_FIRE);
     if (events & VK_BOSS_EV_FLASH) vk_enemies.flash = ENEMY_FLASH_START;
     if (events & VK_BOSS_EV_ORB_TILES)
     {
@@ -797,7 +797,9 @@ void vk_step_enemies(void)
      * effect 0D (7EBC). Object 08 (C43A): effect 17 when it drops to 10h (75ED). */
     if (vk_enemies.contactScore) vk_hud_add_score((u32)vk_enemies.contactScore * 100);
     {EnemyU8 n;for(n=0;n<Enemies_itemSoundCount;n++)vk_psg_effect(Enemies_itemSounds[n]);}
-    /* A2F9/A34D/A386 du stage 10 : événements des hommes-poissons dans l’ordre Z80. */
+    /* A2F9/A34D/A386 du stage 10 : événements des hommes-poissons dans l’ordre Z80. Enveloppe A4E8 :
+     * aucune requête quand C420 = 6 (pose de mort de Simon, 7070 ou chute 76C6). */
+    if (!vk_simon_pose6())
     {
         EnemyU8 n;
         for (n = 0; n < vk_enemies.fishSoundCount; n++) vk_psg_effect(vk_enemies.fishSounds[n]);

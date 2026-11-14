@@ -96,6 +96,9 @@ void vk_show_player(const VKPlayer *player);
 void vk_actors_flush(void);
 /* Backdrop colour of object 05's flash (7604, C43E); call it right after the VBlank. */
 void vk_show_backdrop(void);
+/* 1 while C420 = 6 (Simon's death pose: after the fatal recoil, 7070, or the fatal fall, 76C6). The sound
+ * envelope A4E8 (bank 3: fish men 07/08/09, stage 9 boss ball 0A) requests nothing then. Defined in main.c. */
+int vk_simon_pose6(void);
 /* One gameplay frame of the hall enemies (spawn, move, contact, whip hits, recoil). */
 void vk_step_enemies(void);
 void vk_enemy_room_cells(void);   /* enemy cells of the room, loaded while it is shown */

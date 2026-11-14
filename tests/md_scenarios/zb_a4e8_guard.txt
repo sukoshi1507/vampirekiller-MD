@@ -1,0 +1,27 @@
+# (zb) Garde de l'enveloppe A4E8 (banque 3 : `LD C,A / LD A,(C420) / CP 6 / RET Z / LD A,C / JP 509F`, research/audio-driver.md
+# section 7) : aucune requete sonore pour 07/08/09/0A quand C420 = 6, la pose de mort de Simon (fin du recul mortel 7070,
+# chute mortelle 76C6). Les quatre seuls appelants (CALL A4E8 en A2FB, A34F, A388, B9AB) sont l'homme-poisson et la boule
+# du boss 9 (voir zzd_stage9_boss). Ici : l'homme-poisson de la salle 4 du stage 2 (comme l_stage2_room4_fishman),
+# C420 = 6 simule par health.fell = 1 (octet +4 de `health`).
+include boot_to_courtyard.inc
+until front_mode == MODES['INTERIOR'] max 3000 RIGHT
+wait 20
+poke vk_game+22 2
+poke vk_game+20 3
+poke vk_debug_keys 1
+hold A 3
+hold A+RIGHT 3
+expect game.stage == 2 and game.room == 4
+poke vk_game+0 72
+poke vk_game+1 112
+poke vk_game+2 1
+poke health+4 1                                   # C420 = 6
+poke vk_psg+22 0
+wait 2
+poke enemy_state+143 0x96                         # C434 : Simon ne craint rien pendant le scenario
+until enemies.alive > 0 max 80
+expect enemies.enemy[0].type == 4                 # le premier homme-poisson a saute (A2F9 : 08 sans le garde)
+expect ram8('vk_psg+22') == 0                     # garde : aucune requete
+poke health+4 0                                   # le garde est leve : le second saut demande 08 de nouveau
+until enemies.enemy[3].type == 4 and enemies.enemy[3].active max 20
+expect ram8('vk_psg+22') == 0x08                  # A2F9 : effet 08 (le meme saut, sans C420 = 6)
