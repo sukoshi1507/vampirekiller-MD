@@ -6,6 +6,7 @@
 #include "generated/enemy_sprites_md.h"
 #include "generated/object_tiles_md.h"
 #include "generated/rooms.h"
+#include "gfx16.h"
 #include "candles.h"
 
 /* Free VRAM after the enemy tiles (actors.h) and before the HUD bar (hud.h). */
@@ -32,7 +33,7 @@ static void draw_block(u16 tile, u16 x, u16 y, u16 w, u16 h)
     for (r = 0; r < h; r++)
     {
         u16 cells[DOOR_COLS > VK_HUD_BOX_W ? DOOR_COLS : VK_HUD_BOX_W];
-        for (c = 0; c < w; c++) cells[c] = TILE_ATTR_FULL(PAL0, FALSE, FALSE, FALSE, tile + r * w + c);
+        for (c = 0; c < w; c++) cells[c] = TILE_ATTR_FULL(VK_PAL_OBJ, FALSE, FALSE, FALSE, tile + r * w + c);
         VDP_setTileMapDataRow(BG_A, cells, (u16)(y + r), x, w, DMA_QUEUE_COPY);
     }
 }
@@ -91,7 +92,8 @@ static void compose_key(const VKGame *game, VKByte x, VKByte y)
 /* The room map tiles back under a taken stage 2 key (the opened block, 885E). */
 static void clear_key(const VKGame *game, VKByte x, VKByte y)
 {
-    const u16 *map = room_map(game);
+    /* The cells as drawn (16-bit graphics: gfx16.h); compose_key keeps the MSX tiles under the key. */
+    const u16 *map = vk_room_cells(game->stage, game->room);
     u16 cell;
     for (cell = 0; cell < 4; cell++)
     {

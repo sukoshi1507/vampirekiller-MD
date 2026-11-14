@@ -9,6 +9,7 @@ typedef int VDPPlane;
 #define TRUE true
 #define FALSE false
 #define PAL0 0
+#define PAL2 2
 #define BG_A 0
 #define DMA_QUEUE 1
 #define CPU 0

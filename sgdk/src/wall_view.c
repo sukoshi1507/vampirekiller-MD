@@ -3,6 +3,7 @@
 #include "frontend.h"
 #include "hud.h"
 #include "msx_text.h"
+#include "gfx16.h"
 #include "generated/object_tiles_md.h"
 
 /* Frame tiles of the two records, 12 each. Castle rooms load 192 tiles of tileset 0
@@ -60,7 +61,7 @@ u16 vk_wall_view_sprites(u16 first)
         /* The first 8 lines of the 32 x 32 frame are empty: Y + 8. Low priority: Simon
          * and the enemies (earlier sprites) pass in front, as over the MSX bitmap. */
         VDP_setSpriteFull((u16)(first + n), vk_walls.obj[i].x, (s16)(vk_walls.obj[i].y + 8),
-                          SPRITE_SIZE(4, 3), TILE_ATTR_FULL(PAL0, FALSE, FALSE, FALSE, tile),
+                          SPRITE_SIZE(4, 3), TILE_ATTR_FULL(VK_PAL_OBJ, FALSE, FALSE, FALSE, tile),
                           (u16)(first + n + 1));
         n++;
     }
@@ -162,7 +163,7 @@ static u16 make_tiles(void)
                     count++;
                 }
             }
-            win_cells[cy][cx] = TILE_ATTR_FULL(PAL0, FALSE, FALSE, FALSE, MSX_TEXT_TILE_INDEX + k);
+            win_cells[cy][cx] = TILE_ATTR_FULL(VK_PAL_OBJ, FALSE, FALSE, FALSE, MSX_TEXT_TILE_INDEX + k);
         }
     return count;
 }

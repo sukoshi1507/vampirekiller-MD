@@ -1,0 +1,104 @@
+# (zzv) Mode graphique 16 bits (research/gfx16.md) : le scenario (f) cle blanche / porte / stage 2, rejoue tel quel
+# avec vk_gfx16 = 1 : la logique ne lit pas les graphismes, toutes les assertions de (f) doivent tenir.
+# (research/door-room7.md, section 16 ; sgdk/src/items.c). items : keys, white_key_taken,
+# door (0 fermee, 1 levee, 2 sortie a pied, 3 faite), timer, white_key_revealed.
+include boot_to_courtyard.inc
+poke vk_gfx16 1                                    # 16-bit graphics from the first castle room on
+until front_mode == MODES['INTERIOR'] max 3000 RIGHT
+expect ram8('vk_gfx16_on') == 1 # hall room 0 (scene 6) drawn with the 16-bit cells
+shot zzv-hall
+# Changement de salle debug du hall : A tenu, puis A+DROITE (le premier front est perdu).
+poke vk_debug_keys 1                               # debug shortcuts are off by default
+hold A 3
+hold A+RIGHT 3
+wait 10
+hold A 3
+hold A+RIGHT 3
+wait 10
+hold A 3
+hold A+RIGHT 3
+wait 10
+expect game.room == 2 # salle 2 du hall
+poke vk_game+0 166
+poke vk_game+1 192
+wait 4
+expect ram8('items+4') == 0 # cle cachee dans le bloc (bougie C490, mode 3)
+# Regard a gauche puis fouet : X fouet 164 - 20 = 144, |144 - 136| < 20 (8450).
+hold LEFT 2
+hold B 2
+until ram8('items+4') == 1 max 30
+wait 10
+shot zzv-cle-au-sol
+until ram8('items') & 1 max 200 LEFT
+expect ram8('items') == 1 and ram8('items+1') == 1 # cle blanche prise (C701 bit 0)
+expect 140 <= game.player.x <= 152 # ramassage au contact (K1 : x 148)
+wait 4
+shot zzv-cle-prise
+# Salle 7, sur le rebord y 96 a gauche de la porte.
+hold A 3
+hold A+RIGHT 3
+wait 10
+hold A 3
+hold A+RIGHT 3
+wait 10
+hold A 3
+hold A+RIGHT 3
+wait 10
+hold A 3
+hold A+RIGHT 3
+wait 10
+hold A 3
+hold A+RIGHT 3
+wait 10
+expect game.room == 7 # salle 7 du hall
+# La panthere de la salle 7 (C0,60) nait sur le rebord de la porte ; on la retire et on
+# laisse passer un eventuel recul pour isoler la porte (le run K3 du MSX encaissait son coup).
+until enemies.enemy[0].active max 40
+poke enemy_state+0 0
+wait 30
+poke vk_game+0 200
+poke vk_game+1 96
+wait 4
+shot zzv-porte-fermee
+until ram8('items+2') == 1 max 120 RIGHT
+expect game.player.x == 228 # ouverture a x 228, regard a droite
+expect ram8('items') == 0 # cle consommee (7743)
+# Phase des poses de marche (openMSX, 4 ouvertures, C003 117 a 124 : research/door-pose-phase.md) : 6CA4 prend la pose
+# dans les bits 3-2 de C003 (00 -> 2, 01 -> 1, 10 -> 0, 11 -> 1), donc le cycle suit le compteur global et non le debut
+# de la marche. Image f apres l'image d'ouverture (frame - t0) : C003 = C003 de la passe d'ouverture + f // 2, premiere 778A (pose ecrite) a f = 88 (ligne 89 du releve).
+set t0 frame
+set c0 enemies.tick
+wait 40
+until frame - t0 == 88 max 100
+expect player.pose == [2, 1, 0, 1][((c0 + (frame - t0) // 2) >> 2) & 3] # debut de la marche : premiere pose du cycle de C003
+until frame - t0 == 102 max 100
+expect player.pose == [2, 1, 0, 1][((c0 + (frame - t0) // 2) >> 2) & 3]
+until frame - t0 == 135 max 100
+expect player.pose == [2, 1, 0, 1][((c0 + (frame - t0) // 2) >> 2) & 3]
+until frame - t0 == 150 max 100
+expect player.pose == [2, 1, 0, 1][((c0 + (frame - t0) // 2) >> 2) & 3]
+shot zzv-porte-levee
+set music0 ram32('vk_psg+4')
+until game.stage == 2 max 200
+expect ram8('items+2') == 0 # porte franchie ; celle du stage 2 (salle 1) est fermee (BB37, vk_items_enter_stage)
+wait 30                                            # chargement de la salle passe
+expect ram32('vk_psg+4') >= music0 # 794F : 7777[1] = 0, la musique continue sans redemarrer
+expect front_mode == MODES['INTERIOR'] and game.room == 0 # stage 2 jouable, salle 0
+expect game.player.x == 16 and game.player.y == 96 # arrivee (door-room7.md section 16)
+wait 10
+shot zzv-stage2-salle0
+# Salle 0 du stage 2 (drapeau 08) : la chauve-souris (type 4, motifs du hall) part a
+# droite en Y SAT = C425 - 22 = 74 (trace stage 2, image 6068).
+until enemies.alive > 0 max 200
+expect enemies.enemy[0].type == 2 and enemies.enemy[0].x == 0xE5 and enemies.enemy[0].y == 74
+wait 20
+shot zzv-stage2-chauve-souris
+# Sortie droite par l'etage haut (sol y 64, colonnes 20-31) que l'escalier dessert.
+poke vk_game+0 200
+poke vk_game+1 64
+wait 4
+until game.room == 1 max 300 RIGHT
+expect game.stage == 2 and game.player.x == 10 # salle 1 du stage 2 par la droite (lien R1)
+expect game.player.y == 64 and game.player.mode == 0 # sur le sol haut (colonnes 0-7)
+wait 30
+shot zzv-stage2-salle1

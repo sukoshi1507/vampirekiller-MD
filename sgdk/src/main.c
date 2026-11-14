@@ -10,6 +10,7 @@
 #include "dracula_view.h"
 #include "room_view.h"
 #include "scene.h"
+#include "gfx16.h"
 #include "sound_test.h"
 #include "wall_view.h"
 #include "stage_map_view.h"
@@ -744,6 +745,12 @@ int main(bool hardReset)
                 /* Music on the PSG or the YM2612; the Konami code keeps its own LEFT / RIGHT. */
                 vk_psg_set_fm(!vk_sound_fm);
                 vk_title_sound_draw();
+            }
+            else if ((pressed & BUTTON_DOWN) && !vk_konami_pending())
+            {
+                /* Graphics: MSX or 16-bit art (gfx16.h); the Konami code keeps its own DOWN. */
+                vk_gfx16 = !vk_gfx16;
+                vk_title_gfx_draw();
             }
             else if (vk_konami_step(pressed)) { vk_sound_test_enter(); vk_front_mode = FRONT_SOUND; }
             else if (pressed & BUTTON_A)

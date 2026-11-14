@@ -5,6 +5,7 @@
 #include "candle_view.h"
 #include "hud.h"
 #include "generated/rooms.h"
+#include "gfx16.h"
 #include "generated/intro_assets.h"
 
 /* Text colour (15) and the HUD bar colours of hud.c: PLAYER fill (1), ENEMY
@@ -26,6 +27,7 @@ static void draw_room(u16 stage, u16 room, bool atlas)
 {
     const VKStage *group = &vk_stages[stage - 1];
     const u16 index = group->first + room;
+    const VKGfx16Room *g16 = vk_gfx16_room(stage, room);
     char label[40];
     u16 i;
 
@@ -37,8 +39,11 @@ static void draw_room(u16 stage, u16 room, bool atlas)
     VDP_resetSprites();
     VDP_updateSprites(1, CPU);
     VDP_clearPlane(BG_A, TRUE);
-    VDP_loadTileData(vk_tiles[group->tileset], TILE_USER_INDEX, VK_TILE_COUNT, VK_TM);
-    PAL_setPalette(PAL0, vk_palettes[index], CPU);
+    /* 16-bit graphics: the room's own tiles, cells and palette (gfx16.h); the MSX palette stays in PAL2. */
+    vk_gfx16_on = g16 != 0;
+    if (g16) VDP_loadTileData(g16->tiles, TILE_USER_INDEX, g16->count, VK_TM);
+    else VDP_loadTileData(vk_tiles[group->tileset], TILE_USER_INDEX, VK_TILE_COUNT, VK_TM);
+    PAL_setPalette(PAL0, g16 ? g16->palette : vk_palettes[index], CPU);
     PAL_setPalette(PAL1, hud_palette, CPU);
     VDP_setTextPalette(PAL1);
     sprintf(label, "STAGE %02u  ROOM %02u/%02u", stage, room, group->count - 1);
@@ -53,7 +58,7 @@ static void draw_room(u16 stage, u16 room, bool atlas)
         VDP_drawText("STATIC ASSETS / NO GAMEPLAY", 3, 22);
     }
     else
-        VDP_setTileMapDataRectEx(BG_A, vk_maps[index],
+        VDP_setTileMapDataRectEx(BG_A, g16 ? g16->map : vk_maps[index],
             TILE_ATTR_FULL(PAL0, FALSE, FALSE, FALSE, TILE_USER_INDEX),
             0, 4, 32, 22, 32, CPU);
     VDP_drawText("L/R ROOM  U/D STAGE  A TILES", 2, 27);
@@ -69,6 +74,7 @@ void vk_show_room(u16 stage, u16 room, bool atlas)
 static void draw_scene(u16 index)
 {
     const VKScene *scene = &vk_scenes[index];
+    vk_gfx16_on = 0;
     VDP_setEnable(FALSE);
     VDP_resetSprites();
     VDP_updateSprites(1, CPU);
@@ -344,6 +350,19 @@ void vk_show_interior(void)
     debug_room_key = 0xFFFF;
     vk_tiles_by_dma = vk_fast_room_draw;   /* fast draw: display off until vk_room_display_on */
     draw_scene(6);
+    {
+        /* 16-bit graphics: the room cells of stage 1 room 0 over the scene (rows 4..25), the scene
+         * keeps the rest of the screen. */
+        const VKGfx16Room *g16 = vk_gfx16_room(1, 0);
+        if (g16)
+        {
+            vk_gfx16_on = 1;
+            VDP_loadTileData(g16->tiles, TILE_USER_INDEX, g16->count, VK_TM);
+            PAL_setPalette(PAL0, g16->palette, CPU);
+            VDP_setTileMapDataRectEx(BG_A, g16->map,
+                TILE_ATTR_FULL(PAL0, FALSE, FALSE, FALSE, TILE_USER_INDEX), 0, 4, 32, 22, 32, CPU);
+        }
+    }
     if (!vk_fast_room_draw) VDP_setEnable(TRUE);
     vk_player = vk_game.player;
     /* Set the mode first: the hall target must not be placed as a courtyard flame. */

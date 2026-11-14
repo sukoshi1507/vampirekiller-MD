@@ -4,6 +4,7 @@
 #include "room_view.h"
 #include "generated/intro_assets.h"
 #include "psg_player.h"
+#include "gfx16.h"
 
 static u16 front_timer;
 
@@ -15,6 +16,13 @@ void vk_title_sound_draw(void)
     VDP_drawText(vk_sound_fm ? "SOUND < FM  >" : "SOUND < PSG >", 9, 23);
 }
 
+/* Graphics mode line of the title: DOWN switches between the MSX graphics and the 16-bit art
+ * (gfx16.h). Same centre as the sound line. */
+void vk_title_gfx_draw(void)
+{
+    VDP_drawText(vk_gfx16 ? "GRAPH < 16B >" : "GRAPH < MSX >", 9, 25);
+}
+
 void vk_show_title(void)
 {
     u16 x;
@@ -23,6 +31,7 @@ void vk_show_title(void)
     for (x = 9; x < 24; x++) VDP_setTileMapXY(BG_A, 0, x, 20);
     VDP_drawText("PRESS START", 10, 20);
     vk_title_sound_draw();
+    vk_title_gfx_draw();
     vk_front_mode = FRONT_TITLE;
     front_timer = 0;
     /* The MSX title is silent (no 509F request in states 0 to 2). */

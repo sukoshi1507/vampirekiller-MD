@@ -1,6 +1,7 @@
 #include <string.h>
 #include "../sgdk/src/wall_view.c"
 u16 vk_front_mode=FRONT_INTERIOR;
+u8 vk_gfx16_on;   /* gfx16.c is not linked: MSX graphics */
 static int sprite[6], loads;
 void VDP_loadTileData(const u32 *p,u16 t,u16 n,int mode){(void)p;(void)t;(void)n;(void)mode;loads++;}
 void VDP_setSpriteFull(u16 i,s16 x,s16 y,u16 size,u16 attr,u16 link){sprite[0]=i;sprite[1]=x;sprite[2]=y;sprite[3]=size;sprite[4]=attr;sprite[5]=link;}

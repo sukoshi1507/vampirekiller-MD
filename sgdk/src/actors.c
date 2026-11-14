@@ -45,6 +45,7 @@ _Static_assert(STAIR_TILE_INDEX + VK_PLAYER_STAIR_POSES * VK_PLAYER_TILES_PER_PO
 #include "candle_view.h"
 #include "psg_player.h"
 #include "generated/weapons_md.h"
+#include "gfx16.h"
 
 _Static_assert(ENEMY4_TILE_INDEX + VK_ENEMY4_TILE_COUNT <= HUD_TILE_INDEX,
                "sprite tiles 400.. must end before the HUD tiles");
@@ -541,6 +542,7 @@ static void step_boss(const EnemyRoomVars *v)
         else VDP_loadTileData(vk_orb_tiles, ENEMY5_TILE_INDEX, VK_ORB_TILE_COUNT, DMA_QUEUE);
         for (pal = PAL0; pal <= PAL2; pal = (u16)(pal + PAL2))
         {
+            if (pal == PAL0 && vk_gfx16_on) continue;   /* PAL0 holds the 16-bit art, not the MSX palette */
             PAL_setColor((u16)(pal * 16 + first), red[0]);
             PAL_setColor((u16)(pal * 16 + first + 2), red[1]);
         }

@@ -6,6 +6,7 @@
 #include "wall_view.h"
 #include "stage_map_view.h"
 #include "hud.h"
+#include "gfx16.h"
 /* Three unused slots: after the4 weapon-icon tiles275..278, and after the
  * key/HUD/door tiles700..749, before death-flame tiles752..759. */
 #define OUTLINE_TOP 279
@@ -28,7 +29,7 @@ static void rectangle(const VKItemBlock *b,bool erase,int clipx,int clipy)
         if((!r||r==n-1)&&(!c||c==n-1)){tile=OUTLINE_CORNER;flipx=c!=0;flipy=r!=0;}
         else if(!r||r==n-1){tile=OUTLINE_TOP;flipy=r!=0;}
         else{tile=OUTLINE_LEFT;flipx=c!=0;}
-        VDP_setTileMapXY(BG_B,TILE_ATTR_FULL(PAL0,TRUE,flipy,flipx,tile),x,y);
+        VDP_setTileMapXY(BG_B,TILE_ATTR_FULL(VK_PAL_OBJ,TRUE,flipy,flipx,tile),x,y);
     }
 }
 void vk_item_reveal_invalidate(void){signature=0xFFFF;}
