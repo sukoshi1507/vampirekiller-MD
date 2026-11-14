@@ -1,0 +1,30 @@
+# (zzr) Stage 11 salle 3, SANS mode invulnerable : l'aigle (type 18) et la puce qu'il porte, compares a la trace openMSX
+# (tools/run_eagle_flea_trace.py, research/routes-stages-10-11.md, section « Aigle et puce de la salle 3 : MSX contre portage »).
+# Simon est cloue par poke a chaque image (le menu de pause coche le mode invulnerable : on le recoupe apres la selection de salle).
+# Mesures MSX reprises ici : vagues toutes les 200 images, Y 48 puis 64 en alternance ; aigle a Y 48 contre Simon en (175, 64) :
+# coup 40 images apres la creation, 4 points d'energie, invulnerabilite 90 (C42D, 180 images).
+include zzm_enter11.inc
+until game.player.mode == 0 max 300
+wait 30
+include zzb_next.inc
+until game.stage == 11 and game.room == 1 max 300
+include zzb_next.inc
+until game.stage == 11 and game.room == 2 max 300
+include zzb_next.inc
+until game.stage == 11 and game.room == 3 max 300
+until game.player.mode == 0 max 300
+poke Enemies_god 0
+set spl []
+set syl []
+set prev 0
+set hit 0
+repeat 125 zzr_pin_a.inc
+expect len(spl) == 1 and syl[0] == 48 # premiere vague : aigle a Y 48 (CF0D = 1)
+expect hit - spl[0] == 40 # coup de l'aigle 40 images apres sa creation (MSX : 104 - 64)
+expect enemies.energy == 28 # aigle : 4 points
+expect 78 <= enemies.invuln <= 90 # C42D = 5Ah au coup, -1 toutes les 2 images : ~83 quatorze images apres le coup (MSX : 89 deux images apres)
+repeat 440 zzr_pin_b.inc
+expect len(spl) >= 3 # trois vagues
+expect spl[1] - spl[0] == 200 and spl[2] - spl[1] == 200 # periode de 200 images
+expect syl[:3] == [48, 64, 48] # Y 48 / 64 en alternance
+expect enemies.energy <= 28 and enemies.energy >= 20 # que des coups de puce (2) apres l'aigle
