@@ -80,3 +80,10 @@ ROM de mesure (`EXTRA_FLAGS=-DVK_MEASURE_PSG`, `tools/measure_fm_cost.txt`, cœu
 - Les sons FB et FD (arrêt du temps, jingle de pause) restent sur le PSG (ton 0).
 - Cri de Wilhelm : le DAC est coupé quelques microsecondes à chaque lot d'écritures (bus Z80 demandé) ; non écouté.
 - Rejeu 12-18 : valable pour le mode PSG seulement.
+
+## Rejeu 12-18 en mode FM (2026-11-14, main 409380e)
+
+Rejeu réenregistré avec `VK_SOUND_FM=1` (`tools/playthrough_12_18_md.py --record --width 64`, segments 12-15 puis 16-17, fichiers hors dépôt dans `scratchpad/fmrec/`) :
+55 points de contrôle, **0 image perdue, 0 tour absorbé**. Marge avant le VBlank : segment 12-15, 25 567 tours, médiane 102 lignes, 1 % à 47, 0,1 % à -7, minimum -10 (mode PSG : médiane 111, 0,1 % à -6) ;
+segment 16-17, 3 410 tours, minimum 30, médiane 119. Le mode FM coûte donc environ 9 lignes de marge médiane sans perdre d'image sur cette route. Non couvert : stages 1 à 11, combat de Dracula, console réelle.
+Ce rejeu FM n'est pas dans la batterie (il doublerait le temps de réenregistrement à chaque changement de gameplay).
