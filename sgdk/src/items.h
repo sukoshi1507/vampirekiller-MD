@@ -35,6 +35,8 @@ typedef struct {
     VKByte attacking;                /* C422 != 0: set by the caller before vk_items_tick */
     VKByte c003;                     /* C003 after this frame's pass (tick + 1 on the first frame of a pass): set by the caller */
     VKByte door_c003;                /* C003 of the opening pass (7752), phase of the walk poses of 6CA4 */
+    VKByte second_frame;             /* 1 on the second frame of a 2-frame pass: the door check (8580) does not run there; set by the caller */
+    VKByte end_wait;                 /* steps since Simon reached the end X of the walk (7802 acts two frames after 77BA) */
     VKWord late_keys_taken[7];      /* LOT11: one stream flag per late room, appended. */
 } VKItems;
 

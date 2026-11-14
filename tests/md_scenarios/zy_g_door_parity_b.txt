@@ -1,0 +1,5 @@
+# (zy_g) Left door of the stage 4 opened by a touch on the SECOND frame of a pass (enemies.itemPhase 0), 10 idle frames
+# earlier than the _a scenario (other C003): the MSX skips it, the door opens one frame later (zy_g_door_parity.inc).
+set ph 0
+set pre 10
+include zy_g_door_parity.inc

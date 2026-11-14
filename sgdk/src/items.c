@@ -7,11 +7,10 @@
 #define PICK_HALF_W 13
 #define PICK_HEIGHT 42
 
-/* K3, frames from the opening (5799): C5AF = t / 2 lifts the bar by one pixel per
- * two frames; Simon starts walking at t 91 (X 229) and gains one pixel every four
- * frames up to X 248 at t 167; the stage changes at t 168 (D000 1 -> 2). The walk
- * starts from the X of the opening (229: X 248 at t 163). */
-#define DOOR_WALK_T0 87
+/* K3: C5AF = t / 2 lifts the bar by one pixel per two frames; Simon walks alone from the frame 88 after the opening
+ * (778A on the first frame of each pass), one pixel every four frames from the X of the opening. */
+#define DOOR_WALK_T0 86      /* walk phase origin: the X steps fall on t = 2 (left) or 4 (right) mod 4 */
+#define DOOR_WALK_FIRST 88   /* first 778A call, frame f = 88 after the opening */
 static VKByte door_pose;   /* pose of Simon at the opening, kept during the lift */
 
 static const VKStageItems *stage_items(const VKGame *game)
@@ -143,26 +142,27 @@ VKItemEvent vk_items_tick(VKItems *items, VKGame *game)
         items->timer++;
         /* 77BA: X - 8 >= F0, so X 248 on the right and X 7 on the left; 7802 one frame later (openMSX, doors of
          * the stages 1, 4 and 5: X 248 or 7 then C000 = 10 at the next frame). */
-        if (items->door == VK_DOOR_WALKING && (left ? p->x <= 7 : p->x >= 248))
+        if (items->door == VK_DOOR_WALKING && (left ? p->x <= 7 : p->x >= 248) && ++items->end_wait >= 2)
         {
             items->door = VK_DOOR_DONE;
             return VK_ITEM_STAGE_EXIT;
         }
-        if (items->timer > DOOR_WALK_T0)
+        if (items->timer >= DOOR_WALK_FIRST)
         {
             /* 778A: 80h a pass from the X of the opening (6C94), with the walk cycle of 6CA4 (poses 0, 1, 2, 1 held
              * 8 frames each) and, facing left, the left compositions of 765F (C42E + 10: Simon looks at the door he
-             * walks to). openMSX, forced rooms: on the right X + 1 at t 91 then every 4 frames (229 -> 248 at t 163);
-             * on the left the first half pixel already takes one (X.00 - 0.80), X - 1 at t 89 then every 4 frames
-             * (stage 4 room 3 and stage 5 room 5: 26 -> 25 at t 89, 7 at t 161, stage + 1 at t 162). */
+             * walks to). openMSX (research/door-pose-phase.md), f = frames after the opening frame (7752), writes of
+             * C427 and C42E at f = 88, 90, 92...: 778A only runs on the first frame of each pass (C003 written in the
+             * same frame, 8580 too). On the right X + 1 at f 90 then every 4 frames (229 -> 248 at f 162); on the left
+             * the first half pixel already takes one (X.00 - 0.80), X - 1 at f 88 then every 4 frames (stage 4 room 3
+             * and stage 5 room 5: 26 -> 25 at f 88, 7 at f 160; 77BA and 7802 in that frame, C000 = 10 at f 161, D000
+             * + 1 at f 162). Row n of the notes is the state after f = n - 1. */
             const int t = items->timer - DOOR_WALK_T0;
             /* 6CA4 picks the pose from bits 3 and 2 of C003 (00 -> 2, 01 -> 1, 10 -> 0, 11 -> 1), so the cycle is in
-             * phase with the global counter, not with the start of the walk: C003 of the row n after the opening
-             * pass is door_c003 + (n - 1) / 2 (openMSX, research/door-pose-phase.md). The first call of 778A, at
-             * timer 88, only shows its pose from row 89. */
+             * phase with the global counter, not with the start of the walk: C003 of the frame f after the opening
+             * pass is door_c003 + f / 2 (the opening is on a first frame, the next pass counts at f = 2). */
             static const VKByte walk_pose[4] = {2, 1, 0, 1};
-            if (t >= 2) p->pose = (VKByte)(walk_pose[((items->door_c003 + ((items->timer - 1) >> 1)) >> 2) & 3] + (p->facing ? 3 : 0));
-            else p->pose = door_pose;
+            p->pose = (VKByte)(walk_pose[((items->door_c003 + (items->timer >> 1)) >> 2) & 3] + (p->facing ? 3 : 0));
             items->door = VK_DOOR_WALKING;
             if (left) { if ((t & 3) == 2 && p->x > 7) p->x--; }
             else if ((t & 3) == 0 && p->x < 248) p->x++;
@@ -186,12 +186,16 @@ VKItemEvent vk_items_tick(VKItems *items, VKGame *game)
         const int left = s->door_x < 128;
         if (left && p->x < 20) p->x = 20;
         if (!left && p->x > 228) p->x = 228;
-        if ((items->keys & VK_KEY_WHITE) && p->facing == left && !p->on_stairs &&
+        /* 8580 is called from the pass code, so only on the first frame of a 2-frame pass, the frame where 414D
+         * counts C003: 209 calls of 16 openings of the stage 4 door, none on a second frame (openMSX,
+         * research/door-pose-phase.md). A touch on a second frame opens the door on the next first frame. */
+        if (!items->second_frame && (items->keys & VK_KEY_WHITE) && p->facing == left && !p->on_stairs &&
             vk_items_door_touch(game))
         {
             items->keys &= (VKByte)~VK_KEY_WHITE;          /* 7743: RES 0,(C701) */
             items->door = VK_DOOR_OPENING;
             items->timer = 0;
+            items->end_wait = 0;
             door_pose = p->pose;
             items->door_c003 = items->c003;
             return VK_ITEM_DOOR_OPENED;

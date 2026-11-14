@@ -72,7 +72,7 @@ FRONT_MODES = ['LOGO', 'TITLE', 'CASTLE', 'COURTYARD', 'INTERIOR', 'VIEWER', 'TE
 ENEMY_SLOTS = 7
 # Tailles attendues (octets) des globales decodees : garde-fou contre une derive des structures.
 EXPECTED_SIZES = {'player': 15, 'game': 38, 'whip': 6, 'enemy_state': 166, 'vk_projectiles': 144,
-                  'test_target': 18, 'courtyard_flame': 36, 'front_mode': 2, 'health': 6, 'vk_candles': 530, 'items': 22, 'vk_walls': 693}
+                  'test_target': 18, 'courtyard_flame': 36, 'front_mode': 2, 'health': 6, 'vk_candles': 530, 'items': 24, 'vk_walls': 693}
 # Noms C actuels des globales partagees (sgdk/src/frontend.h, actors.h) ; les scenarios
 # gardent les noms courts. test_target et courtyard_flame sont statiques (room_view.c).
 SYMBOL_ALIASES = {'game': 'vk_game', 'player': 'vk_player', 'whip': 'vk_whip',
