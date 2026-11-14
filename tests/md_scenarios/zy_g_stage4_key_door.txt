@@ -24,9 +24,12 @@ wait 4
 expect ram8('items+2') == 0 # porte fermee
 until ram8('items+2') == 1 max 160 LEFT
 expect ram8('items') == 0 and game.player.x < 34 # cle consommee a l'ouverture (porte de gauche)
-# Porte de gauche, openMSX (salle forcee, Simon depuis X 34) : ouverture a X 26 en pose de marche gauche (C42E 11) gardee
-# pendant la levee ; puis marche seule avec les compositions gauches (765F, C42E 10..12), X 25 a t 89, 1 px / 4 images,
-# X 7 a t 161. Avant : poses droites en reculant vers la gauche (« moonwalk »), X saute de 26 a 20.
+# Porte de gauche, openMSX (salle forcee, Simon depuis X 34, stage 4 salle 3 et stage 5 salle 5, 16 ouvertures, C003
+# varies : research/door-pose-phase.md) : ouverture a X 26 en pose de marche gauche (C42E 11) gardee pendant la levee ;
+# la premiere 778A est a f = 88 apres l'image d'ouverture (premiere image d'une passe, comme 8580) : X 25, pose de
+# 6CA4 (bits 3-2 de C003, + 3 a gauche, compositions 765F C42E 10..12), puis 1 px / 4 images (un pas par 2 passes),
+# X 7 a f 160, sortie du stage 4 a f 162. Avant : poses droites en reculant vers la gauche (« moonwalk »), X saute
+# de 26 a 20, puis marche en retard d'une image (sur une seconde image de la passe).
 set t0 frame
 set xo game.player.x
 set po player.pose
@@ -34,17 +37,15 @@ set c0 enemies.tick                                # C003 de la passe d'ouvertur
 expect xo == 26 and player.facing == 1 and 4 <= po <= 5 # pose de marche, regard a gauche
 wait 60
 expect player.x == xo and player.pose == po # pose gardee pendant la levee (C5AC = 2)
-until ram8('items+2') == 2 max 60
-expect player.x == xo
-until player.x == xo - 1 max 8
-expect frame - t0 == 89 and player.facing == 1 and 3 <= player.pose <= 5
-expect player.pose == [2, 1, 0, 1][((c0 + (frame - t0 - 1) // 2) >> 2) & 3] + 3 # 6CA4 : pose par les bits 3-2 de C003, + 3 a gauche
+until player.x == xo - 1 max 40
+expect frame - t0 == 88 and ram8('items+2') == 2 and player.facing == 1 and 3 <= player.pose <= 5
+expect player.pose == [2, 1, 0, 1][((c0 + (frame - t0) // 2) >> 2) & 3] + 3 # 6CA4 : pose par les bits 3-2 de C003, + 3 a gauche
 until player.x == xo - 9 max 40
-expect frame - t0 == 121 and 3 <= player.pose <= 5 # 1 px toutes les 4 images, poses gauches
-expect player.pose == [2, 1, 0, 1][((c0 + (frame - t0 - 1) // 2) >> 2) & 3] + 3
+expect frame - t0 == 120 and 3 <= player.pose <= 5 # 1 px toutes les 4 images, poses gauches
+expect player.pose == [2, 1, 0, 1][((c0 + (frame - t0) // 2) >> 2) & 3] + 3
 shot zy-g-porte-gauche
 until player.x == 7 max 100
-expect frame - t0 == 161 and 3 <= player.pose <= 5 # sortie a X 7 (77BA)
+expect frame - t0 == 160 and 3 <= player.pose <= 5 # sortie a X 7 (77BA)
 until game.stage == 5 max 400 LEFT
 wait 30
 expect game.stage == 5 and game.room == 0 and game.player.x == 232 and game.player.y == 96 # entree du stage 5 (232, 96)

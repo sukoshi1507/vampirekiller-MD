@@ -1,0 +1,4 @@
+# (zy_g) Left door of the stage 4 opened by a touch on the FIRST frame of a pass (enemies.itemPhase 1): see zy_g_door_parity.inc.
+set ph 1
+set pre 0
+include zy_g_door_parity.inc

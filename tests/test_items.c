@@ -62,8 +62,14 @@ int main(void)
     g.player.facing = 1;
     assert(vk_items_tick(&it, &g) == VK_ITEM_NONE && it.door == VK_DOOR_CLOSED);
 
-    /* K3: facing right at (228, 96) the door opens and the key goes (7743). */
+    /* 8580 runs only on the first frame of a pass (openMSX: 209 calls, none on a second frame): a touch on the second
+     * frame leaves the door closed, the next first frame opens it. */
     g.player.facing = 0;
+    it.second_frame = 1;
+    assert(vk_items_tick(&it, &g) == VK_ITEM_NONE && it.door == VK_DOOR_CLOSED && (it.keys & VK_KEY_WHITE));
+    it.second_frame = 0;
+
+    /* K3: facing right at (228, 96) the door opens and the key goes (7743). */
     it.c003 = 117;                                   /* C003 of the opening pass in the openMSX trace of the pose phase */
     assert(vk_items_tick(&it, &g) == VK_ITEM_DOOR_OPENED);
     assert(!(it.keys & VK_KEY_WHITE) && vk_items_controls_locked(&it));
@@ -73,18 +79,19 @@ int main(void)
     assert(vk_items_tick(&it, &g) == VK_ITEM_DOOR_STEP && vk_items_door_lift(&it) == 1);
     for (t = 2; t < 86; t++) (void)vk_items_tick(&it, &g);
     assert(vk_items_door_lift(&it) == VK_DOOR_LIFT_MAX && g.player.x == 228);
-    /* Simon walks alone: x 229 at t 91 (frame 5890), one pixel every four frames. */
-    for (; t < 91; t++) (void)vk_items_tick(&it, &g);
+    /* Simon walks alone: x 229 at f 90 (778A runs on the first frames, from f 88), one pixel every four frames. */
+    for (; t < 90; t++) (void)vk_items_tick(&it, &g);
     assert(g.player.x == 229 && it.door == VK_DOOR_WALKING);
-    /* 778A -> 6CA4: pose 2, 1, 0, 1 from bits 3-2 of C003 (117 + (n - 1) / 2): 2 up to row 94, 1 from 95, 0 from 103 */
+    /* 778A -> 6CA4: pose 2, 1, 0, 1 from bits 3-2 of C003 (117 + f / 2): 2 up to f 93, 1 from f 94, 0 from f 102 */
     assert(g.player.pose == 2);
-    for (; t < 95; t++) (void)vk_items_tick(&it, &g);
+    for (; t < 94; t++) (void)vk_items_tick(&it, &g);
     assert(g.player.x == 230 && g.player.pose == 1);
-    for (; t < 95 + 8; t++) (void)vk_items_tick(&it, &g);
+    for (; t < 94 + 8; t++) (void)vk_items_tick(&it, &g);
     assert(g.player.pose == 0);
-    for (; t < 167; t++) assert(vk_items_tick(&it, &g) != VK_ITEM_STAGE_EXIT);
+    for (; t < 166; t++) assert(vk_items_tick(&it, &g) != VK_ITEM_STAGE_EXIT);
     assert(g.player.x == 248);
-    /* Frame 5967: D000 1 -> 2. */
+    /* X 248 at f 166, 7802 in the same frame, D000 1 -> 2 two frames later. */
+    assert(vk_items_tick(&it, &g) == VK_ITEM_NONE);
     assert(vk_items_tick(&it, &g) == VK_ITEM_STAGE_EXIT && it.door == VK_DOOR_DONE);
     assert(!vk_items_controls_locked(&it));
 
@@ -129,9 +136,10 @@ int main(void)
 
     /* Left door, stage 4 room 3 (12, 48), openMSX forced room (Simon from X 34, facing left, C701 bit 0):
      * opening at X 26 in walk pose C42E = 11, kept 88 frames; then the left walk compositions (C42E 10..12,
-     * 765F), X 25 at t 89 and one pixel every four frames, X 7 at t 161, D000 4 -> 5 at t 162. */
+     * 765F), X 25 at f 88 (row 89) and one pixel every four frames, X 7 at f 160, D000 4 -> 5 at f 162. */
     vk_items_begin(&it);
     it.keys = VK_KEY_WHITE;
+    it.c003 = 117;
     hall(&g, 3, 26, 96);
     g.stage = 4;
     g.player.facing = 1;
@@ -141,19 +149,19 @@ int main(void)
     {
         g.player.pose = 3;                           /* the locked controls give the idle pose each frame */
         (void)vk_items_tick(&it, &g);
-        assert(g.player.x == 26 && g.player.pose == (t <= 87 ? 4 : 3));
+        assert(g.player.x == 26 && g.player.pose == 4);
     }
-    (void)vk_items_tick(&it, &g);                    /* t 88: first 778A, its pose only shows from row 89, no pixel yet */
-    assert(g.player.x == 26 && g.player.pose == 4);
-    (void)vk_items_tick(&it, &g);
-    assert(g.player.x == 25 && it.door == VK_DOOR_WALKING);
-    for (t = 90; t <= 161; t++)
+    /* f 88: first 778A, on a first frame of the pass: the half pixel already takes one, pose of C003 + 44 (117 + 44 = 161: 2, left 5) */
+    for (t = 88; t <= 160; t++)
     {
+        static const VKByte walk[4] = {2, 1, 0, 1};
         assert(vk_items_tick(&it, &g) == VK_ITEM_NONE);
-        assert(g.player.pose >= 3 && g.player.pose <= 5);   /* never the right poses: no moonwalk */
-        assert(g.player.x == 26 - (t - 85) / 4);
+        assert(g.player.x == 25 - (t - 88) / 4);
+        assert(g.player.pose == walk[((117 + t / 2) >> 2) & 3] + 3);   /* never the right poses: no moonwalk */
     }
-    assert(g.player.x == 7 && vk_items_tick(&it, &g) == VK_ITEM_STAGE_EXIT);
+    assert(g.player.x == 7 && it.door == VK_DOOR_WALKING);
+    assert(vk_items_tick(&it, &g) == VK_ITEM_NONE);   /* 77BA at f 160 (X 7), C000 = 10 at f 161 */
+    assert(vk_items_tick(&it, &g) == VK_ITEM_STAGE_EXIT);   /* D000 + 1 at f 162 */
 
     printf("test_items: OK\n");
     /* New life: a white key not used is lost and back in its hidden block. */

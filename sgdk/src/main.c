@@ -927,6 +927,7 @@ int main(bool hardReset)
                     VK_MARK(46);
                     items.attacking = vk_whip.timer != 0;   /* C422, 7FE2 */
                     items.c003 = c003_now();
+                    items.second_frame = vk_enemies.itemPhase ? 0 : 1;
                     const VKItemEvent item = vk_items_tick(&items, &vk_game);
                     VK_MARK(47);
                     vk_player = vk_game.player;
