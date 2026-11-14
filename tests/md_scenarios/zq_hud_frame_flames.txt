@@ -20,6 +20,8 @@ until game.room == 1 max 1500 RIGHT
 wait 30
 expect pixel(135, 11) == (238, 0, 32) # case rouge, haut
 expect pixel(135, 28) == (238, 0, 32) # case rouge, bas
+expect pixel(127, 20) == (238, 0, 32) # case rouge, bord gauche
+expect pixel(127, 24) == (238, 0, 32) # bord gauche a la hauteur de la barre ENEMY (lignes 23 a 26) : pas du remplissage
 expect pixel(200, 11) == (238, 238, 238) # case de droite, haut
 expect pixel(200, 28) == (238, 238, 238) # case de droite, bas
 expect pixel(248, 20) == (238, 238, 238) # case de droite, bord droit

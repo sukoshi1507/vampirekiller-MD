@@ -43,7 +43,9 @@ static void prepare_bar(void)
                     {
                     const u32 pixel = (pixels >> (28 - 4 * p)) & 0xF;
                     if (pixel == HUD_FILL) fill |= 0xFUL << (28 - 4 * p);
-                    else if (pixel == 8 && y >= 23 && y <= 26) enemy |= 0xFUL << (28 - 4 * p);
+                    /* The ENEMY bar is 64 pixels long (bar pixel = col * 8 + p - 4): past it, colour 8 on
+                     * those lines is the left edge of the red weapon box (x 127), which is not fill. */
+                    else if (pixel == 8 && y >= 23 && y <= 26 && col * 8 + p < 68) enemy |= 0xFUL << (28 - 4 * p);
                 }
                 bar_full[tile + line] = pixels;
                 bar_fill[tile + line] = fill;
