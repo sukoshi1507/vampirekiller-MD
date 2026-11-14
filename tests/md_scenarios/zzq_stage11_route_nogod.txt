@@ -1,0 +1,43 @@
+# (zzq) Stage 11 a la manette SANS mode invulnerable (Enemies_god coupe par zzm_enter11.inc), de l'entree jusqu'a l'arrivee dans la salle 3, sans pose de position ni de vie.
+# Variante de zzq_stage11_route.txt (qui reste en invulnerable). PARTIE : salles 0, 1 et 2 passees SANS AUCUN DEGAT, energie pleine a l'arrivee en salle 3. Les salles 3 et 4 (aigles
+# qui portent une puce : la puce plonge sur Simon, 2 points ; l'aigle lui-meme 4 points a hauteur du bloc haut) n'ont pas pu etre passees sans degats ni, avec le rythme d'attente
+# essaye, jusqu'a la porte : voir research/routes-stages-10-11.md.
+# Reproductible : memes entrees depuis le reset = meme partie.
+# Salle 0 : on fouette le premier ennemi (type 0) puis on marche sans attendre ; salle 1 : le saut + fouet casse le mur et on enchaine vite (l'oiseau/puce du fond plonge sur
+#   l'endroit ou Simon s'est pose) ; salle 2 : on attend a gauche que la puce de l'aigle soit tombee et fouettee, puis on traverse apres 90 images de garde (fenetre sans degat trouvee par essai).
+set ty 36
+include zzm_enter11.inc
+until game.player.mode == 0 max 300
+wait 10
+set gt (0, 1, 18, 14)
+set troom 0
+set tx 250
+repeat 900 zzq_walk.inc
+set troom 1
+set tx 50
+repeat 200 zzq_walk.inc
+hold C+RIGHT 1
+hold RIGHT 40
+set tx 88
+repeat 200 zzq_walk.inc
+hold C+RIGHT 1
+hold RIGHT 16
+hold B 3
+set tx 120
+repeat 200 zzq_walk.inc
+hold C+RIGHT 1
+hold RIGHT 60
+hold RIGHT 40
+hold RIGHT 100
+set troom 2
+set ct (14,)
+until any(e.active and e.type == 14 and e.x > 150 for e in enemies.enemy) max 200
+repeat 400 zzq_clear.inc
+repeat 90 zzq_guard.inc
+set tx 84
+repeat 300 zzq_walk.inc
+hold C+RIGHT 1
+until game.player.mode == 0 max 80 RIGHT
+set tx 255
+repeat 700 zzq_walk.inc
+expect game.stage == 11 and game.room == 3 and ram8('Enemies_god') == 0 and enemies.energy == 32 and health.phase == 0 # salles 0 a 2 sans degat
