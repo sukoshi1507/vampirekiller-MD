@@ -7,6 +7,13 @@
 
 static u16 front_timer;
 
+/* Sound mode line of the title (SGDK font, no tile of the text budget): LEFT or RIGHT
+ * switches the music between the PSG and the YM2612 (research/audio-fm.md). */
+void vk_title_sound_draw(void)
+{
+    VDP_drawText(vk_sound_fm ? "SOUND  < FM  >" : "SOUND  < PSG >", 13, 23);
+}
+
 void vk_show_title(void)
 {
     u16 x;
@@ -14,6 +21,7 @@ void vk_show_title(void)
     /* The ROM's keyboard prompt is adapted to the Mega Drive controller. */
     for (x = 9; x < 24; x++) VDP_setTileMapXY(BG_A, 0, x, 20);
     VDP_drawText("PRESS START", 10, 20);
+    vk_title_sound_draw();
     vk_front_mode = FRONT_TITLE;
     front_timer = 0;
     /* The MSX title is silent (no 509F request in states 0 to 2). */

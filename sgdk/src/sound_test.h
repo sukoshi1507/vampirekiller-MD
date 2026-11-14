@@ -6,6 +6,8 @@
 /* Konami code on the title screen: UP UP DOWN DOWN LEFT RIGHT LEFT RIGHT B A.
  * Call once per frame with the edge-triggered button mask. */
 bool vk_konami_step(u16 pressed);
+/* TRUE while a started code is waiting for its next key (LEFT/RIGHT then belong to it). */
+bool vk_konami_pending(void);
 
 /* Debug sound test: every MSX2 effect and music (psg_player.h). Returns TRUE from
  * vk_sound_test_tick when the player leaves with B. */

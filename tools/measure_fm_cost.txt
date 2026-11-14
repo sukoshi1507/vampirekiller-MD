@@ -1,0 +1,31 @@
+# Cout du pas du lecteur en mode FM (psg_vint : coeur, ecritures PSG, demande de bus Z80 et
+# ecritures YM2612), ROM de mesure seulement (research/audio-fm.md) :
+#   cd sgdk && make GDK=... clean && EXTRA_FLAGS=-DVK_MEASURE_PSG make GDK=...
+#   python3 tools/md_harness.py tools/measure_fm_cost.txt --out DIR
+#   puis make GDK=... clean && make GDK=... (ROM normale).
+# Les 15 musiques par le test sonore du titre (mode FM), puis la cour avec fouets. Les ecritures YM2612
+# de la mesure vont au registre inutilise 2F (aucun effet) ; vk_psg_cost_pairs[n] = pas le plus long
+# pour n paires YM2612 ; vk_psg_cost_max / vk_psg_cost_sum / vk_psg_cost_count comme measure_psg_cost.txt.
+until front_mode == MODES['TITLE'] max 300
+tap RIGHT
+expect ram8('vk_sound_fm') == 1
+tap UP 2
+tap UP 2
+tap DOWN 2
+tap DOWN 2
+tap LEFT 2
+tap RIGHT 2
+tap LEFT 2
+tap RIGHT 2
+tap B
+tap A
+wait 10
+expect front_mode == MODES['SOUND']
+# 29 effets d'abord : les musiques sont les 15 entrees suivantes (BAS 29 fois = 80, puis une de plus par musique)
+repeat 29 measure_fm_down.inc
+tap A 2
+wait 1500
+repeat 14 measure_fm_next.inc
+echo (ram16('vk_psg_cost_count'), ram16('vk_psg_cost_max'), ram32('vk_psg_cost_sum'))
+echo [ram16('vk_psg_cost_pairs+%d' % (2 * i)) for i in range(32)]
+echo [ram16('vk_psg_cost_pairs_n+%d' % (2 * i)) for i in range(32)]

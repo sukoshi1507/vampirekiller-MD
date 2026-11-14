@@ -311,7 +311,12 @@ def envelope_buzz_period(regs):
 class FrameConverter:
     """AY register state to SN76489 writes, frame by frame, with SN state diffing."""
 
-    def __init__(self, channels=(0, 1, 2), initial_mixer=0xBC):
+    def __init__(self, channels=(0, 1, 2), initial_mixer=0xBC, noise_only=False, noise_att=0):
+        # noise_only: the music tones are played elsewhere (YM2612, tools/convert_fm.py); the
+        # PSG keeps the noise (drums), always clocked by tone 2 (exact AY noise rate), plus
+        # noise_att extra SN attenuation steps (2 dB each) on the noise volume.
+        self.noise_only = noise_only
+        self.noise_att = noise_att
         self.channels = tuple(channels)
         self.regs = [0] * 16
         self.regs[7] = initial_mixer
@@ -344,6 +349,10 @@ class FrameConverter:
             tone_on = not (mixer >> ch) & 1
             noise_on = not (mixer >> (3 + ch)) & 1
             buzz = None
+            if self.noise_only:
+                if noise_on and level:
+                    noise_sources.append((level, ch))
+                continue
             if regs[8 + ch] & 0x10:
                 self.stats['envelope_frames'] += 1
                 level = envelope_frame_level(regs, self.env_time)
@@ -367,13 +376,13 @@ class FrameConverter:
                 self.stats['noise_conflicts'] += 1
             level, ch = max(noise_sources)
             np = max(1, regs[6] & 0x1F)
-            if target_att[2] == 15 and 2 in self.channels:
+            if self.noise_only or (target_att[2] == 15 and 2 in self.channels):
                 noise = 0xE7                      # white noise clocked by tone 2
                 target_tone[2] = np
             else:
                 self.stats['noise_fixed_rate'] += 1
                 noise = 0xE4 | nearest_noise_rate(np)
-            target_att[3] = ay_volume_to_sn_attenuation(level)
+            target_att[3] = min(15, ay_volume_to_sn_attenuation(level) + self.noise_att)
         self.env_time += FRAME_SECONDS
         out = bytearray()
         for ch in self.channels:
@@ -393,9 +402,9 @@ class FrameConverter:
         return bytes(out)
 
 
-def convert_frames(frames, channels=(0, 1, 2), loop=None):
+def convert_frames(frames, channels=(0, 1, 2), loop=None, noise_only=False, noise_att=0):
     """SN writes per frame for AY frames; the loop frame restates the full SN state."""
-    conv = FrameConverter(channels)
+    conv = FrameConverter(channels, noise_only=noise_only, noise_att=noise_att)
     out = []
     for index, writes in enumerate(frames):
         if index == loop:

@@ -157,6 +157,9 @@ class Game:
         for _ in range(2000):
             if m.rd16(self.mode) == 1: break
             self.frame(frozenset())
+        if os.environ.get('VK_SOUND_FM'):      # experiment (research/audio-fm.md): music on the YM2612
+            for keys, n in (({BUTTONS['RIGHT']}, 4), (set(), 4)):
+                for _ in range(n): self.frame(keys)
         for keys, n in (({BUTTONS['START']}, 4), (set(), 4), ({BUTTONS['START']}, 4), (set(), 6)):
             for _ in range(n): self.frame(keys)
         for _ in range(600):

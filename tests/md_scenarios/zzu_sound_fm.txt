@@ -1,0 +1,76 @@
+# (zzu) Musique FM (research/audio-fm.md) : le titre propose PSG / FM (LEFT ou RIGHT), PSG au
+# demarrage ; en FM la musique du stage 1 passe sur les voies YM2612 (flux FM suivi par le curseur
+# vk_fm+4, pointeur de flux FM vk_fm+0), boucle, se fige en pause, reprend, est remplacee a la
+# mort (89) ; les effets (PSG) passent toujours. vk_psg : music_id +20, effect_id +21, paused +54.
+until front_mode == MODES['TITLE'] max 300
+expect ram8('vk_sound_fm') == 0 # PSG par defaut
+shot zzu-title-psg
+tap RIGHT
+expect ram8('vk_sound_fm') == 1
+shot zzu-title-fm
+tap LEFT
+expect ram8('vk_sound_fm') == 0
+tap RIGHT
+expect ram8('vk_sound_fm') == 1
+# le code Konami garde ses LEFT / RIGHT : le mode ne bouge pas
+tap UP 2
+tap UP 2
+tap DOWN 2
+tap DOWN 2
+tap LEFT 2
+tap RIGHT 2
+tap LEFT 2
+tap RIGHT 2
+expect ram8('vk_sound_fm') == 1 and front_mode == MODES['TITLE']
+tap B
+tap A
+wait 10
+expect front_mode == MODES['SOUND']
+# la musique 80 (premiere entree musique : 28 effets plus bas) est jouee dans le mode courant
+tap B
+wait 10
+expect front_mode == MODES['TITLE'] and ram8('vk_sound_fm') == 1
+tap START                                          # titre -> chateau : musique 8A
+until front_mode == MODES['CASTLE'] max 30
+wait 5
+expect ram8('vk_psg+20') == 0x8A and ram32('vk_fm+0') != 0 # flux FM actif
+tap START
+until front_mode == MODES['COURTYARD'] max 30
+wait 20
+expect ram8('vk_psg+20') == 0x80 and ram32('vk_fm+0') != 0
+set c0 ram32('vk_fm+4')
+wait 30
+expect ram32('vk_fm+4') > c0 # le curseur FM avance avec la musique
+# un effet (PSG) pendant la musique FM : accepte, la musique continue
+set c0 ram32('vk_fm+4')
+hold B 2
+expect ram8('vk_psg+21') == 5 # coup de fouet : effet 05, sur le PSG
+expect ram8('vk_psg+20') == 0x80 and ram32('vk_fm+4') > c0
+# pause : musique gelee, puis reprise
+wait 20
+tap START
+wait 2
+expect ram8('vk_psg+54') == 1
+set c0 ram32('vk_fm+4')
+wait 30
+expect ram32('vk_fm+4') == c0 # gelee
+tap START
+wait 2
+expect ram8('vk_psg+54') == 0
+wait 10
+expect ram32('vk_fm+4') > c0 # reprise
+# boucle : le curseur FM revient en arriere apres 2388 images (musique 80)
+wait 2250
+set c0 ram32('vk_fm+4')
+until ram32('vk_fm+4') < c0 max 500
+expect ram8('vk_psg+20') == 0x80 and ram32('vk_fm+0') != 0
+# remplacement a la mort : musique 89 en FM, puis la musique du stage revient
+until front_mode == MODES['INTERIOR'] max 3000 RIGHT
+until enemies.alive > 0 max 600
+poke vk_game+0 136
+poke enemy_state+126 2
+until enemies.energy == 0 max 600
+until ram8('vk_psg+20') == 0x89 max 400
+expect ram32('vk_fm+0') != 0 and ram8('vk_sound_fm') == 1
+until ram8('vk_psg+20') == 0x80 max 600
+expect ram32('vk_fm+0') != 0

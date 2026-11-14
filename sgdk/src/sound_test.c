@@ -25,6 +25,11 @@ bool vk_konami_step(u16 pressed)
     return FALSE;
 }
 
+bool vk_konami_pending(void)
+{
+    return konami_index != 0;
+}
+
 /* Entries: effects 01..1D, music 80..8E, then FB (timed item) and FD (pause). */
 #define EFFECT_ENTRIES (VK_MSX_EFFECT_SLOTS - 1)
 #define MUSIC_ENTRIES (VK_MSX_MUSIC_SLOTS - 1)
