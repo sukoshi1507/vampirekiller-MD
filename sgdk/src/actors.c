@@ -46,6 +46,7 @@ _Static_assert(STAIR_TILE_INDEX + VK_PLAYER_STAIR_POSES * VK_PLAYER_TILES_PER_PO
 #include "psg_player.h"
 #include "generated/weapons_md.h"
 #include "gfx16.h"
+#include "generated/simon16_md.h"
 
 _Static_assert(ENEMY4_TILE_INDEX + VK_ENEMY4_TILE_COUNT <= HUD_TILE_INDEX,
                "sprite tiles 400.. must end before the HUD tiles");
@@ -1060,6 +1061,23 @@ static u8 simon_color(void)
 /* PAL3 entries 1..3 for the silhouette colour of the sprite table being sent. */
 static void load_simon_color(u8 color)
 {
+    if (vk_gfx16)
+    {
+        /* 16-bit Simon is always drawn with PAL3: the silhouette is his whole palette in that one
+         * colour, and his own colours come back on the passes without it. */
+        static u16 flash[VK_SIMON16_COLOURS];
+        u16 i;
+        if (color == simon_flash_color) return;
+        simon_flash_color = color;
+        if (!color)
+        {
+            PAL_setColors((u16)(PAL3 * 16 + 1), vk_simon16_palette + 1, VK_SIMON16_COLOURS, DMA_QUEUE);
+            return;
+        }
+        for (i = 0; i < VK_SIMON16_COLOURS; i++) flash[i] = PAL_getColor((u16)(PAL2 * 16 + color));
+        PAL_setColors((u16)(PAL3 * 16 + 1), flash, VK_SIMON16_COLOURS, DMA_QUEUE);
+        return;
+    }
     if (!color || color == simon_flash_color) return;
     /* Sent in the next VBlank with the sprite table (DMA queue). */
     static u16 rgb[3];
@@ -1157,7 +1175,7 @@ void vk_show_player(const VKPlayer *shown)
      * (openMSX trace, research/castle-candles.md 9.8). */
     if (Enemies_simonHidden(&vk_enemies)) parked.y = 255;
     const u8 color = simon_color();
-    const u16 simon_pal = color ? PAL3 : PAL2;
+    const u16 simon_pal = (color || vk_gfx16) ? PAL3 : PAL2;
     /* Enemy sprites come after the player chain: sprite 6 (or 7 when the target is
      * shown) links to ENEMY_SPRITE_BASE when there are enemies, then the candles and
      * objects of candle_view.c close the chain. The enemies shown are those of the
@@ -1182,7 +1200,7 @@ void vk_show_player(const VKPlayer *shown)
     if (shield >= 0)
         /* Shield poses share the 24 x 32 canvas of the normal ones (top y - 31). */
         VDP_setSpriteFull(0, (s16)player->x - 8, (s16)player->y - 31, SPRITE_SIZE(3, 4),
-            TILE_ATTR_FULL(PAL2, TRUE, FALSE, FALSE, SHIELD_TILE_INDEX), 1);
+            TILE_ATTR_FULL(vk_gfx16 ? PAL3 : PAL2, TRUE, FALSE, FALSE, SHIELD_TILE_INDEX), 1);
     else if (player->pose >= VK_PLAYER_STAIR_POSE && !crouch_mode && !attack_frame)
         VDP_setSpriteFull(0, (s16)player->x - 8, (s16)player->y - 31, SPRITE_SIZE(3, 4),
             TILE_ATTR_FULL(simon_pal, TRUE, FALSE, FALSE, STAIR_TILE_INDEX +
@@ -1278,7 +1296,7 @@ void vk_show_player(const VKPlayer *shown)
         if (shown_enemies) VDP_setSpriteLink((u16)(ENEMY_SPRITE_BASE + shown_enemies - 1), candle_link);
         if (late_valid && late_shield >= 0 && late_shield != shield_loaded)
         {
-            VDP_loadTileData((const u32 *)vk_player_shield_tiles[late_shield], SHIELD_TILE_INDEX,
+            VDP_loadTileData(vk_simon_gfx_shield_tiles((u16)late_shield), SHIELD_TILE_INDEX,
                              VK_PLAYER_TILES_PER_POSE, DMA_QUEUE);
             shield_loaded = late_shield;
         }
@@ -1337,7 +1355,7 @@ static void whip_pending_queue(void)
 
 static const u32 *whip_level_tiles(int level)
 {
-    return level == 1 ? (const u32 *)vk_whip_level1_tiles : level >= VK_WHIP_LEVEL_THROW ? (const u32 *)vk_whip_level2_tiles : 0;
+    return level == 1 ? vk_simon_gfx_whip_tiles(1) : level >= VK_WHIP_LEVEL_THROW ? vk_simon_gfx_whip_tiles(2) : 0;
 }
 
 static void load_whip_level(int level)
@@ -1355,12 +1373,12 @@ static int crouch_loaded = 0;   /* 0, 1 or 2 (levels 2..4): what the frames 1..3
 static void load_crouch_level(int level)
 {
     const int kind = level >= VK_WHIP_LEVEL_THROW ? 2 : level;
-    const unsigned long *src = vk_simon_crouch_tiles + VK_CROUCH_TILES_PER_FRAME * 8;
-    if (level == 1) src = vk_simon_crouch_level_tiles;
-    else if (level >= VK_WHIP_LEVEL_THROW) src = vk_simon_crouch_level_tiles + CROUCH_ATTACK_TILES * 8;
+    const u32 *src = vk_simon_gfx_crouch_tiles() + VK_CROUCH_TILES_PER_FRAME * 8;
+    if (level == 1) src = vk_simon_gfx_crouch_level_tiles();
+    else if (level >= VK_WHIP_LEVEL_THROW) src = vk_simon_gfx_crouch_level_tiles() + CROUCH_ATTACK_TILES * 8;
     if (kind == crouch_loaded) return;
     crouch_loaded = kind;
-    VDP_loadTileData((const u32 *)src, CROUCH_TILE_INDEX + VK_CROUCH_TILES_PER_FRAME, CROUCH_ATTACK_TILES, DMA_QUEUE);
+    VDP_loadTileData(src, CROUCH_TILE_INDEX + VK_CROUCH_TILES_PER_FRAME, CROUCH_ATTACK_TILES, DMA_QUEUE);
 }
 
 /* The same, in two halves, for the crouched attack frames, once the whip chunks are done. */
@@ -1369,12 +1387,12 @@ static u16 crouch_step = 2;
 static void crouch_pending_start(int level)
 {
     const int kind = level >= VK_WHIP_LEVEL_THROW ? 2 : level;
-    const unsigned long *src = vk_simon_crouch_tiles + VK_CROUCH_TILES_PER_FRAME * 8;
-    if (level == 1) src = vk_simon_crouch_level_tiles;
-    else if (level >= VK_WHIP_LEVEL_THROW) src = vk_simon_crouch_level_tiles + CROUCH_ATTACK_TILES * 8;
+    const u32 *src = vk_simon_gfx_crouch_tiles() + VK_CROUCH_TILES_PER_FRAME * 8;
+    if (level == 1) src = vk_simon_gfx_crouch_level_tiles();
+    else if (level >= VK_WHIP_LEVEL_THROW) src = vk_simon_gfx_crouch_level_tiles() + CROUCH_ATTACK_TILES * 8;
     if (kind == crouch_loaded) { crouch_step = 2; return; }
     crouch_loaded = kind;
-    crouch_pending = (const u32 *)src;
+    crouch_pending = src;
     crouch_step = 0;
 }
 static void crouch_pending_queue(void)
@@ -1409,16 +1427,18 @@ void vk_load_whip_graphics(void)
 {
     VDP_loadTileData(whip_tiles, WHIP_TILE_INDEX, 3, VK_TM);
     VDP_loadTileData(arm_tiles, ARM_TILE_INDEX, 4, VK_TM);
-    VDP_loadTileData((const u32 *) vk_simon_attack_tiles, ATTACK_TILE_INDEX,
+    VDP_loadTileData(vk_simon_gfx_attack_tiles(), ATTACK_TILE_INDEX,
                      VK_ATTACK_FRAME_COUNT * VK_ATTACK_TILES_PER_FRAME, VK_TM);
     PAL_setPalette(PAL3, attack_palette, CPU);
+    /* 16-bit Simon: his 13 colours in entries 1..13 (14 and 15 stay the port's). */
+    if (vk_gfx16) PAL_setColors((u16)(PAL3 * 16 + 1), vk_simon16_palette + 1, VK_SIMON16_COLOURS, CPU);
     VDP_loadTileData(target_tiles, TARGET_TILE_INDEX, 4, VK_TM);
     /* MSX colour numbers: shown in PAL2, the room palette, as the VRAM copies of the MSX. */
     VDP_loadTileData(vk_flame_fx_tiles, FLAME_TILE_INDEX,
                      (VK_FLAME_FRAMES + VK_SPARK_FRAMES) * VK_FLAME_TILES_PER_FRAME, VK_TM);
     simon_flash_color = 0;
     vk_actors_flush();
-    VDP_loadTileData((const u32 *)vk_simon_crouch_tiles, CROUCH_TILE_INDEX, VK_CROUCH_TILE_COUNT, VK_TM);
+    VDP_loadTileData(vk_simon_gfx_crouch_tiles(), CROUCH_TILE_INDEX, VK_CROUCH_TILE_COUNT, VK_TM);
     crouch_loaded = 0;
     vk_whip_reset(&vk_whip);
     vk_whip_set_level(&vk_whip, whip_level_choice);

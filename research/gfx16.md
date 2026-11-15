@@ -39,12 +39,26 @@ Le code qui remet une case du décor (bloc caché cassé, bougie éteinte de la 
 
 La salle 0 du stage 1 est dessinée depuis la scène 6 de la ROM : en mode 16 bits ses 22 lignes de salle sont redessinées par-dessus avec les cases 16 bits.
 
+## Simon 16 bits
+
+Avec l'option 16B, Simon est dessiné en 16 bits sur tous les écrans du jeu (c'est un sprite : il ne dépend pas du décor).
+
+- Source : les images de Simon de Castlevania-MD (`src/level.c`, listes de sprites 8 × 16), copiées une fois dans `assets/gfx16/simon/` par `tools/import_simon16.py` (image 96 × 44, bord gauche de Simon en x = 32).
+- `tools/build_simon16.py` écrit `generated/simon16_md.c/.h` : un tableau de même disposition pour chaque tableau MSX (12 poses 24 × 32, 8 poses d'escalier, 2 morts 32 × 16, 18 poses au bouclier, 3 images d'attaque 64 × 32, 6 du fouet long, 6 du lancer, 4 accroupies, 6 accroupies par niveau). Le code de dessin ne change pas de géométrie : il choisit le tableau (`vk_simon_gfx_*` de `gfx16.c`).
+- Placement : chaque image MSX est relue de son tableau généré ; l'image 16 bits est posée pieds sur la même ligne, corps sur les mêmes colonnes (boîtes centrées pour les poses 24 × 32 ; colonnes 16 à 31 pour les compositions, miroir pour la gauche).
+- Correspondance : marche 1-2-3 → debout, marche 1, marche 2 ; saut et réception → accroupi ; recul → pose d'escalier descendant (provisoire : Castlevania-MD n'a pas de pose touché) ; escaliers → montée a, montée b, descente ; niveau 0 → fouet de cuir ; niveau 1 → chaîne longue ; niveaux de lancer → images de lancer NES ; lancer accroupi (absent du jeu NES) → images du fouet accroupi sans lanière.
+- Lanière tendue : rééchantillonnée pour finir sur la dernière colonne de la lanière MSX (cuir : 44 → 41 pixels depuis le bord gauche de Simon ; chaîne longue : 60 → 48). La boîte de coup reste celle du MSX ; l'image ne promet ni plus ni moins de portée.
+- Bouclier (absent du jeu NES) : dessiné par l'outil, une barre d'acier de 5 × 16 pixels tenue devant Simon (15 de haut accroupi). Validé sur planche par l'utilisateur.
+- Mort : l'image de marche couchée face contre terre (variante A choisie par l'utilisateur), dans le canevas 32 × 16 du MSX.
+- Palette : 13 couleurs pour toutes ces images, dans PAL3 entrées 1 à 13 (14 et 15 restent celles du portage). Simon 16 bits est toujours dessiné en PAL3. Le clignotement tracé (790C : silhouette d'une seule couleur une passe sur deux) réécrit ces 13 entrées avec la couleur MSX de la silhouette, puis les remet à la passe suivante, dans le même VBlank que la table des sprites.
+
 ## Limites du pilote
 
 - Seuls les stages 1 à 3 ont des graphismes 16 bits ; les autres salles, la cour et les écrans restent en MSX même si l'option est active.
-- Simon, les ennemis, les bougies et les objets restent les sprites MSX.
+- Les ennemis, les bougies, les objets et les armes lancées restent les sprites MSX.
 - Restent en pixels MSX dans une salle 16 bits : la clé blanche posée (carré 16 × 16 de mur MSX autour d'elle), les murs cassables, les nervures de voûte du stage 3.
 - Les fissures et les escaliers gardent la forme MSX avec une texture 16 bits ; les vrais escaliers 16 bits (rampe) ne sont pas repris.
+- Simon 16 bits : attaque sur escalier dessinée avec les images debout (comme en MSX) ; clignotement, bouclier, mort et fouet long non vérifiés en jeu image par image.
 - Non vérifié : console réelle, combat du boss du stage 3 en mode 16 bits, marchands.
 
 ## Vérification

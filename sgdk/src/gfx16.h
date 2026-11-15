@@ -22,4 +22,16 @@ const VKGfx16Room *vk_gfx16_room(u16 stage, u16 room);
 const u16 *vk_room_cells(u16 stage, u16 room);
 const u32 *vk_room_tile(u16 stage, u16 room, u16 tile);
 
+/* Simon's tiles: the arrays decoded from the MSX ROM, or with the option on their 16-bit
+ * counterparts of the same layout (generated/simon16_md.h, tools/build_simon16.py). The 16-bit
+ * Simon is drawn with PAL3 (vk_simon16_palette in entries 1..13), on every screen of the game. */
+const u32 *vk_simon_gfx_player_tiles(void);            /* 12 poses of 12 tiles */
+const u32 *vk_simon_gfx_death_tiles(void);             /* 2 x 8 tiles */
+const u32 *vk_simon_gfx_stair_tiles(void);             /* 8 poses of 12 tiles */
+const u32 *vk_simon_gfx_shield_tiles(u16 pose);        /* 12 tiles */
+const u32 *vk_simon_gfx_attack_tiles(void);            /* 3 frames of 32 tiles */
+const u32 *vk_simon_gfx_whip_tiles(int kind);          /* kind 1: long whip, 2: thrown weapons; 6 frames of 32 tiles */
+const u32 *vk_simon_gfx_crouch_tiles(void);            /* 4 frames of 32 tiles */
+const u32 *vk_simon_gfx_crouch_level_tiles(void);      /* 6 frames of 32 tiles */
+
 #endif

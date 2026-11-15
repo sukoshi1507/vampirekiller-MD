@@ -234,7 +234,7 @@ void vk_enter_play(VKPlayer *player)
 {
     vk_show_room(1, 0, FALSE);
     vk_player_reset(player);
-    VDP_loadTileData((const u32 *) vk_player_tiles, PLAYER_TILE_INDEX,
+    VDP_loadTileData(vk_simon_gfx_player_tiles(), PLAYER_TILE_INDEX,
                     VK_PLAYER_POSES * VK_PLAYER_TILES_PER_POSE, VK_TM);
     PAL_setPalette(PAL2, vk_palettes[0], CPU);
     vk_load_whip_graphics();
@@ -247,11 +247,11 @@ void vk_enter_play(VKPlayer *player)
 
 static void load_actor(u16 scene)
 {
-    VDP_loadTileData((const u32 *) vk_player_tiles, PLAYER_TILE_INDEX,
+    VDP_loadTileData(vk_simon_gfx_player_tiles(), PLAYER_TILE_INDEX,
                     VK_PLAYER_POSES * VK_PLAYER_TILES_PER_POSE, VK_TM);
-    VDP_loadTileData((const u32 *) vk_player_death_tiles, DEATH_TILE_INDEX,
+    VDP_loadTileData(vk_simon_gfx_death_tiles(), DEATH_TILE_INDEX,
                     2 * VK_PLAYER_DEATH_TILES, VK_TM);
-    VDP_loadTileData((const u32 *) vk_player_stair_tiles, STAIR_TILE_INDEX,
+    VDP_loadTileData(vk_simon_gfx_stair_tiles(), STAIR_TILE_INDEX,
                     VK_PLAYER_STAIR_POSES * VK_PLAYER_TILES_PER_POSE, VK_TM);
     PAL_setPalette(PAL2, vk_scenes[scene].palette, CPU);
     vk_load_whip_graphics();
@@ -326,7 +326,7 @@ void vk_show_castle_room(u16 stage, u16 room)
     draw_room(stage, room, FALSE);
     if (!vk_fast_room_draw) VDP_setEnable(TRUE);
     vk_player = vk_game.player;
-    VDP_loadTileData((const u32 *)vk_player_tiles, PLAYER_TILE_INDEX,
+    VDP_loadTileData(vk_simon_gfx_player_tiles(), PLAYER_TILE_INDEX,
         VK_PLAYER_POSES * VK_PLAYER_TILES_PER_POSE, VK_TM);
     PAL_setPalette(PAL2, vk_palettes[vk_stages[stage - 1].first + room], CPU);
     vk_load_whip_graphics();
@@ -361,6 +361,10 @@ void vk_show_interior(void)
             PAL_setPalette(PAL0, g16->palette, CPU);
             VDP_setTileMapDataRectEx(BG_A, g16->map,
                 TILE_ATTR_FULL(PAL0, FALSE, FALSE, FALSE, TILE_USER_INDEX), 0, 4, 32, 22, 32, CPU);
+            /* The scene's own cells above and below the room (its HUD frame) point at scene tiles
+             * that are no longer loaded: cleared, the frame is drawn as in the other rooms. */
+            VDP_clearTileMapRect(BG_A, 0, 0, 32, 4);
+            VDP_clearTileMapRect(BG_A, 0, 26, 32, 2);
         }
     }
     if (!vk_fast_room_draw) VDP_setEnable(TRUE);
@@ -369,6 +373,7 @@ void vk_show_interior(void)
     vk_front_mode = FRONT_INTERIOR;
     load_actor(6);
     show_play_overlay();
+    if (vk_gfx16_on) vk_hud_show_frame();
     vk_front_mode = FRONT_INTERIOR;
     vk_room_display_on();
 }

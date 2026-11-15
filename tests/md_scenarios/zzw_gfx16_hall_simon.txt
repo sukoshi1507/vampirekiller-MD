@@ -1,0 +1,15 @@
+# (zzw) Mode 16 bits, salle 0 du stage 1 (dessinee depuis la scene 6) : le cadre du HUD est redessine
+# (les cases de la scene au-dessus de la salle pointaient sur des tuiles remplacees), et Simon est
+# dessine avec PAL3 (sprite 0, bits 13-14 de l'attribut) et ses 13 couleurs (research/gfx16.md).
+include boot_to_courtyard.inc
+poke vk_gfx16 1
+until front_mode == MODES['INTERIOR'] max 3000 RIGHT
+wait 200
+expect ram8('vk_gfx16_on') == 1
+expect pixel(200, 11) == (238, 238, 238) # case de droite, haut
+expect pixel(248, 20) == (238, 238, 238) # case de droite, bord droit
+expect pixel(135, 11) == (238, 0, 32) # case rouge, haut
+expect pixel(240, 4) != (0, 0, 0) # ligne d'etat (P-02)
+expect pixel(200, 20) == (0, 0, 0) # interieur de la case vide : plus de tuile de decor
+expect pixel(160, 20) == (0, 0, 0)
+shot zzw-hall
