@@ -1,0 +1,49 @@
+# (zzz_g) Mode 16 bits : le clignotement de Simon (790C, croix : silhouette couleur 8 une passe sur deux) et le fond
+# blanc de l'objet 05, debut du scenario (t) rejoue avec vk_gfx16 = 1. Simon 16 bits est toujours en PAL3 : la
+# silhouette se lit a l'ecran (rouge 2 images sur 4), et le fond blanc vient de PAL2 (palette MSX de la salle).
+# Un objet est pose sous Simon dans le premier emplacement C500 de vk_candles (+6 etat 3 =
+# au sol, +7 X, +8 Y, +9 objet, +10 minuterie FF = permanent, +11 fixe 0) ; +171 = C419.
+# vk_enemies : energie +126, C434 +143, C43A +144, C440 +145.
+# Clignotement de Simon (790C) : palette du sprite 0 (vdpSpriteCache+4, bits 13-14 : PAL2
+# normal, PAL3 silhouette) et pixels rouges (couleur 8 = 020E) autour de Simon ; l'image
+# capturee a une image de retard sur la table de sprites (DMA a la VBlank suivante), qui montre
+# Simon calcule au tour precedent (2 images apres le calcul, comme le MSX : research/frame-timing.md).
+# Eclair de 05 (7604) : backdrop_color (registre 7, ecrit juste apres la VBlank) et le
+# pixel (2, 2), transparent.
+include boot_to_courtyard.inc
+poke vk_gfx16 1
+until front_mode == MODES['INTERIOR'] max 3000 RIGHT
+wait 40                                            # fin de l'etat 9 de la salle 0
+poke vk_game+0 136
+wait 2
+# 07 : 4605 avec B = 08, energie + 8.
+poke enemy_state+126 10
+poke vk_candles+7 128
+poke vk_candles+8 176
+poke vk_candles+9 0x07
+poke vk_candles+10 0xFF
+poke vk_candles+11 0
+poke vk_candles+6 3
+wait 2
+expect ram8('vk_candles+6') == 0 and ram8('vk_candles+321') == 0x07 # objet 07 pris
+expect enemies.energy == 18 # 10 + 8
+# 09 : C434 = 96h ; un ennemi qui touche Simon est detruit, sans degat ni recul.
+poke vk_candles+9 0x09
+poke vk_candles+6 3
+wait 2
+expect ram8('vk_candles+321') == 0x09 and 0x90 <= ram8('enemy_state+143') <= 0x96
+# 7932 : silhouette couleur 8 une passe sur deux (2 images sur 4).
+set red lambda: len([c for c in colors(game.player.x - 8, game.player.y - 31, game.player.x + 16, game.player.y + 1) if c == (238, 0, 32)]) > 40
+set pal lambda: (ram16('vdpSpriteCache+4') >> 13) & 3
+wait 2                                             # les sprites de Simon ont 2 images de retard (research/frame-timing.md)
+set a0 (pal(), red())
+wait 1
+set a1 (pal(), red())
+wait 1
+set a2 (pal(), red())
+wait 1
+set a3 (pal(), red())
+wait 1
+set a4 (pal(), red())
+expect [a[0] for a in (a0, a1, a2, a3)] == [3, 3, 3, 3] # Simon 16 bits : toujours PAL3
+expect [a[1] for a in (a1, a2, a3, a4)] in ([True, True, False, False], [False, True, True, False], [False, False, True, True], [True, False, False, True]) # silhouette rouge 2 images sur 4 (a l'ecran une image apres la table des sprites, comme en MSX)

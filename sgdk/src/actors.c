@@ -1136,7 +1136,8 @@ void vk_show_backdrop(void)
 {
     const u8 color = (u8)(room_key() ? vk_enemies.border : 0);
     if (color == backdrop_color) return;
-    VDP_setBackgroundColor(color);
+    /* 16-bit graphics: PAL0 holds the 16-bit art, the MSX room palette is PAL2 (gfx16.h). */
+    VDP_setBackgroundColor((u8)(color && vk_gfx16_on ? PAL2 * 16 + color : color));
     backdrop_color = color;
 }
 

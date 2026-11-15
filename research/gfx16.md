@@ -77,5 +77,7 @@ Avec l'option 16B, Simon est dessiné en 16 bits sur tous les écrans du jeu (c'
 ## Vérification
 
 - `zzw_gfx16_hall_simon` (cadre du HUD de la salle 0), `zzx_gfx16_castle_entrance` (le scénario (h) entrée du château rejoué en 16 bits, 18/18), `zzy_gfx16_intro` (introduction 16 bits, durée, cour).
+- Tous les scénarios MD qui démarrent par `boot_to_courtyard.inc` (46 sur 119) ont été rejoués une fois avec `vk_gfx16 = 1` : 43 passent tels quels ; les 3 autres (`t_item_effects`, `w_simon_blink_phase`, `zy_candle_flames`) n'échouent que sur des assertions propres au rendu MSX (ligne de palette de Simon, pixels du décor MSX). Ce contrôle a trouvé un défaut, corrigé : le fond blanc de l'objet 05 (registre 7) prenait sa couleur dans PAL0 ; il la prend dans PAL2 en mode 16 bits.
+- `zzz_gfx16_blink` : silhouette de Simon 2 images sur 4 à l'écran en mode 16 bits.
 - `tests/md_scenarios/zzv_gfx16_key_door.txt` : le scénario (f) clé blanche / porte / stage 2 rejoué avec `vk_gfx16 = 1` ; toutes ses assertions tiennent (19/19).
 - Aperçus hors ROM : `python3 tools/build_gfx16.py ROM --preview DOSSIER`.
