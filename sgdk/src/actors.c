@@ -627,9 +627,11 @@ static void room_cells(u16 key)
     cells_key = key;
         if (key)
         {
-            VDP_loadTileData((const u32 *)vk_enemy_tiles, ENEMY_TILE_INDEX, VK_ENEMY_TILE_COUNT, VK_TM);
+            /* 16-bit graphics, stages 1 to 3: the common enemies in the 16-bit art, same layout as the MSX cells (gfx16.h). */
+            const u8 e16 = vk_gfx16_enemies(vk_game.stage, vk_game.room);
+            VDP_loadTileData(e16 ? vk_enemy16_zombie_tiles : (const u32 *)vk_enemy_tiles, ENEMY_TILE_INDEX, VK_ENEMY_TILE_COUNT, VK_TM);
             /* The bat of the stage 10 room 0 is another image than the bat of the hall and of the stage 2 (tools/build_stage10_enemies_md.py). */
-            VDP_loadTileData(vk_game.stage == 10 ? vk_stage10_bat_tiles : (const u32 *)vk_enemy4_tiles, ENEMY4_TILE_INDEX, VK_ENEMY4_TILE_COUNT, VK_TM);
+            VDP_loadTileData(e16 ? vk_enemy16_bat_tiles : vk_game.stage == 10 ? vk_stage10_bat_tiles : (const u32 *)vk_enemy4_tiles, ENEMY4_TILE_INDEX, VK_ENEMY4_TILE_COUNT, VK_TM);
             /* Stage 2 rooms 4 and 5: the fishman and its splash take the type 5 block. */
             if (vk_game.stage == 4 || vk_game.stage == 5)
             {
@@ -656,9 +658,9 @@ static void room_cells(u16 key)
             else if (vk_game.stage == 7)
                 VDP_loadTileData(vk_stage7_enemy_tiles, ENEMY5_TILE_INDEX, VK_STAGE7_ENEMY_TILE_COUNT, VK_TM);
             else if ((Enemies_roomFlags(vk_game.stage, vk_game.room) & 0x02))
-                VDP_loadTileData((const u32 *)vk_enemy2_tiles, ENEMY5_TILE_INDEX, VK_ENEMY2_TILE_COUNT, VK_TM);
+                VDP_loadTileData(e16 ? vk_enemy16_fish_tiles : (const u32 *)vk_enemy2_tiles, ENEMY5_TILE_INDEX, VK_ENEMY2_TILE_COUNT, VK_TM);
             else
-                VDP_loadTileData((const u32 *)vk_enemy5_tiles, ENEMY5_TILE_INDEX, VK_ENEMY5_TILE_COUNT, VK_TM);
+                VDP_loadTileData(e16 ? vk_enemy16_panther_tiles : (const u32 *)vk_enemy5_tiles, ENEMY5_TILE_INDEX, VK_ENEMY5_TILE_COUNT, VK_TM);
             /* Object 1C of the candles of object 15 (stages 7 to 9): the two poses of the room, cells B4 and B8 of the block. */
             if (vk_game.stage >= 7 && vk_game.stage <= 9)
             {

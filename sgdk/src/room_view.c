@@ -299,7 +299,8 @@ static void load_actor(u16 scene)
                     2 * VK_PLAYER_DEATH_TILES, VK_TM);
     VDP_loadTileData(vk_simon_gfx_stair_tiles(), STAIR_TILE_INDEX,
                     VK_PLAYER_STAIR_POSES * VK_PLAYER_TILES_PER_POSE, VK_TM);
-    PAL_setPalette(PAL2, vk_scenes[scene].palette, CPU);
+    /* Hall room 0 (scene 6) has zombies: in 16-bit mode its PAL2 is the one of the 16-bit enemies. */
+    PAL_setPalette(PAL2, scene == 6 ? vk_gfx16_pal2(1, 0, vk_scenes[scene].palette) : vk_scenes[scene].palette, CPU);
     vk_load_whip_graphics();
     if (scene == 6 || (scene >= 3 && scene <= 5)) vk_reset_training_target();
     vk_show_player(&vk_player);
@@ -374,7 +375,7 @@ void vk_show_castle_room(u16 stage, u16 room)
     vk_player = vk_game.player;
     VDP_loadTileData(vk_simon_gfx_player_tiles(), PLAYER_TILE_INDEX,
         VK_PLAYER_POSES * VK_PLAYER_TILES_PER_POSE, VK_TM);
-    PAL_setPalette(PAL2, vk_palettes[vk_stages[stage - 1].first + room], CPU);
+    PAL_setPalette(PAL2, vk_gfx16_pal2(stage, room, vk_palettes[vk_stages[stage - 1].first + room]), CPU);
     vk_load_whip_graphics();
     /* Mode first: reset_training_target must not redraw the courtyard torch cells
      * (64,144) and (192,144) when the previous screen was the courtyard (stage

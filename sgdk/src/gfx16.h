@@ -3,6 +3,7 @@
 
 #include <genesis.h>
 #include "generated/gfx16_md.h"
+#include "generated/enemies16_md.h"
 
 /* 16-bit graphics mode (research/gfx16.md, tools/build_gfx16.py): the castle rooms drawn with
  * the 16-bit art, cell for cell on the MSX layout. Nothing of the game logic reads it.
@@ -10,10 +11,19 @@
  * vk_gfx16: the option of the title screen (0: the MSX graphics, the default).
  * vk_gfx16_on: the room on screen is drawn with the 16-bit art. PAL0 then holds the palette of
  * that art, and everything else drawn with the colours of the MSX room palette (objects on the
- * plane, sprites) takes PAL2, which always holds the MSX room palette: VK_PAL_OBJ. */
+ * plane, sprites) takes PAL2, which holds the MSX room palette (stages 1 to 3: the same colours for the entries
+ * that content uses, see vk_gfx16_enemies below): VK_PAL_OBJ. */
 extern u8 vk_gfx16;
 extern u8 vk_gfx16_on;
 #define VK_PAL_OBJ (vk_gfx16_on ? PAL2 : PAL0)
+
+/* The common enemies of block 1 (stages 1 to 3: zombie, panther, bat, fishman) are drawn in the 16-bit art in
+ * every room but the boss room: tools/build_enemies16.py, tiles of the same layout as the MSX arrays. Their
+ * colours replace the MSX palette in PAL2 (vk_enemy16_palette): the MSX colours that other PAL2 content uses
+ * keep their entries, so objects, candles, weapons and the HUD boxes look as in MSX mode. */
+u8 vk_gfx16_enemies(u16 stage, u16 room);
+/* PAL2 of a room: the MSX room palette `msx`, or the palette above in such a room. */
+const u16 *vk_gfx16_pal2(u16 stage, u16 room, const u16 *msx);
 
 /* The 16-bit data of a castle room, 0 when the option is off or the room has none. */
 const VKGfx16Room *vk_gfx16_room(u16 stage, u16 room);

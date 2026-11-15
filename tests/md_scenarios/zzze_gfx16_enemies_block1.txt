@@ -1,0 +1,84 @@
+# (zzze) Mode graphique 16 bits (research/gfx16.md, section "Ennemis 16 bits") : les ennemis communs du bloc 1
+# (stages 1 a 3) sont dessines avec les sprites 16 bits de Castlevania-MD : zombie (salle 0 du stage 1), panthere
+# (salle 2), chauve-souris (salle 4), homme-poisson et ses gouttes (salle 4 du stage 2). La palette PAL2 des salles
+# est celle des ennemis 16 bits (vk_enemy16_palette) : les couleurs MSX que les objets, les bougies et le HUD utilisent
+# gardent leurs entrees. Positions, hit boxes et table des sprites sont celles du MSX (memes tuiles, autres pixels).
+# Couleurs 16 bits qui n'existent pas dans la palette MSX de ces salles : gris-bleu (65, 101, 139), rouge sombre
+# (139, 0, 0) ; couleurs MSX des ennemis (rose 238, 34, 204 ; cyan 136, 204, 204) absentes.
+include boot_to_courtyard.inc
+poke vk_gfx16 1
+until front_mode == MODES['INTERIOR'] max 3000 RIGHT
+wait 30
+expect ram8('vk_gfx16_on') == 1 # salle 0 du stage 1 dessinee en 16 bits
+# Les objets restent en couleurs MSX : cases du HUD (PAL2) comme dans zzw.
+expect pixel(200, 11) == (238, 238, 238) # case de droite, haut
+expect pixel(135, 11) == (238, 0, 32) # case rouge, haut
+# Zombie.
+until enemies.alive > 0 max 600
+until enemies.enemy[0].x < 200 max 200
+wait 4
+shot zzze-zombie
+set zx enemies.enemy[0].x
+set zy enemies.enemy[0].y
+set zc sorted(colors(zx, zy, zx + 16, zy + 32))
+expect (65, 101, 139) in zc # gris-bleu 16 bits (entree libre de PAL2)
+expect (238, 32, 205) not in zc # plus le rose MSX
+# Panthere de la salle 2 du hall (meme depart que g_room2_panther).
+poke vk_debug_keys 1
+hold A 3
+hold A+RIGHT 3
+wait 10
+hold A 3
+hold A+RIGHT 3
+wait 10
+expect game.room == 2 # salle 2 du hall
+poke vk_game+0 194
+poke vk_game+1 128
+until enemies.enemy[0].active max 40
+wait 4
+shot zzze-panthere-assise
+set px enemies.enemy[0].x
+set py enemies.enemy[0].y
+set pc sorted(colors(px - 16, py - 16, px + 16, py + 1))
+expect (65, 101, 139) in pc and (139, 0, 0) in pc # corps gris-bleu, contour rouge sombre 16 bits
+expect (238, 32, 205) not in pc
+until enemies.enemy[0].state == 1 max 20 LEFT
+wait 6
+shot zzze-panthere-course
+# Salles 3 puis 4 : la chauve-souris.
+hold A 3
+hold A+RIGHT 3
+wait 10
+hold A 3
+hold A+RIGHT 3
+wait 10
+expect game.room == 4 # salle 4 du hall
+until enemies.alive > 0 max 120
+until enemies.enemy[0].age == 20 max 40
+shot zzze-chauve-souris
+set bx enemies.enemy[0].x
+set by enemies.enemy[0].y
+set bc sorted(colors(bx, by, bx + 16, by + 20))
+expect (65, 101, 139) in bc or (139, 0, 0) in bc # couleurs 16 bits de la chauve-souris
+expect (139, 206, 205) not in bc # plus le cyan MSX
+# Homme-poisson du stage 2, salle 4 (meme depart que l_stage2_room4_fishman).
+poke vk_game+22 2
+poke vk_game+20 3
+hold A 3
+hold A+RIGHT 3
+wait 20
+expect game.stage == 2 and game.room == 4 # stage 2, salle 4
+poke vk_game+0 72
+poke vk_game+1 112
+poke vk_game+2 1
+wait 2
+until enemies.alive > 0 max 80
+until enemies.enemy[0].state == 1 max 80
+wait 6
+shot zzze-homme-poisson
+expect enemies.splashCount >= 3 # gouttes creees
+set fx enemies.enemy[0].x
+set fy enemies.enemy[0].y
+set fc sorted(colors(fx - 8, fy - 31, fx + 8, fy))
+expect (139, 0, 0) in fc # rouge sombre 16 bits
+expect (139, 206, 205) not in fc # plus le cyan MSX
