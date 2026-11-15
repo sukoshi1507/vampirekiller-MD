@@ -17,4 +17,7 @@ void vk_item_view_key(const VKItems *items, const VKGame *game);
 /* Redraws what an event of vk_items_tick changed. */
 void vk_item_view_event(VKItemEvent event, const VKItems *items, const VKGame *game);
 
+/* 16-bit graphics: the white key lying in the room is a PAL1 sprite; its tile, 0 when not shown (x, y: MSX position). */
+u16 vk_item_view_key_sprite(u16 *x, u16 *y);
+
 #endif

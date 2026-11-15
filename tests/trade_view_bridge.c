@@ -6,6 +6,7 @@ u8 vk_gfx16;
 const u32 *vk_item16_object(u16 o){return &vk_object_tiles[(o-1)*32];}
 u32 vk_msx_font_row(u8 code,u16 py){return vk_msx_font_tiles[(code-VK_MSX_FONT_FIRST)*8+py];}   /* msx_text.c is not linked */
 const VKGfx16Room *vk_gfx16_room(u16 s,u16 r){(void)s;(void)r;return 0;}
+const u32 vk_wall16_tiles[480];   /* wall16_md.c is not linked (MSX graphics) */
 static int sprite[6], loads;
 void VDP_loadTileData(const u32 *p,u16 t,u16 n,int mode){(void)p;(void)t;(void)n;(void)mode;loads++;}
 void VDP_setSpriteFull(u16 i,s16 x,s16 y,u16 size,u16 attr,u16 link){sprite[0]=i;sprite[1]=x;sprite[2]=y;sprite[3]=size;sprite[4]=attr;sprite[5]=link;}

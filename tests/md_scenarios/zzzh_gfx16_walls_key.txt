@@ -1,0 +1,44 @@
+# (zzzh) Mode graphique 16 bits (research/gfx16.md, section "Murs cassables et cle blanche") : stage 4 (bloc 2 du jeu).
+# Salle 0 : bloc cache (32, 64) casse, la cle blanche posee sur les cases 16 bits de la salle (sprite PAL1 : l'image 16 bits
+# de la cle blanche, blanche dans toutes les palettes) puis prise ; salle 1 : le vieil homme du mur, dessine en 16 bits avec PAL1 (la palette des objets).
+# Depart de zy_g_stage4_key_door.txt ; la logique ne lit pas les graphismes.
+until front_mode == MODES['TITLE'] max 2000
+wait 2
+poke vk_gfx16 1                                    # the option on before the first castle room
+include zy_enter4.inc
+poke Enemies_god 1
+expect ram8('vk_gfx16_on') == 1 # stage 4 drawn with the 16-bit art
+poke vk_game+0 70
+poke vk_game+1 96
+poke vk_game+2 1
+wait 4
+expect ram8('items+4') == 0 and ram8('items') == 0 # cle cachee dans le bloc (32, 64)
+shot zzzh-bloc-intact
+hold B 2
+wait 20
+expect ram8('items+4') == 1 # bloc brise : la cle blanche est posee
+wait 10
+shot zzzh-cle-posee
+# The key is the white PAL1 sprite of the 16-bit objects, white in any room palette.
+expect ram8('key_spr') == 1
+expect any(pixel(x, y) == (238, 238, 238) for x in range(32, 48) for y in range(64, 80))
+until ram8('items') & 1 max 200 LEFT
+expect ram8('items') == 1 # cle blanche prise
+wait 4
+shot zzzh-cle-prise
+poke vk_debug_keys 1                               # debug shortcuts are off by default
+hold A 3
+hold A+RIGHT 3
+until game.room == 1 max 200
+wait 20
+# Wall block (192, 160): Simon 24 px to its left on the floor, as in zzzd.
+poke vk_candles+118 50
+poke vk_game+0 168
+poke vk_game+1 192
+poke vk_game+2 1
+wait 20
+hold B 2
+wait 30
+expect ram8('vk_walls+0') == 0x82 or ram8('vk_walls+8') == 0x82 # vieil homme affiche
+shot zzzh-vieil-homme
+expect any(pixel(x, y) == (205, 206, 238) for x in range(150, 256) for y in range(100, 200)) # robe, ton moyen (PAL1)

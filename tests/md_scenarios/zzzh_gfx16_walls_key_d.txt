@@ -1,0 +1,63 @@
+# (zzzh_d) Mode graphique 16 bits : le vieil homme du mur au stage 13 (bloc 5), salle 4 (mur (32, 144), image du mur
+# tardive : tuiles 208..219). Entree par le selecteur de zzp_stage13.txt, puis les salles par la touche de debug.
+until front_mode == MODES['TITLE'] max 2000
+wait 2
+poke vk_gfx16 1                                    # the option on before the first castle room
+tap START
+tap START
+until front_mode == MODES['COURTYARD'] max 500
+wait 60
+tap START
+until ram8('paused') == 1 max 30
+tap UP
+tap UP
+tap DOWN
+tap DOWN
+tap LEFT
+tap RIGHT
+tap LEFT
+tap RIGHT
+tap B
+tap A
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap B
+until game.stage == 13 and game.room == 0 max 300
+poke Enemies_god 1
+until game.player.mode == 0 max 300
+poke vk_debug_keys 1                               # debug shortcuts are off by default
+wait 30
+hold A 3
+hold A+RIGHT 3
+wait 10
+hold A 3
+hold A+RIGHT 3
+wait 10
+hold A 3
+hold A+RIGHT 3
+wait 10
+hold A 3
+hold A+RIGHT 3
+until game.stage == 13 and game.room == 4 max 300
+wait 30
+expect ram8('vk_gfx16_on') == 1 # stage 13 drawn with the 16-bit art
+poke vk_candles+118 50
+poke vk_game+0 70
+poke vk_game+1 176
+poke vk_game+2 1
+wait 20
+shot zzzh-s13-avant
+hold B 2
+wait 30
+expect ram8('vk_walls+0') != 0 or ram8('vk_walls+8') != 0 # un enregistrement mural actif
+shot zzzh-s13-vieil-homme

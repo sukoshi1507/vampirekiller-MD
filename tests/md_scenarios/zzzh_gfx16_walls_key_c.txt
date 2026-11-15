@@ -1,0 +1,24 @@
+# (zzzh_c) Mode graphique 16 bits : le vieil homme du mur au stage 10 (bloc 4), salle 1 (bloc cache (32, 48)) puis au
+# stage 13 (bloc 5), salle 4 (mur (32, 144), image du mur tardive : tuiles 208..219).
+until front_mode == MODES['TITLE'] max 2000
+wait 2
+poke vk_gfx16 1                                    # the option on before the first castle room
+include zzm_enter10.inc
+poke Enemies_god 1
+poke vk_debug_keys 1                               # debug shortcuts are off by default
+wait 30
+hold A 3
+hold A+RIGHT 3
+until game.stage == 10 and game.room == 1 max 300
+wait 10
+expect ram8('vk_gfx16_on') == 1 # stage 10 drawn with the 16-bit art
+poke vk_candles+118 50
+poke vk_game+0 70
+poke vk_game+1 80
+poke vk_game+2 1
+wait 20
+shot zzzh-s10-avant
+hold B 2
+wait 30
+expect ram8('vk_walls+0') == 0x82 or ram8('vk_walls+8') == 0x82 # vieil homme du stage 10 affiche
+shot zzzh-s10-vieil-homme
