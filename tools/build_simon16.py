@@ -59,6 +59,12 @@ def msx_wide(words, frame):
     return [ra + rb for ra, rb in zip(a, b)]
 
 
+# Hit pose variants shown to the user (~/Documents/VampireKiller-MD_maquette_simon16_recul.png).
+RECOIL = {'A': ('pose_walk2', 'shear', 0.25), 'B': ('pose_walk2', 'shear', 0.4), 'C': ('pose_stand', 'shear', 0.3),
+          'D': ('pose_walk2', 'rotate', 20), 'E': ('pose_crouch', 'rotate', 25)}
+RECOIL_CHOICE = 'D'
+
+
 def box(rows):
     pts = [(x, y) for y, r in enumerate(rows) for x, v in enumerate(r) if v]
     return min(p[0] for p in pts), min(p[1] for p in pts), max(p[0] for p in pts) + 1, max(p[1] for p in pts) + 1
@@ -120,6 +126,26 @@ class Art:
                     px[x, y] = fx[sx, y] if sx is not None and sx < 96 else (0, 0, 0, 0)
         return out
 
+    def recoil(self, kind):
+        """The hit pose (absent from the NES game, drawn here): a walking frame leaned back by a
+        shear (top moved away from the facing side), or turned. Kept as frame 'recoil'."""
+        name, how, k = RECOIL[kind]
+        src = self.frame(name)
+        body = src.crop(src.getbbox())
+        if how == 'shear':
+            w, h = body.size
+            ext = int(k * h) + 1
+            lean = self.new(w + ext, h)
+            for y in range(h):
+                lean.paste(body.crop((0, y, w, y + 1)), (ext - int(round((h - 1 - y) * k)), y))
+        else:
+            lean = body.rotate(k, resample=self.Image.NEAREST, expand=True)
+        lean = lean.crop(lean.getbbox())
+        out = self.new(96, 44)
+        out.paste(lean, (OX, 4 + 32 - lean.size[1]), lean)
+        self.cache['recoil'] = out
+        return 'recoil'
+
     def mirror(self, im):
         return im.transpose(self.Image.FLIP_LEFT_RIGHT)
 
@@ -149,7 +175,7 @@ def build(art):
     shield_w = msx_words('player_assets.c', 'vk_player_shield_tiles')
     out = {}
     # 12 poses: walk right 0-2, walk left 3-5, jump 6-7, hit 8-9, landed 10-11 (right, left)
-    names = pose_src + pose_src + ['pose_crouch'] * 2 + ['pose_stair_down_b'] * 2 + ['pose_crouch'] * 2
+    names = pose_src + pose_src + ['pose_crouch'] * 2 + [art.recoil(RECOIL_CHOICE)] * 2 + ['pose_crouch'] * 2
     left = [0, 0, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1]
     out['player'] = [art.centred(n, msx_canvas(player_w, i * 12, 3, 4), left[i]) for i, n in enumerate(names)]
     # stairs: k + 4 x facing, k: up a, up b, down, hit

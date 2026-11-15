@@ -33,6 +33,7 @@ _Static_assert(LATE_ENEMY_TILE_INDEX+128<=SHIELD_TILE_INDEX,"late sprites before
 #include "crushers.h"
 #include "generated/stage5_platform_md.h"
 #include "generated/stage10_platform_md.h"
+#include "generated/platform16_md.h"
 #include "generated/stage10_enemies_md.h"
 #include "generated/stage11_enemies_md.h"
 #include "platforms.h"
@@ -634,14 +635,14 @@ static void room_cells(u16 key)
             {
                 VDP_loadTileData(vk_stage4_enemy_tiles, ENEMY5_TILE_INDEX, VK_STAGE4_ENEMY_TILE_COUNT, VK_TM);
                 if (vk_game.stage == 5)
-                    VDP_loadTileData(vk_stage5_platform_tiles, ENEMY5_TILE_INDEX + VK_PLATFORM_PATTERN - VK_ENEMY5_FIRST_PATTERN,
+                    VDP_loadTileData(vk_gfx16 ? vk_platform16_tiles : vk_stage5_platform_tiles, ENEMY5_TILE_INDEX + VK_PLATFORM_PATTERN - VK_ENEMY5_FIRST_PATTERN,
                                      VK_STAGE5_PLATFORM_TILE_COUNT, VK_TM);
             }
             else if (vk_game.stage == 10)
             {
                 /* The fishman 03 / 21h (cells 40 to 68), its shot (60), the drop (90) and the platform (6C) share the block. */
                 VDP_loadTileData(vk_stage10_enemy_tiles, ENEMY5_TILE_INDEX, VK_STAGE10_ENEMY_TILE_COUNT, VK_TM);
-                VDP_loadTileData(vk_stage10_platform_tiles, ENEMY5_TILE_INDEX + VK_PLATFORM_PATTERN_10 - VK_ENEMY5_FIRST_PATTERN,
+                VDP_loadTileData(vk_gfx16 ? vk_platform16_tiles : vk_stage10_platform_tiles, ENEMY5_TILE_INDEX + VK_PLATFORM_PATTERN_10 - VK_ENEMY5_FIRST_PATTERN,
                                  VK_STAGE10_PLATFORM_TILE_COUNT, VK_TM);
             }
             else if (vk_game.stage == 11)   /* eagle, flea, dragon and its shot (tools/build_stage11_enemies_md.py) */
@@ -1041,7 +1042,10 @@ static u16 show_enemy_sprites(u16 tail)
             ? (u16)(ENEMY4_TILE_INDEX + (pattern & ~ENEMY_PATTERN_TYPE4) - VK_ENEMY4_FIRST_PATTERN)
             : (u16)(ENEMY_TILE_INDEX + pattern - VK_ENEMY_FIRST_PATTERN);
         VDP_setSpriteFull((u16)(ENEMY_SPRITE_BASE + boss_body_count + i), list[i].x, list[i].y, SPRITE_SIZE(2, 2),
-            TILE_ATTR_FULL(PAL2, TRUE, FALSE, FALSE, tile),
+            /* 16-bit graphics: the moving platform is drawn with the 16-bit Simon colours (build_platform16.py). */
+            TILE_ATTR_FULL(vk_gfx16 && list[i].bank == 1 && (vk_game.stage == 5 || vk_game.stage == 10) &&
+                           pattern == (vk_game.stage == 10 ? VK_PLATFORM_PATTERN_10 : VK_PLATFORM_PATTERN) ? PAL3 : PAL2,
+                           TRUE, FALSE, FALSE, tile),
             (u16)(i+1<count?ENEMY_SPRITE_BASE+boss_body_count+i+1:boss_count>boss_body_count?ENEMY_SPRITE_BASE+boss_body_count+count:tail));
     }
     return (u16)(count+boss_count);

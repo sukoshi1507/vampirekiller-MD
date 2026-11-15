@@ -8,7 +8,7 @@
 #include <genesis.h>
 #define VK_GFX16_ROOMS 152
 #define VK_GFX16_SLOTS 180
-#define VK_GFX16_POOL 6093
+#define VK_GFX16_POOL 6084
 typedef struct { const u16 *slots; const u8 *map; u16 count; u16 palette[16]; u8 msx[16]; } VKGfx16Room;
 extern const u32 vk_gfx16_pool[VK_GFX16_POOL * 8];
 extern const VKGfx16Room *const vk_gfx16_rooms[VK_GFX16_ROOMS];

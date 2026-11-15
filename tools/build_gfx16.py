@@ -284,15 +284,16 @@ def block6_rules(rooms, graphics):
 
 def block7_rules(rooms, graphics):
     """Stage 18: grey brick tower (tiles of colours 9, 10, 12) -> the blue bricks of Castlevania-MD's
-    clock tower, red platforms and pillars (01-08, 0C-0D, 11-12, 14-15) -> its red blocks, sky
-    (colour 15) -> its night sky. The moon and the steps keep their MSX pixels."""
-    bricks, red = ('block7', 1504, 0, 32, 32), ('block7', 672, 80, 16, 16)
+    clock tower, sky (colour 15) -> its night sky. The red platforms and pillars (01-08, 0C-0D,
+    11-12, 14-15), the moon and the steps keep their MSX pixels: only the backdrop changes (asked
+    by the tester after a run, 2026-11-15)."""
+    bricks = ('block7', 1504, 0, 32, 32)
     sky = ('flat', 0, 36, 144)
     r = {}
     for t in sorted({t for room in rooms.values() for t in room['grid']}):
         colours = tile_colours(graphics, t)
         if t in (0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x0C, 0x0D, 0x11, 0x12, 0x14, 0x15):
-            r[t] = ('cs', {c: red for c in (2, 10, 11, 12, 13, 14)}, red)
+            continue
         elif t and colours <= {0, 15}:
             r[t] = ('cs', {15: sky}, None)
         elif 0x16 <= t <= 0x37 or t == 0x3E:

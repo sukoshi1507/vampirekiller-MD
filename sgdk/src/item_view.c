@@ -27,16 +27,24 @@ static u32 door_tiles[DOOR_COLS * DOOR_CELLS * 8];
 
 /* Queued for the VBlank (p + 1 on the MSX, research/frame-timing.md), after the
  * queued block and candle cells of candle_view.c, which the key may cover. */
-static void draw_block(u16 tile, u16 x, u16 y, u16 w, u16 h)
+static void draw_block_pal(u16 pal, u16 tile, u16 x, u16 y, u16 w, u16 h)
 {
     u16 r, c;
     for (r = 0; r < h; r++)
     {
         u16 cells[DOOR_COLS > VK_HUD_BOX_W ? DOOR_COLS : VK_HUD_BOX_W];
-        for (c = 0; c < w; c++) cells[c] = TILE_ATTR_FULL(VK_PAL_OBJ, FALSE, FALSE, FALSE, tile + r * w + c);
+        for (c = 0; c < w; c++) cells[c] = TILE_ATTR_FULL(pal, FALSE, FALSE, FALSE, tile + r * w + c);
         VDP_setTileMapDataRow(BG_A, cells, (u16)(y + r), x, w, DMA_QUEUE_COPY);
     }
 }
+
+static void draw_block(u16 tile, u16 x, u16 y, u16 w, u16 h)
+{
+    draw_block_pal(VK_PAL_OBJ, tile, x, y, w, h);
+}
+
+/* Palette of the key cells: PAL0 when compose_key put the key over the 16-bit cells. */
+static u16 key_pal;
 
 /* The bar rows shifted up by 'lift' pixels, black below (K3: the opening behind
  * the bar is index 0). Tiles are column-major per 8x8 cell: left then right. */
@@ -67,14 +75,20 @@ static const u16 *room_map(const VKGame *game)
 
 static void compose_key(const VKGame *game, VKByte x, VKByte y)
 {
+    /* 16-bit graphics: the key over the 16-bit cells, its MSX colours taken to the closest
+     * entries of the room's 16-bit palette (msx[]), drawn with PAL0 like those cells. */
+    const VKGfx16Room *g16 = vk_gfx16_on ? vk_gfx16_room(game->stage, game->room) : 0;
     const u16 *map = room_map(game);
     const u32 *object = &vk_object_tiles[(VK_OBJ_WHITE_KEY - 1) * 32];
     u16 cell, row, k;
+    key_pal = g16 ? PAL0 : VK_PAL_OBJ;
     for (cell = 0; cell < 4; cell++)
     {
         const u16 col = (u16)(x / 8 + (cell & 1));
         const u16 line = (u16)(y / 8 + (cell >> 1));
-        const u32 *under = &vk_tiles[vk_stages[game->stage - 1].tileset][map[(line - 4) * 32 + col] * 8];
+        const u16 i = (u16)((line - 4) * 32 + col);
+        const u32 *under = g16 ? vk_room_tile(game->stage, game->room, vk_room_cell(game->stage, game->room, i))
+                               : &vk_tiles[vk_stages[game->stage - 1].tileset][map[i] * 8];
         const u32 *over = &object[((cell & 1) * 2 + (cell >> 1)) * 8];
         for (row = 0; row < 8; row++)
         {
@@ -82,7 +96,8 @@ static void compose_key(const VKGame *game, VKByte x, VKByte y)
             for (k = 0; k < 8; k++)
             {
                 const u32 mask = (u32)0xF << (k * 4);
-                if (over[row] & mask) word = (word & ~mask) | (over[row] & mask);
+                const u32 c = (over[row] >> (k * 4)) & 0xF;
+                if (c) word = (word & ~mask) | ((u32)(g16 ? g16->msx[c] : c) << (k * 4));
             }
             key_tiles[cell * 8 + row] = word;
         }
@@ -92,7 +107,7 @@ static void compose_key(const VKGame *game, VKByte x, VKByte y)
 /* The room map tiles back under a taken stage 2 key (the opened block, 885E). */
 static void clear_key(const VKGame *game, VKByte x, VKByte y)
 {
-    /* The cells as drawn (16-bit graphics: gfx16.h); compose_key keeps the MSX tiles under the key. */
+    /* The cells as drawn (16-bit graphics: gfx16.h); the key itself, composed over them by compose_key. */
     u16 cell;
     for (cell = 0; cell < 4; cell++)
     {
@@ -116,14 +131,15 @@ void vk_item_view_key(const VKItems *items, const VKGame *game)
     VKByte key_x = 0, key_y = 0;
     vk_items_key_place(game, &key_x, &key_y);
     if (vk_items_key_shown(items, game))
-        draw_block(KEY_TILE_INDEX, key_x / 8, key_y / 8, 2, 2);
+        draw_block_pal(key_pal, KEY_TILE_INDEX, key_x / 8, key_y / 8, 2, 2);
 }
 
 void vk_item_view_room(const VKItems *items, const VKGame *game)
 {
     VKByte key_x = 0, key_y = 0;
     const int key_room = vk_items_key_place(game, &key_x, &key_y);
-    if (key_room && game->stage != 1)
+    key_pal = VK_PAL_OBJ;
+    if (key_room && (game->stage != 1 || vk_gfx16_on))
     {
         compose_key(game, key_x, key_y);
         VDP_loadTileData(key_tiles, KEY_TILE_INDEX, 4, VK_TM);
@@ -134,7 +150,7 @@ void vk_item_view_room(const VKItems *items, const VKGame *game)
     VDP_loadTileData((const u32 *)vk_hud_key_tiles, HUD_KEY_TILE_INDEX, VK_HUD_BOX_W * VK_HUD_BOX_H, VK_TM);
     draw_hud_box(items);
     if (vk_items_key_shown(items, game))
-        draw_block(KEY_TILE_INDEX, key_x / 8, key_y / 8, 2, 2);
+        draw_block_pal(key_pal, KEY_TILE_INDEX, key_x / 8, key_y / 8, 2, 2);
     if (vk_items_door_room(game))
     {
         VKByte door_x, door_y;
@@ -150,7 +166,7 @@ void vk_item_view_event(VKItemEvent event, const VKItems *items, const VKGame *g
     if (event == VK_ITEM_KEY_TAKEN)
     {
         VKByte key_x, key_y;
-        if (vk_items_key_place(game, &key_x, &key_y) && game->stage != 1) clear_key(game, key_x, key_y);
+        if (vk_items_key_place(game, &key_x, &key_y) && (game->stage != 1 || vk_gfx16_on)) clear_key(game, key_x, key_y);
         else draw_block(KEY_CLEAR_TILE_INDEX, VK_KEY_CELL_X, VK_KEY_CELL_Y, 2, 2);
         draw_hud_box(items);
     }
