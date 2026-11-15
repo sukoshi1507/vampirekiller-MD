@@ -7,15 +7,49 @@
 #include "gfx16.h"
 #include "generated/intro16_md.h"
 #include "generated/screens16_md.h"
+#include "msx_text.h"
 
 static u16 front_timer;
 
 /* Sound mode line of the title (SGDK font, no tile of the text budget): LEFT or RIGHT
  * switches the music between the PSG and the YM2612 (research/audio-fm.md). */
+/* 16-bit graphics: the texts of the title are in the font of the 16-bit HUD (msx_text.h): 13 + 11 + 13 + 13 cells of plane A
+ * from this tile (the title scene ends before: 16 + 131 tiles). Same cells as the SGDK texts and the (c) line of the image. */
+#define TITLE16_TEXT_TILE_INDEX 600
+#define TITLE16_COPYRIGHT_TILE (TITLE16_TEXT_TILE_INDEX)
+#define TITLE16_PRESS_TILE (TITLE16_TEXT_TILE_INDEX + 13)
+#define TITLE16_SOUND_TILE (TITLE16_TEXT_TILE_INDEX + 24)
+#define TITLE16_GRAPH_TILE (TITLE16_TEXT_TILE_INDEX + 37)
+
+/* One text of the 16-bit title, at pixel (x, y) (not inline: one copy of the composing buffer and code). */
+__attribute__((noinline)) static void text16(u16 x, u16 y, const char *text, u16 tile)
+{
+    vk_msx_text(BG_A, x, y, text, tile, FALSE);
+}
+
 void vk_title_sound_draw(void)
 {
+    const char *text = vk_sound_fm ? "SOUND < FM  >" : "SOUND < PSG >";
     /* 13 characters from column 9: same centre as "PRESS START" (11 from column 10). */
-    VDP_drawText(vk_sound_fm ? "SOUND < FM  >" : "SOUND < PSG >", 9, 23);
+    if (vk_gfx16) text16(72, 184, text, TITLE16_SOUND_TILE);
+    else VDP_drawText(text, 9, 23);
+}
+
+/* "PRESS START" (the prompt of the ROM's keyboard is adapted to the Mega Drive controller) and the copyright line of the
+ * title image (row 17, columns 9..21: MSX pixels, ':' is the (c) of the font): in the font of the mode. */
+__attribute__((noinline)) static void title_texts(void)
+{
+    u16 x;
+    for (x = 9; x < 24; x++) VDP_setTileMapXY(BG_A, 0, x, 20);
+    if (vk_gfx16)
+    {
+        text16(72, 136, ": KONAMI 1986", TITLE16_COPYRIGHT_TILE);
+        text16(80, 160, "PRESS START", TITLE16_PRESS_TILE);
+    }
+    else
+    {
+        VDP_drawText("PRESS START", 10, 20);
+    }
 }
 
 /* Graphics mode line of the title: DOWN switches between the MSX graphics and the 16-bit art
@@ -24,7 +58,7 @@ void vk_title_sound_draw(void)
  * rows 0 to 3 and 13 to 14, the MSX band of rows 4 to 12 in a recoloured palette (PAL3); the logo keeps
  * its MSX tiles. title_band16: what is on screen. */
 static u8 title_band16;
-static void title_band(void)
+__attribute__((noinline)) static void title_band(void)
 {
     const VKScene *scene = &vk_scenes[1];
     u16 cells[32];
@@ -47,24 +81,28 @@ static void title_band(void)
     }
     else
         VDP_setTileMapDataRectEx(BG_A, scene->map, TILE_ATTR_FULL(PAL0, FALSE, FALSE, FALSE, TILE_USER_INDEX),
-            0, 0, 32, 15, 32, CPU);
+            0, 0, 32, 18, 32, CPU);   /* rows 15..17: the (c) line of the image comes back (16-bit mode: text) */
     title_band16 = vk_gfx16;
 }
 
 void vk_title_gfx_draw(void)
 {
-    VDP_drawText(vk_gfx16 ? "GRAPH < 16B >" : "GRAPH < MSX >", 9, 25);
-    if (vk_gfx16 != title_band16) title_band();
+    if (vk_gfx16) text16(72, 200, "GRAPH < 16B >", TITLE16_GRAPH_TILE);
+    else VDP_drawText("GRAPH < MSX >", 9, 25);
+    if (vk_gfx16 != title_band16)
+    {
+        title_band();
+        if (vk_gfx16) PAL_setPalette(PAL1, vk_item16_palette, CPU);   /* the palette of the letters (the MSX title only reads entry 15) */
+        title_texts();
+        vk_title_sound_draw();
+    }
 }
 
 void vk_show_title(void)
 {
-    u16 x;
     vk_show_scene(1);
     title_band16 = 0;
-    /* The ROM's keyboard prompt is adapted to the Mega Drive controller. */
-    for (x = 9; x < 24; x++) VDP_setTileMapXY(BG_A, 0, x, 20);
-    VDP_drawText("PRESS START", 10, 20);
+    title_texts();
     vk_title_sound_draw();
     vk_title_gfx_draw();
     vk_front_mode = FRONT_TITLE;

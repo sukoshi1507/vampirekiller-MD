@@ -7,6 +7,7 @@
 #include "generated/object_tiles_md.h"
 #include "generated/rooms.h"
 #include "gfx16.h"
+#include "generated/hud16_md.h"
 #include "candles.h"
 
 /* Free VRAM after the enemy tiles (actors.h) and before the HUD bar (hud.h). */
@@ -120,8 +121,34 @@ static void clear_key(const VKGame *game, VKByte x, VKByte y)
 
 static void draw_hud_box(const VKItems *items)
 {
-    draw_block((items->keys & VK_KEY_WHITE) ? HUD_KEY_TILE_INDEX : HUD_BOX_TILE_INDEX,
-               VK_HUD_BOX_CELL_X, VK_HUD_BOX_CELL_Y, VK_HUD_BOX_W, VK_HUD_BOX_H);
+    /* 16-bit graphics: PAL1 (the box only uses its HUD entries 2, 8, 14), bevelled frame (load_hud_box). */
+    draw_block_pal(VK_PAL_ITEM, (items->keys & VK_KEY_WHITE) ? HUD_KEY_TILE_INDEX : HUD_BOX_TILE_INDEX,
+                   VK_HUD_BOX_CELL_X, VK_HUD_BOX_CELL_Y, VK_HUD_BOX_W, VK_HUD_BOX_H);
+}
+
+/* Loads the cells of a HUD box (x 147..180): with the 16-bit graphics its right column (x 180: cell 4 of each row, pixel 4)
+ * and its bottom line (y 28: row 2, line 4) take the bevel entry (hud16_md.h) where white. */
+static u32 box16[VK_HUD_BOX_W * VK_HUD_BOX_H * 8];
+__attribute__((noinline)) static void load_hud_box(const unsigned long *tiles, u16 index)
+{
+    const u32 *src = (const u32 *)tiles;
+    if (vk_gfx16)
+    {
+        u16 i;
+        for (i = 0; i < VK_HUD_BOX_W * VK_HUD_BOX_H * 8; i++)
+        {
+            u32 w = (u32)tiles[i];
+            if (i / 8 % VK_HUD_BOX_W == VK_HUD_BOX_W - 1 && ((w >> 12) & 15) == 14) w = (w & ~0xF000UL) | ((u32)VK_HUD16_BEVEL << 12);
+            if (i >= ((VK_HUD_BOX_H - 1) * VK_HUD_BOX_W) * 8 && (i & 7) == 4)
+            {
+                const u32 m = (w >> 1) & (w >> 2) & (w >> 3) & ~w & 0x11111111UL;   /* the white (E) nibbles */
+                w = (w & ~(m | (m << 1) | (m << 2) | (m << 3))) | (m * VK_HUD16_BEVEL);
+            }
+            box16[i] = w;
+        }
+        src = box16;
+    }
+    VDP_loadTileData(src, index, VK_HUD_BOX_W * VK_HUD_BOX_H, VK_TM);
 }
 
 /* The hidden key revealed by the whip: its tiles were loaded with the room, only its block is drawn (no tile
@@ -132,6 +159,13 @@ void vk_item_view_key(const VKItems *items, const VKGame *game)
     vk_items_key_place(game, &key_x, &key_y);
     if (vk_items_key_shown(items, game))
         draw_block_pal(key_pal, KEY_TILE_INDEX, key_x / 8, key_y / 8, 2, 2);
+}
+
+void vk_item_view_hud_box(const VKItems *items)
+{
+    load_hud_box(vk_hud_box_tiles, HUD_BOX_TILE_INDEX);
+    load_hud_box(vk_hud_key_tiles, HUD_KEY_TILE_INDEX);
+    draw_hud_box(items);
 }
 
 void vk_item_view_room(const VKItems *items, const VKGame *game)
@@ -146,8 +180,8 @@ void vk_item_view_room(const VKItems *items, const VKGame *game)
     }
     else VDP_loadTileData((const u32 *)vk_key_tiles, KEY_TILE_INDEX, 4, VK_TM);
     VDP_loadTileData((const u32 *)vk_key_clear_tiles, KEY_CLEAR_TILE_INDEX, 4, VK_TM);
-    VDP_loadTileData((const u32 *)vk_hud_box_tiles, HUD_BOX_TILE_INDEX, VK_HUD_BOX_W * VK_HUD_BOX_H, VK_TM);
-    VDP_loadTileData((const u32 *)vk_hud_key_tiles, HUD_KEY_TILE_INDEX, VK_HUD_BOX_W * VK_HUD_BOX_H, VK_TM);
+    load_hud_box(vk_hud_box_tiles, HUD_BOX_TILE_INDEX);
+    load_hud_box(vk_hud_key_tiles, HUD_KEY_TILE_INDEX);
     draw_hud_box(items);
     if (vk_items_key_shown(items, game))
         draw_block_pal(key_pal, KEY_TILE_INDEX, key_x / 8, key_y / 8, 2, 2);

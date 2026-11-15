@@ -90,7 +90,7 @@ static void glyph(u8 code, u16 x, u16 y)
     if (code < VK_MSX_FONT_FIRST || code >= VK_MSX_FONT_FIRST + VK_MSX_FONT_COUNT) return;
     for (r = 0; r < 8; r++)
     {
-        const u32 g = vk_msx_font_tiles[(code - VK_MSX_FONT_FIRST) * 8 + r];
+        const u32 g = vk_msx_font_row(code, r);   /* 16-bit graphics: the steel letters of the HUD */
         for (c = 0; c < 8; c++)
         {
             const u8 v = (u8)((g >> (28 - 4 * c)) & 15);
@@ -103,10 +103,11 @@ static void glyph(u8 code, u16 x, u16 y)
 static void icon(VKByte object, u16 x, u16 y)
 {
     u16 t, r, c;
+    const u32 *tiles = vk_item_gfx_object_tiles(object);   /* 16-bit graphics: the 16-bit picture, PAL1 colours */
     for (t = 0; t < 4; t++)
         for (r = 0; r < 8; r++)
         {
-            const u32 g = vk_object_tiles[(object - 1) * 32 + t * 8 + r];
+            const u32 g = tiles[t * 8 + r];
             for (c = 0; c < 8; c++)
             {
                 const u8 v = (u8)((g >> (28 - 4 * c)) & 15);
@@ -178,7 +179,7 @@ static u16 make_tiles(void)
                     count++;
                 }
             }
-            win_cells[cy][cx] = TILE_ATTR_FULL(VK_PAL_OBJ, FALSE, FALSE, FALSE, MSX_TEXT_TILE_INDEX + k);
+            win_cells[cy][cx] = TILE_ATTR_FULL(VK_PAL_ITEM, FALSE, FALSE, FALSE, MSX_TEXT_TILE_INDEX + k);
         }
     return count;
 }

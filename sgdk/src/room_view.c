@@ -73,40 +73,14 @@ void vk_show_room(u16 stage, u16 room, bool atlas)
     VDP_setEnable(TRUE);
 }
 
-#define SCENE_EDGE_TILES (VK_GFX16_SLOTS - 140)   /* free slots after the largest 16-bit tile set of a scene */
 /* 16-bit graphics of a playfield scene (gfx16.h): its 22 room rows are the 16-bit cells. The
- * scene's own cells above and below the room (its HUD frame) use a few scene tiles: those are
- * loaded after the 16-bit ones, and their cells drawn with PAL2, which holds the scene's MSX
- * palette (load_actor). Same amount of VDP work as the MSX scene. */
-static void draw_scene_gfx16(const VKScene *scene, const VKGfx16Room *g16)
+ * frame of the item boxes that the scene bakes in rows 1..3 is not kept: the HUD code draws the 16-bit
+ * one (hud.c vk_hud_show_frame, bevelled, PAL1) together with the status line, the labels and the bars. */
+static void draw_scene_gfx16(const VKGfx16Room *g16)
 {
-    u16 seen[SCENE_EDGE_TILES];
-    u16 cells[32];
-    u16 count = 0, row, col, k;
     vk_gfx16_load_tiles(g16, TILE_USER_INDEX, VK_TM);
     PAL_setPalette(PAL0, g16->palette, CPU);
     vk_gfx16_draw_map(g16);
-    for (row = 0; row < 28; row++)
-    {
-        if (row == 4) row = 26;
-        for (col = 0; col < 32; col++)
-        {
-            const u16 tile = scene->map[row * 32 + col];
-            cells[col] = 0;
-            /* Only the frame of the item boxes (rows 1..3, columns 15..31) is kept: the rest of
-             * those rows is the status line, the labels and the bars, drawn by the HUD code. */
-            if (!tile || row < 1 || row > 3 || col < 15) continue;
-            for (k = 0; k < count && seen[k] != tile; k++) ;
-            if (k == count)
-            {
-                if (count == SCENE_EDGE_TILES) continue;
-                seen[count++] = tile;
-                VDP_loadTileData(&scene->tiles[tile * 8], (u16)(TILE_USER_INDEX + g16->count + k), 1, VK_TM);
-            }
-            cells[col] = TILE_ATTR_FULL(PAL2, FALSE, FALSE, FALSE, TILE_USER_INDEX + g16->count + k);
-        }
-        VDP_setTileMapDataRow(BG_A, cells, row, 0, 32, CPU);
-    }
 }
 
 /* Draws the scene with the display off and leaves it off. */
@@ -123,7 +97,7 @@ static void draw_scene(u16 index)
     VDP_setTextPalette(PAL1);
     if (g16)
     {
-        draw_scene_gfx16(scene, g16);
+        draw_scene_gfx16(g16);
         return;
     }
     VDP_loadTileData(scene->tiles, TILE_USER_INDEX, scene->count, VK_TM);

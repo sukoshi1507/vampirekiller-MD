@@ -46,6 +46,8 @@ _Static_assert(WEAPON_ICON_TILE_INDEX + 4 <= DEATH_TILE_INDEX,
                "HUD weapon icon tiles before the death pose");
 _Static_assert(GOLD_KEY_TILE_INDEX + 4 <= MSX_TEXT_TILE_INDEX,
                "candle tiles must end before the text tiles (msx_text.h)");
+_Static_assert(GOLD_KEY_TILE_INDEX + 4 <= HUD_FRAME16_EDGE_TILE_INDEX && HUD_FRAME16_EDGE_TILE_INDEX < MSX_TEXT_TILE_INDEX,
+               "free tile of the 16-bit HUD frame (hud.h) between the gold key and the text tiles");
 _Static_assert(ITEM_SLOT_TILE_A + 2 * 4 <= FLAME_A_CLEAR_TILE_INDEX,
                "item box slots A before the torch tiles");
 _Static_assert(ITEM_SLOT_TILE_B + 2 * 4 <= 700,   /* KEY_TILE_INDEX of item_view.c */
