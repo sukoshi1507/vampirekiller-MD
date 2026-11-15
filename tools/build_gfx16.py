@@ -8,8 +8,8 @@ the texture period, a picture cell laid over the wall, or a stencil (the MSX til
 filled with 16-bit textures). A tile id without a rule keeps its MSX pixels.
 
 Output per room (sgdk/src/generated/gfx16_md.c/.h):
-- tiles: slot t (t < 192) is the drawing of MSX tile t at its first place in the block (so the
-  code that draws MSX tile ids - hidden blocks - still finds them); the free slots hold the
+- tiles: slot t is the drawing of MSX tile t at its first place in the block, for the tiles of the
+  room and those the game draws by number (hidden blocks, vk_key_block_tiles); the free slots hold the
   variants a room needs (a texture wider than the tile's own period: wallpaper, water);
 - map: 32 x 22 slots (the vk_maps layout);
 - palette: 15 colours + black at 0, packed from the room picture;
@@ -30,13 +30,13 @@ from probe import load_rom, reference_rom  # noqa: E402
 from extract_rooms import RomView, decode_room  # noqa: E402
 
 SLOTS = 180                      # TILE_USER_INDEX + 180 = HUD_FRAME_TILE_INDEX (hud.h)
-BLOCKS = {1: (1, 2, 3)}          # block -> stages done so far
+BLOCKS = {1: (1, 2, 3), 2: (4, 5, 6), 3: (7, 8, 9), 4: (10, 11, 12), 5: (13, 14, 15), 6: (16, 17), 7: (18,)}          # block -> stages done so far
 
 
 def load_sources():
     from PIL import Image
     return {name: Image.open(ROOT / 'assets/gfx16' / f'{name}.png').convert('RGB').load()
-            for name in ('hall16', 'under16', 'court16', 'gate16')}
+            for name in ('hall16', 'under16', 'court16', 'gate16', 'block2', 'block3', 'block4', 'block5', 'block6', 'block7')}
 
 
 # Textures: (picture, x, y, period x, period y). Period 1: the 8x8 cell at (x, y) itself.
@@ -95,10 +95,218 @@ def block1_rules(rooms):
     return r
 
 
-RULES = {1: block1_rules}
+def black_holes(graphics, t):
+    """The black pixels of MSX tile t that belong to a large black area (an opening), as opposed
+    to the thin black lines between bricks: 4-connected groups that hold a 3 x 3 black square."""
+    def colour(x, y):
+        b = graphics[t * 32 + y * 4 + x // 2]
+        return b & 15 if x & 1 else b >> 4
+    seen, holes = set(), set()
+    for y0 in range(8):
+        for x0 in range(8):
+            if (x0, y0) in seen or colour(x0, y0):
+                continue
+            group, todo = set(), [(x0, y0)]
+            while todo:
+                x, y = todo.pop()
+                if (x, y) in group or not (0 <= x < 8 and 0 <= y < 8) or colour(x, y):
+                    continue
+                group.add((x, y))
+                todo += [(x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)]
+            seen |= group
+            # an opening is thick: it holds a 3 x 3 black square (brick joints never do)
+            if any(all((x + i, y + j) in group for i in range(3) for j in range(3)) for x, y in group):
+                holes |= group
+    return holes
+
+
+def block2_rules(rooms, graphics):
+    """Stages 4-6: pink brick wall, grey brick columns, yellow blocks, arches, blue windows. The MSX
+    tiles are sorted by their colours (room palette of the block): 9, 11, 13 wall bricks, 12 with them
+    the dark broken parts, 4, 6, 10, 14 the yellow blocks and steps, 15 the windows, 8 the red statues
+    (kept in MSX pixels). Kind cs: {MSX colour: texture}, the thin black lines get the `mortar`
+    texture, the large black areas stay black, any other colour keeps its MSX value."""
+    wall, block = ('block2', 64, 0, 16, 16), ('block2', 224, 0, 16, 16)
+    rubble, glass = ('block2', 458, 36, 16, 16), ('block2', 652, 34, 8, 8)
+    tread, step = ('flat', 252, 216, 180), ('flat', 216, 108, 36)     # steps: light top, orange riser
+    used = sorted({t for r in rooms.values() for t in r['grid']})
+    r = {}
+    for t in used:
+        if not t:
+            continue
+        colours = {(graphics[t * 32 + i] >> 4) for i in range(32)} | {graphics[t * 32 + i] & 15 for i in range(32)}
+        holes = black_holes(graphics, t)
+        bricks = {9: wall, 11: wall, 13: wall, 12: wall}
+        if 8 in colours:
+            continue
+        if t in (0x13, 0x14, 0x15):
+            r[t] = ('tex', ('block2', 192 + 8 * (t - 0x13), 16, 1, 8))
+        elif t in (0x01, 0x02, 0x0A, 0x0B):
+            r[t] = ('tex', block)
+        elif 15 in colours:
+            r[t] = ('cs', {**bricks, 15: glass}, wall)
+        elif colours & {4, 6, 10, 14}:
+            r[t] = ('cs', {**bricks, 4: step, 6: step, 10: step, 14: tread}, None)
+        elif colours <= {0, 9, 11, 13}:
+            r[t] = ('tex', wall) if not holes else ('cs', bricks, wall)
+        else:
+            r[t] = ('cs', {9: wall, 11: rubble, 12: rubble, 13: rubble}, wall)
+    return r
+
+
+def tile_colours(graphics, t):
+    return {(graphics[t * 32 + i] >> 4) for i in range(32)} | {graphics[t * 32 + i] & 15 for i in range(32)}
+
+
+def block3_rules(rooms, graphics):
+    """Stages 7-9: stone wall (MSX colours 2, 4, 10, 12, 13), moss (9), sky and water (15), round
+    orange blocks and steps (6, 11, 14). Everything is the MSX shape filled with the 16-bit stone,
+    moss, sky and block of Castlevania-MD's block 3."""
+    stone, block, sky = ('block3', 160, 0, 16, 16), ('block3', 0, 0, 16, 16), ('flat', 0, 36, 144)
+    moss = ('block3', 48, 16, 16, 16)
+    tread, step = ('flat', 252, 216, 180), ('flat', 216, 108, 36)
+    fill = {2: stone, 4: stone, 10: stone, 12: stone, 13: stone, 9: moss, 15: sky}
+    r = {}
+    for t in sorted({t for room in rooms.values() for t in room['grid']}):
+        colours = tile_colours(graphics, t)
+        if not t or 8 in colours:
+            continue
+        if t in (0x01, 0x02, 0x0A, 0x0B):
+            r[t] = ('tex', block)
+        elif colours & {6, 11, 14}:
+            r[t] = ('cs', {**fill, 6: step, 11: step, 14: tread}, None)
+        elif sum(1 for i in range(32) for v in (graphics[t * 32 + i] >> 4, graphics[t * 32 + i] & 15) if v == 9) >= 6:
+            # a mossy tile: the stone under the scattered MSX green pixels is moss too
+            r[t] = ('cs', {**{c: moss for c in (2, 4, 10, 12, 13, 9)}, 15: sky}, moss)
+        else:
+            r[t] = ('cs', fill, stone)
+    return r
+
+
+def block4_rules(rooms, graphics):
+    """Stages 10-12: caves (stage 10), open air with ruined columns (11), blue brick building (12).
+    Colour 15 is the bright blue of the cave rock and the sky of the open air, and the open air draws
+    its mountains with cave rock tiles: the rules depend on the room (open air = tile 6A, the sky).
+    Grey stone blocks -> the pink blocks of Castlevania-MD, cave rock -> its blue rock, water -> its
+    water, columns -> its brick column, rubble ground -> its grass, building -> its blue bricks;
+    skulls (38-3D) and the red striped tiles of room 12-6 keep their MSX pixels."""
+    pink, rock = ('block4', 0, 112, 16, 16), ('block4', 448, 0, 32, 32)
+    water, grass = ('block4', 0, 144, 32, 16), ('block4', 1664, 112, 32, 32)
+    column, bricks = ('block4', 3808, 0, 32, 8), ('block4', 3072, 68, 32, 32)
+    sky = ('flat', 0, 36, 144)
+    hills = {10: ('flat', 72, 72, 108), 11: ('flat', 144, 144, 180), 15: sky}
+    used = sorted({t for room in rooms.values() for t in room['grid']})
+    stage = {t: {s for (s, _), room in rooms.items() if t in room['grid']} for t in used}
+
+    def rules(outdoor):
+        r = {}
+        for t in used:
+            colours = tile_colours(graphics, t)
+            if not t or 8 in colours or 0x38 <= t <= 0x3D or 0x62 <= t <= 0x69:
+                continue
+            if t == 0x6A:
+                r[t] = ('tex', sky)
+            elif t in (0x20, 0x21):
+                r[t] = ('cs', {10: water, 11: water, 15: water}, water)
+            elif t <= 0x0F:
+                r[t] = ('cs', {9: pink, 12: pink, 13: pink, **({15: sky} if outdoor else {})}, pink)
+            elif colours <= {0, 10, 11, 15}:
+                if outdoor:
+                    r[t] = ('cs', hills, None)
+                elif stage[t] & {12}:
+                    r[t] = ('cs', {10: bricks, 11: bricks, 15: bricks}, bricks)
+                else:
+                    r[t] = ('cs', {10: rock, 11: rock, 15: rock}, rock)
+            elif 0x8D <= t <= 0xA2:
+                r[t] = ('cs', {9: grass, 10: grass, 12: grass, 13: grass, 15: sky}, grass)
+            elif colours & {12, 14}:
+                r[t] = ('cs', {9: column, 12: column, 13: column, 14: column, 15: sky}, None)
+        return r
+    out, cave = rules(True), rules(False)
+    return lambda grid: out if 0x6A in grid else cave
+
+
+def block5_rules(rooms, graphics):
+    """Stages 13-15: brown blocks (01, 02, 0A, 0B, 61, 62), light stone wall of stage 13 (0E-2C, 60), dark
+    rubble wall of stages 14-15 (41-57), grey columns (58-5F), grey lattice of the gallery (tiles of
+    colours 2 and 13 only). The stones keep their MSX outlines (thin black lines), filled with the
+    16-bit stone, rubble or column; chains, skeletons, bones, grates, windows, coffins, the gallery's
+    white columns and the portraits keep their MSX pixels."""
+    block, stone = ('block5', 0, 144, 16, 16), ('block5', 40, 88, 16, 16)
+    rubble, column = ('block5', 1888, 80, 32, 32), ('block5', 0, 0, 32, 16)
+    lattice = ('block5', 4416, 64, 24, 24)
+    r = {}
+    for t in sorted({t for room in rooms.values() for t in room['grid']}):
+        colours = tile_colours(graphics, t)
+        if t in (0x01, 0x02, 0x0A, 0x0B, 0x61, 0x62):
+            r[t] = ('tex', block)
+        elif 0x0E <= t <= 0x2C or t == 0x60:
+            r[t] = ('cs', {11: stone, 12: stone, 13: stone}, None)
+        elif 0x41 <= t <= 0x57 and colours <= {0, 11, 12, 13, 14}:
+            r[t] = ('cs', {11: rubble, 12: rubble, 13: rubble}, None)
+        elif 0x58 <= t <= 0x5F:
+            r[t] = ('cs', {11: column, 12: column, 13: column, 14: column}, None)
+        elif 0x8E <= t and colours <= {0, 2, 13}:
+            r[t] = ('cs', {2: lattice, 13: lattice}, lattice)
+    return r
+
+
+def block6_rules(rooms, graphics):
+    """Stages 16-17: grey stone towers (stage 16 under the sky, stage 17 inside), orange blocks (01, 02,
+    0A, 0B), moss (21-23), sky (colour 15). Stone tiles are shared by both stages: a room with sky
+    (tile 13) takes the lilac stone of Castlevania-MD's block 6 outside part, the others its grey
+    stone. Stones keep their MSX outlines. The bridge, railings, windows, gears and pipes keep their
+    MSX pixels."""
+    block, moss = ('block6', 2048, 120, 32, 32), ('block6', 704, 48, 32, 32)
+    lilac, grey = ('block6', 672, 138, 32, 32), ('block6', 1648, 144, 32, 32)
+    sky = ('flat', 0, 36, 144)
+    used = sorted({t for room in rooms.values() for t in room['grid']})
+    stone = [t for t in used if 0x10 <= t <= 0x41 and t not in range(0x21, 0x24) and t not in range(0x26, 0x2B)
+             and t not in range(0x2C, 0x2F) or t in (0x50, 0x51, 0x52, 0x53, 0x60, 0x61, 0x62, 0x63, 0x74)]
+
+    def rules(outside):
+        wall = lilac if outside else grey
+        r = {}
+        for t in used:
+            colours = tile_colours(graphics, t)
+            if t in (0x01, 0x02, 0x0A, 0x0B):
+                r[t] = ('tex', block)
+            elif 0x21 <= t <= 0x23:
+                r[t] = ('cs', {4: moss, 9: moss, 11: moss, 15: sky}, moss)
+            elif colours <= {0, 15}:
+                r[t] = ('cs', {15: sky}, None)
+            elif t in stone and colours <= {0, 6, 11, 12, 13, 15}:
+                r[t] = ('cs', {6: wall, 11: wall, 12: wall, 13: wall, 15: sky}, None)
+        return r
+    out, inside = rules(True), rules(False)
+    return lambda grid: out if 0x13 in grid else inside
+
+
+def block7_rules(rooms, graphics):
+    """Stage 18: grey brick tower (tiles of colours 9, 10, 12) -> the blue bricks of Castlevania-MD's
+    clock tower, red platforms and pillars (01-08, 0C-0D, 11-12, 14-15) -> its red blocks, sky
+    (colour 15) -> its night sky. The moon and the steps keep their MSX pixels."""
+    bricks, red = ('block7', 1504, 0, 32, 32), ('block7', 672, 80, 16, 16)
+    sky = ('flat', 0, 36, 144)
+    r = {}
+    for t in sorted({t for room in rooms.values() for t in room['grid']}):
+        colours = tile_colours(graphics, t)
+        if t in (0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x0C, 0x0D, 0x11, 0x12, 0x14, 0x15):
+            r[t] = ('cs', {c: red for c in (2, 10, 11, 12, 13, 14)}, red)
+        elif t and colours <= {0, 15}:
+            r[t] = ('cs', {15: sky}, None)
+        elif 0x16 <= t <= 0x37 or t == 0x3E:
+            r[t] = ('cs', {9: bricks, 10: bricks, 12: bricks, 15: sky}, bricks)
+    return r
+
+
+RULES = {1: lambda rooms, graphics: block1_rules(rooms), 2: block2_rules, 3: block3_rules, 4: block4_rules,
+         5: block5_rules, 6: block6_rules, 7: block7_rules}
 
 
 def tex(src, texture, X, Y):
+    if texture[0] == 'flat':            # ('flat', r, g, b): one colour
+        return texture[1:]
     name, sx, sy, px, py = texture
     return src[name][sx + X % px + (0 if px > 1 else X % 8), sy + Y % py + (0 if py > 1 else Y % 8)]
 
@@ -106,6 +314,7 @@ def tex(src, texture, X, Y):
 class Skin:
     def __init__(self, src, rules, graphics):
         self.src, self.rules, self.graphics = src, rules, graphics
+        self.holes = {t: black_holes(graphics, t) for t, r in rules.items() if r[0] == 'cs'}
         self.wall_colours = {tex(src, WALL, x, y) for x in range(32) for y in range(32)}
 
     def msx(self, t, x, y):
@@ -133,6 +342,14 @@ class Skin:
                     p = tex(self.src, rule[1], X, Y)
                     if p in self.wall_colours:
                         p = tex(self.src, base, X, Y)
+                elif rule[0] == 'cs':
+                    v = self.msx(t, x, y)
+                    if not v:
+                        p = (0, 0, 0) if (x, y) in self.holes[t] or rule[2] is None else tex(self.src, rule[2], X, Y)
+                    elif v in rule[1]:
+                        p = tex(self.src, rule[1][v], X, Y)
+                    else:
+                        p = msx_rgb[v]
                 elif rule[0] == 'stencil':
                     v = self.msx(t, x, y)
                     if v in rule[1]:
@@ -146,6 +363,15 @@ class Skin:
                     p = tex(self.src, BRICK, X, Y) if v and v in self.brick_idx else (0, 0, 0)
                 out.append(p)
         return tuple(out)
+
+
+def key_block_tiles(stages):
+    """vk_key_block_tiles (generated/candles_md.c): the 16 tile ids of the hidden block of each stage."""
+    import re
+    text = (ROOT / 'sgdk/src/generated/candles_md.c').read_text()
+    body = re.search(r'vk_key_block_tiles\[19\]\[16\]\s*=\s*\{(.*?)\};', text, re.S).group(1)
+    rows = re.findall(r'\{([^{}]*)\}', body)
+    return {int(v, 0) for stage in stages for v in re.findall(r'0x[0-9A-Fa-f]+|\d+', rows[stage])}
 
 
 def distance(a, b):
@@ -185,15 +411,25 @@ def build_block(data, block, src):
     for stage in stages:
         room = 0
         layout = RomView(data, (0, 11, 12, 13))
-        count = layout.byte(0x6000 + stage + 1) - layout.byte(0x6000 + stage)
+        offsets = list(layout.read(0x6000, 19)) + [156]      # as room_index
+        count = offsets[stage + 1] - offsets[stage]
         for room in range(count):
             manifest, graphics, tilemap = decode_room(data, stage, room)
             if manifest['unresolved_tile_ids']:
                 continue
             rooms[(stage, room)] = {'grid': tilemap[64:], 'palette': manifest['palette_rgb333']}
-    skin = Skin(src, RULES[block](rooms), graphics)
-    skin.wall_idx = skin.colours(0x0E) | skin.colours(0x11)
-    skin.brick_idx = skin.colours(0x41)
+    rules = RULES[block](rooms, graphics)        # a rule table, or grid -> rule table
+    skins = {}
+
+    def skin_of(grid):
+        table = rules(grid) if callable(rules) else rules
+        if id(table) not in skins:
+            skins[id(table)] = skin = Skin(src, table, graphics)
+            if block == 1:
+                skin.wall_idx = skin.colours(0x0E) | skin.colours(0x11)
+                skin.brick_idx = skin.colours(0x41)
+        return skins[id(table)]
+    keep = key_block_tiles(stages)        # MSX tile ids the game draws by number (hidden blocks)
     first = {}                           # tile id -> its first cell in the block
     for key in sorted(rooms):
         for i, t in enumerate(rooms[key]['grid']):
@@ -202,7 +438,8 @@ def build_block(data, block, src):
     for key in sorted(rooms):
         grid, palette = rooms[key]['grid'], rooms[key]['palette']
         msx_rgb = [tuple(v * 36 for v in c) for c in palette]
-        paper = 0x0E in grid
+        paper = block == 1 and 0x0E in grid
+        skin = skin_of(grid)
         canon = {t: skin.cell(t, *first.get(t, (0, 0)), paper, msx_rgb) for t in range(192)}
         cells = [skin.cell(t, i % 32, i // 32, paper, msx_rgb) for i, t in enumerate(grid)]
         # palette from the room picture
@@ -220,7 +457,7 @@ def build_block(data, block, src):
             v = [near(rgb3(p)) for p in pixels]
             return tuple(sum(v[y * 8 + x] << (28 - 4 * x) for x in range(8)) for y in range(8))
         used = set(grid)
-        slots = {t: encode(canon[t]) for t in range(192) if t in used or skin.rules.get(t)}
+        slots = {t: encode(canon[t]) for t in range(192) if t in used or t in keep}
         free = [s for s in range(1, SLOTS) if s not in slots]
         variant, room_map = {}, []
         for t, c in zip(grid, cells):
@@ -372,7 +609,7 @@ def main():
     parser.add_argument('--out', type=Path, default=ROOT / 'sgdk/src/generated')
     parser.add_argument('--preview', type=Path)
     args = parser.parse_args()
-    data = load_rom(args.rom) if args.rom else reference_rom()
+    data = load_rom(args.rom or reference_rom())
     src = load_sources()
     rooms = {}
     for block in BLOCKS:

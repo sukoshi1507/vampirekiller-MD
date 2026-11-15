@@ -1,4 +1,4 @@
-# Mode graphique 16 bits (pilote : stages 1 à 3)
+# Mode graphique 16 bits (stages 1 à 18)
 
 Option de l'écran titre : `GRAPH < MSX >` (défaut) ou `GRAPH < 16B >`, changée avec BAS. Elle ne touche qu'au dessin des salles du château : la logique du jeu (cartes de collision, objets, ennemis, sons) ne lit aucune donnée graphique, et le mode MSX reste le portage tracé.
 
@@ -8,6 +8,7 @@ Les graphismes 16 bits sont ceux de Castlevania-MD (autre projet de l'auteur du 
 
 - `assets/gfx16/hall16.png` : premier écran du hall (monde du niveau 1 de Castlevania-MD, colonnes 768 à 1023, lignes 40 à 231), rendu avec les tuiles 16 bits.
 - `assets/gfx16/under16.png` : salle souterraine `room_2_0` (lignes 48 à 239).
+- `assets/gfx16/block2.png` à `block7.png` : les mondes des blocs 2 à 7 de Castlevania-MD (`src/blockN.c`), rendus avec les tuiles 16 bits, lignes 48 à 239.
 
 Les deux jeux suivent le même découpage du château (blocs 1-3, 4-6, 7-9, 10-12, 13-15, 16-17, 18) et les mêmes thèmes par bloc. Dans le hall, les motifs ont les mêmes dimensions : colonne 32 × 160, fenêtre 32 × 96 (carreau 16 × 16), grand rideau 32 × 144, blocs du sol 16 × 16.
 
@@ -28,6 +29,19 @@ Par salle, l'outil produit :
 - la carte 32 × 22 (emplacements) ;
 - une palette de 15 couleurs + noir (regroupement des couleurs les plus proches, comme `art.py` de Castlevania-MD) ;
 - `msx[c]` : l'entrée de cette palette la plus proche de la couleur MSX c (pas encore utilisée par le code).
+
+## Blocs 2 à 7
+
+Même principe que le bloc 1 (agencement MSX case par case), avec surtout la règle `cs` : chaque couleur MSX de la tuile reçoit une texture 16 bits, les traits noirs fins prennent la texture de fond (ou restent noirs pour garder le contour MSX des pierres), les grandes zones noires (un carré 3 × 3 noir, `black_holes`) restent noires. Les textures `('flat', r, g, b)` sont des couleurs unies (ciel, marches).
+
+- Bloc 2 (stages 4-6) : mur de briques roses, colonnes, blocs jaunes, vitraux, gravats ; statues rouges en MSX.
+- Bloc 3 (stages 7-9) : pierre, mousse (tuile à ≥ 6 pixels verts), ciel, blocs ronds orange.
+- Bloc 4 (stages 10-12) : la couleur 15 est la roche bleue dans les grottes et le ciel dehors, et le plein air dessine ses montagnes avec des tuiles de roche : les règles dépendent de la salle (plein air = tuile 6A). Blocs gris → blocs roses, roche, eau, herbe, colonnes de briques, briques bleues du bâtiment du stage 12, montagnes grises unies. Crânes et tuiles rayées rouges de la salle 12-6 en MSX.
+- Bloc 5 (stages 13-15) : blocs bruns → blocs violets, pierres claires (stage 13), moellons sombres (14-15), colonnes grises, treillis de la galerie. Chaînes, squelettes, grilles, fenêtres, cercueils, colonnes blanches et **portraits** gardent leurs pixels MSX (l'image 16 bits n'a pas de portrait).
+- Bloc 6 (stages 16-17) : pierre lilas dans les salles avec ciel (tuile 13), pierre grise dedans, blocs orange, mousse, ciel ; pont, balustrades, engrenages et tuyaux en MSX.
+- Bloc 7 (stage 18) : briques bleues de la tour de l'horloge, plateformes rouges, ciel ; lune et marches en MSX.
+
+Le nombre de salles du stage 18 se lit comme dans `room_index` (table 6000 + 156). Mesuré : 51 à 179 emplacements par salle (stage 11 le plus chargé).
 
 ## Côté ROM (`sgdk/src/gfx16.c/.h`, `generated/gfx16_md.c/.h`)
 
@@ -65,14 +79,15 @@ Avec l'option 16B, Simon est dessiné en 16 bits sur tous les écrans du jeu (c'
 - Mort : l'image de marche couchée face contre terre (variante A choisie par l'utilisateur), dans le canevas 32 × 16 du MSX.
 - Palette : 13 couleurs pour toutes ces images, dans PAL3 entrées 1 à 13 (14 et 15 restent celles du portage). Simon 16 bits est toujours dessiné en PAL3. Le clignotement tracé (790C : silhouette d'une seule couleur une passe sur deux) réécrit ces 13 entrées avec la couleur MSX de la silhouette, puis les remet à la passe suivante, dans le même VBlank que la table des sprites.
 
-## Limites du pilote
+## Limites
 
-- Seuls les stages 1 à 3, la cour et l'introduction ont des graphismes 16 bits ; les stages 4 à 18, le titre, le logo, la carte et la fin restent en MSX même si l'option est active.
+- Le titre, le logo, la carte et la fin restent en MSX même si l'option est active.
+- Blocs 2 à 7 : formes MSX remplies de textures 16 bits ; les motifs propres au jeu NES (rampes, statues, portraits) ne sont pas repris.
 - Les ennemis, les bougies, les objets et les armes lancées restent les sprites MSX.
 - Restent en pixels MSX dans une salle 16 bits : la clé blanche posée (carré 16 × 16 de mur MSX autour d'elle), les murs cassables, les nervures de voûte du stage 3.
 - Les fissures et les escaliers gardent la forme MSX avec une texture 16 bits ; les vrais escaliers 16 bits (rampe) ne sont pas repris.
 - Simon 16 bits : attaque sur escalier dessinée avec les images debout (comme en MSX) ; clignotement, bouclier, mort et fouet long non vérifiés en jeu image par image.
-- Non vérifié : console réelle, combat du boss du stage 3 en mode 16 bits, marchands.
+- Non vérifié : console réelle, combats de boss et marchands en mode 16 bits.
 
 ## Vérification
 
@@ -80,4 +95,5 @@ Avec l'option 16B, Simon est dessiné en 16 bits sur tous les écrans du jeu (c'
 - Tous les scénarios MD qui démarrent par `boot_to_courtyard.inc` (46 sur 119) ont été rejoués une fois avec `vk_gfx16 = 1` : 43 passent tels quels ; les 3 autres (`t_item_effects`, `w_simon_blink_phase`, `zy_candle_flames`) n'échouent que sur des assertions propres au rendu MSX (ligne de palette de Simon, pixels du décor MSX). Ce contrôle a trouvé un défaut, corrigé : le fond blanc de l'objet 05 (registre 7) prenait sa couleur dans PAL0 ; il la prend dans PAL2 en mode 16 bits.
 - `zzz_gfx16_blink` : silhouette de Simon 2 images sur 4 à l'écran en mode 16 bits.
 - `tests/md_scenarios/zzv_gfx16_key_door.txt` : le scénario (f) clé blanche / porte / stage 2 rejoué avec `vk_gfx16 = 1` ; toutes ses assertions tiennent (19/19).
+- Les scénarios des stages 7 à 18 (`zza`, `zzb`, `zzc`, `zzm_stage10`, `zzn_stage11`, `zzp_stage12` à `zzp_stage18`) rejoués avec `poke vk_gfx16 1` après chaque `include` : toutes leurs assertions tiennent, les salles s'affichent en 16 bits.
 - Aperçus hors ROM : `python3 tools/build_gfx16.py ROM --preview DOSSIER`.
