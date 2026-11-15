@@ -5,6 +5,7 @@
 #include "msx_text.h"
 #include "gfx16.h"
 #include "generated/object_tiles_md.h"
+#include "generated/wall16_md.h"
 
 /* Frame tiles of the two records, 12 each. Castle rooms load 192 tiles of tileset 0
  * at 16 (16..207) and the HUD text starts at 224: the maps of stages 1 and 2 use no
@@ -26,9 +27,6 @@ _Static_assert(WALL_TILE_INDEX + VK_WALL_RECORDS * VK_WALL_TILES_PER_FRAME <= HU
 
 VKWall vk_walls;
 static s8 frame_loaded[VK_WALL_RECORDS];
-/* 16-bit graphics: the frame with its MSX colours taken to the closest entries of the room's
- * 16-bit palette (msx[]), kept until the queued transfer has run. */
-static u32 frame16[VK_WALL_RECORDS][VK_WALL_TILES_PER_FRAME * 8];
 /* The window: its pixels (MSX colours of the room palette), its tiles and the plane
  * A cells it covers. */
 static u8 pix[VK_SHOP_H][VK_SHOP_W];
@@ -58,25 +56,15 @@ u16 vk_wall_view_sprites(u16 first)
         {
             /* 925E copies the frame during the pass: shown at the next frame, as the
              * sprite table that the queue sends with it. */
-            const u32 *src = &vk_wall_frame_tiles[frame * VK_WALL_TILES_PER_FRAME * 8];
-            if (g16)
-            {
-                u16 w, k;
-                for (w = 0; w < VK_WALL_TILES_PER_FRAME * 8; w++)
-                {
-                    u32 v = 0;
-                    for (k = 0; k < 32; k += 4) v |= (u32)g16->msx[(src[w] >> k) & 15] << k;
-                    frame16[i][w] = v;
-                }
-                src = frame16[i];
-            }
+            /* 16-bit graphics: the redrawn old man (tools/build_wall16.py), PAL1 like the objects. */
+            const u32 *src = &(g16 ? vk_wall16_tiles : vk_wall_frame_tiles)[frame * VK_WALL_TILES_PER_FRAME * 8];
             VDP_loadTileData(src, tile, VK_WALL_TILES_PER_FRAME, DMA_QUEUE);
             frame_loaded[i] = (s8)frame;
         }
         /* The first 8 lines of the 32 x 32 frame are empty: Y + 8. Low priority: Simon
          * and the enemies (earlier sprites) pass in front, as over the MSX bitmap. */
         VDP_setSpriteFull((u16)(first + n), vk_walls.obj[i].x, (s16)(vk_walls.obj[i].y + 8),
-                          SPRITE_SIZE(4, 3), TILE_ATTR_FULL(g16 ? PAL0 : VK_PAL_OBJ, FALSE, FALSE, FALSE, tile),
+                          SPRITE_SIZE(4, 3), TILE_ATTR_FULL(g16 ? PAL1 : VK_PAL_OBJ, FALSE, FALSE, FALSE, tile),
                           (u16)(first + n + 1));
         n++;
     }

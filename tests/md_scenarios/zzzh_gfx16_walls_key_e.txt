@@ -1,0 +1,12 @@
+# (zzzh_e) Mode graphique 16 bits : cle blanche visible des l'entree (stage 10 salle 0, (48, 48), bloc 4 : fond bleu sombre),
+# sprite PAL1 blanc dans la palette de la salle.
+until front_mode == MODES['TITLE'] max 2000
+wait 2
+poke vk_gfx16 1                                    # the option on before the first castle room
+include zzm_enter10.inc
+poke Enemies_god 1
+wait 20
+expect ram8('vk_gfx16_on') == 1 and game.stage == 10 and game.room == 0
+expect ram8('key_spr') == 1
+shot zzzh-s10-cle
+expect any(pixel(x, y) == (238, 238, 238) for x in range(48, 64) for y in range(48, 64)) # cle blanche

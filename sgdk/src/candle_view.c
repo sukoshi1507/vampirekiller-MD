@@ -1,5 +1,6 @@
 #include "candle_view.h"
 #include "wall_view.h"
+#include "item_view.h"
 #include "actors.h"
 #include "frontend.h"
 #include "generated/enemy_sprites_md.h"
@@ -314,6 +315,15 @@ u16 vk_candle_view_sprites(void)
         set_sprite(n++, d->x, d->y, TILE_ATTR_FULL(item_pal, FALSE, FALSE, FALSE, DROP_TILE_INDEX + i * 4));
     }
     n = (u16)(n + vk_wall_view_sprites((u16)(CANDLE_SPRITE_BASE + n)));
+    {
+        u16 kx, ky;
+        const u16 kt = vk_front_mode == FRONT_INTERIOR ? vk_item_view_key_sprite(&kx, &ky) : 0;
+        if (kt)
+        {
+            if (n) VDP_setSpriteLink((u16)(CANDLE_SPRITE_BASE + n - 1), (u16)(CANDLE_SPRITE_BASE + n));
+            set_sprite(n++, (s16)kx, (s16)ky, TILE_ATTR_FULL(PAL1, FALSE, FALSE, FALSE, kt));
+        }
+    }
     if (n) VDP_setSpriteLink((u16)(CANDLE_SPRITE_BASE + n - 1), 0);
     return n;
 }
