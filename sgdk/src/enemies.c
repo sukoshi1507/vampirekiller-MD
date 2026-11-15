@@ -935,6 +935,7 @@ static Enemy *newObject(EnemyState *s, EnemyU8 type);
 static int ghostInert(const Enemy *e);   /* enemies_ghost.inc : +E = 0, ni contact ni fouet */
 
 EnemyU8 Enemies_god;
+EnemyU8 Enemies_spawnGate;
 EnemyU8 Enemies_shotPower[2];
 EnemyU8 Enemies_killScore;
 
@@ -1772,7 +1773,7 @@ static void type2Channel(EnemyState *s, EnemySpawnTimer *t, const EnemyRoomVars 
 {
     EnemyU8 period, c, x;
     if (!(++s->type2Frames & 1)) return;
-    if (s->spawnPause) return;                      /* 5EB8 : C440 != 0, boucle 5ED8 sautee */
+    if (s->spawnPause || Enemies_spawnGate) return;  /* 5EB8 : C440 != 0 ou C5AC 2, 3, 5 (5EC3), boucle 5ED8 sautee */
     if (s->frozen) return;                          /* 98E5 : D010 != 0, 5EB8 n'est pas appele */
     t->phase--;                                     /* 9CC3 : DEC (CF10) */
     if ((t->phase & 0x03) != 0) return;
@@ -1939,7 +1940,7 @@ int Enemies_frame(EnemyState *s, EnemySpawnTimer *t, const EnemyRoomVars *v)
      * salle : canal type 1 (9CE6, cote alterne par tir, provisoire) puis canal type 4 (9D97,
      * hall salle 4, stage 2 salles 0, 1, 3), dans l'ordre des bits de la boucle 5ED8. */
     /* 98E5 : D010 != 0 saute tout l'appel de 5EB8 (CF10 compris). */
-    if (s->parity == 0 && !s->spawnPause && !s->frozen) {   /* 5EB8 : rien tant que C440 != 0 */
+    if (s->parity == 0 && !s->spawnPause && !Enemies_spawnGate && !s->frozen) {   /* 5EB8 : rien tant que C440 != 0 ni C5AC 2, 3, 5 (5EC3) */
         w.sideFlag = v->facingLeft; /* Original 9D30 reads C42C, not CF01. */
         (void)Enemies_spawnTimerTick(t, &w, s);
         if (roomFlags(v) & ENEMY_FLAG_TYPE4) type4Channel(s, t, v);
