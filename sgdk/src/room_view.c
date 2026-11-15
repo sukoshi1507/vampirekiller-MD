@@ -70,19 +70,62 @@ void vk_show_room(u16 stage, u16 room, bool atlas)
     VDP_setEnable(TRUE);
 }
 
+#define SCENE_EDGE_TILES (VK_GFX16_SLOTS - 140)   /* free slots after the largest 16-bit tile set of a scene */
+/* 16-bit graphics of a playfield scene (gfx16.h): its 22 room rows are the 16-bit cells. The
+ * scene's own cells above and below the room (its HUD frame) use a few scene tiles: those are
+ * loaded after the 16-bit ones, and their cells drawn with PAL2, which holds the scene's MSX
+ * palette (load_actor). Same amount of VDP work as the MSX scene. */
+static void draw_scene_gfx16(const VKScene *scene, const VKGfx16Room *g16)
+{
+    u16 seen[SCENE_EDGE_TILES];
+    u16 cells[32];
+    u16 count = 0, row, col, k;
+    VDP_loadTileData(g16->tiles, TILE_USER_INDEX, g16->count, VK_TM);
+    PAL_setPalette(PAL0, g16->palette, CPU);
+    VDP_setTileMapDataRectEx(BG_A, g16->map,
+        TILE_ATTR_FULL(PAL0, FALSE, FALSE, FALSE, TILE_USER_INDEX), 0, 4, 32, 22, 32, CPU);
+    for (row = 0; row < 28; row++)
+    {
+        if (row == 4) row = 26;
+        for (col = 0; col < 32; col++)
+        {
+            const u16 tile = scene->map[row * 32 + col];
+            cells[col] = 0;
+            /* Only the frame of the item boxes (rows 1..3, columns 15..31) is kept: the rest of
+             * those rows is the status line, the labels and the bars, drawn by the HUD code. */
+            if (!tile || row < 1 || row > 3 || col < 15) continue;
+            for (k = 0; k < count && seen[k] != tile; k++) ;
+            if (k == count)
+            {
+                if (count == SCENE_EDGE_TILES) continue;
+                seen[count++] = tile;
+                VDP_loadTileData(&scene->tiles[tile * 8], (u16)(TILE_USER_INDEX + g16->count + k), 1, VK_TM);
+            }
+            cells[col] = TILE_ATTR_FULL(PAL2, FALSE, FALSE, FALSE, TILE_USER_INDEX + g16->count + k);
+        }
+        VDP_setTileMapDataRow(BG_A, cells, row, 0, 32, CPU);
+    }
+}
+
 /* Draws the scene with the display off and leaves it off. */
 static void draw_scene(u16 index)
 {
     const VKScene *scene = &vk_scenes[index];
-    vk_gfx16_on = 0;
+    const VKGfx16Room *g16 = vk_gfx16_scene(index);
+    vk_gfx16_on = g16 != 0;
     VDP_setEnable(FALSE);
     VDP_resetSprites();
     VDP_updateSprites(1, CPU);
     VDP_clearPlane(BG_A, TRUE);
-    VDP_loadTileData(scene->tiles, TILE_USER_INDEX, scene->count, VK_TM);
-    PAL_setPalette(PAL0, scene->palette, CPU);
     PAL_setPalette(PAL1, hud_palette, CPU);
     VDP_setTextPalette(PAL1);
+    if (g16)
+    {
+        draw_scene_gfx16(scene, g16);
+        return;
+    }
+    VDP_loadTileData(scene->tiles, TILE_USER_INDEX, scene->count, VK_TM);
+    PAL_setPalette(PAL0, scene->palette, CPU);
     VDP_setTileMapDataRectEx(BG_A, scene->map,
         TILE_ATTR_FULL(PAL0, FALSE, FALSE, FALSE, TILE_USER_INDEX), 0, 0, 32, 28, 32, CPU);
 }
@@ -144,8 +187,10 @@ static void set_courtyard_flame_background(u16 flame, int lit)
         const u16 col = flame_cell_col[flame] + (i & 1);
         const u16 row = FLAME_CELL_ROW + (i >> 1);
         cells[i] = lit ?
-            TILE_ATTR_FULL(PAL0, FALSE, FALSE, FALSE, TILE_USER_INDEX + vk_scenes[scene].map[row * 32 + col]) :
-            TILE_ATTR_FULL(PAL0, FALSE, FALSE, FALSE, FLAME_A_CLEAR_TILE_INDEX + i);
+            TILE_ATTR_FULL(PAL0, FALSE, FALSE, FALSE, TILE_USER_INDEX + vk_scene_cell(scene, col, row)) :
+            /* 16-bit graphics: a torch put out shows the 16-bit cells too (no MSX brazier top). */
+            (vk_gfx16_on ? TILE_ATTR_FULL(PAL0, FALSE, FALSE, FALSE, TILE_USER_INDEX + vk_scene_cell(scene, col, row)) :
+            TILE_ATTR_FULL(PAL0, FALSE, FALSE, FALSE, FLAME_A_CLEAR_TILE_INDEX + i));
     }
     /* The MSX clears the torch (HMMM) during the pass: it shows in the next frame
      * (p + 1, research/frame-timing.md). Queued for the VBlank, as the sprites. */
@@ -350,30 +395,12 @@ void vk_show_interior(void)
     debug_room_key = 0xFFFF;
     vk_tiles_by_dma = vk_fast_room_draw;   /* fast draw: display off until vk_room_display_on */
     draw_scene(6);
-    {
-        /* 16-bit graphics: the room cells of stage 1 room 0 over the scene (rows 4..25), the scene
-         * keeps the rest of the screen. */
-        const VKGfx16Room *g16 = vk_gfx16_room(1, 0);
-        if (g16)
-        {
-            vk_gfx16_on = 1;
-            VDP_loadTileData(g16->tiles, TILE_USER_INDEX, g16->count, VK_TM);
-            PAL_setPalette(PAL0, g16->palette, CPU);
-            VDP_setTileMapDataRectEx(BG_A, g16->map,
-                TILE_ATTR_FULL(PAL0, FALSE, FALSE, FALSE, TILE_USER_INDEX), 0, 4, 32, 22, 32, CPU);
-            /* The scene's own cells above and below the room (its HUD frame) point at scene tiles
-             * that are no longer loaded: cleared, the frame is drawn as in the other rooms. */
-            VDP_clearTileMapRect(BG_A, 0, 0, 32, 4);
-            VDP_clearTileMapRect(BG_A, 0, 26, 32, 2);
-        }
-    }
     if (!vk_fast_room_draw) VDP_setEnable(TRUE);
     vk_player = vk_game.player;
     /* Set the mode first: the hall target must not be placed as a courtyard flame. */
     vk_front_mode = FRONT_INTERIOR;
     load_actor(6);
     show_play_overlay();
-    if (vk_gfx16_on) vk_hud_show_frame();
     vk_front_mode = FRONT_INTERIOR;
     vk_room_display_on();
 }

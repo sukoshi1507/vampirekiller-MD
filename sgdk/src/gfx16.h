@@ -17,6 +17,11 @@ extern u8 vk_gfx16_on;
 
 /* The 16-bit data of a castle room, 0 when the option is off or the room has none. */
 const VKGfx16Room *vk_gfx16_room(u16 stage, u16 room);
+/* The same for a ROM scene drawn as a playfield: the courtyard screens (scenes 3..5) and hall
+ * room 0 (scene 6). */
+const VKGfx16Room *vk_gfx16_scene(u16 scene);
+/* The cells of rows 4..25 of that scene as drawn: 16-bit ones while vk_gfx16_on, else the scene map's. */
+u16 vk_scene_cell(u16 scene, u16 col, u16 row);
 /* The 32 x 22 cells of the room as drawn (tile offsets from TILE_USER_INDEX), and the 8 rows of
  * the tile behind one of those cells: the 16-bit ones while vk_gfx16_on, else vk_maps / vk_tiles. */
 const u16 *vk_room_cells(u16 stage, u16 room);

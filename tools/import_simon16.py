@@ -6,14 +6,15 @@ usage: import_simon16.py <castlevania-md checkout>
 Castlevania-MD (same author) holds Simon in the 16-bit art (tiles redrawn by Fiuke Bnuy, given to the
 author) as lists of 8x16 sprites in src/level.c (tools/level_to_md.py there). Each frame is drawn here
 on a 96 x 44 transparent picture, Simon's left edge at x = 32 and the NES sprite origin at y = 4, so
-that tools/build_simon16.py needs nothing but these pictures.
+that tools/build_simon16.py needs nothing but these pictures. obj_0 is the brazier (flame and stand), used
+by tools/build_gfx16.py for the courtyard.
 """
 import re
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-FRAMES = ['pose_stand', 'pose_walk1', 'pose_walk2', 'pose_crouch', 'pose_stair_up_a', 'pose_stair_up_b',
+FRAMES = ['obj_0', 'pose_stand', 'pose_walk1', 'pose_walk2', 'pose_crouch', 'pose_stair_up_a', 'pose_stair_up_b',
           'pose_stair_down_b'] + [f'{p}_{k}' for p in ('whip', 'whipc0', 'throw', 'cwhip', 'cwhipc0') for k in range(3)]
 W, H, OX, OY = 96, 44, 32, 4
 

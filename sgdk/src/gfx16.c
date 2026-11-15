@@ -1,5 +1,6 @@
 #include "gfx16.h"
 #include "generated/rooms.h"
+#include "generated/intro_assets.h"
 #include "generated/player_assets.h"
 #include "generated/simon_attack_md.h"
 #include "generated/simon_crouch_md.h"
@@ -15,6 +16,19 @@ const VKGfx16Room *vk_gfx16_room(u16 stage, u16 room)
 {
     if (!vk_gfx16 || stage < 1 || stage > 18) return 0;
     return vk_gfx16_rooms[vk_stages[stage - 1].first + room];
+}
+
+const VKGfx16Room *vk_gfx16_scene(u16 scene)
+{
+    if (!vk_gfx16) return 0;
+    if (scene >= 3 && scene <= 5) return vk_gfx16_scenes[scene - 3];
+    return scene == 6 ? vk_gfx16_room(1, 0) : 0;
+}
+
+u16 vk_scene_cell(u16 scene, u16 col, u16 row)
+{
+    const VKGfx16Room *g = vk_gfx16_on ? vk_gfx16_scene(scene) : 0;
+    return (g && row >= 4 && row < 26) ? g->map[(row - 4) * 32 + col] : vk_scenes[scene].map[row * 32 + col];
 }
 
 const u16 *vk_room_cells(u16 stage, u16 room)

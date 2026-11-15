@@ -9,4 +9,6 @@
 #define VK_GFX16_SLOTS 180
 typedef struct { const u32 *tiles; const u16 *map; u16 count; u16 palette[16]; u8 msx[16]; } VKGfx16Room;
 extern const VKGfx16Room *const vk_gfx16_rooms[VK_GFX16_ROOMS];
+/* The courtyard screens (ROM scenes 3, 4, 5): free pictures, no MSX tile slots. */
+extern const VKGfx16Room *const vk_gfx16_scenes[3];
 #endif

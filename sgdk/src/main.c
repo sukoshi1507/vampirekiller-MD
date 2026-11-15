@@ -359,7 +359,7 @@ static void castle_door_front(bool front)
         {
             if (front)
                 VDP_setTileMapXY(BG_A, TILE_ATTR_FULL(PAL0, TRUE, FALSE, FALSE,
-                    TILE_USER_INDEX + vk_scenes[5].map[row * 32 + col]), col, row);
+                    TILE_USER_INDEX + vk_scene_cell(5, col, row)), col, row);
             VDP_setTileMapXY(BG_B, front ?
                 TILE_ATTR_FULL(PAL1, TRUE, FALSE, FALSE, TILE_SYSTEM_INDEX + 2) : 0, col, row);
         }
