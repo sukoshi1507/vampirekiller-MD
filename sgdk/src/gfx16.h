@@ -4,6 +4,12 @@
 #include <genesis.h>
 #include "generated/gfx16_md.h"
 #include "generated/enemies16_md.h"
+#include "generated/items16_md.h"
+#include "generated/object_tiles_md.h"
+#include "generated/weapons_md.h"
+#include "generated/loot_md.h"
+#include "generated/death_flame_md.h"
+#include "generated/candle_flames_md.h"
 
 /* 16-bit graphics mode (research/gfx16.md, tools/build_gfx16.py): the castle rooms drawn with
  * the 16-bit art, cell for cell on the MSX layout. Nothing of the game logic reads it.
@@ -24,6 +30,21 @@ extern u8 vk_gfx16_on;
 u8 vk_gfx16_enemies(u16 stage, u16 room);
 /* PAL2 of a room: the MSX room palette `msx`, or the palette above in such a room. */
 const u16 *vk_gfx16_pal2(u16 stage, u16 room, const u16 *msx);
+
+/* The candles, objects, thrown weapons, loot and flames (tools/build_items16.py): with the option on they are the 16-bit
+ * pictures of the same layout as the MSX arrays, drawn with PAL1 (VK_PAL_ITEM), which then holds vk_item16_palette
+ * instead of the HUD palette: the entries the HUD reads (1, 2, 8, 14, 15) are the same, the others are the colours of
+ * the pictures. Everything else that uses the MSX colours (HUD boxes, text of the merchant, key, door) keeps PAL2. */
+#define VK_PAL_ITEM (vk_gfx16 ? PAL1 : VK_PAL_OBJ)
+const u32 *vk_item_gfx_weapon_tiles(void);            /* vk_weapon_tiles or the 16-bit frames (not inline: the sprite pass) */
+const u32 *vk_item16_object(u16 object);              /* 16-bit picture of the MSX object 1..0x22 (4 tiles) */
+/* The tiles to load for the MSX object 1..0x22 (vk_object_tiles), the weapons, the loot and the death flames: inline,
+ * these run in the room load and in the sprite pass (one test of vk_gfx16 more than the MSX path). */
+#define vk_item_gfx_object_tiles(object) (vk_gfx16 ? vk_item16_object(object) : &vk_object_tiles[((object) - 1) * 32])
+#define vk_item_gfx_loot_tiles() (vk_gfx16 ? vk_item16_loot_tiles : vk_loot_tiles)
+#define vk_item_gfx_death_flame_tiles() (vk_gfx16 ? vk_item16_death_flame_tiles : vk_death_flame_tiles)
+/* The ball of a candle flame (colour 0: white 0E, 1: skin, 2: red 08), 4 tiles: vk_candle_flame_tiles, or a loot ball. */
+#define vk_item_gfx_flame_tiles(color) (vk_gfx16 ? &vk_item16_loot_tiles[(3 - (color)) * 32] : &vk_candle_flame_tiles[(color) * 32])
 
 /* The 16-bit data of a castle room, 0 when the option is off or the room has none. */
 const VKGfx16Room *vk_gfx16_room(u16 stage, u16 room);

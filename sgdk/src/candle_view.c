@@ -60,6 +60,8 @@ static VKByte drop_loaded[VK_DROP_MAX];
 static VKByte item_loaded[ITEM_SLOTS];
 /* Sheet object at WEAPON_ICON_TILE_INDEX, 0 when none is loaded. */
 static VKByte weapon_loaded;
+/* Palettes of the item sprites and of the flames of this frame (16-bit graphics: PAL1, gfx16.h), set once per frame. */
+static u16 item_pal, flame_pal;
 static VKByte key_loaded;            /* object drawn in the HUD key sprite: 17, or 12 (three keys) */
 
 static u16 item_slot_tile(u16 slot)
@@ -71,7 +73,7 @@ static u16 item_slot_tile(u16 slot)
  * show the new object for one frame in the slot's previous sprite. */
 static void load_object(VKByte object, u16 index)
 {
-    VDP_loadTileData(&vk_object_tiles[(object - 1) * 32], index, 4, DMA_QUEUE);
+    VDP_loadTileData(vk_item_gfx_object_tiles(object), index, 4, DMA_QUEUE);
 }
 
 /* 4x4 cells of a hidden block of the current castle room (rooms drawn from
@@ -161,7 +163,7 @@ static void set_sprite(u16 n, s16 x, s16 y, u16 attr)
 }
 
 /* The icons of the HUD: the gold key, the weapon and the item box. */
-static u16 hud_sprites(void)
+__attribute__((noinline)) static u16 hud_sprites(void)
 {
     const VKCandles *c = &vk_candles;
     u16 n = 0;
@@ -173,17 +175,17 @@ static u16 hud_sprites(void)
     }
     if (c->hud_key)
         set_sprite(n++, HUD_GOLD_KEY_X, HUD_GOLD_KEY_Y,
-                   TILE_ATTR_FULL(VK_PAL_OBJ, TRUE, FALSE, FALSE, GOLD_KEY_TILE_INDEX));
+                   TILE_ATTR_FULL(item_pal, TRUE, FALSE, FALSE, GOLD_KEY_TILE_INDEX));
     if (c->hud_weapon)
     {
         if (weapon_loaded != c->hud_weapon)
         {
             /* Queued with the sprite table, as the item box objects. */
-            VDP_loadTileData(&vk_object_tiles[(c->hud_weapon - 1) * 32], WEAPON_ICON_TILE_INDEX, 4, DMA_QUEUE);
+            VDP_loadTileData(vk_item_gfx_object_tiles(c->hud_weapon), WEAPON_ICON_TILE_INDEX, 4, DMA_QUEUE);
             weapon_loaded = c->hud_weapon;
         }
         set_sprite(n++, HUD_WEAPON_X, HUD_WEAPON_Y,
-                   TILE_ATTR_FULL(VK_PAL_OBJ, TRUE, FALSE, FALSE, WEAPON_ICON_TILE_INDEX));
+                   TILE_ATTR_FULL(item_pal, TRUE, FALSE, FALSE, WEAPON_ICON_TILE_INDEX));
     }
     /* HUD item box: the object just taken (8F2D), or the objects of C701 bits
      * 7..3 (8EE6), PAL0 sprites over the black box as the gold key. */
@@ -199,11 +201,11 @@ static u16 hud_sprites(void)
             {
                 /* Queued with the sprite table (VBlank DMA): a CPU load would show the
                  * new object for one frame at the slot's previous place. */
-                VDP_loadTileData(&vk_object_tiles[(object - 1) * 32], item_slot_tile(slot), 4, DMA_QUEUE);
+                VDP_loadTileData(vk_item_gfx_object_tiles(object), item_slot_tile(slot), 4, DMA_QUEUE);
                 item_loaded[slot] = object;
             }
             set_sprite(n++, x, VK_ITEM_BOX_Y,
-                       TILE_ATTR_FULL(VK_PAL_OBJ, TRUE, FALSE, FALSE, item_slot_tile(slot)));
+                       TILE_ATTR_FULL(item_pal, TRUE, FALSE, FALSE, item_slot_tile(slot)));
             slot++;
         }
     }
@@ -212,7 +214,9 @@ static u16 hud_sprites(void)
 
 void vk_candle_view_hud_only(void)
 {
-    const u16 n = hud_sprites();
+    u16 n;
+    item_pal = VK_PAL_ITEM;
+    n = hud_sprites();
     if (n) VDP_setSpriteLink((u16)(CANDLE_SPRITE_BASE + n - 1), 0);
     /* The chain starts at sprite 0: out of the screen, it only links the icons. */
     VDP_setSpriteFull(0, -32, -32, SPRITE_SIZE(1, 1), 0, n ? CANDLE_SPRITE_BASE : 0);
@@ -225,7 +229,7 @@ void vk_candle_view_hud_only(void)
  *  - object 01, C800 type 1E: as the death flame (9B71): from T = 2, F4 / F8 changing at T = 6, 14, 22, 30, F8 one line lower;
  *  - the other objects, C800 type 26: the pattern EC, one line lower, from T = 2, colour 0E until T = 5 then 0E, 01, 08, 01 every
  *    2 frames (T - 4 >> 1 & 3), also while it falls. */
-static void burst_sprite(u16 *n, u16 slot, const VKDrop *d)
+__attribute__((noinline)) static void burst_sprite(u16 *n, u16 slot, const VKDrop *d)
 {
     const u16 t = d->timer;
     s16 y = d->y;
@@ -250,13 +254,13 @@ static void burst_sprite(u16 *n, u16 slot, const VKDrop *d)
         if (t < 2) return;
         if (drop_loaded[slot] != loaded)
         {
-            VDP_loadTileData(&vk_candle_flame_tiles[color * 32], (u16)(DROP_TILE_INDEX + slot * 4), 4, DMA_QUEUE);
+            VDP_loadTileData(vk_item_gfx_flame_tiles(color), (u16)(DROP_TILE_INDEX + slot * 4), 4, DMA_QUEUE);
             drop_loaded[slot] = loaded;
         }
         tile = DROP_TILE_INDEX + slot * 4;
         y += 1;
     }
-    set_sprite((*n)++, d->x, y, TILE_ATTR_FULL(PAL2, TRUE, FALSE, FALSE, tile));
+    set_sprite((*n)++, d->x, y, TILE_ATTR_FULL(flame_pal, TRUE, FALSE, FALSE, tile));
 }
 
 u16 vk_candle_view_sprites(void)
@@ -265,6 +269,8 @@ u16 vk_candle_view_sprites(void)
     u16 n;
     u16 i;
     if (vk_front_mode != FRONT_INTERIOR && vk_front_mode != FRONT_COURTYARD) return 0;
+    item_pal = VK_PAL_ITEM;
+    flame_pal = vk_gfx16 ? PAL1 : PAL2;
     n = hud_sprites();
     /* Wall candles (mode 0) of the castle; courtyard torches are room_view.c flames
      * and hidden blocks (mode 3) are part of the wall. */
@@ -276,7 +282,7 @@ u16 vk_candle_view_sprites(void)
             const VKCandleDef *def = vk_candles_def(c, i);
             if (def->mode != 0 || !vk_candles_lit(c, i)) continue;
             set_sprite(n++, def->x, def->y,
-                       TILE_ATTR_FULL(VK_PAL_OBJ, FALSE, FALSE, FALSE, CANDLE_TILE_INDEX + frame * 4));
+                       TILE_ATTR_FULL(item_pal, FALSE, FALSE, FALSE, CANDLE_TILE_INDEX + frame * 4));
         }
     }
     for (i = 0; i < VK_DROP_MAX; i++)
@@ -289,7 +295,7 @@ u16 vk_candle_view_sprites(void)
                 u16 tile;
                 if(sp[2]>=0xF4)tile=DEATH_FLAME_TILE_INDEX+(sp[2]==0xF8?4:0);
                 else tile=LOOT_TILE_INDEX+(sp[2]==0xE8?0:sp[3]==8?4:sp[3]==1?8:12);
-                set_sprite(n++,sp[0],sp[1],TILE_ATTR_FULL(PAL2,TRUE,FALSE,FALSE,tile));
+                set_sprite(n++,sp[0],sp[1],TILE_ATTR_FULL(flame_pal,TRUE,FALSE,FALSE,tile));
             }
             if(!raw || raw[0]!=0x84)continue;
         }
@@ -305,7 +311,7 @@ u16 vk_candle_view_sprites(void)
             load_object(object, (u16)(DROP_TILE_INDEX + i * 4));
             drop_loaded[i] = object;
         }
-        set_sprite(n++, d->x, d->y, TILE_ATTR_FULL(VK_PAL_OBJ, FALSE, FALSE, FALSE, DROP_TILE_INDEX + i * 4));
+        set_sprite(n++, d->x, d->y, TILE_ATTR_FULL(item_pal, FALSE, FALSE, FALSE, DROP_TILE_INDEX + i * 4));
     }
     n = (u16)(n + vk_wall_view_sprites((u16)(CANDLE_SPRITE_BASE + n)));
     if (n) VDP_setSpriteLink((u16)(CANDLE_SPRITE_BASE + n - 1), 0);

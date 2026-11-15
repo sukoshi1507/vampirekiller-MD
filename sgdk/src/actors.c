@@ -1036,7 +1036,7 @@ static u16 show_enemy_sprites(u16 tail)
         for (i = 0; i < n; i++)
             VDP_setSpriteFull((u16)(ENEMY_SPRITE_BASE + (i<boss_body_count?i:count+i)), boss[i].x, boss[i].y,
                 SPRITE_SIZE(boss[i].size, boss[i].size),
-                TILE_ATTR_FULL(PAL2, TRUE, FALSE, FALSE, (u16)((boss[i].tile&VK_BOSS_SHARED_FLAME_TILE)?DEATH_FLAME_TILE_INDEX+(boss[i].tile&7):ENEMY5_TILE_INDEX+boss[i].tile)),
+                TILE_ATTR_FULL((vk_gfx16 && (boss[i].tile&VK_BOSS_SHARED_FLAME_TILE)) ? PAL1 : PAL2, TRUE, FALSE, FALSE, (u16)((boss[i].tile&VK_BOSS_SHARED_FLAME_TILE)?DEATH_FLAME_TILE_INDEX+(boss[i].tile&7):ENEMY5_TILE_INDEX+boss[i].tile)),
                 (u16)(i+1<boss_body_count?ENEMY_SPRITE_BASE+i+1:i+1==boss_body_count && count?ENEMY_SPRITE_BASE+boss_body_count:i+1<n?ENEMY_SPRITE_BASE+count+i+1:tail));
         boss_count=(u16)n;
         }
@@ -1052,11 +1052,17 @@ static u16 show_enemy_sprites(u16 tail)
             : (pattern & ENEMY_PATTERN_TYPE4)
             ? (u16)(ENEMY4_TILE_INDEX + (pattern & ~ENEMY_PATTERN_TYPE4) - VK_ENEMY4_FIRST_PATTERN)
             : (u16)(ENEMY_TILE_INDEX + pattern - VK_ENEMY_FIRST_PATTERN);
+        u16 pal = PAL2;
+        /* 16-bit graphics: the death flames (bank 2) and the loot (bank 4) are the 16-bit items, drawn with PAL1; the moving
+         * platform is drawn with the 16-bit Simon colours (build_platform16.py). */
+        if (vk_gfx16)
+        {
+            if (list[i].bank == 2 || list[i].bank == 4) pal = PAL1;
+            else if (list[i].bank == 1 && (vk_game.stage == 5 || vk_game.stage == 10) &&
+                     pattern == (vk_game.stage == 10 ? VK_PLATFORM_PATTERN_10 : VK_PLATFORM_PATTERN)) pal = PAL3;
+        }
         VDP_setSpriteFull((u16)(ENEMY_SPRITE_BASE + boss_body_count + i), list[i].x, list[i].y, SPRITE_SIZE(2, 2),
-            /* 16-bit graphics: the moving platform is drawn with the 16-bit Simon colours (build_platform16.py). */
-            TILE_ATTR_FULL(vk_gfx16 && list[i].bank == 1 && (vk_game.stage == 5 || vk_game.stage == 10) &&
-                           pattern == (vk_game.stage == 10 ? VK_PLATFORM_PATTERN_10 : VK_PLATFORM_PATTERN) ? PAL3 : PAL2,
-                           TRUE, FALSE, FALSE, tile),
+            TILE_ATTR_FULL(pal, TRUE, FALSE, FALSE, tile),
             (u16)(i+1<count?ENEMY_SPRITE_BASE+boss_body_count+i+1:boss_count>boss_body_count?ENEMY_SPRITE_BASE+boss_body_count+count:tail));
     }
     return (u16)(count+boss_count);
@@ -1245,13 +1251,14 @@ void vk_show_player(const VKPlayer *shown)
      * already hold the lash and the arm. */
     {
         u16 k;
+        const u16 shot_pal = VK_PAL_ITEM;
         for (k = 0; k < VK_WEAPON_SLOTS; k++)
         {
             const VKShot *shot = &vk_weapons.shot[k];
             const int frame = shot_frame[k] = vk_weapons_frame_index(shot);
             VDP_setSpriteFull((u16)(1 + k), frame < 0 ? -32 : (s16)shot->x - 8,
                 frame < 0 ? -32 : (s16)shot->y - 15, SPRITE_SIZE(2, 2),
-                TILE_ATTR_FULL(PAL2, TRUE, FALSE, FALSE, SHOT_TILE_INDEX + k * VK_WEAPON_TILES_PER_FRAME),
+                TILE_ATTR_FULL(shot_pal, TRUE, FALSE, FALSE, SHOT_TILE_INDEX + k * VK_WEAPON_TILES_PER_FRAME),
                 (u16)(2 + k));
         }
         for (k = 3; k <= 4; k++)
@@ -1321,7 +1328,7 @@ void vk_show_player(const VKPlayer *shown)
             for (u16 k = 0; k < VK_WEAPON_SLOTS; k++)
                 if (late_shot[k] >= 0 && late_shot[k] != shot_loaded[k])
                 {
-                    VDP_loadTileData(&vk_weapon_tiles[late_shot[k] * VK_WEAPON_TILES_PER_FRAME * 8],
+                    VDP_loadTileData(&vk_item_gfx_weapon_tiles()[late_shot[k] * VK_WEAPON_TILES_PER_FRAME * 8],
                                      (u16)(SHOT_TILE_INDEX + k * VK_WEAPON_TILES_PER_FRAME),
                                      VK_WEAPON_TILES_PER_FRAME, DMA_QUEUE);
                     shot_loaded[k] = late_shot[k];
@@ -1461,8 +1468,8 @@ void vk_load_whip_graphics(void)
     load_whip_level(vk_whip_level(&vk_whip));
     load_crouch_level(vk_whip_level(&vk_whip));
     shot_loaded[0] = shot_loaded[1] = -1;
-    VDP_loadTileData(vk_death_flame_tiles, DEATH_FLAME_TILE_INDEX, VK_DEATH_FLAME_TILE_COUNT, VK_TM);
-    VDP_loadTileData(vk_loot_tiles,LOOT_TILE_INDEX,VK_LOOT_TILE_COUNT, VK_TM);
+    VDP_loadTileData(vk_item_gfx_death_flame_tiles(), DEATH_FLAME_TILE_INDEX, VK_DEATH_FLAME_TILE_COUNT, VK_TM);
+    VDP_loadTileData(vk_item_gfx_loot_tiles(),LOOT_TILE_INDEX,VK_LOOT_TILE_COUNT, VK_TM);
     vk_hide_targets();
     shield_loaded = -1;              /* the scene tiles may have covered the slot */
 }

@@ -10,6 +10,7 @@ typedef int TransferMethod;
 #define TRUE true
 #define FALSE false
 #define PAL0 0
+#define PAL1 1
 #define PAL2 2
 #define BG_A 0
 #define DMA_QUEUE 1

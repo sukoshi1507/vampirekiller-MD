@@ -9,7 +9,8 @@
 #include "generated/intro_assets.h"
 
 /* Text colour (15) and the HUD bar colours of hud.c: PLAYER fill (1), ENEMY
- * fill (8) and frame (14), the values of ROM scenes 3..6 at those indices. */
+ * fill (8) and frame (14), the values of ROM scenes 3..6 at those indices. In 16-bit mode PAL1 is
+ * vk_item16_palette: the same colours at 1, 2, 8, 14 and 15, the colours of the items elsewhere (gfx16.h). */
 static const u16 hud_palette[16] = {
     0, 0x08AE, 0, 0, 0, 0, 0, 0, 0x020E, 0, 0, 0, 0, 0, 0x0EEE, 0x0EEE
 };
@@ -44,7 +45,7 @@ static void draw_room(u16 stage, u16 room, bool atlas)
     if (g16) vk_gfx16_load_tiles(g16, TILE_USER_INDEX, VK_TM);
     else VDP_loadTileData(vk_tiles[group->tileset], TILE_USER_INDEX, VK_TILE_COUNT, VK_TM);
     PAL_setPalette(PAL0, g16 ? g16->palette : vk_palettes[index], CPU);
-    PAL_setPalette(PAL1, hud_palette, CPU);
+    PAL_setPalette(PAL1, vk_gfx16 ? vk_item16_palette : hud_palette, CPU);
     VDP_setTextPalette(PAL1);
     sprintf(label, "STAGE %02u  ROOM %02u/%02u", stage, room, group->count - 1);
     VDP_drawText(label, 3, 1);
@@ -118,7 +119,7 @@ static void draw_scene(u16 index)
     VDP_resetSprites();
     VDP_updateSprites(1, CPU);
     VDP_clearPlane(BG_A, TRUE);
-    PAL_setPalette(PAL1, hud_palette, CPU);
+    PAL_setPalette(PAL1, vk_gfx16 ? vk_item16_palette : hud_palette, CPU);
     VDP_setTextPalette(PAL1);
     if (g16)
     {

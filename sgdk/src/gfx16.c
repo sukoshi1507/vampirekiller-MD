@@ -102,3 +102,11 @@ const u32 *vk_simon_gfx_whip_tiles(int kind)
 }
 const u32 *vk_simon_gfx_crouch_tiles(void) { return PICK(vk_simon_crouch_tiles, vk_simon16_crouch); }
 const u32 *vk_simon_gfx_crouch_level_tiles(void) { return PICK(vk_simon_crouch_level_tiles, vk_simon16_crouch_levels); }
+
+/* No 16-bit picture (0xFF): the object is empty on the MSX too (0x1F, 0x20) or never shown (0x15), its MSX cell is used. */
+const u32 *vk_item16_object(u16 object)
+{
+    const u8 cell = vk_item16_object_cell[object - 1];
+    return cell == 0xFF ? &vk_object_tiles[(object - 1) * 32] : &vk_item16_object_tiles[cell * 32];
+}
+const u32 *vk_item_gfx_weapon_tiles(void) { return vk_gfx16 ? vk_item16_weapon_tiles : vk_weapon_tiles; }
