@@ -310,6 +310,9 @@ int Enemies_spawnTimerTick(EnemySpawnTimer *t, const EnemyRoomVars *v, EnemyStat
 /* God mode (port addition, Konami code while paused): no contact damage nor recoil. */
 extern EnemyU8 Enemies_itemSoundCount,Enemies_itemSounds[2];
 extern EnemyU8 Enemies_god;
+/* 5EC3-5ECD: 5EB8 returns while C5AC is 2, 3 or 5 (door lifting, door walk, castle entrance): no spawn channel runs,
+ * no timer (CF10) moves. Set by main.c from the door state, every frame. */
+extern EnemyU8 Enemies_spawnGate;
 /* Stage 7 : valeur de LD A,R (B216, B29E, B4AD) des objets 0B et 0D, 0 a 255 pour une valeur fixe (tests, scenario), -1 pour le
  * generateur du port. */
 extern volatile EnemyS16 Enemies_s7R;

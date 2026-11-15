@@ -93,7 +93,7 @@ static void new_game(void)
     vk_reset_enemies();
     vk_reset_enemy_clock();
     vk_health_begin(&health);
-    vk_items_begin(&items);
+    vk_items_begin(&items);Enemies_spawnGate = 0;
     vk_candles_begin(&vk_candles);
     Enemies_loot_handler(enemy_loot_take);
     vk_wall_begin(&vk_walls);
@@ -113,7 +113,7 @@ static void dracula_finish(void)
  const EnemyU8 tick=vk_enemies.tick,phase=vk_enemies.itemPhase;
  vk_dracula_view_reset();
  if(d->return_title){vk_show_title();return;}
- vk_game_begin(&vk_game);vk_items_begin(&items);vk_reset_enemies();
+ vk_game_begin(&vk_game);vk_items_begin(&items);Enemies_spawnGate = 0;vk_reset_enemies();
  vk_enemies.tick=tick;vk_enemies.itemPhase=phase;
  vk_health_begin(&health);health.lives=lives;
  vk_candles_begin(&vk_candles);vk_candles.hearts=hearts;vk_candles.c701=map;vk_candles.c70f=uses;
@@ -181,7 +181,7 @@ static void next_stage(void)
     const EnemyU8 energy = vk_enemies.energy;
     const VKByte next = (VKByte)(vk_game.stage + 1);
     vk_game_enter_stage(&vk_game, next);
-    vk_items_enter_stage(&items);
+    vk_items_enter_stage(&items);Enemies_spawnGate = 0;
     vk_reset_enemies();
     vk_enemies.frozen = frozen;
     vk_enemies.energy = energy;
@@ -572,7 +572,7 @@ static void jump_to_stage(u16 stage, u16 room)
     pause_end();
     new_game();
     vk_game_debug_start(&vk_game, (VKByte)stage, (VKByte)room);
-    vk_items_enter_stage(&items);
+    vk_items_enter_stage(&items);Enemies_spawnGate = 0;
     vk_reset_enemies();
     vk_reset_enemy_clock();
     vk_weapons_reset(&vk_weapons);
@@ -733,7 +733,7 @@ int main(bool hardReset)
                 /* Debug: C starts a game in stage 2 room 0, as through the room 7 door. */
                 new_game();
                 vk_game_enter_stage(&vk_game, 2);
-                vk_items_enter_stage(&items);
+                vk_items_enter_stage(&items);Enemies_spawnGate = 0;
                 vk_player = vk_game.player;
                 vk_reset_enemies();
                 vk_candles_reset_stage(&vk_candles, 2);
@@ -949,6 +949,7 @@ int main(bool hardReset)
                     {
                         /* 77D1, trace: the link of the side of the door (stage 3: right, X 10, Y 176;
                          * stage 6: left, X 246, the Y of the door room goes on), music 87. */
+                        Enemies_spawnGate = 0;   /* the room load of the boss room sets C5AC again (63B1) */
                         vk_game.room = (VKByte)vk_boss_room_of(vk_game.stage);
                         vk_game.player.x = (VKByte)vk_boss_entry_x(vk_game.stage);
                         if (vk_boss_entry_y(vk_game.stage) >= 0) vk_game.player.y = (VKByte)vk_boss_entry_y(vk_game.stage);
@@ -983,6 +984,7 @@ int main(bool hardReset)
                          * vanish at the door as in the NES game), 7513 (the thrown weapons emptied). */
                         vk_whip_stop(&vk_whip);
                         Enemies_doorClear(&vk_enemies);
+                        Enemies_spawnGate = 1;   /* 5EC3: C5AC 2 (bar lifting) and 3 (door walk) stop 5EB8: no spawn channel, no timer */
                         vk_weapons_reset(&vk_weapons);
                     }
                     {

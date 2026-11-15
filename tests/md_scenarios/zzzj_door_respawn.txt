@@ -1,0 +1,30 @@
+# (zzzj) Porte du stage 2 (salle 1) : tant que C5AC vaut 2 (barreau qui monte) ou 3 (marche de porte), 5EC3 fait revenir 5EB8
+# des le debut (C5AC - 2 = 0, - 3 = 0, - 5 = 0) : aucun canal d'apparition ne tourne et aucune minuterie (CF10) ne bouge.
+# Trace openMSX (tools/run_door_respawn_trace.py, stage 2 salle 1) : dernier tir image 3504, porte ouverte image 3550 (C5AC = 2),
+# marche a 3638 (C5AC = 3), sortie 3713 ; les tirs revenaient tous les 168 images (3056, 3224, 3336, 3504) : le suivant, attendu vers
+# 3672 pendant la marche, n'a pas lieu. Retour testeur (console) : des chauves-souris reapparaissaient pendant la porte.
+until front_mode == MODES['TITLE'] max 2000
+wait 10
+tap C
+wait 30
+poke vk_debug_keys 1
+poke Enemies_god 1
+hold A 3
+hold A+RIGHT 3
+wait 10
+expect game.stage == 2 and game.room == 1
+poke items+0 0x01
+poke items+1 1
+poke vk_game+0 200
+poke vk_game+1 96
+poke vk_game+2 0
+until enemies.alive > 0 max 1500
+wait 130
+poke vk_game+0 228
+poke vk_game+1 96
+poke vk_game+2 0
+wait 4
+until ram8('items+2') == 1 max 60 RIGHT
+expect enemies.alive == 0 # 7806 : plus aucun ennemi a l'ouverture
+repeat 70 zzzj_door_step.inc # barreau qui monte puis marche de porte (stage 2 ; les 168 images du tir attendu y tombent)
+until game.stage == 3 max 200
