@@ -541,7 +541,7 @@ static void step_boss(const EnemyRoomVars *v)
         const u16 first = vk_boss.kind ? 5 : 4;   /* stages 6 and 9: trace, entries 5 and 7 */
         u16 pal;
         if (vk_boss.kind) VDP_loadTileData(vk_orb6_tiles, ENEMY5_TILE_INDEX, VK_ORB6_TILE_COUNT, DMA_QUEUE);
-        else VDP_loadTileData(vk_orb_tiles, ENEMY5_TILE_INDEX, VK_ORB_TILE_COUNT, DMA_QUEUE);
+        else VDP_loadTileData(vk_gfx16_boss3(vk_game.stage, vk_game.room) ? vk_orb16_tiles : vk_orb_tiles, ENEMY5_TILE_INDEX, VK_ORB_TILE_COUNT, DMA_QUEUE);
         for (pal = PAL0; pal <= PAL2; pal = (u16)(pal + PAL2))
         {
             if (pal == PAL0 && vk_gfx16_on) continue;   /* PAL0 holds the 16-bit art, not the MSX palette */
@@ -714,7 +714,7 @@ static void room_cells(u16 key)
         }
         else if (stage == VK_BOSS9_STAGE) VDP_loadTileData(vk_boss9_tiles, ENEMY5_TILE_INDEX, VK_BOSS9_TILE_COUNT, VK_TM);
         else if (stage == VK_BOSS6_STAGE) VDP_loadTileData(vk_boss6_tiles, ENEMY5_TILE_INDEX, VK_BOSS6_TILE_COUNT, VK_TM);
-        else VDP_loadTileData(vk_boss_tiles, ENEMY5_TILE_INDEX, VK_BOSS_TILE_COUNT, VK_TM);
+        else VDP_loadTileData(vk_gfx16_boss3(vk_game.stage, vk_game.room) ? vk_boss16_tiles : vk_boss_tiles, ENEMY5_TILE_INDEX, VK_BOSS_TILE_COUNT, VK_TM);
     }
 }
 

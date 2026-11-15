@@ -4,6 +4,7 @@
 #include <genesis.h>
 #include "generated/gfx16_md.h"
 #include "generated/enemies16_md.h"
+#include "generated/boss3_16_md.h"
 #include "generated/items16_md.h"
 #include "generated/object_tiles_md.h"
 #include "generated/weapons_md.h"
@@ -28,7 +29,10 @@ extern u8 vk_gfx16_on;
  * colours replace the MSX palette in PAL2 (vk_enemy16_palette): the MSX colours that other PAL2 content uses
  * keep their entries, so objects, candles, weapons and the HUD boxes look as in MSX mode. */
 u8 vk_gfx16_enemies(u16 stage, u16 room);
-/* PAL2 of a room: the MSX room palette `msx`, or the palette above in such a room. */
+/* The bat boss of the stage 3 (room 5, tools/build_boss3_16.py): 16-bit body, fireball and orb (vk_boss16_tiles, vk_orb16_tiles, same layout as the
+ * MSX arrays). PAL2 of that room is vk_boss16_palette, whose entries 4 and 6 already hold the colours the orb writes there (006, 00A). */
+u8 vk_gfx16_boss3(u16 stage, u16 room);
+/* PAL2 of a room: the MSX room palette `msx`, or one of the palettes above in such a room. */
 const u16 *vk_gfx16_pal2(u16 stage, u16 room, const u16 *msx);
 
 /* The candles, objects, thrown weapons, loot and flames (tools/build_items16.py): with the option on they are the 16-bit

@@ -24,8 +24,14 @@ u8 vk_gfx16_enemies(u16 stage, u16 room)
     return (u8)(vk_gfx16_on && stage >= 1 && stage <= 3 && !vk_boss_room(stage, room));
 }
 
+u8 vk_gfx16_boss3(u16 stage, u16 room)
+{
+    return (u8)(vk_gfx16_on && stage == 3 && vk_boss_room(3, room));
+}
+
 const u16 *vk_gfx16_pal2(u16 stage, u16 room, const u16 *msx)
 {
+    if (vk_gfx16_boss3(stage, room)) return vk_boss16_palette;
     return vk_gfx16_enemies(stage, room) ? vk_enemy16_palette : msx;
 }
 

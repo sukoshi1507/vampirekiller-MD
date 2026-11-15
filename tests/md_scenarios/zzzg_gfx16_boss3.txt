@@ -1,0 +1,117 @@
+# (zzzg) Mode graphique 16 bits (research/gfx16.md, section "Boss chauve-souris 16 bits") : le boss du stage 3 (salle 5) en 16 bits : corps (poses 4E
+# et 4F), boule de feu, flamme de mort du corps (PAL1), orbe (poses 8F, 90, 91). PAL2 de la salle est vk_boss16_palette (les entrees 4 et 6, que l'orbe
+# reecrit en 006 et 00A, les contiennent deja). Meme deroulement que zr_stage3_boss (porte de la salle 4 -> salle 5, vol, tir, dernier coup, orbe, stage 4).
+until front_mode == MODES['TITLE'] max 2000
+wait 10
+poke vk_gfx16 1
+tap C
+wait 30
+poke vk_game+22 3
+poke vk_game+20 3
+poke vk_debug_keys 1                               # debug shortcuts are off by default
+hold A 3
+hold A+RIGHT 3
+wait 10
+expect game.stage == 3
+poke vk_game+20 4
+poke items+0 0x01
+poke items+1 1
+poke vk_game+0 228
+poke vk_game+1 128
+poke vk_game+2 0
+wait 4
+until ram8('items+2') == 1 max 60 RIGHT
+until game.room == 5 max 400
+expect game.player.x == 10 # trace : x 10, y 176, puis chute a 192
+until game.player.y == 192 max 60
+expect ram8('vk_boss') == 1
+expect ram8('vk_boss+3') == 1 and ram8('vk_boss+8') == 0x40 and ram8('vk_boss+10') == 0x70
+wait 2
+shot zzzg-boss-depart
+expect ram8('vk_gfx16_on') == 1
+# Corps 16 bits (obj_51), sprites en PAL2 (palette de la salle : entrees 4 et 6 = rouge sombre 006 et rouge 00A des l'entree dans la salle).
+set pal lambda: [(ram16('vdpSpriteCache+%d' % (8 * i + 4)) >> 13) & 3 for i in range(80)]
+set bc sorted(colors(80, 40, 150, 100))
+expect (65, 101, 139) in bc and (205, 101, 238) in bc and (98, 0, 0) in bc and (172, 32, 32) in bc # gris-bleu, magenta, rouge sombre, rouge du corps 16 bits
+expect 2 in pal()
+poke vk_boss+8 176
+poke vk_boss+10 30
+wait 1
+tap B
+wait 20
+expect ram8('vk_boss+21') == 0x78 # -8
+expect pixel(119, 24) != pixel(120, 24) # barre ENEMY : 60 px
+shot zzzg-coup
+poke vk_boss+8 176
+poke vk_boss+10 16
+wait 2
+expect enemies.energy == 28 and enemies.invuln > 0
+poke vk_boss+8 64
+poke vk_boss+10 200
+until game.recoil == 0 and game.player.y == 192 max 120
+until enemies.invuln == 0 max 300
+poke vk_boss+4 2
+poke vk_boss+7 1
+until ram8('vk_boss+4') >= 4 max 400
+expect ram16('vk_boss+12') == 0 and ram16('vk_boss+14') == 0
+shot zzzg-vise
+set snd0 ram16('vk_psg+24')
+until ram8('vk_boss+36') == 1 max 200
+wait 6
+expect ram16('vk_psg+24') == snd0 # le tir du boss du stage 3 ne demande aucun effet (BF44 : pas de 509F ; ce n'est pas un 13)
+shot zzzg-boule
+set fb sorted(colors(0, 30, 256, 190))
+expect (65, 101, 139) in fb and (172, 32, 32) in fb
+poke vk_boss+36 0
+poke vk_boss+46 0
+poke vk_boss+21 8
+poke vk_game+0 28
+poke vk_boss+8 176
+poke vk_boss+10 48
+wait 1
+until ram8('vk_boss+192') != 0 max 20 B # 7806 -> 9A3A : flamme de mort du corps
+expect ram8('vk_boss+21') == 0 and ram8('vk_boss+3') == 0
+set ex [(ram8('vk_boss+10'), ram8('vk_boss+8') - 24)]
+expect ex[0][0] >= 40 and ex[0][0] <= 60 # le corps du dernier coup, 18h plus haut (trace : Y B9 -> A1)
+set fl lambda t: sorted((x, y) for (tl, x, y) in linked_sprites(t, t))
+set want lambda dy: sorted((x - 8, y - dy) for (x, y) in ex)
+set k frame
+until fl(752) + fl(756) != [] max 10
+set s frame
+expect s - k <= 1 # sprite one frame after the calculation
+expect fl(752) == want(15) and fl(756) == [] # pose 85: F4 at (X - 8, Y - 15)
+until fl(756) != [] max 20
+expect frame - s == 6 and fl(756) == want(14) # F8 at Y - 14
+set p1 lambda: [(ram16('vdpSpriteCache+%d' % (8 * i + 4)) >> 13) & 3 for i in range(80)]
+shot zzzg-flamme-mort
+expect 1 in p1() # flamme de mort du corps = flamme 16 bits, PAL1
+set fm sorted(colors(0, 30, 256, 190))
+expect (238, 170, 0) in fm and (139, 0, 0) in fm
+until fl(752) != [] max 20
+expect frame - s == 14 and fl(752) == want(15)
+until fl(756) != [] max 20
+expect frame - s == 22
+until fl(752) != [] max 20
+expect frame - s == 30
+until fl(752) + fl(756) == [] max 20
+expect frame - s == 34 # 34 frames in all
+expect ram8('vk_boss+192') == 0 and ram8('vk_boss+193') == 0
+wait 4
+until ram8('vk_boss+28') == 1 max 200
+until ram8('vk_boss+34') == 1 max 500
+expect ram8('vk_boss+33') == 0xC0
+wait 2
+shot zzzg-orbe
+# Orbe 16 bits (obj_56, obj_57) : les entrees 4 et 6 de PAL2 valaient deja 006 et 00A ; l'orbe n'a ni le beige ni le blanc de l'orbe MSX.
+set ob sorted(colors(100, 160, 140, 200))
+expect (98, 0, 0) in ob and (172, 32, 32) in ob
+until (205, 101, 238) in colors(100, 160, 140, 200) max 40 # anneau de lumiere de la pose 90
+poke vk_game+0 120
+until ram8('vk_boss+35') == 1 max 10
+poke vk_game+0 40
+set e0 enemies.energy
+until enemies.energy > e0 max 500
+until game.stage == 4 max 400
+wait 10
+expect game.room == 0 and ram8('vk_boss') == 0
+shot zzzg-stage4
