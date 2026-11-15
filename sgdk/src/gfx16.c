@@ -31,16 +31,52 @@ u16 vk_scene_cell(u16 scene, u16 col, u16 row)
     return (g && row >= 4 && row < 26) ? g->map[(row - 4) * 32 + col] : vk_scenes[scene].map[row * 32 + col];
 }
 
-const u16 *vk_room_cells(u16 stage, u16 room)
+u16 vk_room_cell(u16 stage, u16 room, u16 i)
 {
     const VKGfx16Room *g = vk_gfx16_on ? vk_gfx16_room(stage, room) : 0;
-    return g ? g->map : vk_maps[vk_stages[stage - 1].first + room];
+    return g ? g->map[i] : vk_maps[vk_stages[stage - 1].first + room][i];
 }
 
 const u32 *vk_room_tile(u16 stage, u16 room, u16 tile)
 {
     const VKGfx16Room *g = vk_gfx16_on ? vk_gfx16_room(stage, room) : 0;
-    return g ? &g->tiles[tile * 8] : &vk_tiles[vk_stages[stage - 1].tileset][tile * 8];
+    return g ? &vk_gfx16_pool[g->slots[tile] * 8] : &vk_tiles[vk_stages[stage - 1].tileset][tile * 8];
+}
+
+void vk_gfx16_load_tiles(const VKGfx16Room *g, u16 index, TransferMethod tm)
+{
+    /* The slots point anywhere in the pool (about 60 runs per room): one VRAM address, then
+     * the tiles written by the CPU, no transfer set up per run (draw_room is timed to the image). */
+    vu32 *data = (vu32 *)VDP_DATA_PORT;
+    const u16 *slot = g->slots;
+    u16 n = g->count;
+    (void)tm;
+    VDP_setAutoInc(2);
+    *(vu32 *)VDP_CTRL_PORT = VDP_WRITE_VRAM_ADDR((u32)index * 32);
+    while (n--)
+    {
+        const u32 *src = &vk_gfx16_pool[*slot++ * 8];
+        *data = *src++; *data = *src++; *data = *src++; *data = *src++;
+        *data = *src++; *data = *src++; *data = *src++; *data = *src;
+    }
+}
+
+void vk_gfx16_draw_map(const VKGfx16Room *g)
+{
+    vu16 *data = (vu16 *)VDP_DATA_PORT;
+    const u8 *cell = g->map;
+    const u16 base = TILE_ATTR_FULL(PAL0, FALSE, FALSE, FALSE, TILE_USER_INDEX);
+    u16 row, col;
+    VDP_setAutoInc(2);
+    for (row = 4; row < 26; row++)
+    {
+        *(vu32 *)VDP_CTRL_PORT = VDP_WRITE_VRAM_ADDR((u32)VDP_getPlaneAddress(BG_A, 0, row));
+        for (col = 0; col < 32; col += 4)
+        {
+            *data = (u16)(base + *cell++); *data = (u16)(base + *cell++);
+            *data = (u16)(base + *cell++); *data = (u16)(base + *cell++);
+        }
+    }
 }
 
 #define PICK(msx, art) ((const u32 *)(vk_gfx16 ? (const void *)(art) : (const void *)(msx)))

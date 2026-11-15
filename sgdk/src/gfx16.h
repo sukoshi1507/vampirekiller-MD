@@ -22,10 +22,17 @@ const VKGfx16Room *vk_gfx16_room(u16 stage, u16 room);
 const VKGfx16Room *vk_gfx16_scene(u16 scene);
 /* The cells of rows 4..25 of that scene as drawn: 16-bit ones while vk_gfx16_on, else the scene map's. */
 u16 vk_scene_cell(u16 scene, u16 col, u16 row);
-/* The 32 x 22 cells of the room as drawn (tile offsets from TILE_USER_INDEX), and the 8 rows of
- * the tile behind one of those cells: the 16-bit ones while vk_gfx16_on, else vk_maps / vk_tiles. */
-const u16 *vk_room_cells(u16 stage, u16 room);
+/* Cell i (row * 32 + col) of the 32 x 22 cells of the room as drawn (tile offset from
+ * TILE_USER_INDEX), and the 8 rows of the tile behind one of those cells: the 16-bit ones while
+ * vk_gfx16_on, else vk_maps / vk_tiles. */
+u16 vk_room_cell(u16 stage, u16 room, u16 i);
 const u32 *vk_room_tile(u16 stage, u16 room, u16 tile);
+
+/* The `count` tiles of a 16-bit room at VRAM tile `index` (one transfer per run of tiles that
+ * follow each other in vk_gfx16_pool), and its 32 x 22 cells on BG_A rows 4..25 with PAL0 from
+ * TILE_USER_INDEX. */
+void vk_gfx16_load_tiles(const VKGfx16Room *g, u16 index, TransferMethod tm);
+void vk_gfx16_draw_map(const VKGfx16Room *g);
 
 /* Simon's tiles: the arrays decoded from the MSX ROM, or with the option on their 16-bit
  * counterparts of the same layout (generated/simon16_md.h, tools/build_simon16.py). The 16-bit

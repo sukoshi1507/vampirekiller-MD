@@ -6,6 +6,7 @@
 typedef uint32_t u32; typedef uint16_t u16; typedef int16_t s16;
 typedef uint8_t u8; typedef int8_t s8; typedef volatile u32 vu32; typedef volatile u16 vu16;
 typedef int VDPPlane;
+typedef int TransferMethod;
 #define TRUE true
 #define FALSE false
 #define PAL0 0

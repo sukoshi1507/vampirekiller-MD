@@ -93,14 +93,13 @@ static void compose_key(const VKGame *game, VKByte x, VKByte y)
 static void clear_key(const VKGame *game, VKByte x, VKByte y)
 {
     /* The cells as drawn (16-bit graphics: gfx16.h); compose_key keeps the MSX tiles under the key. */
-    const u16 *map = vk_room_cells(game->stage, game->room);
     u16 cell;
     for (cell = 0; cell < 4; cell++)
     {
         const u16 col = (u16)(x / 8 + (cell & 1));
         const u16 line = (u16)(y / 8 + (cell >> 1));
         VDP_setTileMapXY(BG_A, TILE_ATTR_FULL(PAL0, FALSE, FALSE, FALSE,
-                         TILE_USER_INDEX + map[(line - 4) * 32 + col]), col, line);
+                         TILE_USER_INDEX + vk_room_cell(game->stage, game->room, (u16)((line - 4) * 32 + col))), col, line);
     }
 }
 

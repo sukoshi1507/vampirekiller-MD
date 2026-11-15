@@ -79,7 +79,6 @@ static void load_object(VKByte object, u16 index)
  * when it is broken (885E). Screen row = Y / 8, vk_maps row = Y / 8 - 4. */
 static void draw_hidden_block(const VKCandleDef *def, bool present)
 {
-    const u16 *map = vk_room_cells(vk_game.stage, vk_game.room);
     u16 r, k;
     for (r = 0; r < 4; r++)
     {
@@ -88,7 +87,7 @@ static void draw_hidden_block(const VKCandleDef *def, bool present)
         for (k = 0; k < 4; k++)
         {
             const u16 col = (u16)(def->x / 8 + k);
-            const u16 tile = present ? vk_key_block_tiles[vk_game.stage][r * 4 + k] : map[(row - 4) * 32 + col];
+            const u16 tile = present ? vk_key_block_tiles[vk_game.stage][r * 4 + k] : vk_room_cell(vk_game.stage, vk_game.room, (u16)((row - 4) * 32 + col));
             cells[k] = TILE_ATTR_FULL(PAL0, FALSE, FALSE, FALSE, TILE_USER_INDEX + tile);
         }
         /* The MSX copies the block (HMMM) during the pass: it shows in the next frame
@@ -125,7 +124,7 @@ void vk_candle_view_out(int i)
     {
         const u16 col = (u16)(def->x / 8 + (k & 1));
         const u16 row = (u16)(def->y / 8 + (k >> 1));
-        const u16 tile = vk_room_cells(1, 0)[(row - 4) * 32 + col];
+        const u16 tile = vk_room_cell(1, 0, (u16)((row - 4) * 32 + col));
         const u16 index = (u16)(BAKED_TILE_INDEX + i * 4 + k);
         VDP_loadTileData(vk_room_tile(1, 0, tile), index, 1, DMA_QUEUE);
         cells[k] = TILE_ATTR_FULL(PAL0, FALSE, FALSE, FALSE, index);

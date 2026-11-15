@@ -41,7 +41,7 @@ static void draw_room(u16 stage, u16 room, bool atlas)
     VDP_clearPlane(BG_A, TRUE);
     /* 16-bit graphics: the room's own tiles, cells and palette (gfx16.h); the MSX palette stays in PAL2. */
     vk_gfx16_on = g16 != 0;
-    if (g16) VDP_loadTileData(g16->tiles, TILE_USER_INDEX, g16->count, VK_TM);
+    if (g16) vk_gfx16_load_tiles(g16, TILE_USER_INDEX, VK_TM);
     else VDP_loadTileData(vk_tiles[group->tileset], TILE_USER_INDEX, VK_TILE_COUNT, VK_TM);
     PAL_setPalette(PAL0, g16 ? g16->palette : vk_palettes[index], CPU);
     PAL_setPalette(PAL1, hud_palette, CPU);
@@ -57,8 +57,10 @@ static void draw_room(u16 stage, u16 room, bool atlas)
                              TILE_USER_INDEX + i), 8 + (i % 16), 6 + (i / 16));
         VDP_drawText("STATIC ASSETS / NO GAMEPLAY", 3, 22);
     }
+    else if (g16)
+        vk_gfx16_draw_map(g16);
     else
-        VDP_setTileMapDataRectEx(BG_A, g16 ? g16->map : vk_maps[index],
+        VDP_setTileMapDataRectEx(BG_A, vk_maps[index],
             TILE_ATTR_FULL(PAL0, FALSE, FALSE, FALSE, TILE_USER_INDEX),
             0, 4, 32, 22, 32, CPU);
     VDP_drawText("L/R ROOM  U/D STAGE  A TILES", 2, 27);
@@ -80,10 +82,9 @@ static void draw_scene_gfx16(const VKScene *scene, const VKGfx16Room *g16)
     u16 seen[SCENE_EDGE_TILES];
     u16 cells[32];
     u16 count = 0, row, col, k;
-    VDP_loadTileData(g16->tiles, TILE_USER_INDEX, g16->count, VK_TM);
+    vk_gfx16_load_tiles(g16, TILE_USER_INDEX, VK_TM);
     PAL_setPalette(PAL0, g16->palette, CPU);
-    VDP_setTileMapDataRectEx(BG_A, g16->map,
-        TILE_ATTR_FULL(PAL0, FALSE, FALSE, FALSE, TILE_USER_INDEX), 0, 4, 32, 22, 32, CPU);
+    vk_gfx16_draw_map(g16);
     for (row = 0; row < 28; row++)
     {
         if (row == 4) row = 26;
