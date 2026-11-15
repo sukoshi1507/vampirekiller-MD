@@ -1,0 +1,28 @@
+# (zzzd) Mode graphique 16 bits (research/gfx16.md) : le bloc cache casse de la salle 0 du stage 2 et le
+# vieil homme du mur. Les cases remises sous le bloc sont les cases 16 bits de la salle (vk_room_cell) et
+# l'objet mural prend les couleurs 16 bits de la salle (msx[] vers PAL0) au lieu de la palette MSX (PAL2).
+# Meme depart que zo_merchant.txt (research/merchant.md) : blocs (160, 160) et (192, 160).
+until front_mode == MODES['TITLE'] max 2000
+wait 10
+poke vk_gfx16 1
+tap C
+wait 30
+expect ram8('vk_gfx16_on') == 1 # salle 0 du stage 2 dessinee en 16 bits
+poke vk_candles+118 50
+poke vk_game+0 136
+poke vk_game+1 192
+wait 20
+shot zzzd-avant
+tap B
+wait 30
+expect (ram8('vk_candles+4') & 32) == 0 # bloc (160, 160) casse
+shot zzzd-coup
+poke vk_game+0 168
+wait 4
+tap B
+wait 30
+expect (ram8('vk_candles+4') & 64) == 0 # bloc (192, 160) casse
+expect ram8('vk_walls+8') == 0x82 # objet mural cree et affiche
+shot zzzd-apres
+# Les pixels de l'objet mural ne sont plus la robe blanche MSX (238, 238, 238).
+expect all(pixel(x, y) != (238, 238, 238) for x in range(196, 232) for y in range(160, 200))

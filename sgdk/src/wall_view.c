@@ -26,6 +26,9 @@ _Static_assert(WALL_TILE_INDEX + VK_WALL_RECORDS * VK_WALL_TILES_PER_FRAME <= HU
 
 VKWall vk_walls;
 static s8 frame_loaded[VK_WALL_RECORDS];
+/* 16-bit graphics: the frame with its MSX colours taken to the closest entries of the room's
+ * 16-bit palette (msx[]), kept until the queued transfer has run. */
+static u32 frame16[VK_WALL_RECORDS][VK_WALL_TILES_PER_FRAME * 8];
 /* The window: its pixels (MSX colours of the room palette), its tiles and the plane
  * A cells it covers. */
 static u8 pix[VK_SHOP_H][VK_SHOP_W];
@@ -44,6 +47,7 @@ void vk_wall_view_room(void)
 u16 vk_wall_view_sprites(u16 first)
 {
     u16 n = 0, i;
+    const VKGfx16Room *g16 = vk_gfx16_on ? vk_gfx16_room(vk_walls.stage, vk_walls.room) : 0;
     if (vk_front_mode != FRONT_INTERIOR) return 0;
     for (i = 0; i < VK_WALL_RECORDS; i++)
     {
@@ -54,14 +58,25 @@ u16 vk_wall_view_sprites(u16 first)
         {
             /* 925E copies the frame during the pass: shown at the next frame, as the
              * sprite table that the queue sends with it. */
-            VDP_loadTileData(&vk_wall_frame_tiles[frame * VK_WALL_TILES_PER_FRAME * 8], tile,
-                             VK_WALL_TILES_PER_FRAME, DMA_QUEUE);
+            const u32 *src = &vk_wall_frame_tiles[frame * VK_WALL_TILES_PER_FRAME * 8];
+            if (g16)
+            {
+                u16 w, k;
+                for (w = 0; w < VK_WALL_TILES_PER_FRAME * 8; w++)
+                {
+                    u32 v = 0;
+                    for (k = 0; k < 32; k += 4) v |= (u32)g16->msx[(src[w] >> k) & 15] << k;
+                    frame16[i][w] = v;
+                }
+                src = frame16[i];
+            }
+            VDP_loadTileData(src, tile, VK_WALL_TILES_PER_FRAME, DMA_QUEUE);
             frame_loaded[i] = (s8)frame;
         }
         /* The first 8 lines of the 32 x 32 frame are empty: Y + 8. Low priority: Simon
          * and the enemies (earlier sprites) pass in front, as over the MSX bitmap. */
         VDP_setSpriteFull((u16)(first + n), vk_walls.obj[i].x, (s16)(vk_walls.obj[i].y + 8),
-                          SPRITE_SIZE(4, 3), TILE_ATTR_FULL(VK_PAL_OBJ, FALSE, FALSE, FALSE, tile),
+                          SPRITE_SIZE(4, 3), TILE_ATTR_FULL(g16 ? PAL0 : VK_PAL_OBJ, FALSE, FALSE, FALSE, tile),
                           (u16)(first + n + 1));
         n++;
     }

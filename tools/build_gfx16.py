@@ -81,6 +81,8 @@ def block1_rules(rooms):
               2: ('hall16', 0, 180, 16, 8), 13: ('hall16', 0, 180, 16, 8)}
     for t in (3, 4, 6, 7, 0xC, 0xD):
         r[t] = ('stencil', stairs)
+    for t in range(0x18, 0x29):           # vault ribs of stage 3: wallpaper in the light stone, dark edge, black gaps
+        r[t] = ('cs', {12: WALL, 14: WALL, 13: ('flat', 72, 72, 72)}, None)
     r[0x41] = ('tex', BRICK)
     for t in (0x42, 0x43, 0x44, 0x45, 0x46, 0x4C, 0x4D, 0x4E):
         r[t] = ('bstencil',)
