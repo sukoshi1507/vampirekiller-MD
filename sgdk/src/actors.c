@@ -682,7 +682,16 @@ static void room_cells(u16 key)
         }
             if(vk_game.stage>=12 && vk_game.stage<=18 && vk_game.room<12){
                 const VKLateGraphicsRoom *g=&late_graphics_rooms[vk_game.stage-12][vk_game.room];
-                if(g->tiles)VDP_loadTileData(&late_graphics_words[g->first*8],LATE_ENEMY_TILE_INDEX,g->tiles, VK_TM);
+                /* Cells stored once (late_graphics_slots): one transfer per run of consecutive pool cells. */
+                const u8 *slot=&late_graphics_slots[g->first];
+                const u16 n=g->tiles>>2;
+                u16 j=0;
+                while(j<n){
+                    u16 k=(u16)(j+1);
+                    while(k<n && slot[k]==slot[k-1]+1)k++;
+                    VDP_loadTileData(&late_graphics_words[slot[j]*32],(u16)(LATE_ENEMY_TILE_INDEX+4*j),(u16)(4*(k-j)), VK_TM);
+                    j=k;
+                }
             }
     /* The boss block replaces the enemy cells of the room. It used to be loaded by the CPU (display on, ~200 lines) in the first
      * game turn, which lost a frame; the draw loads it (DMA while the display is off). Dracula has its own view (dracula_view.c). */
