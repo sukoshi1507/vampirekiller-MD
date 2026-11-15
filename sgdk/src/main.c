@@ -978,6 +978,11 @@ int main(bool hardReset)
                          * (stages 3, 6, 9, 10, 12, 15, 17, 18). */
                         if (vk_items_door_fades(vk_game.stage)) vk_psg_fade();
                         vk_psg_effect(VK_SFX_DOOR_1A);
+                        /* 7748-774F: C422 := 0 (the whip stops), 7806 (every object destroyed: the enemies
+                         * vanish at the door as in the NES game), 7513 (the thrown weapons emptied). */
+                        vk_whip_stop(&vk_whip);
+                        Enemies_doorClear(&vk_enemies);
+                        vk_weapons_reset(&vk_weapons);
                     }
                     {
                         /* 6F9A: effect 13 when a contact starts the recoil (C42D set). */

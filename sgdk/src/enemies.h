@@ -250,6 +250,8 @@ void Enemies_init(EnemyState *s);
  * les fouets 1A-1D (C440). c431 = C431 (bit 2 : minuteries F0h). Les autres objets sont sans
  * effet ici. */
 void Enemies_item(EnemyState *s, EnemyU8 kind, EnemyU8 c431);
+/* 7806 at a door opening (7743): every enemy, shot and loot object destroyed as by the cross. */
+void Enemies_doorClear(EnemyState *s);
 /* 8610 before object movement: one sound0B per intercepted D700 projectile. */
 int Enemies_shield(EnemyState *s,const EnemyRoomVars *v,EnemyU8 *inventory);
 /* 8AD0 : une bougie d'objet 15 s'eteint apres 16 passes ; l'objet 1A (stages 4 a 6, groupe D002 = 1) ou 1C (stages 7 a 9, D002 = 2) est cree

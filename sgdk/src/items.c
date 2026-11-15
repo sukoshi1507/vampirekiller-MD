@@ -140,6 +140,10 @@ VKItemEvent vk_items_tick(VKItems *items, VKGame *game)
         const int before = vk_items_door_lift(items);
         const int left = s->door_x < 128;
         items->timer++;
+        /* 7792: 778A returns while C420 != 0 (recoil 5, jump, fall): no walk step, no exit test (77BA) until
+         * Simon is back on the floor. A recoil inside the walk no longer carries the walk into the next room. */
+        if (items->timer >= DOOR_WALK_FIRST && (p->mode != 0 || game->recoil != VK_RECOIL_NONE))
+            return VK_ITEM_NONE;
         /* 77BA: X - 8 >= F0, so X 248 on the right and X 7 on the left; 7802 one frame later (openMSX, doors of
          * the stages 1, 4 and 5: X 248 or 7 then C000 = 10 at the next frame). */
         if (items->door == VK_DOOR_WALKING && (left ? p->x <= 7 : p->x >= 248) && ++items->end_wait >= 2)

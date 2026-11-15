@@ -384,6 +384,10 @@ int Enemies_useTimeStop(EnemyState *s, EnemyU8 *hearts, EnemyU8 c431, EnemyU8 c7
 
 static void crossClear(EnemyState *s);
 
+/* 7743 -> 774C: opening a door calls 7806, which destroys every object of C800 and D700 as the
+ * cross does (9A3A, death flames, no points), without the flash of 8DC5. */
+void Enemies_doorClear(EnemyState *s) { crossClear(s); }
+
 void Enemies_item(EnemyState *s, EnemyU8 kind, EnemyU8 c431)
 {
     const EnemyU8 timer = (c431 & 0x04) ? ENEMY_ITEM_TIMER_LONG : ENEMY_ITEM_TIMER;

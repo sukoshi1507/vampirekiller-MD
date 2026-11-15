@@ -1,0 +1,34 @@
+# (zzzb) Porte du stage 3 (salle 4, vers le boss) : a l'ouverture, 7743 appelle 7806 (774C), qui detruit tous les objets
+# C800 et D700 comme la croix (9A3A, flammes de mort, sans points), puis 7513 (armes lancees videes) ; C422 := 0 (7748).
+# Desassemblage 7718-7805 (research/castle-entrance.md). Retour testeur 2026-11-15 (console) : touche par un ennemi
+# pendant le passage de la porte, Simon refaisait la marche de porte a travers toute la salle du boss.
+until front_mode == MODES['TITLE'] max 2000
+wait 10
+tap C
+wait 30
+poke vk_game+22 3
+poke vk_game+20 3
+poke vk_debug_keys 1
+hold A 3
+hold A+RIGHT 3
+wait 10
+expect game.stage == 3
+poke vk_game+20 4
+poke items+0 0x01
+poke items+1 1
+poke Enemies_god 1
+poke vk_game+0 200
+poke vk_game+1 128
+poke vk_game+2 0
+until enemies.alive > 0 max 1500
+expect enemies.alive > 0 # un ennemi dans la salle avant la porte
+poke items+0 0x01
+poke vk_game+0 228
+poke vk_game+1 128
+poke vk_game+2 0
+wait 4
+until ram8('items+2') == 1 max 60 RIGHT
+wait 2
+expect enemies.alive == 0 # 7806 : plus aucun ennemi vivant apres l'ouverture
+until game.room == 5 max 400
+expect game.player.x == 10 # la marche de porte finit dans la salle du boss comme avant
