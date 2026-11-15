@@ -35,6 +35,9 @@
 #define HUD_FRAME_TILE_INDEX 196
 #define HUD_FRAME_TILE_COUNT 4
 void vk_hud_show_frame(void);
+/* 16-bit graphics: the bevelled frame (tools/build_hud16.py, hud16_md.h) takes the 4 slots above for its first 4 tiles
+ * and the free tile after the gold key tile of candle_view.c for its right edge. Drawn by vk_hud_show in every screen. */
+#define HUD_FRAME16_EDGE_TILE_INDEX 989
 
 /* Draws the bar cells, the labels and the status line (last values) after a
  * scene or room load. */

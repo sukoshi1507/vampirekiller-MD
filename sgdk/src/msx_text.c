@@ -1,6 +1,8 @@
 #include "msx_text.h"
 #include "actors.h"
 #include "generated/object_tiles_md.h"
+#include "gfx16.h"
+#include "generated/hud16_md.h"
 
 _Static_assert(MSX_TEXT_TILE_INDEX + MSX_TEXT_TILE_MAX <= PLAYER_TILE_INDEX,
                "text tiles must end before the sprite tiles");
@@ -21,14 +23,50 @@ static u8 text_code(char c)
     return (u8)(c - 0x10);
 }
 
+/* 16-bit graphics (research/gfx16.md, "HUD et texte 16 bits"): the font in steel letters, built in RAM the first time it is
+ * used: the white (14) of the letters is the steel entry 10 or 3 on the rows of vk_hud16_steel, the heart keeps its colours,
+ * '<' and '>' (codes 2C, 2E: unused shapes of the MSX font) are chevrons. */
+static u32 font16[VK_MSX_FONT_COUNT * 8];
+static bool font16_ready;
+
+__attribute__((noinline)) static const u32 *font_tiles(void)
+{
+    u16 i;
+    if (!vk_gfx16) return vk_msx_font_tiles;
+    if (!font16_ready)
+    {
+        for (i = 0; i < VK_MSX_FONT_COUNT * 8; i++)
+        {
+            const u32 g = vk_msx_font_tiles[i], steel = vk_hud16_steel[i & 7];
+            u32 m = (g >> 1) & 0x11111111UL;   /* white nibbles (E) */
+            m |= (m << 1) | (m << 2) | (m << 3);
+            font16[i] = (steel && (i >> 3) + VK_MSX_FONT_FIRST != VK_MSX_HEART) ? m & steel : g;
+        }
+        for (i = 0; i < 8; i++)
+        {
+            const u32 m = vk_hud16_steel[i];
+            font16[(0x2C - VK_MSX_FONT_FIRST) * 8 + i] = m ? vk_hud16_chevron[i] & m : vk_hud16_chevron[i];
+            font16[(0x2E - VK_MSX_FONT_FIRST) * 8 + i] = m ? vk_hud16_chevron[8 + i] & m : vk_hud16_chevron[8 + i];
+        }
+        font16_ready = TRUE;
+    }
+    return font16;
+}
+
+__attribute__((noinline)) u32 vk_msx_font_row(u8 code, u16 py)
+{
+    if (code < VK_MSX_FONT_FIRST || code >= VK_MSX_FONT_FIRST + VK_MSX_FONT_COUNT) return 0;
+    return font_tiles()[(code - VK_MSX_FONT_FIRST) * 8 + py];
+}
+
 /* Row py of the glyph of c as an opaque 8-pixel word: font colours, PAPER where
  * the font pixel is 0 (the cell is copied whole, as HMMM does). */
-static u32 glyph_row(char c, u16 py)
+static u32 glyph_row(char c, u16 py, const u32 *font)
 {
     const u8 code = text_code(c);
     u32 g = 0, zero;
     if (code >= VK_MSX_FONT_FIRST && code < VK_MSX_FONT_FIRST + VK_MSX_FONT_COUNT)
-        g = vk_msx_font_tiles[(code - VK_MSX_FONT_FIRST) * 8 + py];
+        g = font[(code - VK_MSX_FONT_FIRST) * 8 + py];
     zero = ~(g | (g >> 1) | (g >> 2) | (g >> 3)) & 0x11111111UL;
     return g | (zero << 1);   /* PAPER (2) in each empty nibble */
 }
@@ -36,6 +74,7 @@ static u32 glyph_row(char c, u16 py)
 void vk_msx_text_compose(u32 *cells, u16 cols, u16 rows, s16 x, s16 y, const char *text)
 {
     s16 k, py;
+    const u32 *font = font_tiles();
     for (k = 0; text[k]; k++)
     {
         const s16 cx = x + 8 * k;
@@ -48,7 +87,7 @@ void vk_msx_text_compose(u32 *cells, u16 cols, u16 rows, s16 x, s16 y, const cha
             const bool left = col >= 0 && col < (s16)cols, right = shift && col + 1 >= 0 && col + 1 < (s16)cols;
             const u8 code = text_code(text[k]);
             const u32 *src = (code >= VK_MSX_FONT_FIRST && code < VK_MSX_FONT_FIRST + VK_MSX_FONT_COUNT) ?
-                             &vk_msx_font_tiles[(code - VK_MSX_FONT_FIRST) * 8] : NULL;
+                             &font[(code - VK_MSX_FONT_FIRST) * 8] : NULL;
             u32 *a = left ? &line[col * 8] : NULL, *b = right ? &line[(col + 1) * 8] : NULL;
             const u16 sl = (u16)(4 * shift), sr = (u16)(32 - 4 * shift);
             for (py = 0; py < 8; py++)
@@ -65,7 +104,7 @@ void vk_msx_text_compose(u32 *cells, u16 cols, u16 rows, s16 x, s16 y, const cha
             const s16 sy = y + py;
             u32 g, *line;
             if (sy < 0 || sy >= 8 * (s16)rows) continue;
-            g = glyph_row(text[k], (u16)py);
+            g = glyph_row(text[k], (u16)py, font);
             line = &cells[((sy >> 3) * cols) * 8 + (sy & 7)];
             if (col >= 0 && col < (s16)cols)
                 line[col * 8] |= shift ? g >> (4 * shift) : g;
@@ -97,7 +136,8 @@ u16 vk_msx_text(VDPPlane plane, u16 x, u16 y, const char *text, u16 tile, bool p
 void vk_msx_glyph_cell(u32 *cell, char c)
 {
     u16 py;
-    for (py = 0; py < 8; py++) cell[py] = glyph_row(c, py);
+    const u32 *font = font_tiles();
+    for (py = 0; py < 8; py++) cell[py] = glyph_row(c, py, font);
 }
 
 u16 vk_msx_text_queued(VDPPlane plane, u16 x, u16 y, const char *text, u16 tile, bool priority, u32 *buf)

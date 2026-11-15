@@ -1,0 +1,50 @@
+# (zzzi) Mode graphique 16 bits (research/gfx16.md, section "HUD et texte 16 bits") : HUD d'une salle du chateau et fenetre du
+# marchand (route de zo_merchant : stage 2, salle 0, objet 04 a 20 coeurs). Police MSX en acier (entrees 10 et 3 de PAL1), barres
+# degradees, cadres biseautes ; la fenetre passe en PAL1 avec l'icone 16 bits de l'objet vendu.
+until front_mode == MODES['TITLE'] max 2000
+poke vk_gfx16 1
+wait 10
+tap C
+wait 30
+poke vk_candles+118 50
+poke vk_game+0 136
+poke vk_game+1 192
+wait 20
+expect ram8('vk_gfx16_on') == 1
+shot zzzi-hud-salle
+include zzzi_hud_checks.inc
+tap B
+wait 30
+poke vk_game+0 168
+wait 4
+tap B
+wait 30
+expect ram8('vk_walls+8') == 0x82 # objet mural cree et affiche
+poke vk_walls+11 1
+wait 4
+until ram8('vk_walls+8') == 0x82 max 120
+poke vk_walls+11 1
+wait 4
+until ram8('vk_walls+8') == 0x82 max 120
+poke vk_candles+118 50
+poke vk_walls+11 1
+until ram8('vk_walls+348') == 2 max 120
+until ram8('win_open') == 1 max 10
+wait 1
+shot zzzi-fenetre
+# Fenetre en PAL1 : bord blanc, texte "OK ?" et "coeur x20" en police acier, icone de l'objet 04 en 16 bits.
+expect pixel(161, 136) == (238, 238, 238) # cadre blanc de la fenetre
+set w_top colors(168, 141, 200, 143)
+expect (205, 206, 238) in w_top and (238, 238, 238) not in w_top # haut des lettres de "OK ?" : acier clair
+expect (238, 238, 238) in colors(168, 143, 200, 146) # corps des lettres : blanc
+set ic colors(217, 144, 233, 160)
+expect (172, 101, 65) in ic and (65, 32, 0) in ic and (238, 170, 139) in ic # icone 16 bits du bouclier (PAL1)
+expect (238, 0, 32) in colors(168, 152, 176, 160) # le coeur du prix garde son rouge
+tap B
+wait 2
+expect ram8('vk_candles+118') == 30 and ram8('vk_candles+322') & 0x20 # 20 coeurs, objet 04 donne
+until ram8('vk_walls+348') == 0 max 30
+wait 4
+shot zzzi-apres
+# La fenetre fermee, la salle est redessinee comme avant (cases du HUD toujours biseautees).
+expect pixel(150, 28) == (65, 101, 139) # bas de la case, biseau acier

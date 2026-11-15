@@ -5,12 +5,19 @@
 
 /* Text in the MSX font (4ACB/4AE7: 8x8 codes of VRAM page 1, copied opaque by
  * HMMM at any pixel X). Here the cells of a plane get tiles composed for that
- * X: the font colours (PAL1 14 white, the heart 8 and 14), background black (PAL1 2), transparent outside the
+ * X: the font colours (PAL1 14 white, the heart 8 and 14; with the 16-bit graphics option the top and bottom rows of the
+ * letters are the steel entries 10 and 3, vk_hud16_steel), background black (PAL1 2), transparent outside the
  * text so that the cells around it keep what is under them.
  * Tiles from MSX_TEXT_TILE_INDEX, free VRAM between the candle tiles and the
  * sprite tiles (actors.h). */
 #define MSX_TEXT_TILE_INDEX 990
 #define MSX_TEXT_TILE_MAX 34
+
+/* Code of the heart in the font ('`' in the texts). */
+#define VK_MSX_HEART 0x50
+/* The 8 pixels of row py of the font code (0x20..0x5F), as the text draws them: the MSX font, or with the 16-bit graphics
+ * option (vk_gfx16) the same shapes in the steel-blue letters of research/gfx16.md, '<' and '>' as chevrons. */
+u32 vk_msx_font_row(u8 code, u16 py);
 
 /* Draws text (ASCII, letters, digits, space, '-', '`' heart) at pixel x, cell row y / 8 (y is a
  * multiple of 8), from tile index tile on. Returns the number of cells used. */

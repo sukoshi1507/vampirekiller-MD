@@ -1,0 +1,49 @@
+# (zzzi) Mode graphique 16 bits (research/gfx16.md, section "HUD et texte 16 bits") : l'ecran titre (PRESS START, copyright, lignes
+# SOUND et GRAPH en police acier), puis le HUD de la cour, la pause et la salle 0 du hall (scenes dont le HUD est cuit dans l'image).
+until front_mode == MODES['TITLE'] max 2000
+shot zzzi-titre-msx
+set t_msx colors(56, 128, 200, 212)
+tap DOWN
+wait 6
+expect ram8('vk_gfx16') == 1
+shot zzzi-titre-16
+# Copyright, PRESS START, SOUND et GRAPH : haut des lettres en acier clair, corps blanc, bas en acier sombre.
+expect (205, 206, 238) in colors(72, 137, 176, 139) and (238, 238, 238) not in colors(72, 137, 176, 139) # "(c) KONAMI 1986"
+expect (238, 238, 238) in colors(72, 139, 176, 142) and (65, 101, 139) in colors(72, 143, 176, 144)
+expect (205, 206, 238) in colors(80, 161, 168, 163) and (65, 101, 139) in colors(80, 167, 168, 168) # "PRESS START"
+expect (205, 206, 238) in colors(72, 185, 176, 187) and (65, 101, 139) in colors(72, 191, 176, 192) # "SOUND < PSG >"
+expect (205, 206, 238) in colors(72, 201, 176, 203) and (65, 101, 139) in colors(72, 207, 176, 208) # "GRAPH < 16B >"
+expect colors(56, 128, 200, 212) != t_msx
+tap LEFT
+wait 4
+shot zzzi-titre-fm
+expect (205, 206, 238) in colors(72, 185, 176, 187) and ram8('vk_sound_fm') == 1 # la ligne SOUND se redessine dans la meme police
+tap DOWN
+wait 6
+expect ram8('vk_gfx16') == 0
+expect colors(56, 128, 200, 212) != t_msx # la ligne SOUND (FM) n'est pas celle de la capture
+tap LEFT
+wait 4
+expect colors(56, 128, 200, 212) == t_msx # retour MSX identique (copyright et PRESS START rendus par l'image et la police SGDK)
+tap DOWN
+wait 6
+expect ram8('vk_gfx16') == 1
+tap START
+tap START
+until front_mode == MODES['COURTYARD'] max 500
+wait 60
+shot zzzi-hud-cour
+include zzzi_hud_checks.inc
+# Pause : le texte "PAUSE" prend la police acier.
+tap START
+wait 6
+shot zzzi-pause
+expect (205, 206, 238) in colors(108, 89, 148, 91) and (65, 101, 139) in colors(108, 95, 148, 96)
+tap START
+wait 6
+# Salle 0 du hall (scene 6) : le meme HUD.
+until front_mode == MODES['INTERIOR'] max 3000 RIGHT
+wait 30
+expect ram8('vk_gfx16_on') == 1
+shot zzzi-hud-hall
+include zzzi_hud_checks.inc

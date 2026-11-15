@@ -136,6 +136,7 @@ static void show_courtyard(u16 room)
 {
     vk_draws++;
     vk_show_courtyard(room);
+    if (vk_gfx16) vk_item_view_hud_box(&items);   /* the frame baked in the scene is replaced (hud.c) */
     vk_candle_view_room();
     wall_room();
     hud_status();   /* the changed fields (stage...) are composed here, in the draw turn, not in the first game turn */

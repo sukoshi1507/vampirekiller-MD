@@ -3,6 +3,8 @@
 #include "health.h"
 #include "generated/intro_assets.h"
 #include "msx_text.h"
+#include "gfx16.h"
+#include "generated/hud16_md.h"
 
 #define HUD_COL 7
 #define HUD_COLS 9
@@ -23,7 +25,20 @@ static u32 bar_fill[HUD_ROWS * HUD_COLS * 8];
 static u32 bar_enemy[HUD_ROWS * HUD_COLS * 8];   /* ENEMY fill: colour 8, y 23..26 */
 static int enemy_pixels = 64;
 static bool bar_ready = FALSE;
+static u8 bar_mode;                 /* vk_gfx16 when the bar tiles were prepared */
 static int drawn_pixels = -1;
+
+/* 16-bit graphics: the fill rows (PLAYER y 14..17, ENEMY y 23..26) take their ramp (hud16_md.h). */
+__attribute__((noinline)) static void ramp_bars(void)
+{
+    u16 i;
+    for (i = 0; i < HUD_ROWS * HUD_COLS * 8; i++)
+    {
+        const u16 y = (u16)(HUD_ROW * 8 + (i / (HUD_COLS * 8)) * 8 + (i & 7));
+        if (bar_fill[i]) bar_full[i] = (bar_full[i] & ~bar_fill[i]) | (bar_fill[i] & ((u32)vk_hud16_player_ramp[y - 14] * 0x11111111UL));
+        if (bar_enemy[i]) bar_full[i] = (bar_full[i] & ~bar_enemy[i]) | (bar_enemy[i] & ((u32)vk_hud16_enemy_ramp[y - 23] * 0x11111111UL));
+    }
+}
 
 static void prepare_bar(void)
 {
@@ -52,7 +67,9 @@ static void prepare_bar(void)
                 bar_enemy[tile + line] = enemy;
             }
         }
+    if (vk_gfx16) ramp_bars();
     bar_ready = TRUE;
+    bar_mode = vk_gfx16;
 }
 
 /* Copies the ROM tiles and clears each PLAYER fill pixel at or past 'filled'.
@@ -60,7 +77,7 @@ static void prepare_bar(void)
 static void build_bar(int filled)
 {
     u16 col, i;
-    if (!bar_ready) prepare_bar();
+    if (!bar_ready || bar_mode != vk_gfx16) prepare_bar();
     for (col = 0; col < HUD_COLS; col++)
     {
         /* Pixels p of the column with col * 8 + p - 4 >= filled: the low nibbles. */
@@ -109,6 +126,7 @@ static void digits2(char *text, u16 v)
 /* The label and status tiles stay in VRAM (no scene or room loads there):
  * composed once, then only their cells are set again. */
 static bool tiles_ready;
+static u8 tiles_mode;   /* vk_gfx16 when the text tiles were composed */
 void vk_hud_invalidate_tiles(void){tiles_ready=FALSE;}
 
 static void show_labels(void)
@@ -210,6 +228,22 @@ static void frame_cell(u16 tile, bool flip, u16 col, u16 row)
 void vk_hud_show_frame(void)
 {
     u16 col;
+    if (vk_gfx16)
+    {
+        /* 16-bit graphics: bevelled frame (hud16_md.h) in PAL1, drawn in every screen with a HUD: 4 tiles in the slots of the
+         * MSX frame, the right edge (5th) in HUD_FRAME16_EDGE_TILE_INDEX. */
+        const u16 t = HUD_FRAME_TILE_INDEX, e = HUD_FRAME16_EDGE_TILE_INDEX;
+        VDP_loadTileData(vk_hud16_frame_tiles, t, HUD_FRAME_TILE_COUNT, VK_TM);
+        VDP_loadTileData(&vk_hud16_frame_tiles[HUD_FRAME_TILE_COUNT * 8], e, 1, VK_TM);
+        VDP_fillTileMapRect(BG_A, TILE_ATTR_FULL(PAL1, FALSE, FALSE, FALSE, t), 16, 1, 2, 1);
+        VDP_fillTileMapRect(BG_A, TILE_ATTR_FULL(PAL1, FALSE, TRUE, FALSE, t), 16, 3, 2, 1);
+        VDP_fillTileMapRect(BG_A, TILE_ATTR_FULL(PAL1, FALSE, FALSE, FALSE, t + 1), 23, 1, 8, 1);
+        VDP_fillTileMapRect(BG_A, TILE_ATTR_FULL(PAL1, FALSE, FALSE, FALSE, t + 2), 23, 3, 8, 1);
+        VDP_setTileMapXY(BG_A, TILE_ATTR_FULL(PAL1, FALSE, FALSE, FALSE, t + 3), 31, 1);
+        VDP_setTileMapXY(BG_A, TILE_ATTR_FULL(PAL1, FALSE, FALSE, FALSE, e), 31, 2);
+        VDP_setTileMapXY(BG_A, TILE_ATTR_FULL(PAL1, FALSE, TRUE, FALSE, t + 3), 31, 3);
+        return;
+    }
     VDP_loadTileData(&frame_tiles[0][0], HUD_FRAME_TILE_INDEX, HUD_FRAME_TILE_COUNT, VK_TM);
     for (col = 16; col <= 17; col++) { frame_cell(0, FALSE, col, 1); frame_cell(0, TRUE, col, 3); }
     for (col = 23; col <= 30; col++) { frame_cell(1, FALSE, col, 1); frame_cell(1, TRUE, col, 3); }
@@ -223,7 +257,8 @@ void vk_hud_show_frame(void)
 void vk_hud_show(void)
 {
     u16 row, col;
-    if (!bar_ready) prepare_bar();   /* once, here: the first bar update of play took ~100 lines of a turn */
+    if (tiles_mode != vk_gfx16) { tiles_ready = FALSE; tiles_mode = vk_gfx16; }   /* text tiles of the other graphics */
+    if (!bar_ready || bar_mode != vk_gfx16) prepare_bar();   /* once, here: the first bar update of play took ~100 lines of a turn */
     for (row = 0; row < HUD_ROWS; row++)
         for (col = 0; col < HUD_COLS; col++)
             VDP_setTileMapXY(BG_A, TILE_ATTR_FULL(PAL1, FALSE, FALSE, FALSE,
@@ -241,6 +276,7 @@ void vk_hud_show(void)
     }
     tiles_ready = TRUE;
     drawn_pixels = -1;
+    if (vk_gfx16) vk_hud_show_frame();   /* the baked frame of the scenes gives way to the bevelled one */
 }
 
 void vk_hud_status(u32 score, u16 stage, u16 hearts, u16 lives)

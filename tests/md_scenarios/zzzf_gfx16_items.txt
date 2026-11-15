@@ -93,6 +93,7 @@ shot zzzf-arme-hud
 set wi colors(128, 8, 150, 30)
 expect (0, 68, 205) in wi and (65, 101, 139) in wi and (238, 0, 32) in wi # icone de la dague 16 bits, cadre MSX rouge de la case
 until whip.timer == 0 max 30
+wait 2 # le lancer part a la fin du coup de fouet : phase d'image
 tap B 1
 until ram8('vk_weapons+1') == 2 max 20
 wait 3
@@ -101,7 +102,7 @@ shot zzzf-dague-lancee
 until enemies.enemy[0].flame == 1 max 120
 wait 2
 shot zzzf-flamme-mort
-set fm colors(172, 164, 190, 180)
+set fm colors(enemies.enemy[0].x - 4, enemies.enemy[0].y - 4, enemies.enemy[0].x + 14, enemies.enemy[0].y + 12)
 expect (238, 170, 0) in fm and (139, 0, 0) in fm # flamme de mort 16 bits
 expect 1 in pal1()
 # Hache 1C, croix 1D (icone en diagonale) et eau benite 1E : image de l'arme en vol (PAL1), puis la flamme de l'eau benite.
