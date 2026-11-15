@@ -1,0 +1,18 @@
+# (zzy) Mode 16 bits : l'introduction NES 16 bits remplace la scene MSX du chateau (research/gfx16.md).
+# Meme duree que l'intro MSX (320 tours), sans la barre d'etat NES ; la cour qui suit est en 16 bits.
+until front_mode == MODES['TITLE'] max 300
+tap DOWN
+expect ram8('vk_gfx16') == 1
+tap START
+until front_mode == MODES['CASTLE'] max 30
+set t0 frame
+wait 20
+expect pixel(128, 20) == (0, 0, 0) # plus de barre d'etat NES
+expect pixel(140, 36) == (0, 0, 0)
+expect pixel(8, 60) != (0, 0, 0) # ciel de l'intro
+shot zzy-intro
+until front_mode == MODES['COURTYARD'] max 400
+expect 308 <= frame - t0 <= 318 # duree de l'intro MSX (311 a 314 images mesurees dans les deux modes)
+wait 20
+expect ram8('vk_gfx16_on') == 1 # cour en 16 bits
+shot zzy-cour

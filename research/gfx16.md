@@ -39,6 +39,19 @@ Le code qui remet une case du décor (bloc caché cassé, bougie éteinte de la 
 
 La salle 0 du stage 1 est dessinée depuis la scène 6 de la ROM : en mode 16 bits ses 22 lignes de salle sont redessinées par-dessus avec les cases 16 bits.
 
+## Cour du château
+
+Les trois écrans de la cour (scènes 3, 4 et 5 de la ROM, des images complètes et non des salles en tuiles) sont remplacés par des images libres de 256 × 176, composées par `courtyard_pictures` de `tools/build_gfx16.py` :
+
+- `assets/gfx16/court16.png` : la cour de Castlevania-MD (monde du niveau 1, colonnes 0 à 511, lignes 48 à 223), `assets/gfx16/gate16.png` : la tour du château (image `gate`, mêmes lignes). Le sol 16 bits tombe sur la ligne de sol MSX (y 144 de la salle).
+- sous chaque torche MSX (x 64 et 192) un pied de brasero 16 bits (`assets/gfx16/simon/obj_0.png`, moitié basse) ; la flamme reste le sprite du jeu. Une torche éteinte montre les cases 16 bits (pas le haut de brasero MSX).
+- troisième écran : la tour posée pour que son ouverture tombe sur la porte MSX (x 224 à 239) ; les 8 cases du montant passées devant Simon (`castle_door_front`) sont les cases 16 bits (`vk_scene_cell`).
+- 37, 37 et 92 tuiles. `draw_scene` dessine ces scènes directement en 16 bits (même quantité de travail VDP que la scène MSX : le dessin du hall tient toujours dans l'image attendue par le scénario d'entrée). Le cadre des cases d'objets (lignes 1 à 3, colonnes 15 à 31) fait partie de la scène MSX : ses quelques tuiles sont rechargées après les tuiles 16 bits et dessinées en PAL2.
+
+## Introduction
+
+Avec l'option 16B, la scène MSX du château (scène 2 et ses sprites) est remplacée par l'introduction NES en 16 bits de Castlevania-MD (Simon marche vers la grille, chauves-souris, nuage), décision de l'utilisateur. `tools/import_intro16.py` copie les données de `castlevania-md/src/screens.c` dans `generated/intro16_md.c/.h` : 136 tuiles, 4 palettes, 32 × 28 cases, 458 images de sprites 8 × 16 (10 au plus par image). La barre d'état NES (5 rangées, et ses sprites) est retirée. L'introduction dure autant que celle du MSX (320 tours, START la saute) : ses 458 images sont réparties sur ces tours ; mesuré, 311 à 314 images entre le mode CASTLE et la cour dans les deux modes. La musique est celle du MSX.
+
 ## Simon 16 bits
 
 Avec l'option 16B, Simon est dessiné en 16 bits sur tous les écrans du jeu (c'est un sprite : il ne dépend pas du décor).
@@ -54,7 +67,7 @@ Avec l'option 16B, Simon est dessiné en 16 bits sur tous les écrans du jeu (c'
 
 ## Limites du pilote
 
-- Seuls les stages 1 à 3 ont des graphismes 16 bits ; les autres salles, la cour et les écrans restent en MSX même si l'option est active.
+- Seuls les stages 1 à 3, la cour et l'introduction ont des graphismes 16 bits ; les stages 4 à 18, le titre, le logo, la carte et la fin restent en MSX même si l'option est active.
 - Les ennemis, les bougies, les objets et les armes lancées restent les sprites MSX.
 - Restent en pixels MSX dans une salle 16 bits : la clé blanche posée (carré 16 × 16 de mur MSX autour d'elle), les murs cassables, les nervures de voûte du stage 3.
 - Les fissures et les escaliers gardent la forme MSX avec une texture 16 bits ; les vrais escaliers 16 bits (rampe) ne sont pas repris.
@@ -63,5 +76,6 @@ Avec l'option 16B, Simon est dessiné en 16 bits sur tous les écrans du jeu (c'
 
 ## Vérification
 
+- `zzw_gfx16_hall_simon` (cadre du HUD de la salle 0), `zzx_gfx16_castle_entrance` (le scénario (h) entrée du château rejoué en 16 bits, 18/18), `zzy_gfx16_intro` (introduction 16 bits, durée, cour).
 - `tests/md_scenarios/zzv_gfx16_key_door.txt` : le scénario (f) clé blanche / porte / stage 2 rejoué avec `vk_gfx16 = 1` ; toutes ses assertions tiennent (19/19).
 - Aperçus hors ROM : `python3 tools/build_gfx16.py ROM --preview DOSSIER`.

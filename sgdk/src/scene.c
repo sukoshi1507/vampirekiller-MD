@@ -5,6 +5,7 @@
 #include "generated/intro_assets.h"
 #include "psg_player.h"
 #include "gfx16.h"
+#include "generated/intro16_md.h"
 
 static u16 front_timer;
 
@@ -51,8 +52,47 @@ static void show_castle_frame(u16 frame)
     VDP_updateSprites(8, DMA_QUEUE);
 }
 
+/* 16-bit graphics: the NES introduction in the 16-bit art (generated/intro16_md.h) takes the place
+ * of the MSX castle scene. It lasts as long (CASTLE_FRAMES turns, START skips it): its 458 frames
+ * are spread over them. It uses the four palettes; the courtyard loads them all again. */
+#define CASTLE_FRAMES 320
+static void show_castle16_frame(u16 turn)
+{
+    const u16 frame = (u16)((u32)turn * VK_INTRO16_FRAMES / CASTLE_FRAMES);
+    const VKIntro16List *list = &vk_intro16_lists[vk_intro16_frames[frame]];
+    u16 i;
+    for (i = 0; i < list->count; i++)
+    {
+        const VKIntro16Sprite *sprite = &vk_intro16_sprites[list->first + i];
+        VDP_setSpriteFull(i, sprite->x, sprite->y, SPRITE_SIZE(1, 2),
+            (u16)(sprite->attr + TILE_USER_INDEX), i + 1 == list->count ? 0 : i + 1);
+    }
+    if (!list->count) VDP_setSpriteFull(0, -32, -32, SPRITE_SIZE(1, 1), 0, 0);
+    VDP_updateSprites(list->count ? list->count : 1, DMA_QUEUE);
+}
+
+static void begin_castle16(void)
+{
+    VDP_setEnable(FALSE);
+    VDP_resetSprites();
+    VDP_updateSprites(1, CPU);
+    VDP_clearPlane(BG_A, TRUE);
+    VDP_loadTileData(vk_intro16_tiles, TILE_USER_INDEX, VK_INTRO16_TILES, CPU);
+    PAL_setColors(0, vk_intro16_palette, 64, CPU);
+    VDP_setTileMapDataRectEx(BG_A, vk_intro16_map, TILE_USER_INDEX, 0, 0, 32, 28, 32, CPU);
+    show_castle16_frame(0);
+    VDP_setEnable(TRUE);
+}
+
 void vk_begin_castle(void)
 {
+    if (vk_gfx16)
+    {
+        begin_castle16();
+        vk_front_mode = FRONT_CASTLE;
+        front_timer = 0;
+        return;
+    }
     vk_show_scene(2);
     VDP_loadTileData(vk_intro_sprite_tiles, PLAYER_TILE_INDEX, vk_intro_sprite_tile_count, CPU);
     show_castle_frame(0);
@@ -62,8 +102,9 @@ void vk_begin_castle(void)
 
 bool vk_castle_tick(u16 pressed)
 {
-    if (pressed & BUTTON_START || ++front_timer >= 320) return TRUE;
-    show_castle_frame(front_timer);
+    if (pressed & BUTTON_START || ++front_timer >= CASTLE_FRAMES) return TRUE;
+    if (vk_gfx16) show_castle16_frame(front_timer);
+    else show_castle_frame(front_timer);
     return FALSE;
 }
 
