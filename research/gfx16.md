@@ -81,9 +81,19 @@ Avec l'option 16B, Simon est dessiné en 16 bits sur tous les écrans du jeu (c'
 - Mort : l'image de marche couchée face contre terre (variante A choisie par l'utilisateur), dans le canevas 32 × 16 du MSX.
 - Palette : 13 couleurs pour toutes ces images, dans PAL3 entrées 1 à 13 (14 et 15 restent celles du portage). Simon 16 bits est toujours dessiné en PAL3. Le clignotement tracé (790C : silhouette d'une seule couleur une passe sur deux) réécrit ces 13 entrées avec la couleur MSX de la silhouette, puis les remet à la passe suivante, dans le même VBlank que la table des sprites.
 
+## Titre, carte du stage et fin
+
+Les trois écrans suivent le même principe : l'option ne change que le dessin, jamais la durée ni les touches. `tools/build_screens16.py <castlevania-md>` écrit `generated/screens16_md.c/.h` (4632 octets en tout). Le mode MSX est inchangé (captures du titre, de la carte et des crédits identiques, pixel pour pixel, à celles de la version précédente).
+
+- **Titre** (`scene.c`, 32 octets de tuile + 2 palettes, soit 96 octets) : la pellicule du titre de Castlevania-MD (une seule tuile, palette de la ligne 2 dans PAL2) remplace les rangées 0 à 3 et 13 à 14 ; la bande MSX (rangées 4 à 12, logo compris) garde ses tuiles mais passe en PAL3, copie de la palette de la scène avec le bleu plus sombre, le rouge des lettres et l'ombre recolorés. `vk_title_gfx_draw` (BAS) redessine ces rangées dans les deux sens ; le reste (copyright, PRESS START, lignes SOUND et GRAPH) est inchangé.
+- **Carte du stage** (objet 0F, `stage_map_view.c`, 416 octets) : tant que la carte est ouverte, PAL0 porte la palette de la carte (sauvegardée puis rétablie à la fermeture). Les pixels de couleur 3 du panneau sont remplacés par une brique violette (période de 16 × 8 pixels, deux tuiles) par un calcul sur les mots de tuile ; murs en crème, point et flèche en rouge ; cadre doré de 3 pixels autour du panneau (10 tuiles posées dans les emplacements libres de la carte, deux dernières lignes du panneau repeintes). Le tracé de la carte (`stage_map.c`) n'est pas touché.
+- **Fin** (`dracula_view.c`, 92 tuiles, 4120 octets) : le tableau de la fin de Castlevania-MD (forêt, falaise, château) assombri est le plan B derrière le défilement des crédits (plan A, transparent hors du texte). Le château, des sprites dans Castlevania-MD, est cuit dans les tuiles. Les tuiles suivent les 1024 tuiles du texte (VRAM 1040 et suivantes), les palettes sont PAL1 à PAL3 (le plan A et ses crédits gardent PAL0). Le plan B est effacé à la sortie des crédits. Texte blanc lisible sur toute la course du défilement (vérifié sur trois captures, un peu moins contrasté sur les arbres clairs).
+
+Vérification : `tests/md_scenarios/zzzc_gfx16_screens.txt` (titre dans les deux sens, carte, crédits du stage 18 puis retour à la cour, mode 16 bits).
+
 ## Limites
 
-- Le titre, le logo, la carte et la fin restent en MSX même si l'option est active.
+- Le logo de Konami (scène 0) reste en MSX même si l'option est active ; le titre, la carte et la fin ont leur version 16 bits (section suivante).
 - Blocs 2 à 7 : formes MSX remplies de textures 16 bits ; les motifs propres au jeu NES (rampes, statues, portraits) ne sont pas repris.
 - Les ennemis, les bougies, les objets et les armes lancées restent les sprites MSX.
 - Restent en pixels MSX dans une salle 16 bits : les murs cassables, les nervures de voûte du stage 3. La clé blanche posée garde ses pixels MSX, mais `compose_key` (`item_view.c`) la pose sur les cases 16 bits de la salle, couleurs ramenées aux entrées les plus proches de la palette 16 bits (`msx[]`) et dessinée avec PAL0 ; avant, un carré de mur MSX l'entourait (vu sur console par le testeur, stage 16). Au stage 1 aussi, en mode 16 bits.

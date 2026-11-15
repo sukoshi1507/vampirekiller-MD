@@ -5,6 +5,8 @@
 #include "generated/dracula_background.h"
 #include "generated/dracula_credits.h"
 #include "generated/dracula_md.h"
+#include "gfx16.h"
+#include "generated/screens16_md.h"
 
 /* Preserve HUD196..274, death/stairs280.., whip404..595 and item700..751.
  * Only the blocks belonging to absent regular enemies are reused here. */
@@ -16,7 +18,11 @@ _Static_assert(TILE_USER_INDEX+BACKGROUND_SPLIT<=HUD_FRAME_TILE_INDEX,"Dracula r
 _Static_assert(ENEMY4_TILE_INDEX+16+BACKGROUND_THIRD<=700,"Dracula extra room tiles avoid keys");
 _Static_assert(VK_DRACULA_TILE_COUNT+BACKGROUND_LAST<=128,"Dracula room and sprite tails fit type5 block");
 static s16 last_room=-1,last_bust=-1;
-static u8 in_credits,last_blank;
+static u8 in_credits,last_blank,credits16;
+/* 16-bit graphics (research/gfx16.md): the Castlevania-MD ending picture, darkened, on plane B behind the
+ * credits (plane A, transparent where the text is not). Its tiles follow the 1024 tiles of the credit text. */
+#define END16_TILE (TILE_USER_INDEX+1024)
+_Static_assert(END16_TILE+VK_END16_TILES<=1440,"ending picture tiles stay under the font tiles");
 static u16 credit_map[1024];
 static u8 erased[32];
 static u32 row_words[256]; /* Also used for the sixteen-tile bust. */
@@ -61,6 +67,17 @@ static void credit_row(u16 row)
  for(c=0;c<32;c++)for(line=0;line<8;line++)row_words[c*8+line]=(erased[row]&(1<<line))?0:vk_dracula_credit_tiles[credit_map[row*32+c]*8+line];
  VDP_loadTileData(row_words,(u16)(TILE_USER_INDEX+row*32),32,CPU);
 }
+static void credits_picture16(void)
+{
+ u16 row,c,cells[32];
+ VDP_loadTileData(vk_end16_tiles,END16_TILE,VK_END16_TILES,CPU);
+ PAL_setColors(PAL1*16,vk_end16_palette[0],48,CPU);
+ for(row=0;row<28;row++){
+  for(c=0;c<32;c++)cells[c]=(u16)(vk_end16_attr[vk_end16_map[row*32+c]]+END16_TILE);
+  VDP_setTileMapDataRow(BG_B,cells,row,0,32,CPU);
+ }
+ credits16=1;
+}
 static void credits(const VKDracula *d)
 {
  u16 row,c;
@@ -72,6 +89,7 @@ static void credits(const VKDracula *d)
    credit_row(row);VDP_setTileMapDataRow(BG_A,cells,row,0,32,CPU);
   }
   in_credits=1;
+  if(vk_gfx16)credits_picture16();
  }
  if(d->paint&2){
   const u16 line=d->credit_line;row=vk_dracula_credit_y[line]/8;erased[row]=0;
@@ -87,6 +105,7 @@ void vk_dracula_view_reset(void)
 {
  DMA_flushQueue();
  if(in_credits)vk_hud_invalidate_tiles();
+ if(credits16){VDP_clearPlane(BG_B,TRUE);credits16=0;}
  VDP_setVerticalScroll(BG_A,0);last_room=last_bust=-1;in_credits=last_blank=0;
  VDP_setEnable(TRUE);
 }

@@ -1,0 +1,128 @@
+# (zzzc) Mode 16 bits : titre, carte du stage (objet 0F) et fin en 16 bits (research/gfx16.md).
+until front_mode == MODES['TITLE'] max 2000
+shot zzzc-titre-msx
+set msx_band pixel(100, 60)
+set msx_strip pixel(8, 12)
+tap DOWN
+expect ram8('vk_gfx16') == 1
+wait 4
+shot zzzc-titre-16
+expect pixel(4, 12) != msx_strip # film : une case sur deux, perforation
+expect pixel(100, 60) != msx_band # bande bleue plus sombre
+expect pixel(8, 200) == (0, 0, 0) # le bas reste noir
+tap DOWN
+wait 4
+expect ram8('vk_gfx16') == 0
+expect pixel(4, 12) == msx_strip and pixel(100, 60) == msx_band # retour MSX identique
+tap DOWN
+wait 4
+expect ram8('vk_gfx16') == 1
+tap START
+tap START
+until front_mode == MODES['COURTYARD'] max 500
+wait 60
+poke vk_candles+322 0x80
+poke vk_candles+329 3
+set room0 pixel(30, 60)
+tap A
+wait 40
+shot zzzc-carte-16
+expect pixel(30, 60) != room0
+expect pixel(30, 60) == pixel(225, 60) and pixel(30, 60) != pixel(10, 60) # panneau x 24..231
+expect pixel(22, 100) != (0, 0, 0) and pixel(8, 100) == (0, 0, 0) # cadre dore autour du panneau
+expect pixel(150, 22) != pixel(30, 60) # la case du HUD garde son fond
+tap A
+wait 40
+expect pixel(30, 60) == room0 # la salle est revenue
+shot zzzc-carte-retour
+# Fin : le tableau de Castlevania-MD assombri sur le plan B derriere le defilement du texte (plan A).
+# Route du stage 18 de zzp_stage18.txt (selecteur de pause, puis la salle 9 par fixtures RAM) et les
+# memes coups sur Dracula que zzp_dracula_finish.inc ; les credits prennent le mode 16 bits.
+tap START
+until ram8('paused') == 1 max 30
+tap UP
+tap UP
+tap DOWN
+tap DOWN
+tap LEFT
+tap RIGHT
+tap LEFT
+tap RIGHT
+tap B
+tap A
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap B
+until game.stage == 18 and game.room == 0 max 300
+poke Enemies_god 1
+poke vk_enemies+162 1
+until game.player.mode == 0 max 300
+poke vk_game+16 1 32
+poke vk_game+22 18
+poke vk_game+20 8
+poke vk_front_mode 4 16
+poke vk_game+0 24
+poke vk_game+1 120
+poke vk_game+2 0
+poke vk_game+3 0
+poke vk_game+4 0
+poke vk_game+7 0
+poke vk_game+8 0
+poke vk_game+23 0
+poke vk_game+26 0
+poke vk_game+30 0
+poke vk_candles 255
+poke health+1 0
+poke health+2 0 16
+poke Enemies_god 1
+poke vk_enemies+162 1
+poke items+2 0
+poke items+3 0
+poke freeze_drawn 0
+poke room_freeze 4
+poke room_freeze+1 4
+poke room_freeze+2 0
+write freeze_vtimer 32 ram32('vtimer')
+until ram8('room_freeze') == 0 and ram8('freeze_drawn') != 0 max 100
+wait 30
+poke items 1
+poke vk_game+2 1
+poke vk_game+0 20
+poke vk_game+1 144
+poke vk_game+3 0
+until ram8('items+2') == 1 max 60 LEFT
+until game.room == 9 max 500
+wait 60
+poke Enemies_god 1
+poke vk_enemies+162 0
+repeat 500 zzp_dracula_hit1.inc
+repeat 700 zzp_dracula_pin.inc
+expect ram8('dracula') == 23
+repeat 500 zzp_dracula_hit2.inc
+until ram8('dracula+544') == 2 and ram8('dracula+529') > 0 max 4000
+wait 320
+shot zzzc-fin-16
+expect pixel(10, 30) != (0, 0, 0) and pixel(200, 140) != (0, 0, 0) # ciel et falaise du tableau
+wait 300
+shot zzzc-fin-16-b
+wait 400
+shot zzzc-fin-16-c
+until front_mode == MODES['COURTYARD'] max 16000
+wait 30
+shot zzzc-fin-cour
+expect ram8('vk_gfx16') == 1

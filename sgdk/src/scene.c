@@ -6,6 +6,7 @@
 #include "psg_player.h"
 #include "gfx16.h"
 #include "generated/intro16_md.h"
+#include "generated/screens16_md.h"
 
 static u16 front_timer;
 
@@ -19,15 +20,48 @@ void vk_title_sound_draw(void)
 
 /* Graphics mode line of the title: DOWN switches between the MSX graphics and the 16-bit art
  * (gfx16.h). Same centre as the sound line. */
+/* 16-bit title (research/gfx16.md): the film strip of the Castlevania-MD title (one tile, PAL2) on
+ * rows 0 to 3 and 13 to 14, the MSX band of rows 4 to 12 in a recoloured palette (PAL3); the logo keeps
+ * its MSX tiles. title_band16: what is on screen. */
+static u8 title_band16;
+static void title_band(void)
+{
+    const VKScene *scene = &vk_scenes[1];
+    u16 cells[32];
+    u16 row, col;
+    if (vk_gfx16)
+    {
+        VDP_loadTileData(vk_title16_tile, TILE_USER_INDEX + scene->count, 1, CPU);
+        PAL_setPalette(PAL2, vk_title16_pal2, CPU);
+        PAL_setPalette(PAL3, vk_title16_pal3, CPU);
+        VDP_setTileMapDataRectEx(BG_A, scene->map + 4 * 32, TILE_ATTR_FULL(PAL3, FALSE, FALSE, FALSE, TILE_USER_INDEX),
+            0, 4, 32, 9, 32, CPU);
+        for (row = 0; row < 15; row++)
+        {
+            if (row == 4) row = 13;
+            for (col = 0; col < 32; col++)
+                cells[col] = (row & 1) && !(col & 1) ?
+                    TILE_ATTR_FULL(PAL2, FALSE, FALSE, FALSE, TILE_USER_INDEX + scene->count) : 0;
+            VDP_setTileMapDataRow(BG_A, cells, row, 0, 32, CPU);
+        }
+    }
+    else
+        VDP_setTileMapDataRectEx(BG_A, scene->map, TILE_ATTR_FULL(PAL0, FALSE, FALSE, FALSE, TILE_USER_INDEX),
+            0, 0, 32, 15, 32, CPU);
+    title_band16 = vk_gfx16;
+}
+
 void vk_title_gfx_draw(void)
 {
     VDP_drawText(vk_gfx16 ? "GRAPH < 16B >" : "GRAPH < MSX >", 9, 25);
+    if (vk_gfx16 != title_band16) title_band();
 }
 
 void vk_show_title(void)
 {
     u16 x;
     vk_show_scene(1);
+    title_band16 = 0;
     /* The ROM's keyboard prompt is adapted to the Mega Drive controller. */
     for (x = 9; x < 24; x++) VDP_setTileMapXY(BG_A, 0, x, 20);
     VDP_drawText("PRESS START", 10, 20);
